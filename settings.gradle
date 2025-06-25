@@ -2,3 +2,4 @@ rootProject.name = 'cherrypic'
 
 include 'cherrypic-api'
 include 'cherrypic-batch'
+include 'cherrypic-common'
