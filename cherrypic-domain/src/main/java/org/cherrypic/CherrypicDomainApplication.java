@@ -9,5 +9,4 @@ public class CherrypicDomainApplication {
     public static void main(String[] args) {
         SpringApplication.run(CherrypicDomainApplication.class, args);
     }
-
 }
