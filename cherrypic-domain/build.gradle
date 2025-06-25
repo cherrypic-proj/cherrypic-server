@@ -3,4 +3,5 @@ jar {
 }
 
 dependencies {
+    implementation project(':cherrypic-common')
 }
