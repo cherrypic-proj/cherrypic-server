@@ -1,1 +1,3 @@
 rootProject.name = 'cherrypic'
+
+include 'cherrypic-api'
