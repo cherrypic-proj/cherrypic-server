@@ -23,10 +23,48 @@ subprojects {
     apply plugin: 'java-library'
     apply plugin: 'org.springframework.boot'
     apply plugin: 'io.spring.dependency-management'
+    apply plugin: 'jacoco'
 
     configurations {
         compileOnly {
             extendsFrom annotationProcessor
+        }
+    }
+
+    jacoco {
+        toolVersion = '0.8.12'
+    }
+
+    jacocoTestReport {
+        dependsOn test
+        reports {
+            html.required.set(true)
+            csv.required.set(true)
+            xml.required.set(true)
+            xml.destination file("${buildDir}/reports/jacoco.xml")
+        }
+
+        def QDomains = []
+
+        for (qPattern in '**/QA'..'**/QZ') {
+            QDomains.add(qPattern + '*')
+        }
+
+        afterEvaluate {
+            classDirectories.setFrom(
+                    files(classDirectories.files.collect {
+                        fileTree(dir: it,
+                                excludes: [
+                                        "**/*Application*",
+                                        "**/*Config*",
+                                        "**/*Dto*",
+                                        "**/*Request*",
+                                        "**/*Response*",
+                                        "**/*Interceptor*",
+                                        "**/*Exception*"
+                                ] + QDomains)
+                    })
+            )
         }
     }
 
@@ -46,6 +84,7 @@ subprojects {
 
     test {
         useJUnitPlatform()
+        finalizedBy jacocoTestReport
     }
 }
 
