@@ -3,6 +3,7 @@ plugins {
     id 'org.springframework.boot' version '3.5.3'
     id 'io.spring.dependency-management' version '1.1.7'
     id 'com.diffplug.spotless' version '7.0.4'
+    id "org.sonarqube" version '6.2.0.5505'
 }
 
 bootJar {
@@ -11,6 +12,21 @@ bootJar {
 
 repositories {
     mavenCentral()
+}
+
+sonarqube {
+    properties {
+        property 'sonar.projectKey', 'cherrypic-server'
+        property 'sonar.organization', 'cherrypic'
+        property 'sonar.host.url', 'https://sonarcloud.io'
+        property 'sonar.sources', 'src'
+        property 'sonar.language', 'java'
+        property 'sonar.sourceEncoding', 'UTF-8'
+        property 'sonar.test.inclusions', '**/*Test.java'
+        property 'sonar.exclusions', '**/test/**, **/Q*.java, **/*Doc*.java, **/resources/** ,**/*Application*.java , **/*Config*.java,' +
+                '**/*Dto*.java, **/*Request*.java, **/*Response*.java ,**/*Exception*.java ,**/*ErrorCode*.java'
+        property 'sonar.java.coveragePlugin', 'jacoco'
+    }
 }
 
 subprojects {
@@ -23,31 +39,52 @@ subprojects {
     apply plugin: 'java-library'
     apply plugin: 'org.springframework.boot'
     apply plugin: 'io.spring.dependency-management'
-    apply plugin: 'com.diffplug.spotless'
-
-    spotless {
-        java {
-            // Google Java 포맷 적용
-            /*
-                googleJavaFormat() : 탭은 2개의 공백
-                googleJavaFormat().aosp() : 탭은 4개의 공백
-                [참고] https://github.com/google/google-java-format/issues/525
-             */
-            googleJavaFormat().aosp()
-            // import 순서 정렬
-            importOrder()
-            // 사용하지 않는 import 제거
-            removeUnusedImports()
-            // 각 라인 끝에 있는 공백을 제거
-            trimTrailingWhitespace()
-            // 파일 끝에 새로운 라인 추가
-            endWithNewline()
-        }
-    }
+    apply plugin: 'jacoco'
+    apply plugin: 'org.sonarqube'
 
     configurations {
         compileOnly {
             extendsFrom annotationProcessor
+        }
+    }
+
+    jacocoTestReport {
+        dependsOn test
+        reports {
+            html.required.set(true)
+            xml.required.set(true)
+            csv.required.set(false)
+            xml.destination file("${buildDir}/reports/jacoco.xml")
+        }
+
+        def QDomains = []
+
+        for (qPattern in '**/QA'..'**/QZ') {
+            QDomains.add(qPattern + '*')
+        }
+
+        afterEvaluate {
+            classDirectories.setFrom(
+                    files(classDirectories.files.collect {
+                        fileTree(dir: it,
+                                excludes: [
+                                        "**/*Application*",
+                                        "**/*Config*",
+                                        "**/*Dto*",
+                                        "**/*Request*",
+                                        "**/*Response*",
+                                        "**/*Interceptor*",
+                                        "**/*Exception*"
+                                ] + QDomains)
+                    })
+            )
+        }
+    }
+
+    sonarqube {
+        properties {
+            property 'sonar.java.binaries', "${buildDir}/classes"
+            property 'sonar.coverage.jacoco.xmlReportPaths', "${buildDir}/reports/jacoco.xml"
         }
     }
 
@@ -67,6 +104,18 @@ subprojects {
 
     test {
         useJUnitPlatform()
+        finalizedBy jacocoTestReport
+    }
+}
+
+spotless {
+    java {
+        target("**/*.java")
+        googleJavaFormat().aosp()
+        importOrder()
+        removeUnusedImports()
+        trimTrailingWhitespace()
+        endWithNewline()
     }
 }
 
