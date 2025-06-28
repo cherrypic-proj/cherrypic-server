@@ -56,8 +56,8 @@ subprojects {
         dependsOn test
         reports {
             html.required.set(true)
-            csv.required.set(true)
             xml.required.set(true)
+            csv.required.set(false)
             xml.destination file("${buildDir}/reports/jacoco.xml")
         }
 
