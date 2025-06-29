@@ -2,8 +2,8 @@ package org.cherrypic.global.error;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.cherrypic.exception.BaseCustomException;
 import org.cherrypic.exception.BaseErrorCode;
-import org.cherrypic.exception.CustomException;
 import org.cherrypic.exception.GlobalBaseErrorCode;
 import org.cherrypic.global.response.GlobalResponse;
 import org.springframework.http.HttpStatus;
@@ -18,10 +18,14 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(CustomException.class)
+    @ExceptionHandler(BaseCustomException.class)
     protected ResponseEntity<GlobalResponse<ErrorResponse>> handleCustomException(
-            CustomException e, HttpServletRequest request) {
-        log.info("CustomException: code={}, url={}", e.getErrorCode(), request.getRequestURL());
+            BaseCustomException e, HttpServletRequest request) {
+        log.info(
+                "{}: code={}, url={}",
+                e.getClass().getSimpleName(),
+                e.getErrorCode(),
+                request.getRequestURL());
 
         final BaseErrorCode errorCode = e.getErrorCode();
         final ErrorResponse errorResponse =
