@@ -3,7 +3,9 @@ package org.cherrypic.global.error;
 import org.cherrypic.exception.CustomException;
 import org.cherrypic.exception.ErrorCode;
 import org.cherrypic.global.response.GlobalResponse;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -20,5 +22,22 @@ public class GlobalExceptionHandler {
                 GlobalResponse.fail(errorCode.getStatus(), errorResponse);
 
         return ResponseEntity.status(errorCode.getStatus()).body(response);
+    }
+
+    /**
+     * javax.validation.Valid or @Validated 으로 binding error 발생시 발생한다. HttpMessageConverter 에서 등록한
+     * HttpMessageConverter binding 못할경우 발생 주로 @RequestBody, @RequestPart 어노테이션에서 발생
+     */
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    protected ResponseEntity<GlobalResponse<ErrorResponse>> handleMethodArgumentNotValidException(
+            MethodArgumentNotValidException e) {
+        final String errorMessage =
+                e.getBindingResult().getAllErrors().getFirst().getDefaultMessage();
+        final ErrorResponse errorResponse =
+                ErrorResponse.of(e.getClass().getSimpleName(), errorMessage);
+        final GlobalResponse<ErrorResponse> response =
+                GlobalResponse.fail(HttpStatus.BAD_REQUEST.value(), errorResponse);
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 }
