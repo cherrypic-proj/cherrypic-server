@@ -2,9 +2,11 @@ package org.cherrypic.global.error;
 
 import org.cherrypic.exception.CustomException;
 import org.cherrypic.exception.ErrorCode;
+import org.cherrypic.exception.GlobalErrorCode;
 import org.cherrypic.global.response.GlobalResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -39,5 +41,18 @@ public class GlobalExceptionHandler {
                 GlobalResponse.fail(HttpStatus.BAD_REQUEST.value(), errorResponse);
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    /** 지원하지 않은 HTTP method 호출 할 경우 발생 */
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    protected ResponseEntity<GlobalResponse<ErrorResponse>>
+            handleHttpRequestMethodNotSupportedException() {
+        final ErrorCode errorCode = GlobalErrorCode.METHOD_NOT_ALLOWED;
+        final ErrorResponse errorResponse =
+                ErrorResponse.of(errorCode.getCode(), errorCode.getMessage());
+        final GlobalResponse<ErrorResponse> response =
+                GlobalResponse.fail(errorCode.getStatus(), errorResponse);
+
+        return ResponseEntity.status(errorCode.getStatus()).body(response);
     }
 }
