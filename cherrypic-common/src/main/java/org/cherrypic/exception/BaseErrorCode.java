@@ -1,6 +1,6 @@
 package org.cherrypic.exception;
 
-public interface ErrorCode {
+public interface BaseErrorCode {
 
     int getStatus();
 

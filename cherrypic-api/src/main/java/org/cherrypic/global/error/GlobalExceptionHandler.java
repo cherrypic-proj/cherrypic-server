@@ -2,9 +2,9 @@ package org.cherrypic.global.error;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.cherrypic.exception.BaseErrorCode;
 import org.cherrypic.exception.CustomException;
-import org.cherrypic.exception.ErrorCode;
-import org.cherrypic.exception.GlobalErrorCode;
+import org.cherrypic.exception.GlobalBaseErrorCode;
 import org.cherrypic.global.response.GlobalResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,7 +23,7 @@ public class GlobalExceptionHandler {
             CustomException e, HttpServletRequest request) {
         log.info("CustomException: code={}, url={}", e.getErrorCode(), request.getRequestURL());
 
-        final ErrorCode errorCode = e.getErrorCode();
+        final BaseErrorCode errorCode = e.getErrorCode();
         final ErrorResponse errorResponse =
                 ErrorResponse.of(errorCode.getCode(), errorCode.getMessage());
         final GlobalResponse<ErrorResponse> response =
@@ -53,7 +53,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     protected ResponseEntity<GlobalResponse<ErrorResponse>>
             handleHttpRequestMethodNotSupportedException() {
-        final ErrorCode errorCode = GlobalErrorCode.METHOD_NOT_ALLOWED;
+        final BaseErrorCode errorCode = GlobalBaseErrorCode.METHOD_NOT_ALLOWED;
         final ErrorResponse errorResponse =
                 ErrorResponse.of(errorCode.getCode(), errorCode.getMessage());
         final GlobalResponse<ErrorResponse> response =
@@ -66,7 +66,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     protected ResponseEntity<GlobalResponse<ErrorResponse>>
             handleMethodArgumentTypeMismatchException() {
-        final ErrorCode errorCode = GlobalErrorCode.METHOD_ARGUMENT_TYPE_MISMATCH;
+        final BaseErrorCode errorCode = GlobalBaseErrorCode.METHOD_ARGUMENT_TYPE_MISMATCH;
         final ErrorResponse errorResponse =
                 ErrorResponse.of(errorCode.getCode(), errorCode.getMessage());
         final GlobalResponse<ErrorResponse> response =
@@ -85,7 +85,7 @@ public class GlobalExceptionHandler {
                 e.getMessage(),
                 request.getRequestURL());
 
-        final ErrorCode errorCode = GlobalErrorCode.INTERNAL_SERVER_ERROR;
+        final BaseErrorCode errorCode = GlobalBaseErrorCode.INTERNAL_SERVER_ERROR;
         final ErrorResponse errorResponse =
                 ErrorResponse.of(errorCode.getCode(), errorCode.getMessage());
         final GlobalResponse<ErrorResponse> response =
