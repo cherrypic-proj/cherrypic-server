@@ -41,7 +41,7 @@ public class GlobalExceptionHandler {
         final GlobalResponse<ErrorResponse> response =
                 GlobalResponse.fail(HttpStatus.BAD_REQUEST.value(), errorResponse);
 
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        return ResponseEntity.badRequest().body(response);
     }
 
     /** 지원하지 않은 HTTP method 호출 할 경우 발생 */
@@ -67,7 +67,7 @@ public class GlobalExceptionHandler {
         final GlobalResponse<ErrorResponse> response =
                 GlobalResponse.fail(errorCode.getStatus(), errorResponse);
 
-        return ResponseEntity.status(errorCode.getStatus()).body(response);
+        return ResponseEntity.badRequest().body(response);
     }
 
     /** 500번대 에러 처리 */
