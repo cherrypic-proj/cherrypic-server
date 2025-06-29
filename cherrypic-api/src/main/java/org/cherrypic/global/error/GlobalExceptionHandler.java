@@ -77,7 +77,14 @@ public class GlobalExceptionHandler {
 
     /** 500번대 에러 처리 */
     @ExceptionHandler(Exception.class)
-    protected ResponseEntity<GlobalResponse<ErrorResponse>> handleException() {
+    protected ResponseEntity<GlobalResponse<ErrorResponse>> handleException(
+            Exception e, HttpServletRequest request) {
+        log.error(
+                "Exception: code={}, message={}, url={}",
+                e.getClass().getSimpleName(),
+                e.getMessage(),
+                request.getRequestURL());
+
         final ErrorCode errorCode = GlobalErrorCode.INTERNAL_SERVER_ERROR;
         final ErrorResponse errorResponse =
                 ErrorResponse.of(errorCode.getCode(), errorCode.getMessage());
