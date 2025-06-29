@@ -1,4 +1,4 @@
-package org.cherrypic.global.config;
+package org.cherrypic.global.config.swagger;
 
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
