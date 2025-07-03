@@ -12,3 +12,12 @@ management:
   endpoint:
     health:
       access: unrestricted
+
+spring-doc:
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json
+  swagger-ui:
+    tags-sorter: alpha
+    operations-sorter : method
+    path: /swagger-ui
+    doc-expansion : none
