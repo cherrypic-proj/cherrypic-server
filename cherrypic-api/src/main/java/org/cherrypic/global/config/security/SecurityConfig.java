@@ -7,6 +7,8 @@ import lombok.RequiredArgsConstructor;
 import org.cherrypic.helper.SpringEnvironmentHelper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -30,6 +32,22 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(
                         session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+    }
+
+    @Bean
+    @Order(1)
+    @Profile({"dev", "local"})
+    public SecurityFilterChain swaggerFilterChain(HttpSecurity http) throws Exception {
+        defaultFilterChain(http);
+
+        http.securityMatcher("/swagger-ui/**", "/v3/api-docs/**").httpBasic(withDefaults());
+
+        http.authorizeHttpRequests(
+                springEnvironmentHelper.isProdProfile() || springEnvironmentHelper.isDevProfile()
+                        ? auth -> auth.anyRequest().authenticated()
+                        : auth -> auth.anyRequest().permitAll());
+
+        return http.build();
     }
 
     @Bean
