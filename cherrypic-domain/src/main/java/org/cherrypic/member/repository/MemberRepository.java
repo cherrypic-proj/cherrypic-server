@@ -1,0 +1,6 @@
+package org.cherrypic.member.repository;
+
+import org.cherrypic.member.entity.Member;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface MemberRepository extends JpaRepository<Long, Member> {}
