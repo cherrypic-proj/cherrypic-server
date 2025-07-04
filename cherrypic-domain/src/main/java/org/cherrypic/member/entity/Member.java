@@ -18,9 +18,7 @@ public class Member extends BaseTimeEntity {
 
     private String nickname;
 
-    //    auth 관련 사항
-    //    @Embedded
-    //    private OauthInfo oauthInfo;
+    @Embedded private OauthInfo oauthInfo;
 
     private String profile;
 
