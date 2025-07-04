@@ -1,4 +1,4 @@
-package org.cherrypic.album.enums;
+package org.cherrypic.participant.enums;
 
 public enum ParticipantRole {
     HOST,

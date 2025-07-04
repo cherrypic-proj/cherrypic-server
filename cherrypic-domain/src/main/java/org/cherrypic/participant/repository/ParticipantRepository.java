@@ -1,6 +1,6 @@
-package org.cherrypic.album.repository;
+package org.cherrypic.participant.repository;
 
-import org.cherrypic.album.entity.Participant;
+import org.cherrypic.participant.entity.Participant;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ParticipantRepository extends JpaRepository<Long, Participant> {}

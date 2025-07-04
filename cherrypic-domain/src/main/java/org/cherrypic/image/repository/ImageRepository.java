@@ -1,6 +1,6 @@
-package org.cherrypic.album.repository;
+package org.cherrypic.image.repository;
 
-import org.cherrypic.album.entity.Image;
+import org.cherrypic.image.entity.Image;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ImageRepository extends JpaRepository<Long, Image> {}

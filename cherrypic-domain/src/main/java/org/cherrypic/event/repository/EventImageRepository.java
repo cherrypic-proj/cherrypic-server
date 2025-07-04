@@ -1,4 +1,4 @@
-package org.cherrypic.album.repository;
+package org.cherrypic.event.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 

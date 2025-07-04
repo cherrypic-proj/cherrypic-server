@@ -1,9 +1,10 @@
-package org.cherrypic.album.entity;
+package org.cherrypic.event.entity;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.cherrypic.album.entity.Album;
 import org.cherrypic.common.model.BaseTimeEntity;
 
 @Getter
@@ -16,7 +17,7 @@ public class Event extends BaseTimeEntity {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "album_id", nullable = false)
+    @JoinColumn(name = "album_id")
     private Album album;
 
     private String name;

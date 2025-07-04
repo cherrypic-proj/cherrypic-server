@@ -1,6 +1,6 @@
-package org.cherrypic.member.repository;
+package org.cherrypic.favorites.repsoitory;
 
-import org.cherrypic.member.entity.Favorites;
+import org.cherrypic.favorites.entity.Favorites;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface FavoritesRepository extends JpaRepository<Long, Favorites> {}
