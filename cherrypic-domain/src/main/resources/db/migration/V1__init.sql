@@ -1,8 +1,8 @@
 CREATE TABLE member (
                         id BIGINT AUTO_INCREMENT PRIMARY KEY,
                         nickname VARCHAR(50) NOT NULL,
-                        oauth_info_oauth_id CHAR(10) NOT NULL,
-                        oauth_info_provider VARCHAR(10),
+                        oauth_id VARCHAR(255) NOT NULL,
+                        oauth_provider VARCHAR(255),
                         profile VARCHAR(100) NOT NULL,
                         role VARCHAR(255) NOT NULL,
                         status VARCHAR(255) NOT NULL,

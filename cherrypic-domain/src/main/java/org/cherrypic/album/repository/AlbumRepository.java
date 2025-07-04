@@ -3,4 +3,4 @@ package org.cherrypic.album.repository;
 import org.cherrypic.album.entity.Album;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface AlbumRepository extends JpaRepository<Long, Album> {}
+public interface AlbumRepository extends JpaRepository<Album, Long> {}

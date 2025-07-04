@@ -10,6 +10,7 @@ import org.cherrypic.member.enums.MemberRole;
 import org.cherrypic.member.enums.MemberStatus;
 import org.cherrypic.participant.entity.Participant;
 import org.cherrypic.payment.entity.Payment;
+import org.cherrypic.subscription.entity.Subscription;
 
 @Getter
 @Entity
@@ -20,9 +21,8 @@ public class Member extends BaseTimeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "subscription_id", unique = true)
-    private Member member;
+    @OneToOne(mappedBy = "member", fetch = FetchType.LAZY)
+    private Subscription subscription;
 
     private String nickname;
 
