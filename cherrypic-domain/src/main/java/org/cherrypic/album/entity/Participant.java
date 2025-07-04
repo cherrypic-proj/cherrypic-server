@@ -27,4 +27,6 @@ public class Participant extends BaseTimeEntity {
 
     @Enumerated(EnumType.STRING)
     private ParticipantRole role;
+
+    private String password;
 }
