@@ -5,10 +5,11 @@ import java.util.ArrayList;
 import java.util.List;
 import lombok.*;
 import org.cherrypic.common.model.BaseTimeEntity;
+import org.cherrypic.favorites.entity.Favorites;
 import org.cherrypic.member.enums.MemberRole;
 import org.cherrypic.member.enums.MemberStatus;
+import org.cherrypic.participant.entity.Participant;
 import org.cherrypic.payment.entity.Payment;
-import org.cherrypic.post.entity.Post;
 
 @Getter
 @Entity
@@ -38,11 +39,11 @@ public class Member extends BaseTimeEntity {
     private boolean appAlarm;
 
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Post> posts = new ArrayList<>();
-
-    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Payment> payments = new ArrayList<>();
 
-    //    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
-    //    private Image<Payment> payments = new ArrayList<>();
+    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Participant> participants = new ArrayList<>();
+
+    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Favorites> favorites = new ArrayList<>();
 }
