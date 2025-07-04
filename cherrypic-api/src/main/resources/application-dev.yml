@@ -15,21 +15,6 @@ spring:
     enabled: true
     baseline-on-migrate: true
 
-management:
-  endpoints:
-    jmx:
-      exposure:
-        exclude: "*"
-    web:
-      exposure:
-        include: health
-      base-path: /cherrypic-actuator
-    access:
-      default: none
-  endpoint:
-    health:
-      access: unrestricted
-
 spring-doc:
   default-consumes-media-type: application/json
   default-produces-media-type: application/json
