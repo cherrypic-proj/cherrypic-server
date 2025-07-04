@@ -1,12 +1,12 @@
 package org.cherrypic.image.entity;
 
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.cherrypic.album.entity.Album;
 import org.cherrypic.common.model.BaseTimeEntity;
-import org.cherrypic.member.entity.Member;
 
 @Getter
 @Entity
@@ -17,9 +17,7 @@ public class Image extends BaseTimeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "member_id")
-    private Member member;
+    private Long memberId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "album_id")
@@ -27,5 +25,5 @@ public class Image extends BaseTimeEntity {
 
     private String url;
 
-    private String imageFileCreated;
+    private LocalDateTime imageFileCreated;
 }
