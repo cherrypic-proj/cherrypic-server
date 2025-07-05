@@ -68,6 +68,7 @@ CREATE TABLE favorites (
                            id BIGINT AUTO_INCREMENT PRIMARY KEY,
                            member_id BIGINT NOT NULL,
                            album_id BIGINT NOT NULL,
+                           status VARCHAR(255) NOT NULL CHECK (status IN ('INCLUDED','EXCLUDED')),
                            CONSTRAINT fk_favorites_member FOREIGN KEY (member_id) REFERENCES member (id),
                            CONSTRAINT fk_favorites_album FOREIGN KEY (album_id) REFERENCES album (id)
 );
