@@ -1,13 +1,16 @@
 package org.cherrypic.image.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.cherrypic.album.entity.Album;
 import org.cherrypic.common.model.BaseTimeEntity;
-import org.cherrypic.event.entity.Event;
+import org.cherrypic.event.entity.EventImage;
 
 @Getter
 @Entity
@@ -18,17 +21,16 @@ public class Image extends BaseTimeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long memberId;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "album_id")
     private Album album;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "event_id")
-    private Event event;
+    @NotNull private Long memberId;
 
-    private String url;
+    @NotNull private String url;
 
-    private LocalDateTime imageFileCreated;
+    private LocalDateTime imageFileCreatedAt;
+
+    @OneToMany(mappedBy = "image", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<EventImage> eventImages = new ArrayList<>();
 }

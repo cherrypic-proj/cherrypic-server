@@ -1,6 +1,7 @@
 package org.cherrypic.subscription.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -22,11 +23,13 @@ public class Subscription {
     @JoinColumn(name = "member_id", unique = true)
     private Member member;
 
+    @NotNull
     @Enumerated(EnumType.STRING)
-    private SubscriptionType subscriptionType;
+    private SubscriptionType type;
 
+    @NotNull
     @Enumerated(EnumType.STRING)
-    private SubscriptionStatus subscriptionStatus;
+    private SubscriptionStatus status;
 
     private LocalDateTime startAt;
 

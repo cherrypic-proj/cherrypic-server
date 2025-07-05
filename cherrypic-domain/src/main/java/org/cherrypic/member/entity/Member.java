@@ -1,6 +1,7 @@
 package org.cherrypic.member.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.*;
@@ -24,19 +25,21 @@ public class Member extends BaseTimeEntity {
     @OneToOne(mappedBy = "member", fetch = FetchType.LAZY)
     private Subscription subscription;
 
-    private String nickname;
+    @NotNull private String nickname;
 
     @Embedded private OauthInfo oauthInfo;
 
-    private String profile;
+    @NotNull private String profile;
 
+    @NotNull
     @Enumerated(EnumType.STRING)
     private MemberRole role;
 
+    @NotNull
     @Enumerated(EnumType.STRING)
     private MemberStatus status;
 
-    private boolean appAlarm;
+    @NotNull private boolean appAlarm;
 
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Payment> payments = new ArrayList<>();

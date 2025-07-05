@@ -1,6 +1,7 @@
 package org.cherrypic.event.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.AccessLevel;
@@ -8,7 +9,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.cherrypic.album.entity.Album;
 import org.cherrypic.common.model.BaseTimeEntity;
-import org.cherrypic.image.entity.Image;
 
 @Getter
 @Entity
@@ -23,8 +23,8 @@ public class Event extends BaseTimeEntity {
     @JoinColumn(name = "album_id")
     private Album album;
 
-    private String name;
+    @NotNull private String name;
 
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Image> images = new ArrayList<>();
+    private List<EventImage> eventImages = new ArrayList<>();
 }

@@ -1,6 +1,7 @@
 package org.cherrypic.payment.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -22,16 +23,16 @@ public class Payment extends BaseTimeEntity {
     @JoinColumn(name = "member_id")
     private Member member;
 
-    private String merchantUid;
+    @NotNull private String merchantUid;
 
     private String impUid;
 
     private String pgProvider;
 
-    private int amount;
+    @NotNull private int amount;
 
     @Enumerated(EnumType.STRING)
-    private PaymentStatus paymentStatus;
+    private PaymentStatus status;
 
     private LocalDateTime paidAt;
 }

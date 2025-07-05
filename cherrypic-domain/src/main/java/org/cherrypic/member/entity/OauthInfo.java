@@ -1,5 +1,6 @@
 package org.cherrypic.member.entity;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -8,6 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class OauthInfo {
 
-    private String oauthId;
+    @NotNull private String oauthId;
+
     private String oauthProvider;
 }

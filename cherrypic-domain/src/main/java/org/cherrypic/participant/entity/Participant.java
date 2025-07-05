@@ -1,6 +1,7 @@
 package org.cherrypic.participant.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -26,6 +27,7 @@ public class Participant extends BaseTimeEntity {
     @JoinColumn(name = "album_id")
     private Album album;
 
+    @NotNull
     @Enumerated(EnumType.STRING)
     private ParticipantRole role;
 
