@@ -9,17 +9,8 @@ spring:
       maximum-pool-size: 20
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: none
     open-in-view: false
   flyway:
     enabled: true
     baseline-on-migrate: true
-
-spring-doc:
-  default-consumes-media-type: application/json
-  default-produces-media-type: application/json
-  swagger-ui:
-    tags-sorter: alpha
-    operations-sorter : method
-    path: /swagger-ui
-    doc-expansion : none
