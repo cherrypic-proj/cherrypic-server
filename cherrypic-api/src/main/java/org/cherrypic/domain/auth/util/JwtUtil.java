@@ -1,4 +1,4 @@
-package org.cherrypic.domain.auth.jwt;
+package org.cherrypic.domain.auth.util;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
