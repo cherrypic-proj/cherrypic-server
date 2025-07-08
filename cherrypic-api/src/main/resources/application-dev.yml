@@ -30,6 +30,13 @@ oidc:
     issuer: https://appleid.apple.com
     audience: ${APPLE_SERVICE_ID:}
 
+jwt:
+  access-token-secret: ${JWT_ACCESS_TOKEN_SECRET}
+  refresh-token-secret: ${JWT_REFRESH_TOKEN_SECRET}
+  access-token-expiration-time: ${JWT_ACCESS_TOKEN_EXPIRATION_TIME:7200}
+  refresh-token-expiration-time: ${JWT_REFRESH_TOKEN_EXPIRATION_TIME:172800}
+  issuer: ${JWT_ISSUER}
+
 spring-doc:
   default-consumes-media-type: application/json
   default-produces-media-type: application/json
