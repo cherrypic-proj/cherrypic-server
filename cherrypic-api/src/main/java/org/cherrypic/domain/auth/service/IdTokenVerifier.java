@@ -1,5 +1,6 @@
 package org.cherrypic.domain.auth.service;
 
+import jakarta.annotation.PostConstruct;
 import java.time.Instant;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
@@ -20,11 +21,15 @@ import org.springframework.stereotype.Component;
 public class IdTokenVerifier {
 
     private final OidcProperties oidcProperties;
+    private Map<OauthProvider, JwtDecoder> decoders;
 
-    private final Map<OauthProvider, JwtDecoder> decoders =
-            Map.of(
-                    OauthProvider.KAKAO, buildDecoder(oidcProperties.kakao().jwkSetUri()),
-                    OauthProvider.APPLE, buildDecoder(oidcProperties.apple().jwkSetUri()));
+    @PostConstruct
+    private void initDecoders() {
+        this.decoders =
+                Map.of(
+                        OauthProvider.KAKAO, buildDecoder(oidcProperties.kakao().jwkSetUri()),
+                        OauthProvider.APPLE, buildDecoder(oidcProperties.apple().jwkSetUri()));
+    }
 
     private JwtDecoder buildDecoder(String jwkSetUrl) {
         return NimbusJwtDecoder.withJwkSetUri(jwkSetUrl).build();
