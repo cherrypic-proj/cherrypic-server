@@ -25,11 +25,11 @@ public class Member extends BaseTimeEntity {
     @OneToOne(mappedBy = "member", fetch = FetchType.LAZY)
     private Subscription subscription;
 
-    @NotNull private String nickname;
-
     @Embedded private OauthInfo oauthInfo;
 
-    @NotNull private String profile;
+    @NotNull private String nickname;
+
+    @NotNull private String profileImageUrl;
 
     @NotNull
     @Enumerated(EnumType.STRING)
