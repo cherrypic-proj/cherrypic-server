@@ -49,4 +49,29 @@ public class Member extends BaseTimeEntity {
 
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Favorites> favorites = new ArrayList<>();
+
+    @Builder(access = AccessLevel.PRIVATE)
+    private Member(
+            OauthInfo oauthInfo,
+            String nickname,
+            String profileImageUrl,
+            MemberRole role,
+            MemberStatus status) {
+        this.oauthInfo = oauthInfo;
+        this.nickname = nickname;
+        this.profileImageUrl = profileImageUrl;
+        this.role = role;
+        this.status = status;
+    }
+
+    public static Member createMember(
+            OauthInfo oauthInfo, String nickname, String profileImageUrl) {
+        return Member.builder()
+                .oauthInfo(oauthInfo)
+                .nickname(nickname)
+                .profileImageUrl(profileImageUrl)
+                .role(MemberRole.USER)
+                .status(MemberStatus.NORMAL)
+                .build();
+    }
 }
