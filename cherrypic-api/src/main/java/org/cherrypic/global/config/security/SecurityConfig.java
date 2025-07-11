@@ -58,6 +58,8 @@ public class SecurityConfig {
                 auth ->
                         auth.requestMatchers("/cherrypic-actuator/**")
                                 .permitAll()
+                                .requestMatchers("/auth/**")
+                                .permitAll()
                                 .anyRequest()
                                 .authenticated());
 

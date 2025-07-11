@@ -25,11 +25,11 @@ public class Member extends BaseTimeEntity {
     @OneToOne(mappedBy = "member", fetch = FetchType.LAZY)
     private Subscription subscription;
 
-    @NotNull private String nickname;
-
     @Embedded private OauthInfo oauthInfo;
 
-    @NotNull private String profile;
+    @NotNull private String nickname;
+
+    private String profileImageUrl;
 
     @NotNull
     @Enumerated(EnumType.STRING)
@@ -39,7 +39,7 @@ public class Member extends BaseTimeEntity {
     @Enumerated(EnumType.STRING)
     private MemberStatus status;
 
-    @NotNull private boolean appAlarm;
+    @NotNull private Boolean appAlarm = Boolean.FALSE;
 
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Payment> payments = new ArrayList<>();
@@ -49,4 +49,29 @@ public class Member extends BaseTimeEntity {
 
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Favorites> favorites = new ArrayList<>();
+
+    @Builder(access = AccessLevel.PRIVATE)
+    private Member(
+            OauthInfo oauthInfo,
+            String nickname,
+            String profileImageUrl,
+            MemberRole role,
+            MemberStatus status) {
+        this.oauthInfo = oauthInfo;
+        this.nickname = nickname;
+        this.profileImageUrl = profileImageUrl;
+        this.role = role;
+        this.status = status;
+    }
+
+    public static Member createMember(
+            OauthInfo oauthInfo, String nickname, String profileImageUrl) {
+        return Member.builder()
+                .oauthInfo(oauthInfo)
+                .nickname(nickname)
+                .profileImageUrl(profileImageUrl)
+                .role(MemberRole.USER)
+                .status(MemberStatus.NORMAL)
+                .build();
+    }
 }

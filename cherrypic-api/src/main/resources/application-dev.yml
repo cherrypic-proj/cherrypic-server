@@ -20,6 +20,23 @@ spring:
       port: ${REDIS_PORT:6379}
       password: ${REDIS_PASSWORD}
 
+oidc:
+  kakao:
+    jwk-set-uri: https://kauth.kakao.com/.well-known/jwks.json
+    issuer: https://kauth.kakao.com
+    audience: ${KAKAO_NATIVE_APP_KEY:}
+  apple:
+    jwk-set-uri: https://appleid.apple.com/auth/keys
+    issuer: https://appleid.apple.com
+    audience: ${APPLE_SERVICE_ID:}
+
+jwt:
+  access-token-secret: ${JWT_ACCESS_TOKEN_SECRET}
+  refresh-token-secret: ${JWT_REFRESH_TOKEN_SECRET}
+  access-token-expiration-time: ${JWT_ACCESS_TOKEN_EXPIRATION_TIME:7200}
+  refresh-token-expiration-time: ${JWT_REFRESH_TOKEN_EXPIRATION_TIME:172800}
+  issuer: ${JWT_ISSUER}
+
 spring-doc:
   default-consumes-media-type: application/json
   default-produces-media-type: application/json
