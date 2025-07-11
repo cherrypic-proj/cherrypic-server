@@ -29,7 +29,7 @@ public class Member extends BaseTimeEntity {
 
     @NotNull private String nickname;
 
-    @NotNull private String profileImageUrl;
+    private String profileImageUrl;
 
     @NotNull
     @Enumerated(EnumType.STRING)
