@@ -10,7 +10,7 @@ import java.util.Map;
 import org.cherrypic.IntegrationTest;
 import org.cherrypic.domain.auth.dto.request.IdTokenRequest;
 import org.cherrypic.domain.auth.dto.response.SocialLoginResponse;
-import org.cherrypic.domain.auth.entity.OauthProvider;
+import org.cherrypic.domain.auth.enums.OauthProvider;
 import org.cherrypic.domain.auth.service.AuthService;
 import org.cherrypic.domain.auth.service.IdTokenVerifier;
 import org.cherrypic.domain.auth.service.JwtTokenService;

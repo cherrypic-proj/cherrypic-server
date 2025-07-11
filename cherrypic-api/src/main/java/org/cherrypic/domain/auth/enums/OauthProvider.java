@@ -1,4 +1,4 @@
-package org.cherrypic.domain.auth.entity;
+package org.cherrypic.domain.auth.enums;
 
 public enum OauthProvider {
     KAKAO,

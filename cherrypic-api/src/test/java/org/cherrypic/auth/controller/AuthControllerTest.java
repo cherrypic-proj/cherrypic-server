@@ -10,7 +10,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.cherrypic.domain.auth.controller.AuthController;
 import org.cherrypic.domain.auth.dto.request.IdTokenRequest;
 import org.cherrypic.domain.auth.dto.response.SocialLoginResponse;
-import org.cherrypic.domain.auth.entity.OauthProvider;
+import org.cherrypic.domain.auth.enums.OauthProvider;
 import org.cherrypic.domain.auth.service.AuthService;
 import org.cherrypic.domain.auth.util.CookieUtil;
 import org.junit.jupiter.api.Nested;

@@ -4,7 +4,7 @@ import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.cherrypic.domain.auth.dto.request.IdTokenRequest;
 import org.cherrypic.domain.auth.dto.response.SocialLoginResponse;
-import org.cherrypic.domain.auth.entity.OauthProvider;
+import org.cherrypic.domain.auth.enums.OauthProvider;
 import org.cherrypic.domain.auth.util.NicknameGenerator;
 import org.cherrypic.member.entity.Member;
 import org.cherrypic.member.entity.OauthInfo;

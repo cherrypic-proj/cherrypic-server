@@ -4,7 +4,7 @@ import jakarta.annotation.PostConstruct;
 import java.time.Instant;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
-import org.cherrypic.domain.auth.entity.OauthProvider;
+import org.cherrypic.domain.auth.enums.OauthProvider;
 import org.cherrypic.domain.auth.exception.AuthErrorCode;
 import org.cherrypic.domain.auth.exception.AuthException;
 import org.cherrypic.oidc.OidcProperties;
