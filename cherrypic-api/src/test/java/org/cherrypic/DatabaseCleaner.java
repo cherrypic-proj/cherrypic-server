@@ -3,6 +3,7 @@ package org.cherrypic;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
@@ -39,10 +40,23 @@ public class DatabaseCleaner implements InitializingBean {
 
         for (String name : tableNames) {
             statement.executeUpdate(String.format("TRUNCATE TABLE %s", name));
-            statement.executeUpdate(
-                    String.format("ALTER TABLE %s ALTER COLUMN %s_id RESTART WITH 1", name, name));
+            if (columnExists(conn, name, name)) {
+                statement.executeUpdate(
+                        String.format(
+                                "ALTER TABLE %s ALTER COLUMN %s_id RESTART WITH 1", name, name));
+            }
         }
 
         statement.executeUpdate("SET REFERENTIAL_INTEGRITY TRUE");
+    }
+
+    private boolean columnExists(Connection conn, String tableName, String columnName)
+            throws SQLException {
+        try (ResultSet rs =
+                conn.getMetaData()
+                        .getColumns(
+                                null, null, tableName.toUpperCase(), columnName.toUpperCase())) {
+            return rs.next();
+        }
     }
 }
