@@ -15,12 +15,10 @@ import org.cherrypic.domain.auth.service.AuthService;
 import org.cherrypic.domain.auth.service.IdTokenVerifier;
 import org.cherrypic.domain.auth.service.JwtTokenService;
 import org.cherrypic.member.entity.Member;
-import org.cherrypic.member.entity.OauthInfo;
 import org.cherrypic.member.enums.MemberRole;
 import org.cherrypic.member.enums.MemberStatus;
 import org.cherrypic.member.repository.MemberRepository;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,16 +37,6 @@ public class AuthServiceTest extends IntegrationTest {
 
     @Nested
     class 소셜_로그인할_때 {
-
-        @BeforeEach
-        void setUp() {
-            Member member =
-                    Member.createMember(
-                            OauthInfo.createOauthInfo("testOauthId", "https://test.oauth.provider"),
-                            "testNickname",
-                            "testProfileImageUrl");
-            memberRepository.save(member);
-        }
 
         @Test
         void 유효한_ID_토큰이면_소셜_로그인에_성공한다() {
