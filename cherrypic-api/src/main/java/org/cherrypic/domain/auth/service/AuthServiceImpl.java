@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.cherrypic.domain.auth.dto.request.IdTokenRequest;
 import org.cherrypic.domain.auth.dto.response.SocialLoginResponse;
 import org.cherrypic.domain.auth.entity.OauthProvider;
+import org.cherrypic.domain.auth.util.NicknameGenerator;
 import org.cherrypic.member.entity.Member;
 import org.cherrypic.member.entity.OauthInfo;
 import org.cherrypic.member.repository.MemberRepository;
@@ -20,6 +21,7 @@ public class AuthServiceImpl implements AuthService {
     private final MemberRepository memberRepository;
     private final IdTokenVerifier idTokenVerifier;
     private final JwtTokenService jwtTokenService;
+    private final NicknameGenerator nicknameGenerator;
 
     @Override
     public SocialLoginResponse socialLoginMember(OauthProvider provider, IdTokenRequest request) {
@@ -41,7 +43,8 @@ public class AuthServiceImpl implements AuthService {
         OauthInfo oauthInfo = extractOauthInfo(oidcUser);
 
         Member member =
-                Member.createMember(oauthInfo, oidcUser.getNickName(), oidcUser.getPicture());
+                Member.createMember(
+                        oauthInfo, nicknameGenerator.generateNickname(), oidcUser.getPicture());
         return memberRepository.save(member);
     }
 
