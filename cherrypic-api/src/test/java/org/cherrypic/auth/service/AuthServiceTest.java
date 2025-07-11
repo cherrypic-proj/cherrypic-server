@@ -17,6 +17,7 @@ import org.cherrypic.domain.auth.service.JwtTokenService;
 import org.cherrypic.member.entity.Member;
 import org.cherrypic.member.entity.OauthInfo;
 import org.cherrypic.member.enums.MemberRole;
+import org.cherrypic.member.enums.MemberStatus;
 import org.cherrypic.member.repository.MemberRepository;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -67,6 +68,28 @@ public class AuthServiceTest extends IntegrationTest {
             Assertions.assertAll(
                     () -> assertThat(response.accessToken()).isEqualTo("fake-access-token"),
                     () -> assertThat(response.refreshToken()).isEqualTo("fake-refresh-token"));
+        }
+
+        @Test
+        void 처음_로그인하는_회원이면_회원_정보를_저장한다() {
+            // given
+            given(idTokenVerifier.getOidcUser(anyString(), any())).willReturn(mockOidcUser());
+            given(jwtTokenService.createAccessToken(anyLong(), any(MemberRole.class)))
+                    .willReturn("fake-access-token");
+            given(jwtTokenService.createRefreshToken(anyLong())).willReturn("fake-refresh-token");
+
+            IdTokenRequest request = new IdTokenRequest("testIdTokenValue");
+
+            // when
+            authService.socialLoginMember(OauthProvider.KAKAO, request);
+
+            // then
+            Member member = memberRepository.findById(1L).get();
+            Assertions.assertAll(
+                    () -> assertThat(member.getId()).isEqualTo(1L),
+                    () -> assertThat(member.getNickname()).isNotNull(),
+                    () -> assertThat(member.getRole()).isEqualTo(MemberRole.USER),
+                    () -> assertThat(member.getStatus()).isEqualTo(MemberStatus.NORMAL));
         }
 
         private OidcUser mockOidcUser() {
