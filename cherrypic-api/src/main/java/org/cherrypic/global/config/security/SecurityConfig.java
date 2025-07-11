@@ -4,6 +4,8 @@ import static org.springframework.security.config.Customizer.withDefaults;
 
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.cherrypic.domain.auth.service.JwtTokenService;
+import org.cherrypic.global.security.JwtAuthenticationFilter;
 import org.cherrypic.helper.SpringEnvironmentHelper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,6 +16,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -24,6 +27,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 public class SecurityConfig {
 
     private final SpringEnvironmentHelper springEnvironmentHelper;
+    private final JwtTokenService jwtTokenService;
 
     private void defaultFilterChain(HttpSecurity http) throws Exception {
         http.httpBasic(AbstractHttpConfigurer::disable)
@@ -63,6 +67,10 @@ public class SecurityConfig {
                                 .anyRequest()
                                 .authenticated());
 
+        http.addFilterBefore(
+                jwtAuthenticationFilter(jwtTokenService),
+                UsernamePasswordAuthenticationFilter.class);
+
         return http.build();
     }
 
@@ -90,5 +98,10 @@ public class SecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
+    }
+
+    @Bean
+    public JwtAuthenticationFilter jwtAuthenticationFilter(JwtTokenService jwtTokenService) {
+        return new JwtAuthenticationFilter(jwtTokenService);
     }
 }
