@@ -41,7 +41,8 @@ public class AuthServiceTest extends IntegrationTest {
         @Test
         void 유효한_ID_토큰이면_소셜_로그인에_성공한다() {
             // given
-            given(idTokenVerifier.getOidcUser(anyString(), any())).willReturn(mockOidcUser());
+            given(idTokenVerifier.getOidcUser(anyString(), any()))
+                    .willReturn(mockOidcUser("kakao-sub-001", "https://kauth.kakao.com"));
             given(jwtTokenService.createAccessToken(anyLong(), any(MemberRole.class)))
                     .willReturn("fake-access-token");
             given(jwtTokenService.createRefreshToken(anyLong())).willReturn("fake-refresh-token");
@@ -61,7 +62,8 @@ public class AuthServiceTest extends IntegrationTest {
         @Test
         void 처음_로그인하는_회원이면_회원_정보를_저장한다() {
             // given
-            given(idTokenVerifier.getOidcUser(anyString(), any())).willReturn(mockOidcUser());
+            given(idTokenVerifier.getOidcUser(anyString(), any()))
+                    .willReturn(mockOidcUser("apple-sub-001", "https://appleid.apple.com"));
             given(jwtTokenService.createAccessToken(anyLong(), any(MemberRole.class)))
                     .willReturn("fake-access-token");
             given(jwtTokenService.createRefreshToken(anyLong())).willReturn("fake-refresh-token");
@@ -80,13 +82,13 @@ public class AuthServiceTest extends IntegrationTest {
                     () -> assertThat(member.getStatus()).isEqualTo(MemberStatus.NORMAL));
         }
 
-        private OidcUser mockOidcUser() {
+        private OidcUser mockOidcUser(String sub, String iss) {
             OidcIdToken idToken =
                     new OidcIdToken(
                             "fake-id-token",
                             Instant.now(),
                             Instant.now().plusSeconds(3600),
-                            Map.of("sub", "testOauthId", "iss", "https://test.oauth.provider"));
+                            Map.of("sub", sub, "iss", iss));
 
             return new DefaultOidcUser(List.of(), idToken);
         }
