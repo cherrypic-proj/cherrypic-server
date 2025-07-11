@@ -43,7 +43,7 @@ public class AuthServiceTest extends IntegrationTest {
         void setUp() {
             Member member =
                     Member.createMember(
-                            OauthInfo.createOauthInfo("testOauthId", "testOauthProvider"),
+                            OauthInfo.createOauthInfo("testOauthId", "https://test.oauth.provider"),
                             "testNickname",
                             "testProfileImageUrl");
             memberRepository.save(member);
@@ -75,7 +75,7 @@ public class AuthServiceTest extends IntegrationTest {
                             "fake-id-token",
                             Instant.now(),
                             Instant.now().plusSeconds(3600),
-                            Map.of("sub", "testOauthId", "iss", "testOauthProvider"));
+                            Map.of("sub", "testOauthId", "iss", "https://test.oauth.provider"));
 
             return new DefaultOidcUser(List.of(), idToken);
         }
