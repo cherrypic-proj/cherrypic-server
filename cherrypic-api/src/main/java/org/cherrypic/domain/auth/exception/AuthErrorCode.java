@@ -8,6 +8,9 @@ import org.cherrypic.exception.BaseErrorCode;
 @AllArgsConstructor
 public enum AuthErrorCode implements BaseErrorCode {
     ID_TOKEN_VERIFICATION_FAILED(401, "ID 토큰 검증에 실패했습니다."),
+
+    AUTH_NOT_EXIST(401, "인증 정보가 존재하지 않습니다."),
+    AUTH_NOT_PARSABLE(500, "인증 정보 파싱에 실패했습니다."),
     ;
 
     private final int status;
