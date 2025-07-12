@@ -1,10 +1,14 @@
 package org.cherrypic.domain.auth.util;
 
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import java.security.Key;
 import java.util.Date;
 import lombok.RequiredArgsConstructor;
+import org.cherrypic.domain.auth.dto.AccessTokenDto;
 import org.cherrypic.jwt.JwtProperties;
 import org.cherrypic.member.enums.MemberRole;
 import org.springframework.stereotype.Component;
@@ -12,6 +16,8 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class JwtUtil {
+
+    private static final String TOKEN_ROLE_NAME = "role";
 
     private final JwtProperties jwtProperties;
 
@@ -27,6 +33,29 @@ public class JwtUtil {
         Date expiredAt =
                 new Date(issuedAt.getTime() + jwtProperties.refreshTokenExpirationMilliTime());
         return buildRefreshToken(memberId, issuedAt, expiredAt);
+    }
+
+    public AccessTokenDto parseAccessToken(String accessTokenValue) throws ExpiredJwtException {
+        try {
+            Jws<Claims> claims = getClaims(accessTokenValue, getAccessTokenKey());
+
+            return AccessTokenDto.of(
+                    Long.parseLong(claims.getBody().getSubject()),
+                    MemberRole.valueOf(claims.getBody().get(TOKEN_ROLE_NAME, String.class)),
+                    accessTokenValue);
+        } catch (ExpiredJwtException e) {
+            throw e;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private Jws<Claims> getClaims(String token, Key key) {
+        return Jwts.parserBuilder()
+                .requireIssuer(jwtProperties.issuer())
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token);
     }
 
     public long getRefreshTokenExpirationTime() {
@@ -46,7 +75,7 @@ public class JwtUtil {
         return Jwts.builder()
                 .setIssuer(jwtProperties.issuer())
                 .setSubject(memberId.toString())
-                .claim("role", memberRole.name())
+                .claim(TOKEN_ROLE_NAME, memberRole.name())
                 .setIssuedAt(issuedAt)
                 .setExpiration(expiredAt)
                 .signWith(getAccessTokenKey())
