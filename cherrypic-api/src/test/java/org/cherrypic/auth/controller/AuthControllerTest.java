@@ -1,16 +1,19 @@
 package org.cherrypic.auth.controller;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.Cookie;
 import org.cherrypic.domain.auth.controller.AuthController;
 import org.cherrypic.domain.auth.dto.request.IdTokenRequest;
 import org.cherrypic.domain.auth.dto.response.SocialLoginResponse;
+import org.cherrypic.domain.auth.dto.response.TokenReissueResponse;
 import org.cherrypic.domain.auth.enums.OauthProvider;
+import org.cherrypic.domain.auth.exception.AuthErrorCode;
+import org.cherrypic.domain.auth.exception.AuthException;
 import org.cherrypic.domain.auth.service.AuthService;
 import org.cherrypic.domain.auth.util.CookieUtil;
 import org.junit.jupiter.api.Nested;
@@ -93,6 +96,64 @@ class AuthControllerTest {
                     .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
                     .andExpect(jsonPath("$.data.code").value("MethodArgumentNotValidException"))
                     .andExpect(jsonPath("$.data.message").value("Id Token은 비워둘 수 없습니다."));
+        }
+    }
+
+    @Nested
+    class 토큰_재발급할_때 {
+
+        @Test
+        void 유효한_리프레시_토큰이면_새로운_토큰을_반환한다() throws Exception {
+            // given
+            TokenReissueResponse response =
+                    TokenReissueResponse.of("fake-access-token", "fake-refresh-token");
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.add(HttpHeaders.SET_COOKIE, "accessToken=fake-access-token");
+            headers.add(HttpHeaders.SET_COOKIE, "refreshToken=fake-refresh-token");
+
+            given(authService.reissueToken(anyString())).willReturn(response);
+            given(cookieUtil.generateTokenCookies(response.accessToken(), response.refreshToken()))
+                    .willReturn(headers);
+
+            Cookie refreshTokenCookie = new Cookie("refreshToken", "testRefreshTokenValue");
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/auth/reissue")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .cookie(refreshTokenCookie));
+
+            perform.andExpect(status().isNoContent())
+                    .andExpect(cookie().exists("accessToken"))
+                    .andExpect(cookie().exists("refreshToken"));
+        }
+
+        @Test
+        void 만료된_리프레시_토큰이면_예외가_발생한다() throws Exception {
+            // given
+            given(authService.reissueToken(anyString()))
+                    .willThrow(new AuthException(AuthErrorCode.EXPIRED_REFRESH_TOKEN));
+
+            Cookie refreshTokenCookie = new Cookie("refreshToken", "invalidRefreshToken");
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/auth/reissue")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .cookie(refreshTokenCookie));
+
+            perform.andExpect(status().isUnauthorized())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.UNAUTHORIZED.value()))
+                    .andExpect(
+                            jsonPath("$.data.code")
+                                    .value(AuthErrorCode.EXPIRED_REFRESH_TOKEN.name()))
+                    .andExpect(
+                            jsonPath("$.data.message")
+                                    .value(AuthErrorCode.EXPIRED_REFRESH_TOKEN.getMessage()));
         }
     }
 }
