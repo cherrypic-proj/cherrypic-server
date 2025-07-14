@@ -9,6 +9,7 @@ import java.security.Key;
 import java.util.Date;
 import lombok.RequiredArgsConstructor;
 import org.cherrypic.domain.auth.dto.AccessTokenDto;
+import org.cherrypic.domain.auth.dto.RefreshTokenDto;
 import org.cherrypic.jwt.JwtProperties;
 import org.cherrypic.member.enums.MemberRole;
 import org.springframework.stereotype.Component;
@@ -43,6 +44,21 @@ public class JwtUtil {
                     Long.parseLong(claims.getBody().getSubject()),
                     MemberRole.valueOf(claims.getBody().get(TOKEN_ROLE_NAME, String.class)),
                     accessTokenValue);
+        } catch (ExpiredJwtException e) {
+            throw e;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public RefreshTokenDto parseRefreshToken(String refreshTokenValue) throws ExpiredJwtException {
+        try {
+            Jws<Claims> claims = getClaims(refreshTokenValue, getRefreshTokenKey());
+
+            return RefreshTokenDto.of(
+                    Long.parseLong(claims.getBody().getSubject()),
+                    refreshTokenValue,
+                    jwtProperties.refreshTokenExpirationTime());
         } catch (ExpiredJwtException e) {
             throw e;
         } catch (Exception e) {

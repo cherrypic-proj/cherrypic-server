@@ -1,9 +1,11 @@
 package org.cherrypic.domain.auth.service;
 
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.cherrypic.auth.entity.RefreshToken;
 import org.cherrypic.auth.repository.RefreshTokenRepository;
 import org.cherrypic.domain.auth.dto.AccessTokenDto;
+import org.cherrypic.domain.auth.dto.RefreshTokenDto;
 import org.cherrypic.domain.auth.util.JwtUtil;
 import org.cherrypic.member.enums.MemberRole;
 import org.springframework.stereotype.Service;
@@ -30,6 +32,28 @@ public class JwtTokenService {
         refreshTokenRepository.save(refreshToken);
 
         return token;
+    }
+
+    public RefreshTokenDto retrieveRefreshToken(String refreshTokenValue) {
+        RefreshTokenDto refreshTokenDto;
+        try {
+            refreshTokenDto = jwtUtil.parseRefreshToken(refreshTokenValue);
+        } catch (Exception e) {
+            return null;
+        }
+
+        Optional<RefreshToken> refreshToken =
+                refreshTokenRepository.findById(refreshTokenDto.memberId());
+
+        if (refreshToken.isEmpty()) {
+            return null;
+        }
+
+        if (!refreshTokenDto.tokenValue().equals(refreshToken.get().getToken())) {
+            return null;
+        }
+
+        return refreshTokenDto;
     }
 
     public AccessTokenDto retrieveAccessToken(String accessTokenValue) {
