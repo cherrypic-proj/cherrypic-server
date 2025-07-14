@@ -6,6 +6,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.cherrypic.domain.auth.dto.request.IdTokenRequest;
 import org.cherrypic.domain.auth.dto.response.SocialLoginResponse;
+import org.cherrypic.domain.auth.dto.response.TokenReissueResponse;
 import org.cherrypic.domain.auth.enums.OauthProvider;
 import org.cherrypic.domain.auth.service.AuthService;
 import org.cherrypic.domain.auth.util.CookieUtil;
@@ -28,6 +29,20 @@ public class AuthController {
             @RequestParam(name = "oauthProvider") OauthProvider provider,
             @Valid @RequestBody IdTokenRequest request) {
         SocialLoginResponse response = authService.socialLoginMember(provider, request);
+
+        HttpHeaders headers =
+                cookieUtil.generateTokenCookies(response.accessToken(), response.refreshToken());
+
+        return ResponseEntity.noContent().headers(headers).build();
+    }
+
+    @Operation(
+            summary = "토큰 재발급",
+            description = "엑세스 토큰이 만료되었을 경우, 리프레시 토큰을 이용해 엑세스 및 리프레시 토큰을 재발급합니다.")
+    @PostMapping("/reissue")
+    public ResponseEntity<Void> tokenReissue(
+            @CookieValue("refreshToken") String refreshTokenValue) {
+        TokenReissueResponse response = authService.reissueToken(refreshTokenValue);
 
         HttpHeaders headers =
                 cookieUtil.generateTokenCookies(response.accessToken(), response.refreshToken());
