@@ -24,11 +24,9 @@ class MemberServiceTest extends IntegrationTest {
     @Autowired private MemberService memberService;
     @Autowired private MemberRepository memberRepository;
 
-    private Member member;
-
     @BeforeEach
     void setUp() {
-        member =
+        Member member =
                 Member.createMember(
                         OauthInfo.createOauthInfo("testOauthId", "testOauthProvider"),
                         "testNickname",
