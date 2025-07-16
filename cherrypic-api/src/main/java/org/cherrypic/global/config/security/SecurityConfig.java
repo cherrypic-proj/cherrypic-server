@@ -67,6 +67,11 @@ public class SecurityConfig {
                                 .anyRequest()
                                 .authenticated());
 
+        http.exceptionHandling(
+                exception ->
+                        exception.authenticationEntryPoint(
+                                (request, response, authException) -> response.setStatus(401)));
+
         http.addFilterBefore(
                 jwtAuthenticationFilter(jwtTokenService),
                 UsernamePasswordAuthenticationFilter.class);
