@@ -37,6 +37,10 @@ jwt:
   refresh-token-expiration-time: ${JWT_REFRESH_TOKEN_EXPIRATION_TIME:172800}
   issuer: ${JWT_ISSUER}
 
+swagger:
+  username: ${SWAGGER_USERNAME}
+  password: ${SWAGGER_PASSWORD}
+
 spring-doc:
   default-consumes-media-type: application/json
   default-produces-media-type: application/json
