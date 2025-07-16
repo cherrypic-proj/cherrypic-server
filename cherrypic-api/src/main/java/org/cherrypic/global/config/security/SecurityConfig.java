@@ -35,10 +35,10 @@ public class SecurityConfig {
     private final SpringEnvironmentHelper springEnvironmentHelper;
     private final JwtTokenService jwtTokenService;
 
-    @Value("${swagger.username}")
+    @Value("${swagger.username:default}")
     private String swaggerUsername;
 
-    @Value("${swagger.password}")
+    @Value("${swagger.password:default}")
     private String swaggerPassword;
 
     private void defaultFilterChain(HttpSecurity http) throws Exception {
