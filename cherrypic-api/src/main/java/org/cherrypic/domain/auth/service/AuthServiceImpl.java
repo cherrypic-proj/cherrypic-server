@@ -2,6 +2,7 @@ package org.cherrypic.domain.auth.service;
 
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import org.cherrypic.auth.repository.RefreshTokenRepository;
 import org.cherrypic.domain.auth.dto.AccessTokenDto;
 import org.cherrypic.domain.auth.dto.RefreshTokenDto;
 import org.cherrypic.domain.auth.dto.request.IdTokenRequest;
@@ -13,6 +14,7 @@ import org.cherrypic.domain.auth.exception.AuthException;
 import org.cherrypic.domain.auth.util.NicknameGenerator;
 import org.cherrypic.domain.member.exception.MemberErrorCode;
 import org.cherrypic.domain.member.exception.MemberException;
+import org.cherrypic.global.util.MemberUtil;
 import org.cherrypic.member.entity.Member;
 import org.cherrypic.member.entity.OauthInfo;
 import org.cherrypic.member.repository.MemberRepository;
@@ -25,7 +27,10 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class AuthServiceImpl implements AuthService {
 
+    private final MemberUtil memberUtil;
     private final MemberRepository memberRepository;
+
+    private final RefreshTokenRepository refreshTokenRepository;
     private final IdTokenVerifier idTokenVerifier;
     private final JwtTokenService jwtTokenService;
     private final NicknameGenerator nicknameGenerator;
@@ -56,6 +61,15 @@ public class AuthServiceImpl implements AuthService {
 
         return TokenReissueResponse.of(
                 newAccessTokenDto.tokenValue(), newRefreshTokenDto.tokenValue());
+    }
+
+    @Override
+    public void logoutMember() {
+        final Member currentMember = memberUtil.getCurrentMember();
+
+        refreshTokenRepository
+                .findById(currentMember.getId())
+                .ifPresent(refreshTokenRepository::delete);
     }
 
     private SocialLoginResponse getLoginResponse(Member member) {
