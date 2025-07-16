@@ -13,7 +13,7 @@ public enum AuthErrorCode implements BaseErrorCode {
     AUTH_NOT_PARSABLE(500, "인증 정보 파싱에 실패했습니다."),
 
     REFRESH_TOKEN_NOT_FOUND(401, "리프레시 토큰이 존재하지 않습니다."),
-    EXPIRED_REFRESH_TOKEN(401, "유효하지 않은 리프레시 토큰입니다. 다시 로그인해주세요."),
+    INVALID_REFRESH_TOKEN(401, "유효하지 않은 리프레시 토큰입니다. 다시 로그인해주세요."),
     ;
 
     private final int status;

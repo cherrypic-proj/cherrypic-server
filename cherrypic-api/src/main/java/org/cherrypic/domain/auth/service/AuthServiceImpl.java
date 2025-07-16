@@ -46,7 +46,7 @@ public class AuthServiceImpl implements AuthService {
                 jwtTokenService.retrieveRefreshToken(refreshTokenValue);
 
         if (oldRefreshTokenDto == null) {
-            throw new AuthException(AuthErrorCode.EXPIRED_REFRESH_TOKEN);
+            throw new AuthException(AuthErrorCode.INVALID_REFRESH_TOKEN);
         }
 
         RefreshTokenDto newRefreshTokenDto =

@@ -134,7 +134,7 @@ class AuthControllerTest {
         void 만료된_리프레시_토큰이면_예외가_발생한다() throws Exception {
             // given
             given(authService.reissueToken(anyString()))
-                    .willThrow(new AuthException(AuthErrorCode.EXPIRED_REFRESH_TOKEN));
+                    .willThrow(new AuthException(AuthErrorCode.INVALID_REFRESH_TOKEN));
 
             Cookie refreshTokenCookie = new Cookie("refreshToken", "invalidRefreshToken");
 
@@ -150,10 +150,10 @@ class AuthControllerTest {
                     .andExpect(jsonPath("$.status").value(HttpStatus.UNAUTHORIZED.value()))
                     .andExpect(
                             jsonPath("$.data.code")
-                                    .value(AuthErrorCode.EXPIRED_REFRESH_TOKEN.name()))
+                                    .value(AuthErrorCode.INVALID_REFRESH_TOKEN.name()))
                     .andExpect(
                             jsonPath("$.data.message")
-                                    .value(AuthErrorCode.EXPIRED_REFRESH_TOKEN.getMessage()));
+                                    .value(AuthErrorCode.INVALID_REFRESH_TOKEN.getMessage()));
         }
     }
 }

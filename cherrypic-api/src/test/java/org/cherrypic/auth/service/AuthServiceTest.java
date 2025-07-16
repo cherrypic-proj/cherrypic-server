@@ -145,7 +145,7 @@ public class AuthServiceTest extends IntegrationTest {
             // given
             assertThatThrownBy(() -> authService.reissueToken("testRefreshTokenValue"))
                     .isInstanceOf(AuthException.class)
-                    .hasMessage(AuthErrorCode.EXPIRED_REFRESH_TOKEN.getMessage());
+                    .hasMessage(AuthErrorCode.INVALID_REFRESH_TOKEN.getMessage());
             verify(jwtTokenService, times(1)).retrieveRefreshToken(anyString());
         }
     }
