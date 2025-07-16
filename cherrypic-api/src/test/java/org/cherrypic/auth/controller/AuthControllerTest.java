@@ -120,10 +120,7 @@ class AuthControllerTest {
 
             // when & then
             ResultActions perform =
-                    mockMvc.perform(
-                            post("/auth/reissue")
-                                    .contentType(MediaType.APPLICATION_JSON)
-                                    .cookie(refreshTokenCookie));
+                    mockMvc.perform(post("/auth/reissue").cookie(refreshTokenCookie));
 
             perform.andExpect(status().isNoContent())
                     .andExpect(cookie().exists("accessToken"))
@@ -140,10 +137,7 @@ class AuthControllerTest {
 
             // when & then
             ResultActions perform =
-                    mockMvc.perform(
-                            post("/auth/reissue")
-                                    .contentType(MediaType.APPLICATION_JSON)
-                                    .cookie(refreshTokenCookie));
+                    mockMvc.perform(post("/auth/reissue").cookie(refreshTokenCookie));
 
             perform.andExpect(status().isUnauthorized())
                     .andExpect(jsonPath("$.success").value(false))
