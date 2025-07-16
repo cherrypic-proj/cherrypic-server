@@ -90,7 +90,9 @@ public class SecurityConfig {
                 auth ->
                         auth.requestMatchers("/cherrypic-actuator/**")
                                 .permitAll()
-                                .requestMatchers("/auth/**")
+                                .requestMatchers("/auth/social-login")
+                                .permitAll()
+                                .requestMatchers("/auth/reissue")
                                 .permitAll()
                                 .anyRequest()
                                 .authenticated());
