@@ -2,10 +2,17 @@ package org.cherrypic.domain.auth.service;
 
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import org.cherrypic.domain.auth.dto.AccessTokenDto;
+import org.cherrypic.domain.auth.dto.RefreshTokenDto;
 import org.cherrypic.domain.auth.dto.request.IdTokenRequest;
 import org.cherrypic.domain.auth.dto.response.SocialLoginResponse;
+import org.cherrypic.domain.auth.dto.response.TokenReissueResponse;
 import org.cherrypic.domain.auth.enums.OauthProvider;
+import org.cherrypic.domain.auth.exception.AuthErrorCode;
+import org.cherrypic.domain.auth.exception.AuthException;
 import org.cherrypic.domain.auth.util.NicknameGenerator;
+import org.cherrypic.domain.member.exception.MemberErrorCode;
+import org.cherrypic.domain.member.exception.MemberException;
 import org.cherrypic.member.entity.Member;
 import org.cherrypic.member.entity.OauthInfo;
 import org.cherrypic.member.repository.MemberRepository;
@@ -33,6 +40,24 @@ public class AuthServiceImpl implements AuthService {
         return getLoginResponse(member);
     }
 
+    @Override
+    public TokenReissueResponse reissueToken(String refreshTokenValue) {
+        RefreshTokenDto oldRefreshTokenDto =
+                jwtTokenService.retrieveRefreshToken(refreshTokenValue);
+
+        if (oldRefreshTokenDto == null) {
+            throw new AuthException(AuthErrorCode.INVALID_REFRESH_TOKEN);
+        }
+
+        RefreshTokenDto newRefreshTokenDto =
+                jwtTokenService.reissueRefreshToken(oldRefreshTokenDto);
+        AccessTokenDto newAccessTokenDto =
+                jwtTokenService.reissueAccessToken(getMember(newRefreshTokenDto));
+
+        return TokenReissueResponse.of(
+                newAccessTokenDto.tokenValue(), newRefreshTokenDto.tokenValue());
+    }
+
     private SocialLoginResponse getLoginResponse(Member member) {
         String accessToken = jwtTokenService.createAccessToken(member.getId(), member.getRole());
         String refreshToken = jwtTokenService.createRefreshToken(member.getId());
@@ -55,5 +80,11 @@ public class AuthServiceImpl implements AuthService {
 
     private OauthInfo extractOauthInfo(OidcUser oidcUser) {
         return OauthInfo.createOauthInfo(oidcUser.getSubject(), oidcUser.getIssuer().toString());
+    }
+
+    private Member getMember(RefreshTokenDto refreshTokenDto) {
+        return memberRepository
+                .findById(refreshTokenDto.memberId())
+                .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND));
     }
 }

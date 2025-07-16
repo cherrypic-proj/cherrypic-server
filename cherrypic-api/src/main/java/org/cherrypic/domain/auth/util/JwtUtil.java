@@ -9,6 +9,7 @@ import java.security.Key;
 import java.util.Date;
 import lombok.RequiredArgsConstructor;
 import org.cherrypic.domain.auth.dto.AccessTokenDto;
+import org.cherrypic.domain.auth.dto.RefreshTokenDto;
 import org.cherrypic.jwt.JwtProperties;
 import org.cherrypic.member.enums.MemberRole;
 import org.springframework.stereotype.Component;
@@ -28,11 +29,28 @@ public class JwtUtil {
         return buildAccessToken(memberId, memberRole, issuedAt, expiredAt);
     }
 
+    public AccessTokenDto generateAccessTokenDto(Long memberId, MemberRole memberRole) {
+        Date issuedAt = new Date();
+        Date expiredAt =
+                new Date(issuedAt.getTime() + jwtProperties.accessTokenExpirationMilliTime());
+        String accessTokenValue = buildAccessToken(memberId, memberRole, issuedAt, expiredAt);
+        return AccessTokenDto.of(memberId, memberRole, accessTokenValue);
+    }
+
     public String generateRefreshToken(Long memberId) {
         Date issuedAt = new Date();
         Date expiredAt =
                 new Date(issuedAt.getTime() + jwtProperties.refreshTokenExpirationMilliTime());
         return buildRefreshToken(memberId, issuedAt, expiredAt);
+    }
+
+    public RefreshTokenDto generateRefreshTokenDto(Long memberId) {
+        Date issuedAt = new Date();
+        Date expiredAt =
+                new Date(issuedAt.getTime() + jwtProperties.refreshTokenExpirationMilliTime());
+        String refreshTokenValue = buildRefreshToken(memberId, issuedAt, expiredAt);
+        return RefreshTokenDto.of(
+                memberId, refreshTokenValue, jwtProperties.refreshTokenExpirationTime());
     }
 
     public AccessTokenDto parseAccessToken(String accessTokenValue) throws ExpiredJwtException {
@@ -43,6 +61,21 @@ public class JwtUtil {
                     Long.parseLong(claims.getBody().getSubject()),
                     MemberRole.valueOf(claims.getBody().get(TOKEN_ROLE_NAME, String.class)),
                     accessTokenValue);
+        } catch (ExpiredJwtException e) {
+            throw e;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public RefreshTokenDto parseRefreshToken(String refreshTokenValue) throws ExpiredJwtException {
+        try {
+            Jws<Claims> claims = getClaims(refreshTokenValue, getRefreshTokenKey());
+
+            return RefreshTokenDto.of(
+                    Long.parseLong(claims.getBody().getSubject()),
+                    refreshTokenValue,
+                    jwtProperties.refreshTokenExpirationTime());
         } catch (ExpiredJwtException e) {
             throw e;
         } catch (Exception e) {
