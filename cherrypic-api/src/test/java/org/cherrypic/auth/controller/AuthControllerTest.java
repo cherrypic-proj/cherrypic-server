@@ -2,6 +2,7 @@ package org.cherrypic.auth.controller;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willDoNothing;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -16,6 +17,7 @@ import org.cherrypic.domain.auth.exception.AuthErrorCode;
 import org.cherrypic.domain.auth.exception.AuthException;
 import org.cherrypic.domain.auth.service.AuthService;
 import org.cherrypic.domain.auth.util.CookieUtil;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -148,6 +150,38 @@ class AuthControllerTest {
                     .andExpect(
                             jsonPath("$.data.message")
                                     .value(AuthErrorCode.INVALID_REFRESH_TOKEN.getMessage()));
+        }
+    }
+
+    @Nested
+    class 로그아웃할_때 {
+
+        @Test
+        void 로그아웃하면_엑세스_토큰과_리프레시_토큰_쿠키가_만료_처리된다() throws Exception {
+            // given
+            HttpHeaders headers = new HttpHeaders();
+            headers.add(HttpHeaders.SET_COOKIE, "accessToken=; Max-Age=0");
+            headers.add(HttpHeaders.SET_COOKIE, "refreshToken=; Max-Age=0");
+
+            willDoNothing().given(authService).logoutMember();
+            given(cookieUtil.deleteTokenCookies()).willReturn(headers);
+
+            // when & then
+            ResultActions perform = mockMvc.perform(post("/auth/logout"));
+
+            perform.andExpect(status().isNoContent())
+                    .andExpect(
+                            header().stringValues(
+                                            HttpHeaders.SET_COOKIE,
+                                            Matchers.hasItems(
+                                                    Matchers.allOf(
+                                                            Matchers.containsString("accessToken="),
+                                                            Matchers.containsString("Max-Age=0")),
+                                                    Matchers.allOf(
+                                                            Matchers.containsString(
+                                                                    "refreshToken="),
+                                                            Matchers.containsString(
+                                                                    "Max-Age=0")))));
         }
     }
 }
