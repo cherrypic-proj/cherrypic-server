@@ -33,26 +33,22 @@ public class ImageServiceImpl implements ImageService {
             MemberProfileImageUploadRequest request) {
         final Member currentMember = memberUtil.getCurrentMember();
 
-        String imageKey = generateUUID();
-        String fileName =
-                createFileName(
-                        ImageType.MEMBER_PROFILE,
-                        currentMember.getId(),
-                        imageKey,
-                        request.imageFileExtension());
+        return createPresignedUrl(
+                ImageType.MEMBER_PROFILE, currentMember.getId(), request.imageFileExtension());
+    }
+
+    private PresignedUrlResponse createPresignedUrl(
+            ImageType imageType, Long targetId, ImageFileExtension imageFileExtension) {
+        String imageKey = UUID.randomUUID().toString();
+        String fileName = createFileName(imageType, targetId, imageKey, imageFileExtension);
+
         GeneratePresignedUrlRequest generatePresignedUrlRequest =
                 generatePresignedUrlRequest(
-                        s3Properties.bucket(),
-                        fileName,
-                        request.imageFileExtension().getExtension());
+                        s3Properties.bucket(), fileName, imageFileExtension.getExtension());
 
         String presignedUrl = amazonS3.generatePresignedUrl(generatePresignedUrlRequest).toString();
 
         return new PresignedUrlResponse(presignedUrl);
-    }
-
-    private String generateUUID() {
-        return UUID.randomUUID().toString();
     }
 
     private String createFileName(
