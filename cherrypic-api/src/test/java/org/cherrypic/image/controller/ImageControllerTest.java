@@ -53,7 +53,7 @@ class ImageControllerTest {
 
             perform.andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
-                    .andExpect(jsonPath("$.status").value(200))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
                     .andExpect(jsonPath("$.data.presignedUrl").isNotEmpty());
         }
 
