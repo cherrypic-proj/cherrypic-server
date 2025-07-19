@@ -13,6 +13,10 @@ import org.cherrypic.domain.album.dto.response.AlbumCreateResponse;
 import org.cherrypic.domain.album.service.AlbumService;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EmptySource;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -61,16 +65,14 @@ class AlbumControllerTest {
                     .andExpect(jsonPath("$.data.type").value("PRIVATE"));
         }
 
-        @Test
-        void 앨범_이름이_blank이면_예외가_발생한다() throws Exception {
+        @ParameterizedTest
+        @NullSource
+        @EmptySource
+        @ValueSource(strings = {" "})
+        void 앨범_이름이_null_또는_공백이면_예외가_발생한다(String title) throws Exception {
             // given
             AlbumCreateRequest request =
-                    new AlbumCreateRequest("", "testCoverUrl", AlbumType.PRIVATE);
-
-            AlbumCreateResponse response =
-                    new AlbumCreateResponse(1L, "", "testCoverUrl", AlbumType.PRIVATE);
-
-            given(albumService.createAlbum(request)).willReturn(response);
+                    new AlbumCreateRequest(title, "testCoverUrl", AlbumType.PRIVATE);
 
             // when & then
             ResultActions perform =
@@ -86,15 +88,11 @@ class AlbumControllerTest {
                     .andExpect(jsonPath("$.data.message").value("앨범 이름은 비워둘 수 없습니다."));
         }
 
-        @Test
-        void 앨범_유형이_null이면_예외가_발생한다() throws Exception {
+        @ParameterizedTest
+        @NullSource
+        void 앨범_유형이_null이면_예외가_발생한다(AlbumType type) throws Exception {
             // given
-            AlbumCreateRequest request = new AlbumCreateRequest("testTitle", "testCoverUrl", null);
-
-            AlbumCreateResponse response =
-                    new AlbumCreateResponse(1L, "testTitle", "testCoverUrl", null);
-
-            given(albumService.createAlbum(request)).willReturn(response);
+            AlbumCreateRequest request = new AlbumCreateRequest("testTitle", "testCoverUrl", type);
 
             // when & then
             ResultActions perform =
