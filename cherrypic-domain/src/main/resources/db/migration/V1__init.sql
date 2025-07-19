@@ -2,8 +2,8 @@ CREATE TABLE member (
                         id BIGINT AUTO_INCREMENT PRIMARY KEY,
                         nickname VARCHAR(50) NOT NULL,
                         oauth_id VARCHAR(255) NOT NULL,
-                        oauth_provider VARCHAR(255),
-                        profile VARCHAR(100) NOT NULL,
+                        oauth_provider VARCHAR(255) NOT NULL,
+                        profile_image_url VARCHAR(255),
                         role VARCHAR(255)  NOT NULL CHECK(role IN ('ADMIN','USER')),
                         status VARCHAR(255) NOT NULL CHECK(status IN ('NORMAL','DELETED','FORBIDDEN')),
                         app_alarm BOOLEAN NOT NULL,
@@ -27,7 +27,8 @@ CREATE TABLE subscription (
 CREATE TABLE album (
                        id BIGINT AUTO_INCREMENT PRIMARY KEY,
                        title VARCHAR(50) NOT NULL,
-                       image_url VARCHAR(255) NOT NULL,
+                       cover_url VARCHAR(255) NOT NULL,
+                       type VARCHAR(20) NOT NULL CHECK (type IN ('PRIVATE','SHARED','MANAGED_SHARED')),
                        created_at DATETIME(6) NOT NULL,
                        updated_at DATETIME(6) NOT NULL
 );

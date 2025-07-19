@@ -1,1 +1,0 @@
-ALTER TABLE member MODIFY profile_image_url VARCHAR(255) NULL;
