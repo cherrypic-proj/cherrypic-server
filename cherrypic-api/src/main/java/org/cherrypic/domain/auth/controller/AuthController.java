@@ -49,4 +49,13 @@ public class AuthController {
 
         return ResponseEntity.noContent().headers(headers).build();
     }
+
+    @Operation(
+            summary = "회원 로그아웃",
+            description = "로그아웃 시, 쿠키에 저장된 accessToken과 refreshToken이 만료 처리됩니다.")
+    @PostMapping("/logout")
+    public ResponseEntity<Void> memberLogout() {
+        authService.logoutMember();
+        return ResponseEntity.noContent().headers(cookieUtil.deleteTokenCookies()).build();
+    }
 }

@@ -11,6 +11,8 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import org.cherrypic.IntegrationTest;
+import org.cherrypic.auth.entity.RefreshToken;
+import org.cherrypic.auth.repository.RefreshTokenRepository;
 import org.cherrypic.domain.auth.dto.AccessTokenDto;
 import org.cherrypic.domain.auth.dto.RefreshTokenDto;
 import org.cherrypic.domain.auth.dto.request.IdTokenRequest;
@@ -32,6 +34,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.oidc.OidcIdToken;
 import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
@@ -41,6 +47,7 @@ public class AuthServiceTest extends IntegrationTest {
 
     @Autowired private AuthService authService;
     @Autowired private MemberRepository memberRepository;
+    @Autowired private RefreshTokenRepository refreshTokenRepository;
 
     @MockitoBean private JwtTokenService jwtTokenService;
     @MockitoBean private IdTokenVerifier idTokenVerifier;
@@ -147,6 +154,44 @@ public class AuthServiceTest extends IntegrationTest {
                     .isInstanceOf(AuthException.class)
                     .hasMessage(AuthErrorCode.INVALID_REFRESH_TOKEN.getMessage());
             verify(jwtTokenService, times(1)).retrieveRefreshToken(anyString());
+        }
+    }
+
+    @Nested
+    class 로그아웃할_때 {
+
+        @BeforeEach
+        void setUp() {
+            Member member =
+                    Member.createMember(
+                            OauthInfo.createOauthInfo("testOauthId", "testOauthProvider"),
+                            "testNickname",
+                            "testProfileImageUrl");
+            memberRepository.save(member);
+
+            UserDetails userDetails =
+                    User.withUsername(member.getId().toString())
+                            .password("")
+                            .authorities(member.getRole().name())
+                            .build();
+            UsernamePasswordAuthenticationToken token =
+                    new UsernamePasswordAuthenticationToken(
+                            userDetails, null, userDetails.getAuthorities());
+            SecurityContextHolder.getContext().setAuthentication(token);
+        }
+
+        @Test
+        void 로그아웃하면_Redis에_저장된_리프레시_토큰이_삭제된다() {
+            // given
+            RefreshToken refreshToken =
+                    RefreshToken.builder().memberId(1L).token("testRefreshToken").build();
+            refreshTokenRepository.save(refreshToken);
+
+            // when
+            authService.logoutMember();
+
+            // then
+            assertThat(refreshTokenRepository.findById(1L).isEmpty());
         }
     }
 }
