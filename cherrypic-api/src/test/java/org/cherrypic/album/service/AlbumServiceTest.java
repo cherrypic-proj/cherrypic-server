@@ -22,6 +22,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.transaction.annotation.Transactional;
 
 class AlbumServiceTest extends IntegrationTest {
 
@@ -49,6 +50,7 @@ class AlbumServiceTest extends IntegrationTest {
         SecurityContextHolder.getContext().setAuthentication(token);
     }
 
+    @Transactional
     @Nested
     class 앨범을_생성할_때 {
 
@@ -72,6 +74,7 @@ class AlbumServiceTest extends IntegrationTest {
                     () -> assertThat(album.getCoverUrl()).isEqualTo("testCoverUrl"),
                     () -> assertThat(album.getType()).isEqualTo(AlbumType.SHARED),
                     () -> assertThat(participant.getId()).isEqualTo(1L),
+                    () -> assertThat(participant.getMember().getId()).isEqualTo(1L),
                     () -> assertThat(participant.getRole()).isEqualTo(ParticipantRole.HOST));
         }
     }
