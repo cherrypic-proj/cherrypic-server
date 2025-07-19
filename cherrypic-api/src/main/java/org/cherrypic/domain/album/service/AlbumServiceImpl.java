@@ -8,6 +8,7 @@ import org.cherrypic.domain.album.dto.response.AlbumCreateResponse;
 import org.cherrypic.global.util.MemberUtil;
 import org.cherrypic.member.entity.Member;
 import org.cherrypic.participant.entity.Participant;
+import org.cherrypic.participant.enums.ParticipantRole;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,7 +25,8 @@ public class AlbumServiceImpl implements AlbumService {
         final Member currentMember = memberUtil.getCurrentMember();
 
         Album album = Album.createAlbum(request.title(), request.coverUrl(), request.type());
-        Participant participant = Participant.createParticipant(currentMember, album);
+        Participant participant =
+                Participant.createParticipant(currentMember, album, ParticipantRole.HOST);
         album.addParticipant(participant);
 
         albumRepository.save(album);

@@ -41,7 +41,7 @@ public class Participant extends BaseTimeEntity {
         this.role = role;
     }
 
-    public static Participant createParticipant(Member member, Album album) {
-        return Participant.builder().member(member).album(album).role(ParticipantRole.HOST).build();
+    public static Participant createParticipant(Member member, Album album, ParticipantRole role) {
+        return Participant.builder().member(member).album(album).role(role).build();
     }
 }
