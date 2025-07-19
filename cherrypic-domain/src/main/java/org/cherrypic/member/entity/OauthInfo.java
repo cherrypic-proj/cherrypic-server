@@ -12,7 +12,7 @@ public class OauthInfo {
 
     @NotNull private String oauthId;
 
-    private String oauthProvider;
+    @NotNull private String oauthProvider;
 
     @Builder(access = AccessLevel.PRIVATE)
     private OauthInfo(String oauthId, String oauthProvider) {
