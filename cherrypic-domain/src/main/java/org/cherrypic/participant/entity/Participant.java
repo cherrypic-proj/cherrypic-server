@@ -3,6 +3,7 @@ package org.cherrypic.participant.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.cherrypic.album.entity.Album;
@@ -32,4 +33,15 @@ public class Participant extends BaseTimeEntity {
     private ParticipantRole role;
 
     private String password;
+
+    @Builder(access = AccessLevel.PRIVATE)
+    private Participant(Member member, Album album, ParticipantRole role) {
+        this.member = member;
+        this.album = album;
+        this.role = role;
+    }
+
+    public static Participant createParticipant(Member member, Album album) {
+        return Participant.builder().member(member).album(album).role(ParticipantRole.HOST).build();
+    }
 }
