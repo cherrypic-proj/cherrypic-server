@@ -24,7 +24,7 @@ public class Album extends BaseTimeEntity {
 
     @NotNull private String title;
 
-    @NotNull private String imageUrl;
+    @NotNull private String coverUrl;
 
     @OneToMany(mappedBy = "album", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Favorites> favorites = new ArrayList<>();
