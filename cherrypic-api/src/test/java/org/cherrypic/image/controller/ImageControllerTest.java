@@ -13,6 +13,10 @@ import org.cherrypic.domain.image.enums.ImageFileExtension;
 import org.cherrypic.domain.image.service.ImageService;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EmptySource;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -57,14 +61,14 @@ class ImageControllerTest {
                     .andExpect(jsonPath("$.data.presignedUrl").isNotEmpty());
         }
 
-        @Test
-        void 이미지_파일_확장자가_null이면_예외가_발생한다() throws Exception {
+        @ParameterizedTest
+        @NullSource
+        @EmptySource
+        @ValueSource(strings = {"JPEG1", "PDF", "TXT"})
+        void 이미지_파일_확장자가_null_또는_지원하지_않는_형식이면_예외가_발생한다(String extension) throws Exception {
             // given
-            MemberProfileImageUploadRequest request = new MemberProfileImageUploadRequest(null);
-
-            PresignedUrlResponse response = new PresignedUrlResponse("testPresignedUrl");
-
-            given(imageService.createMemberProfileImageUploadUrl(request)).willReturn(response);
+            MemberProfileImageUploadRequest request =
+                    new MemberProfileImageUploadRequest(ImageFileExtension.from(extension));
 
             // when & then
             ResultActions perform =
@@ -77,7 +81,9 @@ class ImageControllerTest {
                     .andExpect(jsonPath("$.success").value(false))
                     .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
                     .andExpect(jsonPath("$.data.code").value("MethodArgumentNotValidException"))
-                    .andExpect(jsonPath("$.data.message").value("이미지 파일의 확장자는 비워둘 수 없습니다."));
+                    .andExpect(
+                            jsonPath("$.data.message")
+                                    .value("이미지 파일의 확장자는 비워둘 수 없으며, PNG, JPG, JPEG만 지원됩니다."));
         }
     }
 }
