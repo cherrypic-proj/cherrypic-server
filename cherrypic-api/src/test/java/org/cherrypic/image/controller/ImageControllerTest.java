@@ -36,10 +36,10 @@ class ImageControllerTest {
     @MockitoBean private ImageService imageService;
 
     @Nested
-    class Presigned_URL_생성할_때 {
+    class Presigned_URL을_생성할_때 {
 
         @Test
-        void 정상적인_회원_프로필_이미지_업로드_요청이면_Presigned_URL을_반환한다() throws Exception {
+        void 유효한_요청이면_회원_프로필_이미지용_Presigned_URL을_반환한다() throws Exception {
             // given
             MemberProfileImageUploadRequest request =
                     new MemberProfileImageUploadRequest(ImageFileExtension.JPEG);

@@ -45,10 +45,10 @@ class ImageServiceTest extends IntegrationTest {
     }
 
     @Nested
-    class Presigned_URL_생성할_때 {
+    class Presigned_URL을_생성할_때 {
 
         @Test
-        void 회원_프로필_이미지_Presigned_URL을_정상적으로_생성한다() {
+        void 유효한_요청이면_회원_프로필_이미지용_Presigned_URL을_생성한다() {
             // given
             MemberProfileImageUploadRequest request =
                     new MemberProfileImageUploadRequest(ImageFileExtension.JPEG);
