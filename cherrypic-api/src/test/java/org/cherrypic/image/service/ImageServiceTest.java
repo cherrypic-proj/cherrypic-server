@@ -60,7 +60,7 @@ class ImageServiceTest extends IntegrationTest {
             assertThat(response.presignedUrl())
                     .containsPattern(
                             String.format(
-                                    "/%s/%s/%d/[\\w\\-]+\\.jpeg", "local", "member_profile", 1));
+                                    "/%s/%s/%d/[\\w\\-]+\\.jpeg", "local", "member-profile", 1));
         }
     }
 }
