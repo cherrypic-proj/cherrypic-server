@@ -1,12 +1,15 @@
 package org.cherrypic.event.service;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
+import java.util.List;
 import org.cherrypic.IntegrationTest;
 import org.cherrypic.album.entity.Album;
 import org.cherrypic.album.enums.AlbumType;
 import org.cherrypic.album.repository.AlbumRepository;
 import org.cherrypic.domain.event.dto.EventCreateRequest;
+import org.cherrypic.domain.event.exception.EventException;
 import org.cherrypic.domain.event.service.EventService;
 import org.cherrypic.event.entity.Event;
 import org.cherrypic.event.repository.EventRepository;
@@ -59,14 +62,16 @@ public class EventServiceTest extends IntegrationTest {
 
         @BeforeEach
         void setUp() {
-            Album album = Album.createAlbum("Test Album", "Test URL", AlbumType.SHARED);
-            albumRepository.save(album);
+            Album album1 = Album.createAlbum("Test Album1", "Test URL 1", AlbumType.SHARED);
+            Album album2 = Album.createAlbum("Test Album2", "Test URL 2", AlbumType.SHARED);
+            albumRepository.saveAll(List.of(album1, album2));
+
             Participant participant =
                     Participant.createParticipant(
                             memberRepository.findById(1L).orElseThrow(),
-                            album,
+                            album1,
                             ParticipantRole.HOST);
-            album.addParticipant(participant);
+            album1.addParticipant(participant);
         }
 
         @Test
@@ -86,6 +91,18 @@ public class EventServiceTest extends IntegrationTest {
                     () -> assertThat(event.getAlbum().getId()).isEqualTo(1L),
                     () -> assertThat(event.getTitle()).isEqualTo("Test Event"),
                     () -> assertThat(event.getCoverUrl()).isEqualTo("Test CoverURL"));
+        }
+
+        @Test
+        void 엘범에_속하지_않은_사용자는_이벤트를_생성할_수_없다() {
+
+            // given
+            EventCreateRequest request = new EventCreateRequest(2L, "Test Event", "Test CoverURL");
+
+            // when & then
+            assertThatThrownBy(() -> eventService.createEvent(request))
+                    .isInstanceOf(EventException.class)
+                    .hasMessageContaining("사용자가 소속되지 않은 엘범에서 이벤트를 만들 수 없습니다.");
         }
     }
 }
