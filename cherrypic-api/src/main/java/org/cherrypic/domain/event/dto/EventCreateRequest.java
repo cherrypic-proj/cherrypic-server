@@ -11,4 +11,5 @@ public record EventCreateRequest(
         @NotBlank(message = "이벤트 이름은 비워둘 수 없습니다.")
                 @Max(100)
                 @Schema(description = "이벤트의 이름", example = "일본 여행")
-                String title) {}
+                String title,
+        @Schema(description = "이벤트 커버 URL", example = "https://example.jpg") String coverUrl) {}

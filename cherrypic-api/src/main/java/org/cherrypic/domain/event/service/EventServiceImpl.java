@@ -35,7 +35,7 @@ public class EventServiceImpl implements EventService {
         final Album currentAlbum = getAlbumById(request.albumId());
         validateAlbumParticipant(currentMember, currentAlbum);
 
-        Event event = Event.createEvent(currentAlbum, request.title());
+        Event event = Event.createEvent(currentAlbum, request.title(), request.coverUrl());
         eventRepository.save(event);
 
         return EventCreateResponse.from(event, currentAlbum);

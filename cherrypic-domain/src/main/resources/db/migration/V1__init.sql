@@ -37,7 +37,8 @@ CREATE TABLE album (
 CREATE TABLE event (
                        id BIGINT AUTO_INCREMENT PRIMARY KEY,
                        album_id BIGINT NOT NULL,
-                       name VARCHAR(100) NOT NULL,
+                       title VARCHAR(100) NOT NULL,
+                       cover_url VARCHAR(255) NOT NULL,
                        created_at DATETIME(6) NOT NULL,
                        updated_at DATETIME(6) NOT NULL,
                        CONSTRAINT fk_event_album FOREIGN KEY (album_id) REFERENCES album (id)
