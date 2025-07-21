@@ -6,8 +6,10 @@ import org.cherrypic.IntegrationTest;
 import org.cherrypic.album.entity.Album;
 import org.cherrypic.album.enums.AlbumType;
 import org.cherrypic.album.repository.AlbumRepository;
-import org.cherrypic.domain.album.dto.request.AlbumCreateRequest;
-import org.cherrypic.domain.album.service.AlbumService;
+import org.cherrypic.domain.event.dto.EventCreateRequest;
+import org.cherrypic.domain.event.service.EventService;
+import org.cherrypic.event.entity.Event;
+import org.cherrypic.event.repository.EventRepository;
 import org.cherrypic.member.entity.Member;
 import org.cherrypic.member.entity.OauthInfo;
 import org.cherrypic.member.repository.MemberRepository;
@@ -26,7 +28,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 public class EventServiceTest extends IntegrationTest {
 
-    @Autowired private AlbumService albumService;
+    @Autowired private EventService eventService;
+    @Autowired private EventRepository eventRepository;
     @Autowired private AlbumRepository albumRepository;
     @Autowired private MemberRepository memberRepository;
 
@@ -54,28 +57,35 @@ public class EventServiceTest extends IntegrationTest {
     @Nested
     class 이벤트를_생성할_때 {
 
+        @BeforeEach
+        void setUp() {
+            Album album = Album.createAlbum("Test Album", "Test URL", AlbumType.SHARED);
+            albumRepository.save(album);
+            Participant participant =
+                    Participant.createParticipant(
+                            memberRepository.findById(1L).orElseThrow(),
+                            album,
+                            ParticipantRole.HOST);
+            album.addParticipant(participant);
+        }
+
         @Test
-        void 유효한_요청이면_엘범이_생성된다() {
+        void 유효한_요청이면_이벤트가_생성된다() {
 
             // given
-            AlbumCreateRequest request =
-                    new AlbumCreateRequest("testTitle", "testCoverUrl", AlbumType.SHARED);
+            EventCreateRequest request = new EventCreateRequest(1L, "Test Event", "Test CoverURL");
 
             // when
-            albumService.createAlbum(request);
+            eventService.createEvent(request);
 
             // then
-            Album album = albumRepository.findById(1L).orElseThrow();
-            Participant participant = album.getParticipants().get(0);
+            Event event = eventRepository.findById(1L).orElseThrow();
 
             Assertions.assertAll(
-                    () -> assertThat(album.getId()).isEqualTo(1L),
-                    () -> assertThat(album.getTitle()).isEqualTo("testTitle"),
-                    () -> assertThat(album.getCoverUrl()).isEqualTo("testCoverUrl"),
-                    () -> assertThat(album.getType()).isEqualTo(AlbumType.SHARED),
-                    () -> assertThat(participant.getId()).isEqualTo(1L),
-                    () -> assertThat(participant.getMember().getId()).isEqualTo(1L),
-                    () -> assertThat(participant.getRole()).isEqualTo(ParticipantRole.HOST));
+                    () -> assertThat(event.getId()).isEqualTo(1L),
+                    () -> assertThat(event.getAlbum().getId()).isEqualTo(1L),
+                    () -> assertThat(event.getTitle()).isEqualTo("Test Event"),
+                    () -> assertThat(event.getCoverUrl()).isEqualTo("Test CoverURL"));
         }
     }
 }
