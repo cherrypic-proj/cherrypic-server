@@ -99,7 +99,7 @@ public class EventServiceTest extends IntegrationTest {
             // when & then
             assertThatThrownBy(() -> eventService.createEvent(request))
                     .isInstanceOf(EventException.class)
-                    .hasMessageContaining(EventErrorCode.NOT_ALBUM_PARTICIPANT.getMessage());
+                    .hasMessage(EventErrorCode.NOT_ALBUM_PARTICIPANT.getMessage());
         }
     }
 }
