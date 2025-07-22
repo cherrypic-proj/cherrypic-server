@@ -9,6 +9,7 @@ import org.cherrypic.album.entity.Album;
 import org.cherrypic.album.enums.AlbumType;
 import org.cherrypic.album.repository.AlbumRepository;
 import org.cherrypic.domain.event.dto.EventCreateRequest;
+import org.cherrypic.domain.event.exception.EventErrorCode;
 import org.cherrypic.domain.event.exception.EventException;
 import org.cherrypic.domain.event.service.EventService;
 import org.cherrypic.event.entity.Event;
@@ -98,7 +99,7 @@ public class EventServiceTest extends IntegrationTest {
             // when & then
             assertThatThrownBy(() -> eventService.createEvent(request))
                     .isInstanceOf(EventException.class)
-                    .hasMessageContaining("참여하지 않은 앨범에는 이벤트를 생성할 권한이 없습니다");
+                    .hasMessageContaining(EventErrorCode.NOT_ALBUM_PARTICIPANT.getMessage());
         }
     }
 }
