@@ -41,7 +41,7 @@ public class EventServiceTest extends IntegrationTest {
 
     @BeforeEach
     void setUp() {
-        Member member =
+        member =
                 Member.createMember(
                         OauthInfo.createOauthInfo("testOauthId", "testOauthProvider"),
                         "testNickname",
@@ -69,10 +69,7 @@ public class EventServiceTest extends IntegrationTest {
             albumRepository.saveAll(List.of(album1, album2));
 
             Participant participant =
-                    Participant.createParticipant(
-                            memberRepository.findById(1L).orElseThrow(),
-                            album1,
-                            ParticipantRole.HOST);
+                    Participant.createParticipant(member, album1, ParticipantRole.HOST);
             participantRepository.save(participant);
             album1.addParticipant(participant);
         }
@@ -97,7 +94,7 @@ public class EventServiceTest extends IntegrationTest {
         }
 
         @Test
-        void 엘범에_속하지_않은_사용자가_이벤트를_생성하면_예외가_발생한다() {
+        void 앨범에_속하지_않은_사용자가_이벤트를_생성하면_예외가_발생한다() {
 
             // given
             EventCreateRequest request = new EventCreateRequest(2L, "testEvent", "tesCoverUrl");
@@ -105,7 +102,7 @@ public class EventServiceTest extends IntegrationTest {
             // when & then
             assertThatThrownBy(() -> eventService.createEvent(request))
                     .isInstanceOf(EventException.class)
-                    .hasMessageContaining("참여하지 않은 엘범에는 이벤트를 생성할 권한이 없습니다");
+                    .hasMessageContaining("참여하지 않은 앨범에는 이벤트를 생성할 권한이 없습니다");
         }
     }
 }

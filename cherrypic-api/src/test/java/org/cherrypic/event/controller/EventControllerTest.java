@@ -62,7 +62,7 @@ public class EventControllerTest {
 
         @ParameterizedTest
         @NullSource
-        void 엘범_ID가_null이면_예외가_발생한다(Long albumId) throws Exception {
+        void 앨범_ID가_null이면_예외가_발생한다(Long albumId) throws Exception {
             // given
             EventCreateRequest request =
                     new EventCreateRequest(albumId, "testTitle", "testCoverUrl");
@@ -78,7 +78,7 @@ public class EventControllerTest {
                     .andExpect(jsonPath("$.success").value(false))
                     .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
                     .andExpect(jsonPath("$.data.code").value("MethodArgumentNotValidException"))
-                    .andExpect(jsonPath("$.data.message").value("엘범 ID는 비워둘 수 없습니다."));
+                    .andExpect(jsonPath("$.data.message").value("앨범 ID는 비워둘 수 없습니다."));
         }
 
         @ParameterizedTest
