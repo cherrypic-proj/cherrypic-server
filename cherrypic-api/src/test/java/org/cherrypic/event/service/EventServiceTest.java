@@ -71,7 +71,6 @@ public class EventServiceTest extends IntegrationTest {
             Participant participant =
                     Participant.createParticipant(member, album1, ParticipantRole.HOST);
             participantRepository.save(participant);
-            album1.addParticipant(participant);
         }
 
         @Test
