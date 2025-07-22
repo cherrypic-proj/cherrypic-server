@@ -62,8 +62,8 @@ public class EventServiceTest extends IntegrationTest {
 
         @BeforeEach
         void setUp() {
-            Album album1 = Album.createAlbum("Test Album1", "Test URL 1", AlbumType.SHARED);
-            Album album2 = Album.createAlbum("Test Album2", "Test URL 2", AlbumType.SHARED);
+            Album album1 = Album.createAlbum("testAlbum1", "testURL1", AlbumType.SHARED);
+            Album album2 = Album.createAlbum("testAlbum2", "testURL2", AlbumType.SHARED);
             albumRepository.saveAll(List.of(album1, album2));
 
             Participant participant =
@@ -78,7 +78,7 @@ public class EventServiceTest extends IntegrationTest {
         void 유효한_요청이면_이벤트가_생성된다() {
 
             // given
-            EventCreateRequest request = new EventCreateRequest(1L, "Test Event", "Test CoverURL");
+            EventCreateRequest request = new EventCreateRequest(1L, "testEvent", "testCoverUrl");
 
             // when
             eventService.createEvent(request);
@@ -89,15 +89,15 @@ public class EventServiceTest extends IntegrationTest {
             Assertions.assertAll(
                     () -> assertThat(event.getId()).isEqualTo(1L),
                     () -> assertThat(event.getAlbum().getId()).isEqualTo(1L),
-                    () -> assertThat(event.getTitle()).isEqualTo("Test Event"),
-                    () -> assertThat(event.getCoverUrl()).isEqualTo("Test CoverURL"));
+                    () -> assertThat(event.getTitle()).isEqualTo("testEvent"),
+                    () -> assertThat(event.getCoverUrl()).isEqualTo("testCoverUrl"));
         }
 
         @Test
         void 엘범에_속하지_않은_사용자는_이벤트를_생성할_수_없다() {
 
             // given
-            EventCreateRequest request = new EventCreateRequest(2L, "Test Event", "Test CoverURL");
+            EventCreateRequest request = new EventCreateRequest(2L, "testEvent", "tesCoverUrl");
 
             // when & then
             assertThatThrownBy(() -> eventService.createEvent(request))

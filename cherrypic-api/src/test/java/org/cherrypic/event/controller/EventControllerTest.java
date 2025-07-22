@@ -40,9 +40,8 @@ public class EventControllerTest {
         @Test
         void 유효한_요청이면_이벤트_생성_정보를_반환한다() throws Exception {
             // given
-            EventCreateRequest request = new EventCreateRequest(1L, "Test Event", "Test CoverURL");
-            EventCreateResponse response =
-                    new EventCreateResponse(1L, "Test Event", "Test CoverURL");
+            EventCreateRequest request = new EventCreateRequest(1L, "testTitle", "testCoverUrl");
+            EventCreateResponse response = new EventCreateResponse(1L, "testTitle", "testCoverUrl");
 
             given(eventService.createEvent(request)).willReturn(response);
 
@@ -57,8 +56,8 @@ public class EventControllerTest {
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.status").value(HttpStatus.CREATED.value()))
                     .andExpect(jsonPath("$.data.eventId").value(1))
-                    .andExpect(jsonPath("$.data.title").value("Test Event"))
-                    .andExpect(jsonPath("$.data.coverUrl").value("Test CoverURL"));
+                    .andExpect(jsonPath("$.data.title").value("testTitle"))
+                    .andExpect(jsonPath("$.data.coverUrl").value("testCoverUrl"));
         }
 
         @NullSource
@@ -66,7 +65,7 @@ public class EventControllerTest {
         void 엘범_ID가_null이면_에러가_발생한다(Long albumId) throws Exception {
             // given
             EventCreateRequest request =
-                    new EventCreateRequest(albumId, "Test Event", "Test CoverURL");
+                    new EventCreateRequest(albumId, "testTitle", "testCoverUrl");
 
             // when & then
             ResultActions perform =
@@ -88,7 +87,7 @@ public class EventControllerTest {
         @ValueSource(strings = {" "})
         void 이벤트_이름이_null_또는_공백이면_예외가_발생한다(String title) throws Exception {
             // given
-            EventCreateRequest request = new EventCreateRequest(1L, title, "Test CoverURL");
+            EventCreateRequest request = new EventCreateRequest(1L, title, "testCoverUrl");
 
             // when & then
             ResultActions perform =
@@ -108,7 +107,7 @@ public class EventControllerTest {
         void 이벤트_이름이_100자를_넘어가면_에러가_발생한다() throws Exception {
             // given
             EventCreateRequest request =
-                    new EventCreateRequest(1L, "a".repeat(101), "Test CoverURL");
+                    new EventCreateRequest(1L, "t".repeat(101), "testCoverUrl");
 
             // when & then
             ResultActions perform =
