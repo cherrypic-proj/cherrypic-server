@@ -26,7 +26,7 @@ public class Album extends BaseTimeEntity {
 
     @NotNull private String title;
 
-    @NotNull private String coverUrl;
+    private String coverUrl;
 
     @NotNull
     @Enumerated(EnumType.STRING)

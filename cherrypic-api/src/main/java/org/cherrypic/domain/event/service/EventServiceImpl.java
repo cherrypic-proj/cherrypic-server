@@ -30,26 +30,24 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public EventCreateResponse createEvent(EventCreateRequest request) {
-
         final Member currentMember = memberUtil.getCurrentMember();
-        final Album currentAlbum = getAlbumById(request.albumId());
-        validateAlbumParticipant(currentMember, currentAlbum);
+        final Album album = getAlbumById(request.albumId());
+        validateAlbumParticipant(currentMember, album);
 
-        Event event = Event.createEvent(currentAlbum, request.title(), request.coverUrl());
+        Event event = Event.createEvent(album, request.title(), request.coverUrl());
         eventRepository.save(event);
 
-        return EventCreateResponse.from(event, currentAlbum);
+        return EventCreateResponse.from(event);
     }
 
-    private Album getAlbumById(Long id) {
+    private Album getAlbumById(Long albumId) {
         return albumRepository
-                .findById(id)
+                .findById(albumId)
                 .orElseThrow(() -> new AlbumException(AlbumErrorCode.ALBUM_NOT_FOUND));
     }
 
-    private void validateAlbumParticipant(Member participant, Album currentAlbum) {
-        if (!participantRepository.existsByMemberIdAndAlbumId(
-                participant.getId(), currentAlbum.getId())) {
+    private void validateAlbumParticipant(Member member, Album album) {
+        if (!participantRepository.existsByMemberIdAndAlbumId(member.getId(), album.getId())) {
             throw new EventException(EventErrorCode.NOT_ALBUM_PARTICIPANT);
         }
     }

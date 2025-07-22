@@ -1,11 +1,11 @@
 package org.cherrypic.domain.album.exception;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import org.cherrypic.exception.BaseErrorCode;
 
 @Getter
-@RequiredArgsConstructor
+@AllArgsConstructor
 public enum AlbumErrorCode implements BaseErrorCode {
     ALBUM_NOT_FOUND(404, "엘범이 존재하지 않습니다."),
     ;

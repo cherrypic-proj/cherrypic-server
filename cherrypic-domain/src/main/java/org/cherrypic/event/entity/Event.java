@@ -26,19 +26,19 @@ public class Event extends BaseTimeEntity {
 
     @NotNull private String title;
 
-    @NotNull private String coverUrl;
+    private String coverUrl;
 
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<EventImage> eventImages = new ArrayList<>();
 
     @Builder
-    private Event(Album album, String name, String coverUrl) {
+    private Event(Album album, String title, String coverUrl) {
         this.album = album;
-        this.title = name;
+        this.title = title;
         this.coverUrl = coverUrl;
     }
 
     public static Event createEvent(Album album, String name, String coverUrl) {
-        return Event.builder().album(album).name(name).coverUrl(coverUrl).build();
+        return Event.builder().album(album).title(name).coverUrl(coverUrl).build();
     }
 }

@@ -42,7 +42,7 @@ public class EventControllerTest {
             // given
             EventCreateRequest request = new EventCreateRequest(1L, "Test Event", "Test CoverURL");
             EventCreateResponse response =
-                    new EventCreateResponse(1L, 1L, "Test Event", "Test CoverURL");
+                    new EventCreateResponse(1L, "Test Event", "Test CoverURL");
 
             given(eventService.createEvent(request)).willReturn(response);
 
@@ -56,7 +56,6 @@ public class EventControllerTest {
             perform.andExpect(status().isCreated())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.status").value(HttpStatus.CREATED.value()))
-                    .andExpect(jsonPath("$.data.albumId").value(1))
                     .andExpect(jsonPath("$.data.eventId").value(1))
                     .andExpect(jsonPath("$.data.eventTitle").value("Test Event"))
                     .andExpect(jsonPath("$.data.coverUrl").value("Test CoverURL"));
