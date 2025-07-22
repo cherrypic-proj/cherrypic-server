@@ -102,7 +102,7 @@ public class EventServiceTest extends IntegrationTest {
             // when & then
             assertThatThrownBy(() -> eventService.createEvent(request))
                     .isInstanceOf(EventException.class)
-                    .hasMessageContaining("사용자가 소속되지 않은 엘범에서 이벤트를 만들 수 없습니다.");
+                    .hasMessageContaining("참여하지 않은 엘범에는 이벤트를 생성할 권한이 없습니다");
         }
     }
 }
