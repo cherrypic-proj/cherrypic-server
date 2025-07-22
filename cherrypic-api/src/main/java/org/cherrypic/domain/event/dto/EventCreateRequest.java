@@ -7,7 +7,7 @@ import jakarta.validation.constraints.Size;
 
 public record EventCreateRequest(
         @NotNull(message = "엘범 ID는 비워둘 수 없습니다.")
-                @Schema(description = "이벤트가 속한 엘범의 ID", example = "1L")
+                @Schema(description = "이벤트가 속한 엘범의 ID", example = "1")
                 Long albumId,
         @NotBlank(message = "이벤트 이름은 비워둘 수 없습니다.")
                 @Size(max = 100, message = "이벤트 이름은 최대 100자까지 가능합니다.")

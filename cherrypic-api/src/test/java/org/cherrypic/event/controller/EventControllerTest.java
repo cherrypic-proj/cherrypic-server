@@ -57,7 +57,7 @@ public class EventControllerTest {
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.status").value(HttpStatus.CREATED.value()))
                     .andExpect(jsonPath("$.data.eventId").value(1))
-                    .andExpect(jsonPath("$.data.eventTitle").value("Test Event"))
+                    .andExpect(jsonPath("$.data.title").value("Test Event"))
                     .andExpect(jsonPath("$.data.coverUrl").value("Test CoverURL"));
         }
 
