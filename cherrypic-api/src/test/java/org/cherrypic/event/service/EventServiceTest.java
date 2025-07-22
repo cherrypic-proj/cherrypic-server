@@ -18,6 +18,7 @@ import org.cherrypic.member.entity.OauthInfo;
 import org.cherrypic.member.repository.MemberRepository;
 import org.cherrypic.participant.entity.Participant;
 import org.cherrypic.participant.enums.ParticipantRole;
+import org.cherrypic.participant.repository.ParticipantRepository;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -27,7 +28,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.transaction.annotation.Transactional;
 
 public class EventServiceTest extends IntegrationTest {
 
@@ -35,6 +35,9 @@ public class EventServiceTest extends IntegrationTest {
     @Autowired private EventRepository eventRepository;
     @Autowired private AlbumRepository albumRepository;
     @Autowired private MemberRepository memberRepository;
+    @Autowired private ParticipantRepository participantRepository;
+
+    private Member member;
 
     @BeforeEach
     void setUp() {
@@ -56,7 +59,6 @@ public class EventServiceTest extends IntegrationTest {
         SecurityContextHolder.getContext().setAuthentication(token);
     }
 
-    @Transactional
     @Nested
     class 이벤트를_생성할_때 {
 
@@ -71,6 +73,7 @@ public class EventServiceTest extends IntegrationTest {
                             memberRepository.findById(1L).orElseThrow(),
                             album1,
                             ParticipantRole.HOST);
+            participantRepository.save(participant);
             album1.addParticipant(participant);
         }
 
@@ -94,7 +97,7 @@ public class EventServiceTest extends IntegrationTest {
         }
 
         @Test
-        void 엘범에_속하지_않은_사용자는_이벤트를_생성할_수_없다() {
+        void 엘범에_속하지_않은_사용자가_이벤트를_생성하면_예외가_발생한다() {
 
             // given
             EventCreateRequest request = new EventCreateRequest(2L, "testEvent", "tesCoverUrl");

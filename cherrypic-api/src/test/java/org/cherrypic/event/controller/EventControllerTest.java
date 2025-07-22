@@ -35,7 +35,7 @@ public class EventControllerTest {
     @MockitoBean private EventService eventService;
 
     @Nested
-    class 이벤트를_만들_때 {
+    class 이벤트를_생성할_때 {
 
         @Test
         void 유효한_요청이면_이벤트_생성_정보를_반환한다() throws Exception {
@@ -60,9 +60,9 @@ public class EventControllerTest {
                     .andExpect(jsonPath("$.data.coverUrl").value("testCoverUrl"));
         }
 
-        @NullSource
         @ParameterizedTest
-        void 엘범_ID가_null이면_에러가_발생한다(Long albumId) throws Exception {
+        @NullSource
+        void 엘범_ID가_null이면_예외가_발생한다(Long albumId) throws Exception {
             // given
             EventCreateRequest request =
                     new EventCreateRequest(albumId, "testTitle", "testCoverUrl");
@@ -104,7 +104,7 @@ public class EventControllerTest {
         }
 
         @Test
-        void 이벤트_이름이_100자를_넘어가면_에러가_발생한다() throws Exception {
+        void 이벤트_이름이_100자를_넘어가면_예외가_발생한다() throws Exception {
             // given
             EventCreateRequest request =
                     new EventCreateRequest(1L, "t".repeat(101), "testCoverUrl");
