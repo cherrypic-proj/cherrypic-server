@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.cherrypic.album.entity.Album;
@@ -23,8 +24,21 @@ public class Event extends BaseTimeEntity {
     @JoinColumn(name = "album_id")
     private Album album;
 
-    @NotNull private String name;
+    @NotNull private String title;
+
+    private String coverUrl;
 
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<EventImage> eventImages = new ArrayList<>();
+
+    @Builder
+    private Event(Album album, String title, String coverUrl) {
+        this.album = album;
+        this.title = title;
+        this.coverUrl = coverUrl;
+    }
+
+    public static Event createEvent(Album album, String title, String coverUrl) {
+        return Event.builder().album(album).title(title).coverUrl(coverUrl).build();
+    }
 }

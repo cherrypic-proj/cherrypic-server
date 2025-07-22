@@ -27,7 +27,7 @@ CREATE TABLE subscription (
 CREATE TABLE album (
                        id BIGINT AUTO_INCREMENT PRIMARY KEY,
                        title VARCHAR(50) NOT NULL,
-                       cover_url VARCHAR(255) NOT NULL,
+                       cover_url VARCHAR(255),
                        type VARCHAR(20) NOT NULL CHECK (type IN ('PRIVATE','SHARED','MANAGED_SHARED')),
                        created_at DATETIME(6) NOT NULL,
                        updated_at DATETIME(6) NOT NULL
@@ -37,7 +37,8 @@ CREATE TABLE album (
 CREATE TABLE event (
                        id BIGINT AUTO_INCREMENT PRIMARY KEY,
                        album_id BIGINT NOT NULL,
-                       name VARCHAR(100) NOT NULL,
+                       title VARCHAR(100) NOT NULL,
+                       cover_url VARCHAR(255),
                        created_at DATETIME(6) NOT NULL,
                        updated_at DATETIME(6) NOT NULL,
                        CONSTRAINT fk_event_album FOREIGN KEY (album_id) REFERENCES album (id)
