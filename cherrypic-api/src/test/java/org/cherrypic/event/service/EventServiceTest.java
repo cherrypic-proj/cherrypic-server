@@ -76,7 +76,6 @@ public class EventServiceTest extends IntegrationTest {
 
         @Test
         void 유효한_요청이면_이벤트가_생성된다() {
-
             // given
             EventCreateRequest request = new EventCreateRequest(1L, "testEvent", "testCoverUrl");
 
@@ -85,7 +84,6 @@ public class EventServiceTest extends IntegrationTest {
 
             // then
             Event event = eventRepository.findById(1L).orElseThrow();
-
             Assertions.assertAll(
                     () -> assertThat(event.getId()).isEqualTo(1L),
                     () -> assertThat(event.getAlbum().getId()).isEqualTo(1L),
@@ -95,7 +93,6 @@ public class EventServiceTest extends IntegrationTest {
 
         @Test
         void 앨범에_속하지_않은_사용자가_이벤트를_생성하면_예외가_발생한다() {
-
             // given
             EventCreateRequest request = new EventCreateRequest(2L, "testEvent", "tesCoverUrl");
 
