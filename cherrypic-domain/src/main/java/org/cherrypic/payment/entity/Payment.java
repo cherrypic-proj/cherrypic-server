@@ -36,6 +36,7 @@ public class Payment extends BaseTimeEntity {
 
     @NotNull private int amount;
 
+    @NotNull
     @Enumerated(EnumType.STRING)
     private PaymentStatus status;
 
