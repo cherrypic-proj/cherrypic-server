@@ -15,7 +15,6 @@ CREATE TABLE member (
 CREATE TABLE subscription (
                               id BIGINT AUTO_INCREMENT PRIMARY KEY,
                               member_id BIGINT UNIQUE NOT NULL,
-                              type VARCHAR(255) NOT NULL CHECK (type IN ('BASIC','PLUS','PRO')),
                               status VARCHAR(255) NOT NULL CHECK (status IN ('ACTIVE','CANCELLED','EXPIRED')),
                               start_at DATETIME(6),
                               end_at DATETIME(6),
@@ -28,9 +27,25 @@ CREATE TABLE album (
                        id BIGINT AUTO_INCREMENT PRIMARY KEY,
                        title VARCHAR(50) NOT NULL,
                        cover_url VARCHAR(255),
-                       type VARCHAR(20) NOT NULL CHECK (type IN ('PRIVATE','SHARED','MANAGED_SHARED')),
+                       plan VARCHAR(255) CHECK (plan IN ('BASIC','PRO','PREMIUM')),
                        created_at DATETIME(6) NOT NULL,
                        updated_at DATETIME(6) NOT NULL
+);
+
+CREATE TABLE payment (
+                         id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                         member_id BIGINT NOT NULL,
+                         album_id BIGINT,
+                         merchant_uid VARCHAR(255) NOT NULL,
+                         imp_uid VARCHAR(255),
+                         pg_provider VARCHAR(255),
+                         amount INT NOT NULL,
+                         status VARCHAR(255) NOT NULL CHECK (status IN ('READY','PAID','FAILED','CANCELLED')),
+                         paid_at DATETIME,
+                         created_at DATETIME(6) NOT NULL,
+                         updated_at DATETIME(6) NOT NULL,
+                         CONSTRAINT fk_payment_member FOREIGN KEY (member_id) REFERENCES member (id),
+                         CONSTRAINT fk_payment_album FOREIGN KEY (album_id) REFERENCES album (id)
 );
 
 
@@ -86,19 +101,4 @@ CREATE TABLE participant (
                              updated_at DATETIME(6) NOT NULL,
                              CONSTRAINT fk_participant_member FOREIGN KEY (member_id) REFERENCES member (id),
                              CONSTRAINT fk_participant_album FOREIGN KEY (album_id) REFERENCES album (id)
-);
-
-
-CREATE TABLE payment (
-                         id BIGINT AUTO_INCREMENT PRIMARY KEY,
-                         member_id BIGINT NOT NULL ,
-                         merchant_uid VARCHAR(255) NOT NULL,
-                         imp_uid VARCHAR(255),
-                         pg_provider VARCHAR(255),
-                         amount INT NOT NULL,
-                         status VARCHAR(255) NOT NULL CHECK (status IN ('READY','PAID','FAILED','CANCELLED')),
-                         paid_at DATETIME,
-                         created_at DATETIME(6) NOT NULL,
-                         updated_at DATETIME(6) NOT NULL,
-                         CONSTRAINT fk_payment_member FOREIGN KEY (member_id) REFERENCES member (id)
 );

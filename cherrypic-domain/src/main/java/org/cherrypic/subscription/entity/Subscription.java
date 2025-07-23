@@ -8,7 +8,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.cherrypic.member.entity.Member;
 import org.cherrypic.subscription.enums.SubscriptionStatus;
-import org.cherrypic.subscription.enums.SubscriptionType;
 
 @Getter
 @Entity
@@ -22,10 +21,6 @@ public class Subscription {
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id", unique = true)
     private Member member;
-
-    @NotNull
-    @Enumerated(EnumType.STRING)
-    private SubscriptionType type;
 
     @NotNull
     @Enumerated(EnumType.STRING)

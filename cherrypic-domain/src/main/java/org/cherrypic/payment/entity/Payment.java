@@ -4,8 +4,10 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.cherrypic.album.entity.Album;
 import org.cherrypic.common.model.BaseTimeEntity;
 import org.cherrypic.member.entity.Member;
 import org.cherrypic.payment.enums.PaymentStatus;
@@ -23,6 +25,10 @@ public class Payment extends BaseTimeEntity {
     @JoinColumn(name = "member_id")
     private Member member;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "album_id")
+    private Album album;
+
     @NotNull private String merchantUid;
 
     private String impUid;
@@ -31,8 +37,26 @@ public class Payment extends BaseTimeEntity {
 
     @NotNull private int amount;
 
+    @NotNull
     @Enumerated(EnumType.STRING)
     private PaymentStatus status;
 
     private LocalDateTime paidAt;
+
+    @Builder(access = AccessLevel.PRIVATE)
+    private Payment(Member member, String merchantUid, int amount, PaymentStatus status) {
+        this.member = member;
+        this.merchantUid = merchantUid;
+        this.amount = amount;
+        this.status = status;
+    }
+
+    public static Payment createPayment(Member member, String merchantUid, int amount) {
+        return Payment.builder()
+                .member(member)
+                .merchantUid(merchantUid)
+                .amount(amount)
+                .status(PaymentStatus.READY)
+                .build();
+    }
 }

@@ -4,7 +4,6 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 import org.cherrypic.IntegrationTest;
 import org.cherrypic.album.entity.Album;
-import org.cherrypic.album.enums.AlbumType;
 import org.cherrypic.album.repository.AlbumRepository;
 import org.cherrypic.domain.album.dto.request.AlbumCreateRequest;
 import org.cherrypic.domain.album.service.AlbumService;
@@ -58,8 +57,7 @@ class AlbumServiceTest extends IntegrationTest {
         void 유효한_요청이면_앨범과_HOST_참여자가_생성된다() {
 
             // given
-            AlbumCreateRequest request =
-                    new AlbumCreateRequest("testTitle", "testCoverUrl", AlbumType.SHARED);
+            AlbumCreateRequest request = new AlbumCreateRequest("testTitle", "testCoverUrl");
 
             // when
             albumService.createAlbum(request);
@@ -72,7 +70,6 @@ class AlbumServiceTest extends IntegrationTest {
                     () -> assertThat(album.getId()).isEqualTo(1L),
                     () -> assertThat(album.getTitle()).isEqualTo("testTitle"),
                     () -> assertThat(album.getCoverUrl()).isEqualTo("testCoverUrl"),
-                    () -> assertThat(album.getType()).isEqualTo(AlbumType.SHARED),
                     () -> assertThat(participant.getId()).isEqualTo(1L),
                     () -> assertThat(participant.getMember().getId()).isEqualTo(1L),
                     () -> assertThat(participant.getRole()).isEqualTo(ParticipantRole.HOST));
