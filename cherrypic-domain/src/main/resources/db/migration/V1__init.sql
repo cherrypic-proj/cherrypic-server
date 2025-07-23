@@ -32,6 +32,22 @@ CREATE TABLE album (
                        updated_at DATETIME(6) NOT NULL
 );
 
+CREATE TABLE payment (
+                         id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                         member_id BIGINT NOT NULL,
+                         album_id BIGINT,
+                         merchant_uid VARCHAR(255) NOT NULL,
+                         imp_uid VARCHAR(255),
+                         pg_provider VARCHAR(255),
+                         amount INT NOT NULL,
+                         status VARCHAR(255) NOT NULL CHECK (status IN ('READY','PAID','FAILED','CANCELLED')),
+                         paid_at DATETIME,
+                         created_at DATETIME(6) NOT NULL,
+                         updated_at DATETIME(6) NOT NULL,
+                         CONSTRAINT fk_payment_member FOREIGN KEY (member_id) REFERENCES member (id),
+                         CONSTRAINT fk_payment_album FOREIGN KEY (album_id) REFERENCES album (id)
+);
+
 
 CREATE TABLE event (
                        id BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -85,19 +101,4 @@ CREATE TABLE participant (
                              updated_at DATETIME(6) NOT NULL,
                              CONSTRAINT fk_participant_member FOREIGN KEY (member_id) REFERENCES member (id),
                              CONSTRAINT fk_participant_album FOREIGN KEY (album_id) REFERENCES album (id)
-);
-
-
-CREATE TABLE payment (
-                         id BIGINT AUTO_INCREMENT PRIMARY KEY,
-                         member_id BIGINT NOT NULL ,
-                         merchant_uid VARCHAR(255) NOT NULL,
-                         imp_uid VARCHAR(255),
-                         pg_provider VARCHAR(255),
-                         amount INT NOT NULL,
-                         status VARCHAR(255) NOT NULL CHECK (status IN ('READY','PAID','FAILED','CANCELLED')),
-                         paid_at DATETIME,
-                         created_at DATETIME(6) NOT NULL,
-                         updated_at DATETIME(6) NOT NULL,
-                         CONSTRAINT fk_payment_member FOREIGN KEY (member_id) REFERENCES member (id)
 );
