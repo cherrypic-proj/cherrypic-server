@@ -27,7 +27,7 @@ CREATE TABLE album (
                        id BIGINT AUTO_INCREMENT PRIMARY KEY,
                        title VARCHAR(50) NOT NULL,
                        cover_url VARCHAR(255),
-                       plan VARCHAR(255) NOT NULL CHECK (plan IN ('BASIC','PRO','PREMIUM')),
+                       plan VARCHAR(255) CHECK (plan IN ('BASIC','PRO','PREMIUM')),
                        created_at DATETIME(6) NOT NULL,
                        updated_at DATETIME(6) NOT NULL
 );

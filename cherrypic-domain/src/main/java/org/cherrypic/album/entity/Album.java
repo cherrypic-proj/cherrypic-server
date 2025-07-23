@@ -29,7 +29,6 @@ public class Album extends BaseTimeEntity {
 
     private String coverUrl;
 
-    @NotNull
     @Enumerated(EnumType.STRING)
     private AlbumPlan plan;
 
