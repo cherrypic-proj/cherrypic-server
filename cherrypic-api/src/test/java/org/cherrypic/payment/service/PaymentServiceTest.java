@@ -52,7 +52,7 @@ public class PaymentServiceTest extends IntegrationTest {
     }
 
     @Nested
-    class 앨범_구독_결제를_준비할_때 {
+    class 앨범_유료_플랜_결제를_준비할_때 {
 
         @Test
         void 유효한_요청이면_결제_준비_정보를_생성한다() {

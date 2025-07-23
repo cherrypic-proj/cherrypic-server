@@ -38,7 +38,7 @@ class PaymentControllerTest {
     @MockitoBean private PaymentService paymentService;
 
     @Nested
-    class 앨범_구독_결제_준비_요청_시 {
+    class 앨범_유료_플랜_결제_준비_요청_시 {
 
         @Test
         void 유효한_요청이면_결제_준비_정보를_반환한다() throws Exception {
@@ -73,7 +73,7 @@ class PaymentControllerTest {
         @NullSource
         @EmptySource
         @ValueSource(strings = {" ", "PROO", "PREMIUMM"})
-        void 앨범_구독_플랜이_null_또는_지원하지_않는_형식이면_예외가_발생한다(String plan) throws Exception {
+        void 앨범_플랜이_null_또는_지원하지_않는_형식이면_예외가_발생한다(String plan) throws Exception {
             // given
             PaymentReadyRequest request = new PaymentReadyRequest(AlbumPlan.from(plan));
 
@@ -94,7 +94,7 @@ class PaymentControllerTest {
         }
 
         @Test
-        void 앨범_구독_플랜이_BASIC이면_예외가_발생한다() throws Exception {
+        void 앨범_플랜이_BASIC이면_예외가_발생한다() throws Exception {
             // given
             PaymentReadyRequest request = new PaymentReadyRequest(AlbumPlan.BASIC);
 
