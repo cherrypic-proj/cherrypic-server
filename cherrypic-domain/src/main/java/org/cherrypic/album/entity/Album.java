@@ -8,7 +8,6 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.cherrypic.album.enums.AlbumType;
 import org.cherrypic.common.model.BaseTimeEntity;
 import org.cherrypic.event.entity.Event;
 import org.cherrypic.favorites.entity.Favorites;
@@ -28,10 +27,6 @@ public class Album extends BaseTimeEntity {
 
     private String coverUrl;
 
-    @NotNull
-    @Enumerated(EnumType.STRING)
-    private AlbumType type;
-
     @OneToMany(mappedBy = "album", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Favorites> favorites = new ArrayList<>();
 
@@ -45,14 +40,13 @@ public class Album extends BaseTimeEntity {
     private List<Participant> participants = new ArrayList<>();
 
     @Builder(access = AccessLevel.PRIVATE)
-    private Album(String title, String coverUrl, AlbumType type) {
+    private Album(String title, String coverUrl) {
         this.title = title;
         this.coverUrl = coverUrl;
-        this.type = type;
     }
 
-    public static Album createAlbum(String title, String coverUrl, AlbumType type) {
-        return Album.builder().title(title).coverUrl(coverUrl).type(type).build();
+    public static Album createAlbum(String title, String coverUrl) {
+        return Album.builder().title(title).coverUrl(coverUrl).build();
     }
 
     public void addParticipant(Participant participant) {

@@ -24,7 +24,7 @@ public class AlbumServiceImpl implements AlbumService {
     public AlbumCreateResponse createAlbum(AlbumCreateRequest request) {
         final Member currentMember = memberUtil.getCurrentMember();
 
-        Album album = Album.createAlbum(request.title(), request.coverUrl(), request.type());
+        Album album = Album.createAlbum(request.title(), request.coverUrl());
         Participant participant =
                 Participant.createParticipant(currentMember, album, ParticipantRole.HOST);
         album.addParticipant(participant);

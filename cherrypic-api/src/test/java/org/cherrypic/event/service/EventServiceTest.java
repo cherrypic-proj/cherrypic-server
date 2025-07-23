@@ -6,7 +6,6 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import java.util.List;
 import org.cherrypic.IntegrationTest;
 import org.cherrypic.album.entity.Album;
-import org.cherrypic.album.enums.AlbumType;
 import org.cherrypic.album.repository.AlbumRepository;
 import org.cherrypic.domain.event.dto.EventCreateRequest;
 import org.cherrypic.domain.event.exception.EventErrorCode;
@@ -65,8 +64,8 @@ public class EventServiceTest extends IntegrationTest {
 
         @BeforeEach
         void setUp() {
-            Album album1 = Album.createAlbum("testAlbum1", "testURL1", AlbumType.SHARED);
-            Album album2 = Album.createAlbum("testAlbum2", "testURL2", AlbumType.SHARED);
+            Album album1 = Album.createAlbum("testAlbum1", "testURL1");
+            Album album2 = Album.createAlbum("testAlbum2", "testURL2");
             albumRepository.saveAll(List.of(album1, album2));
 
             Participant participant =
