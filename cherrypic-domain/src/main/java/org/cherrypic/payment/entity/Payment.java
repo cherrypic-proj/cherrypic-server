@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.cherrypic.album.entity.Album;
@@ -41,4 +42,21 @@ public class Payment extends BaseTimeEntity {
     private PaymentStatus status;
 
     private LocalDateTime paidAt;
+
+    @Builder(access = AccessLevel.PRIVATE)
+    private Payment(Member member, String merchantUid, int amount, PaymentStatus status) {
+        this.member = member;
+        this.merchantUid = merchantUid;
+        this.amount = amount;
+        this.status = status;
+    }
+
+    public static Payment createPayment(Member member, String merchantUid, int amount) {
+        return Payment.builder()
+                .member(member)
+                .merchantUid(merchantUid)
+                .amount(amount)
+                .status(PaymentStatus.READY)
+                .build();
+    }
 }
