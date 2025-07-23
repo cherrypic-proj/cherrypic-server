@@ -15,7 +15,6 @@ CREATE TABLE member (
 CREATE TABLE subscription (
                               id BIGINT AUTO_INCREMENT PRIMARY KEY,
                               member_id BIGINT UNIQUE NOT NULL,
-                              type VARCHAR(255) NOT NULL CHECK (type IN ('BASIC','PLUS','PRO')),
                               status VARCHAR(255) NOT NULL CHECK (status IN ('ACTIVE','CANCELLED','EXPIRED')),
                               start_at DATETIME(6),
                               end_at DATETIME(6),
@@ -28,6 +27,7 @@ CREATE TABLE album (
                        id BIGINT AUTO_INCREMENT PRIMARY KEY,
                        title VARCHAR(50) NOT NULL,
                        cover_url VARCHAR(255),
+                       plan VARCHAR(255) NOT NULL CHECK (plan IN ('BASIC','PRO','PREMIUM')),
                        created_at DATETIME(6) NOT NULL,
                        updated_at DATETIME(6) NOT NULL
 );
