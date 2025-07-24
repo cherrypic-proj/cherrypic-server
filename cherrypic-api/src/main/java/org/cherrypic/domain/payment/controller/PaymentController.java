@@ -6,8 +6,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.cherrypic.domain.payment.dto.request.PaymentReadyRequest;
 import org.cherrypic.domain.payment.dto.response.PaymentReadyResponse;
+import org.cherrypic.domain.payment.dto.response.PaymentVerificationResponse;
 import org.cherrypic.domain.payment.service.PaymentService;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -30,8 +30,7 @@ public class PaymentController {
     @Operation(
             summary = "impUid 기반 결제 검증",
             description = "impUid에 해당하는 결제 정보를 아임포트에서 조회하고, 결제 금액과 상태를 검증합니다.")
-    public ResponseEntity<Void> paymentVerify(@PathVariable String impUid) {
-        paymentService.verifyPayment(impUid);
-        return ResponseEntity.noContent().build();
+    public PaymentVerificationResponse paymentVerify(@PathVariable String impUid) {
+        return paymentService.verifyPayment(impUid);
     }
 }

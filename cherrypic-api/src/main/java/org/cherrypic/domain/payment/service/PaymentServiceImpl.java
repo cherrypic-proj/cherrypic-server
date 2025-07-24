@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.cherrypic.album.enums.AlbumPlan;
 import org.cherrypic.domain.payment.dto.request.PaymentReadyRequest;
 import org.cherrypic.domain.payment.dto.response.PaymentReadyResponse;
+import org.cherrypic.domain.payment.dto.response.PaymentVerificationResponse;
 import org.cherrypic.domain.payment.exception.PaymentErrorCode;
 import org.cherrypic.domain.payment.exception.PaymentException;
 import org.cherrypic.global.util.MemberUtil;
@@ -55,7 +56,7 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    public void verifyPayment(String impUid) {
+    public PaymentVerificationResponse verifyPayment(String impUid) {
         try {
             var iamportPayment = iamportClient.paymentByImpUid(impUid).getResponse();
 
@@ -85,6 +86,8 @@ public class PaymentServiceImpl implements PaymentService {
             }
 
             payment.updatePayment(impUid, pgProvider, PaymentStatus.PAID, paidAt);
+
+            return PaymentVerificationResponse.from(payment);
 
         } catch (IamportResponseException e) {
             throw new PaymentException(PaymentErrorCode.PAYMENT_NOT_FOUND);
