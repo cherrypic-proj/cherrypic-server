@@ -1,6 +1,7 @@
 package org.cherrypic.properties;
 
 import org.cherrypic.aws.AwsProperties;
+import org.cherrypic.iamport.IamportProperties;
 import org.cherrypic.jwt.JwtProperties;
 import org.cherrypic.oidc.OidcProperties;
 import org.cherrypic.redis.RedisProperties;
@@ -14,6 +15,7 @@ import org.springframework.context.annotation.Configuration;
     OidcProperties.class,
     JwtProperties.class,
     AwsProperties.class,
-    S3Properties.class
+    S3Properties.class,
+    IamportProperties.class
 })
 public class PropertiesConfig {}
