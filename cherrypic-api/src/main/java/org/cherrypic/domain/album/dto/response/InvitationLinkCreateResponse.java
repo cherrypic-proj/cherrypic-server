@@ -1,7 +1,6 @@
 package org.cherrypic.domain.album.dto.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import org.cherrypic.album.entity.InvitationCode;
 
 public record InvitationLinkCreateResponse(
         @Schema(
@@ -9,7 +8,7 @@ public record InvitationLinkCreateResponse(
                         example = "https://dev-api.cherrypic.today/participants/join?code=3FA7A9")
                 String invitationLink) {
 
-    public static InvitationLinkCreateResponse from(InvitationCode invitationCode) {
-        return new InvitationLinkCreateResponse(invitationCode.getCode());
+    public static InvitationLinkCreateResponse of(String invitationCode) {
+        return new InvitationLinkCreateResponse(invitationCode);
     }
 }

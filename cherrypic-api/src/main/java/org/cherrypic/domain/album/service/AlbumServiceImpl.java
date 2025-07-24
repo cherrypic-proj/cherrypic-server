@@ -1,12 +1,9 @@
 package org.cherrypic.domain.album.service;
 
-import java.time.Duration;
 import java.util.Optional;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.cherrypic.album.entity.Album;
 import org.cherrypic.album.entity.InvitationCode;
-import org.cherrypic.album.enums.AlbumPlan;
 import org.cherrypic.album.repository.AlbumRepository;
 import org.cherrypic.album.repository.InvitationCodeRepository;
 import org.cherrypic.domain.album.dto.request.AlbumCreateRequest;
@@ -15,8 +12,6 @@ import org.cherrypic.domain.album.dto.response.AlbumCreateResponse;
 import org.cherrypic.domain.album.dto.response.InvitationLinkCreateResponse;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.album.exception.AlbumException;
-import org.cherrypic.domain.participant.exception.ParticipantErrorCode;
-import org.cherrypic.domain.participant.exception.ParticipantException;
 import org.cherrypic.global.util.MemberUtil;
 import org.cherrypic.member.entity.Member;
 import org.cherrypic.participant.entity.Participant;
@@ -31,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class AlbumServiceImpl implements AlbumService {
 
     private final MemberUtil memberUtil;
+    private final InvitationLinkService invitationLinkService;
 
     private final AlbumRepository albumRepository;
     private final ParticipantRepository participantRepository;
@@ -54,23 +50,23 @@ public class AlbumServiceImpl implements AlbumService {
     public InvitationLinkCreateResponse createInvitationLink(InvitationLinkCreateRequest request) {
         final Member currentMember = memberUtil.getCurrentMember();
 
+        validateAlbumId(request.albumId());
         validateInvitationAuthority(currentMember.getId(), request.albumId());
 
         Optional<InvitationCode> invitationCode =
                 invitationCodeRepository.findById(request.albumId());
         if (invitationCode.isPresent()) {
-            return InvitationLinkCreateResponse.from(invitationCode.get());
+            String invitationLink =
+                    invitationLinkService.createInvitationLink(invitationCode.get());
+            return InvitationLinkCreateResponse.of(invitationLink);
         }
 
-        InvitationCode newCode =
-                InvitationCode.builder()
-                        .albumId(request.albumId())
-                        .code(UUID.randomUUID().toString())
-                        .ttl(Duration.ofMinutes(30).getSeconds())
-                        .build();
+        InvitationCode newCode = invitationLinkService.createInvitationCode(request.albumId());
         invitationCodeRepository.save(newCode);
 
-        return InvitationLinkCreateResponse.from(newCode);
+        String invitationLink = invitationLinkService.createInvitationLink(newCode);
+
+        return InvitationLinkCreateResponse.of(invitationLink);
     }
 
     private void validateInvitationAuthority(Long memberId, Long albumId) {
@@ -78,20 +74,18 @@ public class AlbumServiceImpl implements AlbumService {
                 participantRepository
                         .findByMemberIdAndAlbumId(memberId, albumId)
                         .orElseThrow(
-                                () ->
-                                        new ParticipantException(
-                                                ParticipantErrorCode.PARTICIPANT_NOT_FOUND));
+                                () -> new AlbumException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT));
 
-        Album album =
-                albumRepository
-                        .findById(albumId)
-                        .orElseThrow(() -> new AlbumException(AlbumErrorCode.ALBUM_NOT_FOUND));
+        if (!participant.getRole().equals(ParticipantRole.HOST)) {
+            throw new AlbumException(AlbumErrorCode.INVALID_INVITATION_AUTHORITY);
+        }
+    }
 
-        boolean isNotBasic = !album.getPlan().equals(AlbumPlan.BASIC);
-        boolean isNotHost = !participant.getRole().equals(ParticipantRole.HOST);
+    private void validateAlbumId(Long albumId) {
+        Optional<Album> album = albumRepository.findById(albumId);
 
-        if (isNotBasic && isNotHost) {
-            throw new AlbumException(AlbumErrorCode.INVITATION_NOT_ALLOWED);
+        if (album.isEmpty()) {
+            throw new AlbumException(AlbumErrorCode.ALBUM_NOT_FOUND);
         }
     }
 }
