@@ -5,7 +5,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 import org.cherrypic.IntegrationTest;
 import org.cherrypic.album.enums.AlbumPlan;
-import org.cherrypic.domain.payment.dto.PaymentReadyRequest;
+import org.cherrypic.domain.payment.dto.request.PaymentReadyRequest;
 import org.cherrypic.domain.payment.exception.PaymentErrorCode;
 import org.cherrypic.domain.payment.exception.PaymentException;
 import org.cherrypic.domain.payment.service.PaymentService;

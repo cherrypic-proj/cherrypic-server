@@ -8,8 +8,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.cherrypic.album.enums.AlbumPlan;
 import org.cherrypic.domain.payment.controller.PaymentController;
-import org.cherrypic.domain.payment.dto.PaymentReadyRequest;
-import org.cherrypic.domain.payment.dto.PaymentReadyResponse;
+import org.cherrypic.domain.payment.dto.request.PaymentReadyRequest;
+import org.cherrypic.domain.payment.dto.response.PaymentReadyResponse;
 import org.cherrypic.domain.payment.exception.PaymentErrorCode;
 import org.cherrypic.domain.payment.exception.PaymentException;
 import org.cherrypic.domain.payment.service.PaymentService;

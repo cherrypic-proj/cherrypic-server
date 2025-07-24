@@ -1,4 +1,4 @@
-package org.cherrypic.domain.payment.dto;
+package org.cherrypic.domain.payment.dto.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import org.cherrypic.album.enums.AlbumPlan;
