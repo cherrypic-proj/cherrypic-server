@@ -21,6 +21,7 @@ import org.cherrypic.domain.payment.dto.request.PaymentReadyRequest;
 import org.cherrypic.domain.payment.exception.PaymentErrorCode;
 import org.cherrypic.domain.payment.exception.PaymentException;
 import org.cherrypic.domain.payment.service.PaymentService;
+import org.cherrypic.global.util.MemberUtil;
 import org.cherrypic.member.entity.Member;
 import org.cherrypic.member.entity.OauthInfo;
 import org.cherrypic.member.repository.MemberRepository;
@@ -33,10 +34,6 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import retrofit2.HttpException;
 import retrofit2.Response;
@@ -47,6 +44,8 @@ public class PaymentServiceTest extends IntegrationTest {
 
     @Autowired private PaymentRepository paymentRepository;
     @Autowired private MemberRepository memberRepository;
+
+    @MockitoBean private MemberUtil memberUtil;
 
     @MockitoBean private IamportClient iamportClient;
     @Mock private IamportResponse<com.siot.IamportRestClient.response.Payment> iamportResponse;
@@ -63,15 +62,7 @@ public class PaymentServiceTest extends IntegrationTest {
                         "testProfileImageUrl");
         memberRepository.save(member);
 
-        UserDetails userDetails =
-                User.withUsername(member.getId().toString())
-                        .password("")
-                        .authorities(member.getRole().name())
-                        .build();
-        UsernamePasswordAuthenticationToken token =
-                new UsernamePasswordAuthenticationToken(
-                        userDetails, null, userDetails.getAuthorities());
-        SecurityContextHolder.getContext().setAuthentication(token);
+        given(memberUtil.getCurrentMember()).willReturn(member);
     }
 
     @Nested
