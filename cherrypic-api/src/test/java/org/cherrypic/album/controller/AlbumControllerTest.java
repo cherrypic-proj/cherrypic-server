@@ -151,7 +151,7 @@ class AlbumControllerTest {
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
-            perform.andExpect(status().isBadRequest())
+            perform.andExpect(status().isForbidden())
                     .andExpect(jsonPath("$.success").value(false))
                     .andExpect(jsonPath("$.status").value(HttpStatus.FORBIDDEN.value()))
                     .andExpect(jsonPath("$.data.code").value("INVALID_INVITATION_AUTHORITY"))
@@ -174,13 +174,11 @@ class AlbumControllerTest {
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
-            perform.andExpect(status().isBadRequest())
+            perform.andExpect(status().isForbidden())
                     .andExpect(jsonPath("$.success").value(false))
-                    .andExpect(jsonPath("$.status").value(HttpStatus.NOT_FOUND.value()))
-                    .andExpect(jsonPath("$.data.code").value("INVALID_INVITATION_AUTHORITY"))
-                    .andExpect(
-                            jsonPath("$.data.message")
-                                    .value("HOST가 아닌 경우 앨범 초대 링크를 생성할 권한이 없습니다."));
+                    .andExpect(jsonPath("$.status").value(HttpStatus.FORBIDDEN.value()))
+                    .andExpect(jsonPath("$.data.code").value("NOT_ALBUM_PARTICIPANT"))
+                    .andExpect(jsonPath("$.data.message").value("앨범에 속하지 않은 사용자입니다."));
         }
 
         @Test
@@ -188,7 +186,7 @@ class AlbumControllerTest {
             // given
             InvitationLinkCreateRequest request = new InvitationLinkCreateRequest(999L);
             given(albumService.createInvitationLink(request))
-                    .willThrow(new AlbumException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT));
+                    .willThrow(new AlbumException(AlbumErrorCode.ALBUM_NOT_FOUND));
 
             // when & then
             ResultActions perform =
@@ -197,11 +195,11 @@ class AlbumControllerTest {
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
-            perform.andExpect(status().isBadRequest())
+            perform.andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.success").value(false))
-                    .andExpect(jsonPath("$.status").value(HttpStatus.FORBIDDEN.value()))
-                    .andExpect(jsonPath("$.data.code").value("NOT_ALBUM_PARTICIPANT"))
-                    .andExpect(jsonPath("$.data.message").value("앨범에 속하지 않은 사용자입니다."));
+                    .andExpect(jsonPath("$.status").value(HttpStatus.NOT_FOUND.value()))
+                    .andExpect(jsonPath("$.data.code").value("ALBUM_NOT_FOUND"))
+                    .andExpect(jsonPath("$.data.message").value("앨범이 존재하지 않습니다."));
         }
     }
 }
