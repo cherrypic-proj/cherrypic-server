@@ -5,4 +5,6 @@ import org.cherrypic.domain.payment.dto.PaymentReadyResponse;
 
 public interface PaymentService {
     PaymentReadyResponse preparePayment(PaymentReadyRequest request);
+
+    void verifyPayment(String impUid);
 }

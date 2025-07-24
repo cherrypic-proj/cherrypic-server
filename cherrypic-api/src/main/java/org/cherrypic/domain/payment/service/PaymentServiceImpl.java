@@ -1,9 +1,15 @@
 package org.cherrypic.domain.payment.service;
 
+import com.siot.IamportRestClient.IamportClient;
+import com.siot.IamportRestClient.exception.IamportResponseException;
+import java.io.IOException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.cherrypic.album.enums.AlbumPlan;
 import org.cherrypic.domain.payment.dto.PaymentReadyRequest;
 import org.cherrypic.domain.payment.dto.PaymentReadyResponse;
@@ -12,16 +18,21 @@ import org.cherrypic.domain.payment.exception.PaymentException;
 import org.cherrypic.global.util.MemberUtil;
 import org.cherrypic.member.entity.Member;
 import org.cherrypic.payment.entity.Payment;
+import org.cherrypic.payment.enums.PaymentStatus;
 import org.cherrypic.payment.repository.PaymentRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
 public class PaymentServiceImpl implements PaymentService {
 
     private final MemberUtil memberUtil;
+
+    private final IamportClient iamportClient;
+
     private final PaymentRepository paymentRepository;
 
     @Override
@@ -41,6 +52,45 @@ public class PaymentServiceImpl implements PaymentService {
         paymentRepository.save(payment);
 
         return PaymentReadyResponse.of(plan, price, merchantUid, buyerName);
+    }
+
+    @Override
+    public void verifyPayment(String impUid) {
+        try {
+            var iamportPayment = iamportClient.paymentByImpUid(impUid).getResponse();
+
+            String merchantUid = iamportPayment.getMerchantUid();
+            String pgProvider = iamportPayment.getPgProvider();
+            int amount = iamportPayment.getAmount().intValue();
+            PaymentStatus status = PaymentStatus.valueOf(iamportPayment.getStatus().toUpperCase());
+            LocalDateTime paidAt =
+                    iamportPayment
+                            .getPaidAt()
+                            .toInstant()
+                            .atZone(ZoneId.systemDefault())
+                            .toLocalDateTime();
+
+            Payment payment =
+                    paymentRepository
+                            .findByMerchantUid(merchantUid)
+                            .orElseThrow(
+                                    () -> new PaymentException(PaymentErrorCode.PAYMENT_NOT_FOUND));
+
+            if (amount != payment.getAmount()) {
+                throw new PaymentException(PaymentErrorCode.AMOUNT_MISMATCH);
+            }
+
+            if (status != PaymentStatus.PAID) {
+                throw new PaymentException(PaymentErrorCode.NOT_PAID);
+            }
+
+            payment.updatePayment(impUid, pgProvider, PaymentStatus.PAID, paidAt);
+
+        } catch (IamportResponseException e) {
+            throw new PaymentException(PaymentErrorCode.PAYMENT_NOT_FOUND);
+        } catch (IOException e) {
+            throw new PaymentException(PaymentErrorCode.IAMPORT_API_UNAVAILABLE);
+        }
     }
 
     private String generateMerchantUid(Long memberId, AlbumPlan plan) {
