@@ -41,4 +41,12 @@ public class Event extends BaseTimeEntity {
     public static Event createEvent(Album album, String title, String coverUrl) {
         return Event.builder().album(album).title(title).coverUrl(coverUrl).build();
     }
+
+    public void changeTitle(String title) {
+        this.title = title;
+    }
+
+    public void changeCoverUrl(String coverUrl) {
+        this.coverUrl = coverUrl;
+    }
 }

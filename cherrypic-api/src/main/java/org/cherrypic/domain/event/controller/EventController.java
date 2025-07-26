@@ -6,13 +6,12 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.cherrypic.domain.event.dto.EventCreateRequest;
 import org.cherrypic.domain.event.dto.EventCreateResponse;
+import org.cherrypic.domain.event.dto.EventUpdateRequest;
+import org.cherrypic.domain.event.dto.EventUpdateResponse;
 import org.cherrypic.domain.event.service.EventService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/events")
@@ -28,5 +27,12 @@ public class EventController {
             @Valid @RequestBody EventCreateRequest request) {
         EventCreateResponse response = eventService.createEvent(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PatchMapping("/{eventId}")
+    @Operation(summary = "이벤트 수정", description = "기존 이벤트를 수정합니다.")
+    public EventUpdateResponse eventUpdate(
+            @PathVariable Long eventId, @Valid @RequestBody EventUpdateRequest request) {
+        return eventService.updateEvent(eventId, request);
     }
 }

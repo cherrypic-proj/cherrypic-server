@@ -7,6 +7,8 @@ import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.album.exception.AlbumException;
 import org.cherrypic.domain.event.dto.EventCreateRequest;
 import org.cherrypic.domain.event.dto.EventCreateResponse;
+import org.cherrypic.domain.event.dto.EventUpdateRequest;
+import org.cherrypic.domain.event.dto.EventUpdateResponse;
 import org.cherrypic.domain.event.exception.EventErrorCode;
 import org.cherrypic.domain.event.exception.EventException;
 import org.cherrypic.event.entity.Event;
@@ -31,13 +33,28 @@ public class EventServiceImpl implements EventService {
     @Override
     public EventCreateResponse createEvent(EventCreateRequest request) {
         final Member currentMember = memberUtil.getCurrentMember();
-        final Album album = getAlbumById(request.albumId());
+        Album album = getAlbumById(request.albumId());
         validateAlbumParticipant(currentMember, album);
 
         Event event = Event.createEvent(album, request.title(), request.coverUrl());
         eventRepository.save(event);
 
         return EventCreateResponse.from(event);
+    }
+
+    @Override
+    public EventUpdateResponse updateEvent(Long eventId, EventUpdateRequest request) {
+        final Member currentMember = memberUtil.getCurrentMember();
+
+        Event event =
+                eventRepository
+                        .findById(eventId)
+                        .orElseThrow(() -> new EventException(EventErrorCode.EVENT_NOT_FOUND));
+
+        event.changeTitle(request.title());
+        event.changeCoverUrl(request.coverUrl());
+
+        return EventUpdateResponse.from(event);
     }
 
     private Album getAlbumById(Long albumId) {
