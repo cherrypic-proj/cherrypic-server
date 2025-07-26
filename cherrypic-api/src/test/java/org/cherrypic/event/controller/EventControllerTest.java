@@ -35,7 +35,7 @@ public class EventControllerTest {
     @MockitoBean private EventService eventService;
 
     @Nested
-    class 이벤트를_생성시 {
+    class 이벤트를_생성_시 {
 
         @Test
         void 유효한_요청이면_이벤트_생성_정보를_반환한다() throws Exception {
