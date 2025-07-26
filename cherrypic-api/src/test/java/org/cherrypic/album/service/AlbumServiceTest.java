@@ -109,7 +109,7 @@ class AlbumServiceTest extends IntegrationTest {
         }
 
         @Test
-        void 유효한_요청이면_초대_코드를_저장하며_링크의_뒤에_포함된다() {
+        void 유효한_요청이면_초대_코드를_저장하며_반환되는_링크의_뒤에_포함된다() {
             // given
             given(memberUtil.getCurrentMember()).willReturn(memberRepository.findById(1L).get());
             InvitationLinkCreateRequest request = new InvitationLinkCreateRequest(1L);
@@ -145,6 +145,23 @@ class AlbumServiceTest extends IntegrationTest {
             Assertions.assertAll(
                     () -> assertThat(code).isPresent(),
                     () -> assertThat(invitationCodeBefore).isEqualTo(code.get().getCode()));
+        }
+
+        @Test
+        void 유효한_요청에_대해서_유효한_초대코드가_생성된다() {
+            // given
+            given(memberUtil.getCurrentMember()).willReturn(memberRepository.findById(1L).get());
+            InvitationLinkCreateRequest request = new InvitationLinkCreateRequest(1L);
+
+            // when
+            albumService.createInvitationLink(request);
+
+            // then
+            InvitationCode createdCode = invitationCodeRepository.findById(1L).orElseThrow();
+            Assertions.assertAll(
+                    () -> assertThat(createdCode.getAlbumId()).isEqualTo(1L),
+                    () -> assertThat(createdCode.getCode().length()).isEqualTo(8),
+                    () -> assertThat(createdCode.getTtl()).isEqualTo(1800L));
         }
 
         @Test
