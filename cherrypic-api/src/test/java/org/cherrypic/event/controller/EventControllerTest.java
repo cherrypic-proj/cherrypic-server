@@ -1,6 +1,7 @@
 package org.cherrypic.event.controller;
 
 import static org.mockito.BDDMockito.given;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -9,6 +10,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.cherrypic.domain.event.controller.EventController;
 import org.cherrypic.domain.event.dto.EventCreateRequest;
 import org.cherrypic.domain.event.dto.EventCreateResponse;
+import org.cherrypic.domain.event.dto.EventUpdateRequest;
+import org.cherrypic.domain.event.dto.EventUpdateResponse;
 import org.cherrypic.domain.event.service.EventService;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -104,10 +107,9 @@ public class EventControllerTest {
         }
 
         @Test
-        void 이벤트_이름이_100자를_넘어가면_예외가_발생한다() throws Exception {
+        void 이벤트_이름이_20자를_넘어가면_예외가_발생한다() throws Exception {
             // given
-            EventCreateRequest request =
-                    new EventCreateRequest(1L, "t".repeat(101), "testCoverUrl");
+            EventCreateRequest request = new EventCreateRequest(1L, "t".repeat(21), "testCoverUrl");
 
             // when & then
             ResultActions perform =
@@ -120,7 +122,80 @@ public class EventControllerTest {
                     .andExpect(jsonPath("$.success").value(false))
                     .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
                     .andExpect(jsonPath("$.data.code").value("MethodArgumentNotValidException"))
-                    .andExpect(jsonPath("$.data.message").value("이벤트 이름은 최대 100자까지 가능합니다."));
+                    .andExpect(jsonPath("$.data.message").value("이벤트 이름은 최대 20자까지 가능합니다."));
+        }
+    }
+
+    @Nested
+    class 이벤트_수정_시 {
+
+        @Test
+        void 유효한_요청이면_이벤트_수정_정보를_반환한다() throws Exception {
+            // given
+            EventUpdateRequest request =
+                    new EventUpdateRequest("testUpdatedTitle", "testUpdatedCoverUrl");
+            EventUpdateResponse response =
+                    new EventUpdateResponse(1L, "testUpdatedTitle", "testUpdatedCoverUrl");
+
+            given(eventService.updateEvent(1L, request)).willReturn(response);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            patch("/events/1")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
+                    .andExpect(jsonPath("$.data.eventId").value(1))
+                    .andExpect(jsonPath("$.data.title").value("testUpdatedTitle"))
+                    .andExpect(jsonPath("$.data.coverUrl").value("testUpdatedCoverUrl"));
+        }
+
+        // null 추가 생각
+
+        @ParameterizedTest
+        @NullSource
+        @EmptySource
+        @ValueSource(strings = {" "})
+        void 이벤트_이름이_null_또는_공백이면_예외가_발생한다(String title) throws Exception {
+            // given
+            EventUpdateRequest request = new EventUpdateRequest(title, "testUpdatedCoverUrl");
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            patch("/events/1")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("MethodArgumentNotValidException"))
+                    .andExpect(jsonPath("$.data.message").value("이벤트 이름은 비워둘 수 없습니다."));
+        }
+
+        @Test
+        void 이벤트_이름이_20자를_넘어가면_예외가_발생한다() throws Exception {
+            // given
+            EventUpdateRequest request =
+                    new EventUpdateRequest("t".repeat(21), "testUpdatedCoverUrl");
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            patch("/events/1")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("MethodArgumentNotValidException"))
+                    .andExpect(jsonPath("$.data.message").value("이벤트 이름은 최대 20자까지 가능합니다."));
         }
     }
 }
