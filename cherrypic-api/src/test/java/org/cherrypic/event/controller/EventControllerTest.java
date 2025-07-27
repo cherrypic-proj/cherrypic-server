@@ -154,8 +154,6 @@ public class EventControllerTest {
                     .andExpect(jsonPath("$.data.coverUrl").value("testUpdatedCoverUrl"));
         }
 
-        // null 추가 생각
-
         @ParameterizedTest
         @NullSource
         @EmptySource
