@@ -47,8 +47,8 @@ public class AlbumServiceImpl implements AlbumService {
     @Override
     public InvitationLinkCreateResponse createInvitationLink(Long albumId) {
         final Member currentMember = memberUtil.getCurrentMember();
+        final Album album = getAlbumById(albumId);
 
-        Album album = getAlbumById(albumId);
         validateInvitationAuthority(currentMember.getId(), album.getId());
 
         InvitationCode invitationCode =
