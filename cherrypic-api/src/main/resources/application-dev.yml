@@ -45,6 +45,10 @@ aws:
     bucket: ${S3_BUCKET}
     endpoint: ${S3_ENDPOINT:https://s3.ap-northeast-2.amazonaws.com}
 
+iamport:
+  key: ${IAMPORT_KEY}
+  secret: ${IAMPORT_SECRET}
+
 swagger:
   username: ${SWAGGER_USERNAME}
   password: ${SWAGGER_PASSWORD}
