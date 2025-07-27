@@ -48,7 +48,7 @@ public class AlbumServiceImpl implements AlbumService {
     public InvitationLinkCreateResponse createInvitationLink(Long albumId) {
         final Member currentMember = memberUtil.getCurrentMember();
 
-        Album album = getAlbum(albumId);
+        Album album = getAlbumById(albumId);
         validateInvitationAuthority(currentMember.getId(), album.getId());
 
         InvitationCode invitationCode =
@@ -81,7 +81,7 @@ public class AlbumServiceImpl implements AlbumService {
         }
     }
 
-    private Album getAlbum(Long albumId) {
+    private Album getAlbumById(Long albumId) {
         return albumRepository
                 .findById(albumId)
                 .orElseThrow(() -> new AlbumException(AlbumErrorCode.ALBUM_NOT_FOUND));
