@@ -7,6 +7,7 @@ import static org.mockito.BDDMockito.given;
 import java.util.List;
 import java.util.Optional;
 import org.cherrypic.IntegrationTest;
+import org.cherrypic.RedisCleaner;
 import org.cherrypic.album.entity.Album;
 import org.cherrypic.album.entity.InvitationCode;
 import org.cherrypic.album.repository.AlbumRepository;
@@ -24,15 +25,14 @@ import org.cherrypic.member.repository.MemberRepository;
 import org.cherrypic.participant.entity.Participant;
 import org.cherrypic.participant.enums.ParticipantRole;
 import org.cherrypic.participant.repository.ParticipantRepository;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.transaction.annotation.Transactional;
 
 class AlbumServiceTest extends IntegrationTest {
+
+    @Autowired private RedisCleaner redisCleaner;
 
     @Autowired private AlbumService albumService;
     @Autowired private AlbumRepository albumRepository;
@@ -106,6 +106,11 @@ class AlbumServiceTest extends IntegrationTest {
             Participant participant2 =
                     Participant.createParticipant(member2, album2, ParticipantRole.STANDARD);
             participantRepository.saveAll(List.of(participant1, participant2));
+        }
+
+        @AfterEach
+        void cleanUp() {
+            redisCleaner.flushAll();
         }
 
         @Test
