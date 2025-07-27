@@ -8,7 +8,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.cherrypic.domain.album.controller.AlbumController;
 import org.cherrypic.domain.album.dto.request.AlbumCreateRequest;
-import org.cherrypic.domain.album.dto.request.InvitationLinkCreateRequest;
 import org.cherrypic.domain.album.dto.response.AlbumCreateResponse;
 import org.cherrypic.domain.album.dto.response.InvitationLinkCreateResponse;
 import org.cherrypic.domain.album.service.AlbumService;
@@ -92,20 +91,20 @@ class AlbumControllerTest {
         @Test
         void 유효한_요청이면_초대_코드_정보를_반환한다() throws Exception {
             // given
-            InvitationLinkCreateRequest request = new InvitationLinkCreateRequest(1L);
+            Long albumId = 1L;
 
             InvitationLinkCreateResponse response =
                     new InvitationLinkCreateResponse(
                             "https://dev-api.cherrypic.today/participants/join?code=3FA7A9");
 
-            given(albumService.createInvitationLink(request)).willReturn(response);
+            given(albumService.createInvitationLink(albumId)).willReturn(response);
 
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            post("/albums/invitation-link")
+                            post("/albums/{albumId}/invitation-link", albumId)
                                     .contentType(MediaType.APPLICATION_JSON)
-                                    .content(objectMapper.writeValueAsString(request)));
+                                    .content(objectMapper.writeValueAsString(albumId)));
 
             perform.andExpect(status().isCreated())
                     .andExpect(jsonPath("$.success").value(true))
@@ -114,25 +113,6 @@ class AlbumControllerTest {
                             jsonPath("$.data.invitationLink")
                                     .value(
                                             "https://dev-api.cherrypic.today/participants/join?code=3FA7A9"));
-        }
-
-        @Test
-        void 앨범_id_가_null_이면_예외가_발생한다() throws Exception {
-            // given
-            InvitationLinkCreateRequest request = new InvitationLinkCreateRequest(null);
-
-            // when & then
-            ResultActions perform =
-                    mockMvc.perform(
-                            post("/albums/invitation-link")
-                                    .contentType(MediaType.APPLICATION_JSON)
-                                    .content(objectMapper.writeValueAsString(request)));
-
-            perform.andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.success").value(false))
-                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
-                    .andExpect(jsonPath("$.data.code").value("MethodArgumentNotValidException"))
-                    .andExpect(jsonPath("$.data.message").value("앨범 ID는 비워둘 수 없습니다."));
         }
     }
 }

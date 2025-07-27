@@ -5,7 +5,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.cherrypic.domain.album.dto.request.AlbumCreateRequest;
-import org.cherrypic.domain.album.dto.request.InvitationLinkCreateRequest;
 import org.cherrypic.domain.album.dto.response.AlbumCreateResponse;
 import org.cherrypic.domain.album.dto.response.InvitationLinkCreateResponse;
 import org.cherrypic.domain.album.service.AlbumService;
@@ -29,11 +28,11 @@ public class AlbumController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @PostMapping("/invitation-link")
+    @PostMapping("/{albumId}/invitation-link")
     @Operation(summary = "앨범 초대 링크 생성", description = "앨범 초대링크를 생성합니다.")
     public ResponseEntity<InvitationLinkCreateResponse> invitationLinkCreate(
-            @Valid @RequestBody InvitationLinkCreateRequest request) {
-        InvitationLinkCreateResponse response = albumService.createInvitationLink(request);
+            @PathVariable Long albumId) {
+        InvitationLinkCreateResponse response = albumService.createInvitationLink(albumId);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }

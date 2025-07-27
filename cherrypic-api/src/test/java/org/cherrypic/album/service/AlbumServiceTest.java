@@ -13,7 +13,6 @@ import org.cherrypic.album.entity.InvitationCode;
 import org.cherrypic.album.repository.AlbumRepository;
 import org.cherrypic.album.repository.InvitationCodeRepository;
 import org.cherrypic.domain.album.dto.request.AlbumCreateRequest;
-import org.cherrypic.domain.album.dto.request.InvitationLinkCreateRequest;
 import org.cherrypic.domain.album.dto.response.InvitationLinkCreateResponse;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.album.exception.AlbumException;
@@ -117,10 +116,9 @@ class AlbumServiceTest extends IntegrationTest {
         void 유효한_요청이면_초대_코드를_저장하며_초대_링크가_반환된다() {
             // given
             given(memberUtil.getCurrentMember()).willReturn(memberRepository.findById(1L).get());
-            InvitationLinkCreateRequest request = new InvitationLinkCreateRequest(1L);
 
             // when
-            InvitationLinkCreateResponse response = albumService.createInvitationLink(request);
+            InvitationLinkCreateResponse response = albumService.createInvitationLink(1L);
 
             // then
             InvitationCode savedCode = invitationCodeRepository.findById(1L).orElseThrow();
@@ -140,10 +138,8 @@ class AlbumServiceTest extends IntegrationTest {
             invitationCodeRepository.save(invitationCode);
             String invitationCodeBefore = invitationCode.getCode();
 
-            InvitationLinkCreateRequest request = new InvitationLinkCreateRequest(1L);
-
             // when
-            albumService.createInvitationLink(request);
+            albumService.createInvitationLink(1L);
 
             // then
             Optional<InvitationCode> code = invitationCodeRepository.findById(1L);
@@ -156,10 +152,9 @@ class AlbumServiceTest extends IntegrationTest {
         void 유효한_요청에_대해서_유효한_초대코드가_생성된다() {
             // given
             given(memberUtil.getCurrentMember()).willReturn(memberRepository.findById(1L).get());
-            InvitationLinkCreateRequest request = new InvitationLinkCreateRequest(1L);
 
             // when
-            albumService.createInvitationLink(request);
+            albumService.createInvitationLink(1L);
 
             // then
             InvitationCode createdCode = invitationCodeRepository.findById(1L).orElseThrow();
@@ -173,10 +168,9 @@ class AlbumServiceTest extends IntegrationTest {
         void 현재_유저가_HOST가_아닌_경우_예외가_발생한다() {
             // given
             given(memberUtil.getCurrentMember()).willReturn(memberRepository.findById(2L).get());
-            InvitationLinkCreateRequest request = new InvitationLinkCreateRequest(2L);
 
             // when & then
-            assertThatThrownBy(() -> albumService.createInvitationLink(request))
+            assertThatThrownBy(() -> albumService.createInvitationLink(2L))
                     .isInstanceOf(AlbumException.class)
                     .hasMessage(AlbumErrorCode.NOT_ALBUM_HOST.getMessage());
         }
@@ -185,10 +179,9 @@ class AlbumServiceTest extends IntegrationTest {
         void 현재_유저가_앨범_소속이_아닌_경우_예외가_발생한다() {
             // given
             given(memberUtil.getCurrentMember()).willReturn(memberRepository.findById(2L).get());
-            InvitationLinkCreateRequest request = new InvitationLinkCreateRequest(1L);
 
             // when & then
-            assertThatThrownBy(() -> albumService.createInvitationLink(request))
+            assertThatThrownBy(() -> albumService.createInvitationLink(1L))
                     .isInstanceOf(AlbumException.class)
                     .hasMessage(AlbumErrorCode.NOT_ALBUM_PARTICIPANT.getMessage());
         }
@@ -197,10 +190,9 @@ class AlbumServiceTest extends IntegrationTest {
         void 존재하지_않는_앨범_ID_를_입력한_경우_예외가_발생한다() {
             // given
             given(memberUtil.getCurrentMember()).willReturn(memberRepository.findById(2L).get());
-            InvitationLinkCreateRequest request = new InvitationLinkCreateRequest(3L);
 
             // when & then
-            assertThatThrownBy(() -> albumService.createInvitationLink(request))
+            assertThatThrownBy(() -> albumService.createInvitationLink(3L))
                     .isInstanceOf(AlbumException.class)
                     .hasMessage(AlbumErrorCode.ALBUM_NOT_FOUND.getMessage());
         }
