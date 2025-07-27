@@ -103,7 +103,7 @@ class AlbumControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            post("/albums/invite-link")
+                            post("/albums/invitation-link")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -124,7 +124,7 @@ class AlbumControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            post("/albums/invite-link")
+                            post("/albums/invitation-link")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
