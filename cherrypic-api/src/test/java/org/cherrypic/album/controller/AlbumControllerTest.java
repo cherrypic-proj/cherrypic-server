@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.cherrypic.domain.album.controller.AlbumController;
 import org.cherrypic.domain.album.dto.request.AlbumCreateRequest;
 import org.cherrypic.domain.album.dto.response.AlbumCreateResponse;
+import org.cherrypic.domain.album.dto.response.InvitationLinkCreateResponse;
 import org.cherrypic.domain.album.service.AlbumService;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -35,7 +36,7 @@ class AlbumControllerTest {
     @MockitoBean private AlbumService albumService;
 
     @Nested
-    class 앨범을_생성할_때 {
+    class 앨범_생성_요청_시 {
 
         @Test
         void 유효한_요청이면_앨범_생성_정보를_반환한다() throws Exception {
@@ -81,6 +82,37 @@ class AlbumControllerTest {
                     .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
                     .andExpect(jsonPath("$.data.code").value("MethodArgumentNotValidException"))
                     .andExpect(jsonPath("$.data.message").value("앨범 이름은 비워둘 수 없습니다."));
+        }
+    }
+
+    @Nested
+    class 앨범_초대_코드_생성_요청_시 {
+
+        @Test
+        void 유효한_요청이면_초대_코드_정보를_반환한다() throws Exception {
+            // given
+            Long albumId = 1L;
+
+            InvitationLinkCreateResponse response =
+                    new InvitationLinkCreateResponse(
+                            "https://dev-api.cherrypic.today/participants/join?code=3FA7A9");
+
+            given(albumService.createInvitationLink(albumId)).willReturn(response);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/albums/{albumId}/invitation-link", albumId)
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(albumId)));
+
+            perform.andExpect(status().isCreated())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.CREATED.value()))
+                    .andExpect(
+                            jsonPath("$.data.invitationLink")
+                                    .value(
+                                            "https://dev-api.cherrypic.today/participants/join?code=3FA7A9"));
         }
     }
 }

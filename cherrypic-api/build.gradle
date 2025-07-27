@@ -31,5 +31,7 @@ dependencies {
 
     implementation 'io.awspring.cloud:spring-cloud-starter-aws:2.4.4'
 
+    testImplementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
     implementation 'com.github.iamport:iamport-rest-client-java:0.2.23'
 }
