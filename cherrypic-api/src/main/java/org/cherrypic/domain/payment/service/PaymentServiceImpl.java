@@ -31,9 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class PaymentServiceImpl implements PaymentService {
 
     private final MemberUtil memberUtil;
-
     private final IamportClient iamportClient;
-
     private final PaymentRepository paymentRepository;
 
     @Override
