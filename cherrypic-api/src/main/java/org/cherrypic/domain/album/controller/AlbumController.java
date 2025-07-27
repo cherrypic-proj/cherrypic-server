@@ -29,8 +29,8 @@ public class AlbumController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @PostMapping("/invite-link")
-    @Operation(summary = "앨범 초대 링크 생성", description = "새로운 앨범 초대링크를 생성합니다.")
+    @PostMapping("/invitation-link")
+    @Operation(summary = "앨범 초대 링크 생성", description = "앨범 초대링크를 생성합니다.")
     public ResponseEntity<InvitationLinkCreateResponse> invitationLinkCreate(
             @Valid @RequestBody InvitationLinkCreateRequest request) {
         InvitationLinkCreateResponse response = albumService.createInvitationLink(request);

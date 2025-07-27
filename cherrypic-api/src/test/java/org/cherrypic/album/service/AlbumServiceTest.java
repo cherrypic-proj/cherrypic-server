@@ -114,7 +114,7 @@ class AlbumServiceTest extends IntegrationTest {
         }
 
         @Test
-        void 유효한_요청이면_초대_코드를_저장하며_반환되는_링크의_뒤에_포함된다() {
+        void 유효한_요청이면_초대_코드를_저장하며_초대_링크가_반환된다() {
             // given
             given(memberUtil.getCurrentMember()).willReturn(memberRepository.findById(1L).get());
             InvitationLinkCreateRequest request = new InvitationLinkCreateRequest(1L);

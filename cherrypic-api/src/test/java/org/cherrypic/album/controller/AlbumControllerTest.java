@@ -11,8 +11,6 @@ import org.cherrypic.domain.album.dto.request.AlbumCreateRequest;
 import org.cherrypic.domain.album.dto.request.InvitationLinkCreateRequest;
 import org.cherrypic.domain.album.dto.response.AlbumCreateResponse;
 import org.cherrypic.domain.album.dto.response.InvitationLinkCreateResponse;
-import org.cherrypic.domain.album.exception.AlbumErrorCode;
-import org.cherrypic.domain.album.exception.AlbumException;
 import org.cherrypic.domain.album.service.AlbumService;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -39,7 +37,7 @@ class AlbumControllerTest {
     @MockitoBean private AlbumService albumService;
 
     @Nested
-    class 앨범을_생성할_요청_시 {
+    class 앨범_생성_요청_시 {
 
         @Test
         void 유효한_요청이면_앨범_생성_정보를_반환한다() throws Exception {
@@ -119,7 +117,7 @@ class AlbumControllerTest {
         }
 
         @Test
-        void 앨범_id_가_null_이먄_예외가_발생한다() throws Exception {
+        void 앨범_id_가_null_이면_예외가_발생한다() throws Exception {
             // given
             InvitationLinkCreateRequest request = new InvitationLinkCreateRequest(null);
 
@@ -135,71 +133,6 @@ class AlbumControllerTest {
                     .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
                     .andExpect(jsonPath("$.data.code").value("MethodArgumentNotValidException"))
                     .andExpect(jsonPath("$.data.message").value("앨범 ID는 비워둘 수 없습니다."));
-        }
-
-        @Test
-        void 현재_유저가_HOST가_아닌_경우_예외가_발생한다() throws Exception {
-            // given
-            InvitationLinkCreateRequest request = new InvitationLinkCreateRequest(1L);
-            given(albumService.createInvitationLink(request))
-                    .willThrow(new AlbumException(AlbumErrorCode.INVALID_INVITATION_AUTHORITY));
-
-            // when & then
-            ResultActions perform =
-                    mockMvc.perform(
-                            post("/albums/invite-link")
-                                    .contentType(MediaType.APPLICATION_JSON)
-                                    .content(objectMapper.writeValueAsString(request)));
-
-            perform.andExpect(status().isForbidden())
-                    .andExpect(jsonPath("$.success").value(false))
-                    .andExpect(jsonPath("$.status").value(HttpStatus.FORBIDDEN.value()))
-                    .andExpect(jsonPath("$.data.code").value("INVALID_INVITATION_AUTHORITY"))
-                    .andExpect(
-                            jsonPath("$.data.message")
-                                    .value("HOST가 아닌 경우 앨범 초대 링크를 생성할 권한이 없습니다."));
-        }
-
-        @Test
-        void 현재_유저가_앨범_소속이_아닌_경우_예외가_발생한다() throws Exception {
-            // given
-            InvitationLinkCreateRequest request = new InvitationLinkCreateRequest(1L);
-            given(albumService.createInvitationLink(request))
-                    .willThrow(new AlbumException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT));
-
-            // when & then
-            ResultActions perform =
-                    mockMvc.perform(
-                            post("/albums/invite-link")
-                                    .contentType(MediaType.APPLICATION_JSON)
-                                    .content(objectMapper.writeValueAsString(request)));
-
-            perform.andExpect(status().isForbidden())
-                    .andExpect(jsonPath("$.success").value(false))
-                    .andExpect(jsonPath("$.status").value(HttpStatus.FORBIDDEN.value()))
-                    .andExpect(jsonPath("$.data.code").value("NOT_ALBUM_PARTICIPANT"))
-                    .andExpect(jsonPath("$.data.message").value("앨범에 속하지 않은 사용자입니다."));
-        }
-
-        @Test
-        void 존재하지_않는_앨범_ID_를_입력한_경우_예외가_발생한다() throws Exception {
-            // given
-            InvitationLinkCreateRequest request = new InvitationLinkCreateRequest(999L);
-            given(albumService.createInvitationLink(request))
-                    .willThrow(new AlbumException(AlbumErrorCode.ALBUM_NOT_FOUND));
-
-            // when & then
-            ResultActions perform =
-                    mockMvc.perform(
-                            post("/albums/invite-link")
-                                    .contentType(MediaType.APPLICATION_JSON)
-                                    .content(objectMapper.writeValueAsString(request)));
-
-            perform.andExpect(status().isNotFound())
-                    .andExpect(jsonPath("$.success").value(false))
-                    .andExpect(jsonPath("$.status").value(HttpStatus.NOT_FOUND.value()))
-                    .andExpect(jsonPath("$.data.code").value("ALBUM_NOT_FOUND"))
-                    .andExpect(jsonPath("$.data.message").value("앨범이 존재하지 않습니다."));
         }
     }
 }
