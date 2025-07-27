@@ -8,8 +8,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.cherrypic.album.enums.AlbumPlan;
 import org.cherrypic.domain.payment.controller.PaymentController;
-import org.cherrypic.domain.payment.dto.PaymentReadyRequest;
-import org.cherrypic.domain.payment.dto.PaymentReadyResponse;
+import org.cherrypic.domain.payment.dto.request.PaymentReadyRequest;
+import org.cherrypic.domain.payment.dto.response.PaymentReadyResponse;
+import org.cherrypic.domain.payment.dto.response.PaymentVerificationResponse;
 import org.cherrypic.domain.payment.exception.PaymentErrorCode;
 import org.cherrypic.domain.payment.exception.PaymentException;
 import org.cherrypic.domain.payment.service.PaymentService;
@@ -116,6 +117,108 @@ class PaymentControllerTest {
                             jsonPath("$.data.message")
                                     .value(
                                             "해당 플랜은 유료 결제가 필요하지 않습니다. PRO 또는 PREMIUM 플랜만 결제가 가능합니다."));
+        }
+    }
+
+    @Nested
+    class 앨범_유료_플랜_결제_검증_요청_시 {
+
+        @Test
+        void 유효한_요청이면_결제_ID를_반환한다() throws Exception {
+            // given
+            PaymentVerificationResponse response = new PaymentVerificationResponse(1L);
+
+            given(paymentService.verifyPayment("imp_1234")).willReturn(response);
+
+            // when & then
+            ResultActions perform = mockMvc.perform(post("/payments/verify/imp_1234"));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
+                    .andExpect(jsonPath("$.data.paymentId").value("1"));
+        }
+
+        @Test
+        void impUid가_아임포트에_존재하지_않으면_예외가_발생한다() throws Exception {
+            // given
+            given(paymentService.verifyPayment("imp_1234"))
+                    .willThrow(new PaymentException(PaymentErrorCode.PAYMENT_NOT_FOUND));
+
+            // when & then
+            ResultActions perform = mockMvc.perform(post("/payments/verify/imp_1234"));
+
+            perform.andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.NOT_FOUND.value()))
+                    .andExpect(jsonPath("$.data.code").value("PAYMENT_NOT_FOUND"))
+                    .andExpect(jsonPath("$.data.message").value("결제 정보가 존재하지 않습니다."));
+        }
+
+        @Test
+        void merchantUid에_해당하는_결제가_DB에_없으면_예외가_발생한다() throws Exception {
+            // given
+            given(paymentService.verifyPayment("imp_1234"))
+                    .willThrow(new PaymentException(PaymentErrorCode.PAYMENT_NOT_FOUND));
+
+            // when & then
+            ResultActions perform = mockMvc.perform(post("/payments/verify/imp_1234"));
+
+            perform.andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.NOT_FOUND.value()))
+                    .andExpect(jsonPath("$.data.code").value("PAYMENT_NOT_FOUND"))
+                    .andExpect(jsonPath("$.data.message").value("결제 정보가 존재하지 않습니다."));
+        }
+
+        @Test
+        void 결제_금액이_불일치하면_예외가_발생한다() throws Exception {
+            // given
+            given(paymentService.verifyPayment("imp_1234"))
+                    .willThrow(new PaymentException(PaymentErrorCode.AMOUNT_MISMATCH));
+
+            // when & then
+            ResultActions perform = mockMvc.perform(post("/payments/verify/imp_1234"));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("AMOUNT_MISMATCH"))
+                    .andExpect(jsonPath("$.data.message").value("결제 금액이 일치하지 않아 검증에 실패했습니다."));
+        }
+
+        @Test
+        void 결제_상태가_PAID가_아니면_예외가_발생한다() throws Exception {
+            // given
+            given(paymentService.verifyPayment("imp_1234"))
+                    .willThrow(new PaymentException(PaymentErrorCode.NOT_PAID));
+
+            // when & then
+            ResultActions perform = mockMvc.perform(post("/payments/verify/imp_1234"));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("NOT_PAID"))
+                    .andExpect(jsonPath("$.data.message").value("결제가 완료되지 않아 검증에 실패했습니다."));
+        }
+
+        @Test
+        void Iamport_API_통신_장애가_발생하면_예외가_발생한다() throws Exception {
+            // given
+            given(paymentService.verifyPayment("imp_1234"))
+                    .willThrow(new PaymentException(PaymentErrorCode.IAMPORT_API_UNAVAILABLE));
+
+            // when & then
+            ResultActions perform = mockMvc.perform(post("/payments/verify/imp_1234"));
+
+            perform.andExpect(status().isServiceUnavailable())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.SERVICE_UNAVAILABLE.value()))
+                    .andExpect(jsonPath("$.data.code").value("IAMPORT_API_UNAVAILABLE"))
+                    .andExpect(
+                            jsonPath("$.data.message")
+                                    .value("결제 대행 시스템(Iamport)과의 통신에 실패했습니다. 잠시 후 다시 시도해주세요."));
         }
     }
 }
