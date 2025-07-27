@@ -50,8 +50,8 @@ public class AlbumServiceImpl implements AlbumService {
     public InvitationLinkCreateResponse createInvitationLink(InvitationLinkCreateRequest request) {
         final Member currentMember = memberUtil.getCurrentMember();
 
-        validateAlbumId(request.albumId());
-        validateInvitationAuthority(currentMember.getId(), request.albumId());
+        Album album = getAlbum(request.albumId());
+        validateInvitationAuthority(currentMember.getId(), album.getId());
 
         Optional<InvitationCode> invitationCode =
                 invitationCodeRepository.findById(request.albumId());
@@ -76,16 +76,16 @@ public class AlbumServiceImpl implements AlbumService {
                         .orElseThrow(
                                 () -> new AlbumException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT));
 
-        if (!participant.getRole().equals(ParticipantRole.HOST)) {
-            throw new AlbumException(AlbumErrorCode.INVALID_INVITATION_AUTHORITY);
+        boolean isHost = participant.getRole().equals(ParticipantRole.HOST);
+
+        if (!isHost) {
+            throw new AlbumException(AlbumErrorCode.NOT_ALBUM_HOST);
         }
     }
 
-    private void validateAlbumId(Long albumId) {
-        Optional<Album> album = albumRepository.findById(albumId);
-
-        if (album.isEmpty()) {
-            throw new AlbumException(AlbumErrorCode.ALBUM_NOT_FOUND);
-        }
+    private Album getAlbum(Long albumId) {
+        return albumRepository
+                .findById(albumId)
+                .orElseThrow(() -> new AlbumException(AlbumErrorCode.ALBUM_NOT_FOUND));
     }
 }

@@ -3,11 +3,9 @@ package org.cherrypic.domain.album.service;
 import java.time.Duration;
 import java.util.UUID;
 import org.cherrypic.album.entity.InvitationCode;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 @Service
-@Component
 public class InvitationLinkService {
 
     private static final String INVITATION_LINK_PREFIX =

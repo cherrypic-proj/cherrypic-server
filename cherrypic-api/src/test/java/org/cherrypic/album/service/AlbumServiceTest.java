@@ -178,7 +178,7 @@ class AlbumServiceTest extends IntegrationTest {
             // when & then
             assertThatThrownBy(() -> albumService.createInvitationLink(request))
                     .isInstanceOf(AlbumException.class)
-                    .hasMessage(AlbumErrorCode.INVALID_INVITATION_AUTHORITY.getMessage());
+                    .hasMessage(AlbumErrorCode.NOT_ALBUM_HOST.getMessage());
         }
 
         @Test
