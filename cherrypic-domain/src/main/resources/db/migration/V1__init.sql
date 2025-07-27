@@ -35,7 +35,6 @@ CREATE TABLE album (
 CREATE TABLE payment (
                          id BIGINT AUTO_INCREMENT PRIMARY KEY,
                          member_id BIGINT NOT NULL,
-                         album_id BIGINT,
                          merchant_uid VARCHAR(255) NOT NULL,
                          imp_uid VARCHAR(255),
                          pg_provider VARCHAR(255),
@@ -44,8 +43,7 @@ CREATE TABLE payment (
                          paid_at DATETIME,
                          created_at DATETIME(6) NOT NULL,
                          updated_at DATETIME(6) NOT NULL,
-                         CONSTRAINT fk_payment_member FOREIGN KEY (member_id) REFERENCES member (id),
-                         CONSTRAINT fk_payment_album FOREIGN KEY (album_id) REFERENCES album (id)
+                         CONSTRAINT fk_payment_member FOREIGN KEY (member_id) REFERENCES member (id)
 );
 
 

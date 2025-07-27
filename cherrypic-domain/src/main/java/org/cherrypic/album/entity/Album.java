@@ -14,7 +14,6 @@ import org.cherrypic.event.entity.Event;
 import org.cherrypic.favorites.entity.Favorites;
 import org.cherrypic.image.entity.Image;
 import org.cherrypic.participant.entity.Participant;
-import org.cherrypic.payment.entity.Payment;
 
 @Getter
 @Entity
@@ -31,9 +30,6 @@ public class Album extends BaseTimeEntity {
 
     @Enumerated(EnumType.STRING)
     private AlbumPlan plan;
-
-    @OneToMany(mappedBy = "album", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Payment> payments = new ArrayList<>();
 
     @OneToMany(mappedBy = "album", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Favorites> favorites = new ArrayList<>();
