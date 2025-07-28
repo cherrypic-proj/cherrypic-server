@@ -69,12 +69,15 @@ public class EventServiceImpl implements EventService {
                 .orElseThrow(() -> new EventException(EventErrorCode.EVENT_NOT_FOUND));
     }
 
+    private Participant getParticipantByMemberIdAndAlbumId(Long memberId, Long albumId) {
+        return participantRepository
+                .findByMemberIdAndAlbumId(memberId, albumId)
+                .orElseThrow(() -> new EventException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT));
+    }
+
     private void validateParticipantAuthority(Member member, Album album) {
-        Participant participant =
-                participantRepository
-                        .findByMemberIdAndAlbumId(member.getId(), album.getId())
-                        .orElseThrow(
-                                () -> new EventException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT));
+
+        Participant participant = getParticipantByMemberIdAndAlbumId(member.getId(), album.getId());
 
         boolean isLimited = participant.getRole().equals(ParticipantRole.LIMITED);
         if (isLimited) {
