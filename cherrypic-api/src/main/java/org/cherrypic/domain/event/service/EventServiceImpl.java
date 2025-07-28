@@ -15,6 +15,8 @@ import org.cherrypic.event.entity.Event;
 import org.cherrypic.event.repository.EventRepository;
 import org.cherrypic.global.util.MemberUtil;
 import org.cherrypic.member.entity.Member;
+import org.cherrypic.participant.entity.Participant;
+import org.cherrypic.participant.enums.ParticipantRole;
 import org.cherrypic.participant.repository.ParticipantRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,8 +35,9 @@ public class EventServiceImpl implements EventService {
     @Override
     public EventCreateResponse createEvent(EventCreateRequest request) {
         final Member currentMember = memberUtil.getCurrentMember();
-        Album album = getAlbumById(request.albumId());
-        validateAlbumParticipant(currentMember, album);
+        final Album album = getAlbumById(request.albumId());
+
+        validateParticipantAuthority(currentMember, album);
 
         Event event = Event.createEvent(album, request.title(), request.coverUrl());
         eventRepository.save(event);
@@ -45,11 +48,9 @@ public class EventServiceImpl implements EventService {
     @Override
     public EventUpdateResponse updateEvent(Long eventId, EventUpdateRequest request) {
         final Member currentMember = memberUtil.getCurrentMember();
+        final Event event = getEventById(eventId);
 
-        Event event =
-                eventRepository
-                        .findById(eventId)
-                        .orElseThrow(() -> new EventException(EventErrorCode.EVENT_NOT_FOUND));
+        validateParticipantAuthority(currentMember, event.getAlbum());
 
         event.changeTitle(request.title());
         event.changeCoverUrl(request.coverUrl());
@@ -63,9 +64,22 @@ public class EventServiceImpl implements EventService {
                 .orElseThrow(() -> new AlbumException(AlbumErrorCode.ALBUM_NOT_FOUND));
     }
 
-    private void validateAlbumParticipant(Member member, Album album) {
-        if (!participantRepository.existsByMemberIdAndAlbumId(member.getId(), album.getId())) {
-            throw new EventException(EventErrorCode.NOT_ALBUM_PARTICIPANT);
+    private Event getEventById(Long eventId) {
+        return eventRepository
+                .findById(eventId)
+                .orElseThrow(() -> new EventException(EventErrorCode.EVENT_NOT_FOUND));
+    }
+
+    private void validateParticipantAuthority(Member member, Album album) {
+        Participant participant =
+                participantRepository
+                        .findByMemberIdAndAlbumId(member.getId(), album.getId())
+                        .orElseThrow(
+                                () -> new EventException(EventErrorCode.NOT_ALBUM_PARTICIPANT));
+
+        boolean isLimited = participant.getRole().equals(ParticipantRole.LIMITED);
+        if (isLimited) {
+            throw new EventException(EventErrorCode.LIMITED_AUTHORITY);
         }
     }
 }
