@@ -52,7 +52,7 @@ CREATE TABLE payment (
 CREATE TABLE event (
                        id BIGINT AUTO_INCREMENT PRIMARY KEY,
                        album_id BIGINT NOT NULL,
-                       title VARCHAR(100) NOT NULL,
+                       title VARCHAR(20) NOT NULL,
                        cover_url VARCHAR(255),
                        created_at DATETIME(6) NOT NULL,
                        updated_at DATETIME(6) NOT NULL,
