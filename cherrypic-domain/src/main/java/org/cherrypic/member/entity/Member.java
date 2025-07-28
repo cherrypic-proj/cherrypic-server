@@ -22,9 +22,6 @@ public class Member extends BaseTimeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne(mappedBy = "member", fetch = FetchType.LAZY)
-    private Subscription subscription;
-
     @Embedded private OauthInfo oauthInfo;
 
     @NotNull private String nickname;
@@ -43,6 +40,9 @@ public class Member extends BaseTimeEntity {
 
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Payment> payments = new ArrayList<>();
+
+    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Subscription> subscriptions = new ArrayList<>();
 
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Participant> participants = new ArrayList<>();

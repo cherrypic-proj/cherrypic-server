@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.cherrypic.album.entity.Album;
 import org.cherrypic.member.entity.Member;
 import org.cherrypic.subscription.enums.SubscriptionStatus;
 
@@ -18,9 +19,13 @@ public class Subscription {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "member_id", unique = true)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "member_id")
     private Member member;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "album_id", unique = true)
+    private Album album;
 
     @NotNull
     @Enumerated(EnumType.STRING)
