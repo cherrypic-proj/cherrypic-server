@@ -56,6 +56,9 @@ public class AlbumServiceImpl implements AlbumService {
 
             validatePaidStatus(payment);
             validatePaymentMemberMismatch(currentMember, payment);
+            validatePaymentNotUsed(payment);
+
+            album.addPayment(payment);
 
             Subscription subscription =
                     Subscription.createSubscription(currentMember, album, payment.getPaidAt());
@@ -109,6 +112,12 @@ public class AlbumServiceImpl implements AlbumService {
     private void validatePaymentMemberMismatch(Member member, Payment payment) {
         if (!payment.getMember().getId().equals(member.getId())) {
             throw new AlbumException(PaymentErrorCode.PAYMENT_MEMBER_MISMATCH);
+        }
+    }
+
+    private void validatePaymentNotUsed(Payment payment) {
+        if (albumRepository.existsByPayment(payment)) {
+            throw new AlbumException(PaymentErrorCode.ALREADY_USED_PAYMENT);
         }
     }
 
