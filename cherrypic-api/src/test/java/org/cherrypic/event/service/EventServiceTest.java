@@ -8,6 +8,7 @@ import java.util.List;
 import org.cherrypic.IntegrationTest;
 import org.cherrypic.album.entity.Album;
 import org.cherrypic.album.repository.AlbumRepository;
+import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.event.dto.EventCreateRequest;
 import org.cherrypic.domain.event.dto.EventUpdateRequest;
 import org.cherrypic.domain.event.exception.EventErrorCode;
@@ -94,7 +95,7 @@ public class EventServiceTest extends IntegrationTest {
             // when & then
             assertThatThrownBy(() -> eventService.createEvent(request))
                     .isInstanceOf(EventException.class)
-                    .hasMessage(EventErrorCode.NOT_ALBUM_PARTICIPANT.getMessage());
+                    .hasMessage(AlbumErrorCode.NOT_ALBUM_PARTICIPANT.getMessage());
         }
 
         @Test
@@ -108,7 +109,7 @@ public class EventServiceTest extends IntegrationTest {
             // when & then
             assertThatThrownBy(() -> eventService.createEvent(request))
                     .isInstanceOf(EventException.class)
-                    .hasMessage(EventErrorCode.LIMITED_AUTHORITY.getMessage());
+                    .hasMessage(AlbumErrorCode.LIMITED_AUTHORITY.getMessage());
         }
     }
 
@@ -191,7 +192,7 @@ public class EventServiceTest extends IntegrationTest {
             // when & then
             assertThatThrownBy(() -> eventService.updateEvent(2L, request))
                     .isInstanceOf(EventException.class)
-                    .hasMessage(EventErrorCode.NOT_ALBUM_PARTICIPANT.getMessage());
+                    .hasMessage(AlbumErrorCode.NOT_ALBUM_PARTICIPANT.getMessage());
         }
 
         @Test
@@ -206,7 +207,7 @@ public class EventServiceTest extends IntegrationTest {
             // when & then
             assertThatThrownBy(() -> eventService.updateEvent(1L, request))
                     .isInstanceOf(EventException.class)
-                    .hasMessage(EventErrorCode.LIMITED_AUTHORITY.getMessage());
+                    .hasMessage(AlbumErrorCode.LIMITED_AUTHORITY.getMessage());
         }
     }
 }

@@ -52,8 +52,7 @@ public class EventServiceImpl implements EventService {
 
         validateParticipantAuthority(currentMember, event.getAlbum());
 
-        event.changeTitle(request.title());
-        event.changeCoverUrl(request.coverUrl());
+        event.updateEvent(request.title(), request.coverUrl());
 
         return EventUpdateResponse.from(event);
     }
@@ -75,11 +74,11 @@ public class EventServiceImpl implements EventService {
                 participantRepository
                         .findByMemberIdAndAlbumId(member.getId(), album.getId())
                         .orElseThrow(
-                                () -> new EventException(EventErrorCode.NOT_ALBUM_PARTICIPANT));
+                                () -> new EventException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT));
 
         boolean isLimited = participant.getRole().equals(ParticipantRole.LIMITED);
         if (isLimited) {
-            throw new EventException(EventErrorCode.LIMITED_AUTHORITY);
+            throw new EventException(AlbumErrorCode.LIMITED_AUTHORITY);
         }
     }
 }
