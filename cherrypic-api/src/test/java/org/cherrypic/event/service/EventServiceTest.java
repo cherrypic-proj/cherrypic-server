@@ -177,7 +177,7 @@ public class EventServiceTest extends IntegrationTest {
                     new EventUpdateRequest("changedTestEventTitle", "changedTestEventCoverUrl");
 
             // when % then
-            assertThatThrownBy(() -> eventService.updateEvent(2L, request))
+            assertThatThrownBy(() -> eventService.updateEvent(999L, request))
                     .isInstanceOf(EventException.class)
                     .hasMessage(EventErrorCode.EVENT_NOT_FOUND.getMessage());
         }
