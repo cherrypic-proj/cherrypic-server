@@ -127,7 +127,7 @@ public class EventControllerTest {
     }
 
     @Nested
-    class 이벤트_수정_시 {
+    class 이벤트_수정_요청_시 {
 
         @Test
         void 유효한_요청이면_이벤트_수정_정보를_반환한다() throws Exception {
