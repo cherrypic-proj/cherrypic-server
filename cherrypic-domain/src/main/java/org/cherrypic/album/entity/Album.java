@@ -14,6 +14,7 @@ import org.cherrypic.event.entity.Event;
 import org.cherrypic.favorites.entity.Favorites;
 import org.cherrypic.image.entity.Image;
 import org.cherrypic.participant.entity.Participant;
+import org.cherrypic.payment.entity.Payment;
 import org.cherrypic.subscription.entity.Subscription;
 
 @Getter
@@ -24,6 +25,10 @@ public class Album extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "payment_id")
+    private Payment payment;
 
     @NotNull private String title;
 
@@ -56,6 +61,10 @@ public class Album extends BaseTimeEntity {
 
     public static Album createAlbum(String title, String coverUrl, AlbumPlan plan) {
         return Album.builder().title(title).coverUrl(coverUrl).plan(plan).build();
+    }
+
+    public void addPayment(Payment payment) {
+        this.payment = payment;
     }
 
     public void addParticipant(Participant participant) {

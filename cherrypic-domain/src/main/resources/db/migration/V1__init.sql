@@ -29,11 +29,13 @@ CREATE TABLE payment (
 
 CREATE TABLE album (
                        id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                       payment_id BIGINT,
                        title VARCHAR(50) NOT NULL,
                        cover_url VARCHAR(255),
                        plan VARCHAR(255) CHECK (plan IN ('BASIC','PRO','PREMIUM')),
                        created_at DATETIME(6) NOT NULL,
-                       updated_at DATETIME(6) NOT NULL
+                       updated_at DATETIME(6) NOT NULL,
+                       CONSTRAINT fk_album_payment FOREIGN KEY (payment_id) REFERENCES payment (id)
 );
 
 
