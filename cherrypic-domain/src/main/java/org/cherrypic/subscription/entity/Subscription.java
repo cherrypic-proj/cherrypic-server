@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.cherrypic.album.entity.Album;
@@ -36,4 +37,32 @@ public class Subscription {
     private LocalDateTime endAt;
 
     private LocalDateTime nextBillingAt;
+
+    @Builder(access = AccessLevel.PRIVATE)
+    private Subscription(
+            Member member,
+            Album album,
+            SubscriptionStatus status,
+            LocalDateTime startAt,
+            LocalDateTime endAt,
+            LocalDateTime nextBillingAt) {
+        this.member = member;
+        this.album = album;
+        this.status = status;
+        this.startAt = startAt;
+        this.endAt = endAt;
+        this.nextBillingAt = nextBillingAt;
+    }
+
+    public static Subscription createSubscription(
+            Member member, Album album, LocalDateTime paidAt) {
+        return Subscription.builder()
+                .member(member)
+                .album(album)
+                .status(SubscriptionStatus.ACTIVE)
+                .startAt(paidAt)
+                .endAt(paidAt.plusMonths(1))
+                .nextBillingAt(paidAt.plusMonths(1).plusDays(1))
+                .build();
+    }
 }

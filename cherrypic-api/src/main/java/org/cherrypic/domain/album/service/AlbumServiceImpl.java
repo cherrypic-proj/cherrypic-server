@@ -3,6 +3,7 @@ package org.cherrypic.domain.album.service;
 import lombok.RequiredArgsConstructor;
 import org.cherrypic.album.entity.Album;
 import org.cherrypic.album.entity.InvitationCode;
+import org.cherrypic.album.enums.AlbumPlan;
 import org.cherrypic.album.repository.AlbumRepository;
 import org.cherrypic.album.repository.InvitationCodeRepository;
 import org.cherrypic.domain.album.dto.request.AlbumCreateRequest;
@@ -10,11 +11,17 @@ import org.cherrypic.domain.album.dto.response.AlbumCreateResponse;
 import org.cherrypic.domain.album.dto.response.InvitationLinkCreateResponse;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.album.exception.AlbumException;
+import org.cherrypic.domain.payment.exception.PaymentErrorCode;
 import org.cherrypic.global.util.MemberUtil;
 import org.cherrypic.member.entity.Member;
 import org.cherrypic.participant.entity.Participant;
 import org.cherrypic.participant.enums.ParticipantRole;
 import org.cherrypic.participant.repository.ParticipantRepository;
+import org.cherrypic.payment.entity.Payment;
+import org.cherrypic.payment.enums.PaymentStatus;
+import org.cherrypic.payment.repository.PaymentRepository;
+import org.cherrypic.subscription.entity.Subscription;
+import org.cherrypic.subscription.repository.SubscriptionRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,17 +34,33 @@ public class AlbumServiceImpl implements AlbumService {
     private final InvitationLinkService invitationLinkService;
 
     private final AlbumRepository albumRepository;
+    private final PaymentRepository paymentRepository;
     private final ParticipantRepository participantRepository;
+    private final SubscriptionRepository subscriptionRepository;
     private final InvitationCodeRepository invitationCodeRepository;
 
     @Override
     public AlbumCreateResponse createAlbum(AlbumCreateRequest request) {
         final Member currentMember = memberUtil.getCurrentMember();
 
-        Album album = Album.createAlbum(request.title(), request.coverUrl());
+        validatePaymentRequirementForPlan(request.plan(), request.paymentId());
+
+        Album album = Album.createAlbum(request.title(), request.coverUrl(), request.plan());
+
         Participant participant =
                 Participant.createParticipant(currentMember, album, ParticipantRole.HOST);
         album.addParticipant(participant);
+
+        if (request.plan() != AlbumPlan.BASIC) {
+            final Payment payment = getPaidPaymentById(request.paymentId());
+
+            validatePaidStatus(payment);
+            validatePaymentMemberMismatch(currentMember, payment);
+
+            Subscription subscription =
+                    Subscription.createSubscription(currentMember, album, payment.getPaidAt());
+            subscriptionRepository.save(subscription);
+        }
 
         albumRepository.save(album);
 
@@ -65,6 +88,34 @@ public class AlbumServiceImpl implements AlbumService {
         String invitationLink = invitationLinkService.createInvitationLink(invitationCode);
 
         return InvitationLinkCreateResponse.of(invitationLink);
+    }
+
+    private void validatePaymentRequirementForPlan(AlbumPlan plan, Long paymentId) {
+        if (plan.requiresPayment() && paymentId == null) {
+            throw new AlbumException(AlbumErrorCode.PAYMENT_REQUIRED_FOR_PAID_PLAN);
+        }
+
+        if (!plan.requiresPayment() && paymentId != null) {
+            throw new AlbumException(AlbumErrorCode.PAYMENT_NOT_REQUIRED_FOR_BASIC_PLAN);
+        }
+    }
+
+    private void validatePaidStatus(Payment payment) {
+        if (payment.getStatus() != PaymentStatus.PAID) {
+            throw new AlbumException(PaymentErrorCode.NOT_PAID);
+        }
+    }
+
+    private void validatePaymentMemberMismatch(Member member, Payment payment) {
+        if (!payment.getMember().getId().equals(member.getId())) {
+            throw new AlbumException(PaymentErrorCode.PAYMENT_MEMBER_MISMATCH);
+        }
+    }
+
+    private Payment getPaidPaymentById(Long paymentId) {
+        return paymentRepository
+                .findById(paymentId)
+                .orElseThrow(() -> new AlbumException(PaymentErrorCode.PAYMENT_NOT_FOUND));
     }
 
     private void validateInvitationAuthority(Long memberId, Long albumId) {

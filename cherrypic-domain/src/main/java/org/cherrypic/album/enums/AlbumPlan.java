@@ -22,4 +22,8 @@ public enum AlbumPlan {
                 .findFirst()
                 .orElse(null);
     }
+
+    public boolean requiresPayment() {
+        return price > 0;
+    }
 }

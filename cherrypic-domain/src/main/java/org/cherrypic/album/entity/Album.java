@@ -48,13 +48,14 @@ public class Album extends BaseTimeEntity {
     private List<Image> images = new ArrayList<>();
 
     @Builder(access = AccessLevel.PRIVATE)
-    private Album(String title, String coverUrl) {
+    private Album(String title, String coverUrl, AlbumPlan plan) {
         this.title = title;
         this.coverUrl = coverUrl;
+        this.plan = plan;
     }
 
-    public static Album createAlbum(String title, String coverUrl) {
-        return Album.builder().title(title).coverUrl(coverUrl).build();
+    public static Album createAlbum(String title, String coverUrl, AlbumPlan plan) {
+        return Album.builder().title(title).coverUrl(coverUrl).plan(plan).build();
     }
 
     public void addParticipant(Participant participant) {
