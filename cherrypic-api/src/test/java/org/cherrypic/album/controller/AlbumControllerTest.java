@@ -270,6 +270,51 @@ class AlbumControllerTest {
                     .andExpect(jsonPath("$.data.code").value("MethodArgumentNotValidException"))
                     .andExpect(jsonPath("$.data.message").value("앨범 이름은 비워둘 수 없습니다."));
         }
+
+        @Test
+        void 앨범_이름이_20자를_초과하면_예외가_발생한다() throws Exception {
+            // given
+            AlbumCreateRequest request =
+                    new AlbumCreateRequest("t".repeat(21), "testCoverUrl", AlbumPlan.BASIC, null);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/albums")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("MethodArgumentNotValidException"))
+                    .andExpect(jsonPath("$.data.message").value("앨범 이름은 최대 20자까지 가능합니다."));
+        }
+
+        @ParameterizedTest
+        @NullSource
+        @EmptySource
+        @ValueSource(strings = {" ", "PROO", "PREMIUMM"})
+        void 앨범_플랜이_null_또는_지원하지_않는_형식이면_예외가_발생한다(String plan) throws Exception {
+            // given
+            AlbumCreateRequest request =
+                    new AlbumCreateRequest("testTitle", "testCoverUrl", AlbumPlan.from(plan), 1L);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/albums")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("MethodArgumentNotValidException"))
+                    .andExpect(
+                            jsonPath("$.data.message")
+                                    .value("앨범 플랜은 비워둘 수 없으며, BASIC, PRO, PREMIUM만 지원됩니다."));
+        }
     }
 
     @Nested
