@@ -30,7 +30,7 @@ CREATE TABLE payment (
 CREATE TABLE album (
                        id BIGINT AUTO_INCREMENT PRIMARY KEY,
                        payment_id BIGINT,
-                       title VARCHAR(50) NOT NULL,
+                       title VARCHAR(20) NOT NULL,
                        cover_url VARCHAR(255),
                        plan VARCHAR(255) CHECK (plan IN ('BASIC','PRO','PREMIUM')),
                        created_at DATETIME(6) NOT NULL,
