@@ -10,6 +10,7 @@ import org.cherrypic.IntegrationTest;
 import org.cherrypic.RedisCleaner;
 import org.cherrypic.album.entity.Album;
 import org.cherrypic.album.entity.InvitationCode;
+import org.cherrypic.album.enums.AlbumPlan;
 import org.cherrypic.album.repository.AlbumRepository;
 import org.cherrypic.album.repository.InvitationCodeRepository;
 import org.cherrypic.domain.album.dto.request.AlbumCreateRequest;
@@ -60,7 +61,8 @@ class AlbumServiceTest extends IntegrationTest {
         @Test
         void 유효한_요청이면_앨범과_HOST_참여자가_생성된다() {
             // given
-            AlbumCreateRequest request = new AlbumCreateRequest("testTitle", "testCoverUrl");
+            AlbumCreateRequest request =
+                    new AlbumCreateRequest("testTitle", "testCoverUrl", AlbumPlan.BASIC, null);
 
             // when
             albumService.createAlbum(request);
@@ -96,8 +98,8 @@ class AlbumServiceTest extends IntegrationTest {
                             "testProfileImageUrl2");
             memberRepository.saveAll(List.of(member1, member2));
 
-            Album album1 = Album.createAlbum("testAlbum1", "testURL1");
-            Album album2 = Album.createAlbum("testAlbum2", "testURL2");
+            Album album1 = Album.createAlbum("testAlbum1", "testURL1", AlbumPlan.BASIC);
+            Album album2 = Album.createAlbum("testAlbum2", "testURL2", AlbumPlan.BASIC);
             albumRepository.saveAll(List.of(album1, album2));
 
             Participant participant1 =

@@ -6,6 +6,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.cherrypic.album.enums.AlbumPlan;
 import org.cherrypic.domain.album.controller.AlbumController;
 import org.cherrypic.domain.album.dto.request.AlbumCreateRequest;
 import org.cherrypic.domain.album.dto.response.AlbumCreateResponse;
@@ -41,9 +42,11 @@ class AlbumControllerTest {
         @Test
         void 유효한_요청이면_앨범_생성_정보를_반환한다() throws Exception {
             // given
-            AlbumCreateRequest request = new AlbumCreateRequest("testTitle", "testCoverUrl");
+            AlbumCreateRequest request =
+                    new AlbumCreateRequest("testTitle", "testCoverUrl", AlbumPlan.BASIC, null);
 
-            AlbumCreateResponse response = new AlbumCreateResponse(1L, "testTitle", "testCoverUrl");
+            AlbumCreateResponse response =
+                    new AlbumCreateResponse(1L, "testTitle", "testCoverUrl", AlbumPlan.BASIC);
 
             given(albumService.createAlbum(request)).willReturn(response);
 
@@ -68,7 +71,8 @@ class AlbumControllerTest {
         @ValueSource(strings = {" "})
         void 앨범_이름이_null_또는_공백이면_예외가_발생한다(String title) throws Exception {
             // given
-            AlbumCreateRequest request = new AlbumCreateRequest(title, "testCoverUrl");
+            AlbumCreateRequest request =
+                    new AlbumCreateRequest(title, "testCoverUrl", AlbumPlan.BASIC, null);
 
             // when & then
             ResultActions perform =
