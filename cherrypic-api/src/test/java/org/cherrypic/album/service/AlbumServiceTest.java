@@ -271,7 +271,7 @@ class AlbumServiceTest extends IntegrationTest {
             }
 
             @Test
-            void 결제가_이미_다른_앨범에_사용된_경우_예외가_발생한다() {
+            void 결제가_이미_사용된_경우_예외가_발생한다() {
                 // given
                 AlbumCreateRequest request =
                         new AlbumCreateRequest("testTitle", "testCoverUrl", AlbumPlan.PRO, 3L);

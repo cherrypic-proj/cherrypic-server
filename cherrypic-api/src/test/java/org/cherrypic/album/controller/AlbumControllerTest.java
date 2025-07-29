@@ -225,7 +225,7 @@ class AlbumControllerTest {
             }
 
             @Test
-            void 결제가_이미_다른_앨범에_사용된_경우_예외가_발생한다() throws Exception {
+            void 결제가_이미_사용된_경우_예외가_발생한다() throws Exception {
                 // given
                 AlbumCreateRequest request =
                         new AlbumCreateRequest("testTitle", "testCoverUrl", AlbumPlan.PRO, 1L);
