@@ -4,23 +4,30 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.cherrypic.album.entity.Album;
+import org.cherrypic.common.model.BaseTimeEntity;
 import org.cherrypic.member.entity.Member;
 import org.cherrypic.subscription.enums.SubscriptionStatus;
 
 @Getter
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Subscription {
+public class Subscription extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "member_id", unique = true)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "member_id")
     private Member member;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "album_id", unique = true)
+    private Album album;
 
     @NotNull
     @Enumerated(EnumType.STRING)
@@ -31,4 +38,32 @@ public class Subscription {
     private LocalDateTime endAt;
 
     private LocalDateTime nextBillingAt;
+
+    @Builder(access = AccessLevel.PRIVATE)
+    private Subscription(
+            Member member,
+            Album album,
+            SubscriptionStatus status,
+            LocalDateTime startAt,
+            LocalDateTime endAt,
+            LocalDateTime nextBillingAt) {
+        this.member = member;
+        this.album = album;
+        this.status = status;
+        this.startAt = startAt;
+        this.endAt = endAt;
+        this.nextBillingAt = nextBillingAt;
+    }
+
+    public static Subscription createSubscription(
+            Member member, Album album, LocalDateTime paidAt) {
+        return Subscription.builder()
+                .member(member)
+                .album(album)
+                .status(SubscriptionStatus.ACTIVE)
+                .startAt(paidAt)
+                .endAt(paidAt.plusMonths(1))
+                .nextBillingAt(paidAt.plusMonths(1).plusDays(1))
+                .build();
+    }
 }

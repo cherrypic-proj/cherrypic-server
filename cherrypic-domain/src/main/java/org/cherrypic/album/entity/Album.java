@@ -15,6 +15,7 @@ import org.cherrypic.favorites.entity.Favorites;
 import org.cherrypic.image.entity.Image;
 import org.cherrypic.participant.entity.Participant;
 import org.cherrypic.payment.entity.Payment;
+import org.cherrypic.subscription.entity.Subscription;
 
 @Getter
 @Entity
@@ -35,11 +36,8 @@ public class Album extends BaseTimeEntity {
     @OneToMany(mappedBy = "album", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Payment> payments = new ArrayList<>();
 
-    @OneToMany(mappedBy = "album", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Favorites> favorites = new ArrayList<>();
-
-    @OneToMany(mappedBy = "album", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Image> images = new ArrayList<>();
+    @OneToOne(mappedBy = "album", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Subscription subscription;
 
     @OneToMany(mappedBy = "album", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Event> events = new ArrayList<>();
@@ -47,14 +45,21 @@ public class Album extends BaseTimeEntity {
     @OneToMany(mappedBy = "album", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Participant> participants = new ArrayList<>();
 
+    @OneToMany(mappedBy = "album", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Favorites> favorites = new ArrayList<>();
+
+    @OneToMany(mappedBy = "album", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Image> images = new ArrayList<>();
+
     @Builder(access = AccessLevel.PRIVATE)
-    private Album(String title, String coverUrl) {
+    private Album(String title, String coverUrl, AlbumPlan plan) {
         this.title = title;
         this.coverUrl = coverUrl;
+        this.plan = plan;
     }
 
-    public static Album createAlbum(String title, String coverUrl) {
-        return Album.builder().title(title).coverUrl(coverUrl).build();
+    public static Album createAlbum(String title, String coverUrl, AlbumPlan plan) {
+        return Album.builder().title(title).coverUrl(coverUrl).plan(plan).build();
     }
 
     public void addParticipant(Participant participant) {

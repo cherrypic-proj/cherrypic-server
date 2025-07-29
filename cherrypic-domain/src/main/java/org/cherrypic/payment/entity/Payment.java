@@ -67,4 +67,8 @@ public class Payment extends BaseTimeEntity {
         this.status = status;
         this.paidAt = paidAt;
     }
+
+    public void updatePayment(Album album) {
+        this.album = album;
+    }
 }

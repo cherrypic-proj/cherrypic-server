@@ -12,25 +12,15 @@ CREATE TABLE member (
 );
 
 
-CREATE TABLE subscription (
-                              id BIGINT AUTO_INCREMENT PRIMARY KEY,
-                              member_id BIGINT UNIQUE NOT NULL,
-                              status VARCHAR(255) NOT NULL CHECK (status IN ('ACTIVE','CANCELLED','EXPIRED')),
-                              start_at DATETIME(6),
-                              end_at DATETIME(6),
-                              next_billing_at DATETIME(6),
-                              CONSTRAINT fk_subscription_member FOREIGN KEY (member_id) REFERENCES member (id)
-);
-
-
 CREATE TABLE album (
                        id BIGINT AUTO_INCREMENT PRIMARY KEY,
-                       title VARCHAR(50) NOT NULL,
+                       title VARCHAR(20) NOT NULL,
                        cover_url VARCHAR(255),
                        plan VARCHAR(255) CHECK (plan IN ('BASIC','PRO','PREMIUM')),
                        created_at DATETIME(6) NOT NULL,
                        updated_at DATETIME(6) NOT NULL
 );
+
 
 CREATE TABLE payment (
                          id BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -46,6 +36,21 @@ CREATE TABLE payment (
                          updated_at DATETIME(6) NOT NULL,
                          CONSTRAINT fk_payment_member FOREIGN KEY (member_id) REFERENCES member (id),
                          CONSTRAINT fk_payment_album FOREIGN KEY (album_id) REFERENCES album (id)
+);
+
+
+CREATE TABLE subscription (
+                              id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                              member_id BIGINT NOT NULL,
+                              album_id BIGINT UNIQUE,
+                              status VARCHAR(255) NOT NULL CHECK (status IN ('ACTIVE','CANCELLED','EXPIRED')),
+                              start_at DATETIME(6),
+                              end_at DATETIME(6),
+                              next_billing_at DATETIME(6),
+                              created_at DATETIME(6) NOT NULL,
+                              updated_at DATETIME(6) NOT NULL,
+                              CONSTRAINT fk_subscription_member FOREIGN KEY (member_id) REFERENCES member (id),
+                              CONSTRAINT fk_subscription_album FOREIGN KEY (album_id) REFERENCES album (id)
 );
 
 
