@@ -55,7 +55,7 @@ public class AlbumServiceImpl implements AlbumService {
             final Payment payment = getPaidPaymentById(request.paymentId());
 
             validatePaidStatus(payment);
-            validatePaymentMemberMismatch(currentMember, payment);
+            validatePaymentMemberMismatch(payment, currentMember);
             validatePaymentNotUsed(payment);
 
             payment.updatePayment(album);
@@ -109,7 +109,7 @@ public class AlbumServiceImpl implements AlbumService {
         }
     }
 
-    private void validatePaymentMemberMismatch(Member member, Payment payment) {
+    private void validatePaymentMemberMismatch(Payment payment, Member member) {
         if (!payment.getMember().getId().equals(member.getId())) {
             throw new AlbumException(PaymentErrorCode.PAYMENT_MEMBER_MISMATCH);
         }
