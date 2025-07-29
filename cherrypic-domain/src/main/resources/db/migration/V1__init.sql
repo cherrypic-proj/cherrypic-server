@@ -12,9 +12,20 @@ CREATE TABLE member (
 );
 
 
+CREATE TABLE album (
+                       id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                       title VARCHAR(20) NOT NULL,
+                       cover_url VARCHAR(255),
+                       plan VARCHAR(255) CHECK (plan IN ('BASIC','PRO','PREMIUM')),
+                       created_at DATETIME(6) NOT NULL,
+                       updated_at DATETIME(6) NOT NULL
+);
+
+
 CREATE TABLE payment (
                          id BIGINT AUTO_INCREMENT PRIMARY KEY,
                          member_id BIGINT NOT NULL,
+                         album_id BIGINT,
                          merchant_uid VARCHAR(255) NOT NULL,
                          imp_uid VARCHAR(255),
                          pg_provider VARCHAR(255),
@@ -23,19 +34,8 @@ CREATE TABLE payment (
                          paid_at DATETIME,
                          created_at DATETIME(6) NOT NULL,
                          updated_at DATETIME(6) NOT NULL,
-                         CONSTRAINT fk_payment_member FOREIGN KEY (member_id) REFERENCES member (id)
-);
-
-
-CREATE TABLE album (
-                       id BIGINT AUTO_INCREMENT PRIMARY KEY,
-                       payment_id BIGINT,
-                       title VARCHAR(20) NOT NULL,
-                       cover_url VARCHAR(255),
-                       plan VARCHAR(255) CHECK (plan IN ('BASIC','PRO','PREMIUM')),
-                       created_at DATETIME(6) NOT NULL,
-                       updated_at DATETIME(6) NOT NULL,
-                       CONSTRAINT fk_album_payment FOREIGN KEY (payment_id) REFERENCES payment (id)
+                         CONSTRAINT fk_payment_member FOREIGN KEY (member_id) REFERENCES member (id),
+                         CONSTRAINT fk_payment_album FOREIGN KEY (album_id) REFERENCES album (id)
 );
 
 

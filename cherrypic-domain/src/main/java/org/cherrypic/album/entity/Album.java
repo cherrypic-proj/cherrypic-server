@@ -26,16 +26,15 @@ public class Album extends BaseTimeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "payment_id")
-    private Payment payment;
-
     @NotNull private String title;
 
     private String coverUrl;
 
     @Enumerated(EnumType.STRING)
     private AlbumPlan plan;
+
+    @OneToMany(mappedBy = "album", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Payment> payments = new ArrayList<>();
 
     @OneToOne(mappedBy = "album", cascade = CascadeType.ALL, orphanRemoval = true)
     private Subscription subscription;
@@ -61,10 +60,6 @@ public class Album extends BaseTimeEntity {
 
     public static Album createAlbum(String title, String coverUrl, AlbumPlan plan) {
         return Album.builder().title(title).coverUrl(coverUrl).plan(plan).build();
-    }
-
-    public void addPayment(Payment payment) {
-        this.payment = payment;
     }
 
     public void addParticipant(Participant participant) {
