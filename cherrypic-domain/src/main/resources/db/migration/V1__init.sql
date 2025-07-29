@@ -47,6 +47,8 @@ CREATE TABLE subscription (
                               start_at DATETIME(6),
                               end_at DATETIME(6),
                               next_billing_at DATETIME(6),
+                              created_at DATETIME(6) NOT NULL,
+                              updated_at DATETIME(6) NOT NULL,
                               CONSTRAINT fk_subscription_member FOREIGN KEY (member_id) REFERENCES member (id),
                               CONSTRAINT fk_subscription_album FOREIGN KEY (album_id) REFERENCES album (id)
 );

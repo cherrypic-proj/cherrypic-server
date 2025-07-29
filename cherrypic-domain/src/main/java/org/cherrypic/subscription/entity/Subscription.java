@@ -8,13 +8,14 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.cherrypic.album.entity.Album;
+import org.cherrypic.common.model.BaseTimeEntity;
 import org.cherrypic.member.entity.Member;
 import org.cherrypic.subscription.enums.SubscriptionStatus;
 
 @Getter
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Subscription {
+public class Subscription extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
