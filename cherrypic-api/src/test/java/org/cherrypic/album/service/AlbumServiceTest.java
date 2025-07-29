@@ -3,7 +3,10 @@ package org.cherrypic.album.service;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.BDDMockito.given;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.request;
 
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 import org.cherrypic.IntegrationTest;
@@ -18,66 +21,266 @@ import org.cherrypic.domain.album.dto.response.InvitationLinkCreateResponse;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.album.exception.AlbumException;
 import org.cherrypic.domain.album.service.AlbumService;
+import org.cherrypic.domain.payment.exception.PaymentErrorCode;
 import org.cherrypic.global.util.MemberUtil;
+import org.cherrypic.global.util.TransactionUtil;
 import org.cherrypic.member.entity.Member;
 import org.cherrypic.member.entity.OauthInfo;
 import org.cherrypic.member.repository.MemberRepository;
 import org.cherrypic.participant.entity.Participant;
 import org.cherrypic.participant.enums.ParticipantRole;
 import org.cherrypic.participant.repository.ParticipantRepository;
+import org.cherrypic.payment.entity.Payment;
+import org.cherrypic.payment.enums.PaymentStatus;
+import org.cherrypic.payment.repository.PaymentRepository;
+import org.cherrypic.subscription.entity.Subscription;
+import org.cherrypic.subscription.enums.SubscriptionStatus;
+import org.cherrypic.subscription.repository.SubscriptionRepository;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.transaction.annotation.Transactional;
 
 class AlbumServiceTest extends IntegrationTest {
 
     @Autowired private RedisCleaner redisCleaner;
+    @Autowired private TransactionUtil transactionUtil;
 
     @Autowired private AlbumService albumService;
     @Autowired private AlbumRepository albumRepository;
     @Autowired private MemberRepository memberRepository;
-    @Autowired private InvitationCodeRepository invitationCodeRepository;
+    @Autowired private PaymentRepository paymentRepository;
+    @Autowired private SubscriptionRepository subscriptionRepository;
     @Autowired private ParticipantRepository participantRepository;
+    @Autowired private InvitationCodeRepository invitationCodeRepository;
 
     @MockitoBean MemberUtil memberUtil;
 
-    @Transactional
     @Nested
     class 앨범을_생성할_때 {
 
-        @BeforeEach
-        void setUp() {
-            Member member =
-                    Member.createMember(
-                            OauthInfo.createOauthInfo("testOauthId", "testOauthProvider"),
-                            "testNickname",
-                            "testProfileImageUrl");
-            memberRepository.save(member);
+        @Nested
+        class BASIC_플랜인_경우 {
 
-            given(memberUtil.getCurrentMember()).willReturn(member);
+            @BeforeEach
+            void setUp() {
+                Member member =
+                        Member.createMember(
+                                OauthInfo.createOauthInfo("testOauthId", "testOauthProvider"),
+                                "testNickname",
+                                "testProfileImageUrl");
+                memberRepository.save(member);
+
+                given(memberUtil.getCurrentMember()).willReturn(member);
+            }
+
+            @Test
+            void 결제ID_없이_요청하면_앨범과_HOST_참여자가_생성된다() {
+                // given
+                AlbumCreateRequest request =
+                        new AlbumCreateRequest("testTitle", "testCoverUrl", AlbumPlan.BASIC, null);
+
+                // when
+                albumService.createAlbum(request);
+
+                // then
+                Album album =
+                        transactionUtil.getResult(
+                                () -> {
+                                    Album loadedAlbum = albumRepository.findById(1L).get();
+                                    loadedAlbum.getParticipants().get(0);
+                                    return loadedAlbum;
+                                });
+                Participant participant = album.getParticipants().get(0);
+
+                Assertions.assertAll(
+                        () -> assertThat(album.getId()).isEqualTo(1L),
+                        () -> assertThat(album.getTitle()).isEqualTo("testTitle"),
+                        () -> assertThat(album.getCoverUrl()).isEqualTo("testCoverUrl"),
+                        () -> assertThat(album.getPlan()).isEqualTo(AlbumPlan.BASIC),
+                        () -> assertThat(participant.getId()).isEqualTo(1L),
+                        () -> assertThat(participant.getMember().getId()).isEqualTo(1L),
+                        () -> assertThat(participant.getAlbum().getId()).isEqualTo(1L),
+                        () -> assertThat(participant.getRole()).isEqualTo(ParticipantRole.HOST));
+            }
+
+            @Test
+            void 결제ID를_포함하여_요청하면_예외가_발생한다() {
+                // given
+                AlbumCreateRequest request =
+                        new AlbumCreateRequest("testTitle", "testCoverUrl", AlbumPlan.BASIC, 1L);
+
+                // when & then
+                assertThatThrownBy(() -> albumService.createAlbum(request))
+                        .isInstanceOf(AlbumException.class)
+                        .hasMessage(
+                                AlbumErrorCode.PAYMENT_NOT_REQUIRED_FOR_BASIC_PLAN.getMessage());
+            }
         }
 
-        @Test
-        void 유효한_요청이면_앨범과_HOST_참여자가_생성된다() {
-            // given
-            AlbumCreateRequest request =
-                    new AlbumCreateRequest("testTitle", "testCoverUrl", AlbumPlan.BASIC, null);
+        @Nested
+        class PRO_또는_PREMIUM_플랜인_경우 {
 
-            // when
-            albumService.createAlbum(request);
+            @BeforeEach
+            void setUp() {
+                Member member1 =
+                        Member.createMember(
+                                OauthInfo.createOauthInfo("testOauthId1", "testOauthProvider1"),
+                                "testNickname1",
+                                "testProfileImageUrl1");
+                Member member2 =
+                        Member.createMember(
+                                OauthInfo.createOauthInfo("testOauthId2", "testOauthProvider2"),
+                                "testNickname2",
+                                "testProfileImageUrl2");
+                memberRepository.saveAll(List.of(member1, member2));
 
-            // then
-            Album album = albumRepository.findById(1L).orElseThrow();
-            Participant participant = album.getParticipants().get(0);
+                given(memberUtil.getCurrentMember()).willReturn(member1);
 
-            Assertions.assertAll(
-                    () -> assertThat(album.getId()).isEqualTo(1L),
-                    () -> assertThat(album.getTitle()).isEqualTo("testTitle"),
-                    () -> assertThat(album.getCoverUrl()).isEqualTo("testCoverUrl"),
-                    () -> assertThat(participant.getId()).isEqualTo(1L),
-                    () -> assertThat(participant.getMember().getId()).isEqualTo(1L),
-                    () -> assertThat(participant.getRole()).isEqualTo(ParticipantRole.HOST));
+                Album album = Album.createAlbum("testPaidTitle", "testPaidCoverUrl", AlbumPlan.PRO);
+                albumRepository.save(album);
+
+                // 검증 완료된 결제
+                Payment payment1 = Payment.createPayment(member1, "testMerchantUid", 3900);
+                payment1.updatePayment(
+                        "testImpUid", "testPgProvider", PaymentStatus.PAID, LocalDateTime.now());
+                // 검증되지 않은 결제
+                Payment payment2 = Payment.createPayment(member1, "testMerchantUid", 3900);
+                // 검증 완료 + 유료 앨범에 쓰인 결제
+                Payment payment3 = Payment.createPayment(member1, "testMerchantUid", 3900);
+                payment3.updatePayment(
+                        "testImpUid", "testPgProvider", PaymentStatus.PAID, LocalDateTime.now());
+                payment3.updatePayment(album);
+                paymentRepository.saveAll(List.of(payment1, payment2, payment3));
+            }
+
+            @Test
+            void 유효한_결제ID면_앨범과_HOST_참여자_및_구독이_생성되고_결제에_앨범이_연결된다() {
+                // given
+                AlbumCreateRequest request =
+                        new AlbumCreateRequest("testTitle", "testCoverUrl", AlbumPlan.PRO, 1L);
+
+                // when
+                albumService.createAlbum(request);
+
+                // then
+                Album album =
+                        transactionUtil.getResult(
+                                () -> {
+                                    Album loadedAlbum = albumRepository.findById(2L).get();
+                                    loadedAlbum.getParticipants().get(0);
+                                    loadedAlbum.getPayments().get(0);
+                                    return loadedAlbum;
+                                });
+                Participant participant = album.getParticipants().get(0);
+                Payment payment = album.getPayments().get(0);
+
+                Subscription subscription = subscriptionRepository.findById(1L).orElseThrow();
+
+                Assertions.assertAll(
+                        () -> assertThat(album.getId()).isEqualTo(2L),
+                        () -> assertThat(album.getTitle()).isEqualTo("testTitle"),
+                        () -> assertThat(album.getCoverUrl()).isEqualTo("testCoverUrl"),
+                        () -> assertThat(album.getPlan()).isEqualTo(AlbumPlan.PRO),
+                        () -> assertThat(participant.getId()).isEqualTo(1L),
+                        () -> assertThat(participant.getMember().getId()).isEqualTo(1L),
+                        () -> assertThat(participant.getAlbum().getId()).isEqualTo(2L),
+                        () -> assertThat(participant.getRole()).isEqualTo(ParticipantRole.HOST),
+                        () -> assertThat(payment.getAlbum().getId()).isEqualTo(2L),
+                        () -> assertThat(payment.getStatus()).isEqualTo(PaymentStatus.PAID),
+                        () -> assertThat(subscription.getId()).isEqualTo(1L),
+                        () -> assertThat(subscription.getMember().getId()).isEqualTo(1L),
+                        () -> assertThat(subscription.getAlbum().getId()).isEqualTo(2L),
+                        () ->
+                                assertThat(subscription.getStatus())
+                                        .isEqualTo(SubscriptionStatus.ACTIVE),
+                        () ->
+                                assertThat(
+                                                subscription
+                                                        .getStartAt()
+                                                        .truncatedTo(ChronoUnit.MINUTES))
+                                        .isEqualTo(
+                                                LocalDateTime.now()
+                                                        .truncatedTo(ChronoUnit.MINUTES)),
+                        () ->
+                                assertThat(subscription.getEndAt().truncatedTo(ChronoUnit.MINUTES))
+                                        .isEqualTo(
+                                                LocalDateTime.now()
+                                                        .truncatedTo(ChronoUnit.MINUTES)
+                                                        .plusMonths(1)),
+                        () ->
+                                assertThat(
+                                                subscription
+                                                        .getNextBillingAt()
+                                                        .truncatedTo(ChronoUnit.MINUTES))
+                                        .isEqualTo(
+                                                LocalDateTime.now()
+                                                        .truncatedTo(ChronoUnit.MINUTES)
+                                                        .plusMonths(1)
+                                                        .plusDays(1)));
+            }
+
+            @Test
+            void 결제ID가_null이면_예외가_발생한다() {
+                // given
+                AlbumCreateRequest request =
+                        new AlbumCreateRequest("testTitle", "testCoverUrl", AlbumPlan.PRO, null);
+
+                // when & then
+                assertThatThrownBy(() -> albumService.createAlbum(request))
+                        .isInstanceOf(AlbumException.class)
+                        .hasMessage(AlbumErrorCode.PAYMENT_REQUIRED_FOR_PAID_PLAN.getMessage());
+            }
+
+            @Test
+            void 존재하지_않는_결제ID면_예외가_발생한다() {
+                // given
+                AlbumCreateRequest request =
+                        new AlbumCreateRequest("testTitle", "testCoverUrl", AlbumPlan.PRO, 999L);
+
+                // when & then
+                assertThatThrownBy(() -> albumService.createAlbum(request))
+                        .isInstanceOf(AlbumException.class)
+                        .hasMessage(PaymentErrorCode.PAYMENT_NOT_FOUND.getMessage());
+            }
+
+            @Test
+            void 결제상태가_PAID가_아니면_예외가_발생한다() {
+                // given
+                AlbumCreateRequest request =
+                        new AlbumCreateRequest("testTitle", "testCoverUrl", AlbumPlan.PRO, 2L);
+
+                // when & then
+                assertThatThrownBy(() -> albumService.createAlbum(request))
+                        .isInstanceOf(AlbumException.class)
+                        .hasMessage(PaymentErrorCode.NOT_PAID.getMessage());
+            }
+
+            @Test
+            void 결제한_회원과_로그인_회원이_일치하지_않으면_예외가_발생한다() {
+                // given
+                given(memberUtil.getCurrentMember())
+                        .willReturn(memberRepository.findById(2L).get());
+
+                AlbumCreateRequest request =
+                        new AlbumCreateRequest("testTitle", "testCoverUrl", AlbumPlan.PRO, 1L);
+
+                // when & then
+                assertThatThrownBy(() -> albumService.createAlbum(request))
+                        .isInstanceOf(AlbumException.class)
+                        .hasMessage(PaymentErrorCode.PAYMENT_MEMBER_MISMATCH.getMessage());
+            }
+
+            @Test
+            void 결제가_이미_다른_앨범에_사용된_경우_예외가_발생한다() {
+                // given
+                AlbumCreateRequest request =
+                        new AlbumCreateRequest("testTitle", "testCoverUrl", AlbumPlan.PRO, 3L);
+
+                // when & then
+                assertThatThrownBy(() -> albumService.createAlbum(request))
+                        .isInstanceOf(AlbumException.class)
+                        .hasMessage(PaymentErrorCode.ALREADY_USED_PAYMENT.getMessage());
+            }
         }
     }
 
