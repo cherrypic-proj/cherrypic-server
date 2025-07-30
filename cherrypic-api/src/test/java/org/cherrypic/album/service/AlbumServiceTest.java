@@ -95,14 +95,15 @@ class AlbumServiceTest extends IntegrationTest {
                 Participant participant = album.getParticipants().get(0);
 
                 Assertions.assertAll(
-                        () -> assertThat(album.getId()).isEqualTo(1L),
-                        () -> assertThat(album.getTitle()).isEqualTo("testTitle"),
-                        () -> assertThat(album.getCoverUrl()).isEqualTo("testCoverUrl"),
-                        () -> assertThat(album.getPlan()).isEqualTo(AlbumPlan.BASIC),
-                        () -> assertThat(participant.getId()).isEqualTo(1L),
-                        () -> assertThat(participant.getMember().getId()).isEqualTo(1L),
-                        () -> assertThat(participant.getAlbum().getId()).isEqualTo(1L),
-                        () -> assertThat(participant.getRole()).isEqualTo(ParticipantRole.HOST));
+                        () ->
+                                assertThat(album)
+                                        .extracting("id", "title", "coverUrl", "plan")
+                                        .containsExactly(
+                                                1L, "testTitle", "testCoverUrl", AlbumPlan.BASIC),
+                        () ->
+                                assertThat(participant)
+                                        .extracting("id", "member.id", "album.id", "role")
+                                        .containsExactly(1L, 1L, 1L, ParticipantRole.HOST));
             }
 
             @Test
@@ -179,22 +180,23 @@ class AlbumServiceTest extends IntegrationTest {
                 Subscription subscription = subscriptionRepository.findById(1L).orElseThrow();
 
                 Assertions.assertAll(
-                        () -> assertThat(album.getId()).isEqualTo(2L),
-                        () -> assertThat(album.getTitle()).isEqualTo("testTitle"),
-                        () -> assertThat(album.getCoverUrl()).isEqualTo("testCoverUrl"),
-                        () -> assertThat(album.getPlan()).isEqualTo(AlbumPlan.PRO),
-                        () -> assertThat(participant.getId()).isEqualTo(1L),
-                        () -> assertThat(participant.getMember().getId()).isEqualTo(1L),
-                        () -> assertThat(participant.getAlbum().getId()).isEqualTo(2L),
-                        () -> assertThat(participant.getRole()).isEqualTo(ParticipantRole.HOST),
-                        () -> assertThat(payment.getAlbum().getId()).isEqualTo(2L),
-                        () -> assertThat(payment.getStatus()).isEqualTo(PaymentStatus.PAID),
-                        () -> assertThat(subscription.getId()).isEqualTo(1L),
-                        () -> assertThat(subscription.getMember().getId()).isEqualTo(1L),
-                        () -> assertThat(subscription.getAlbum().getId()).isEqualTo(2L),
                         () ->
-                                assertThat(subscription.getStatus())
-                                        .isEqualTo(SubscriptionStatus.ACTIVE),
+                                assertThat(album)
+                                        .extracting("id", "title", "coverUrl", "plan")
+                                        .containsExactly(
+                                                2L, "testTitle", "testCoverUrl", AlbumPlan.PRO),
+                        () ->
+                                assertThat(participant)
+                                        .extracting("id", "member.id", "album.id", "role")
+                                        .containsExactly(1L, 1L, 2L, ParticipantRole.HOST),
+                        () ->
+                                assertThat(payment)
+                                        .extracting("album.id", "status")
+                                        .containsExactly(2L, PaymentStatus.PAID),
+                        () ->
+                                assertThat(subscription)
+                                        .extracting("id", "member.id", "album.id", "status")
+                                        .containsExactly(1L, 1L, 2L, SubscriptionStatus.ACTIVE),
                         () ->
                                 assertThat(
                                                 subscription
