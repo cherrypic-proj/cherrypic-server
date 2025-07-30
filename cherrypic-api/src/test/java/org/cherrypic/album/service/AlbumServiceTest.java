@@ -503,8 +503,8 @@ class AlbumServiceTest extends IntegrationTest {
         private void createTestAlbums() {
             Member member = memberRepository.findById(1L).get();
 
-            Album album1 = Album.createAlbum("first", "url1", AlbumPlan.BASIC);
-            Album album2 = Album.createAlbum("second", "url2", AlbumPlan.PRO);
+            Album album1 = Album.createAlbum("testTitle1", "testCoverUrl1", AlbumPlan.BASIC);
+            Album album2 = Album.createAlbum("testTitle2", "testCoverUrl2", AlbumPlan.PRO);
             albumRepository.saveAll(List.of(album1, album2));
 
             Participant participant1 =
