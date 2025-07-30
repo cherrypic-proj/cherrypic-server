@@ -322,6 +322,44 @@ public class EventControllerTest {
                         .andExpect(jsonPath("$.data.code").value("EVENT_NOT_FOUND"))
                         .andExpect(jsonPath("$.data.message").value("존재하지 않는 이벤트입니다."));
             }
+
+            @Test
+            void 요청자가_앨범_참가자가_아닌_경우_예외가_발생한다() throws Exception {
+                // given
+                willThrow(new EventException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT))
+                        .given(eventService)
+                        .deleteEvent(1L);
+
+                // when & then
+                ResultActions perform =
+                        mockMvc.perform(
+                                delete("/events/1").contentType(MediaType.APPLICATION_JSON));
+
+                perform.andExpect(status().isForbidden())
+                        .andExpect(jsonPath("$.success").value(false))
+                        .andExpect(jsonPath("$.status").value(HttpStatus.FORBIDDEN.value()))
+                        .andExpect(jsonPath("$.data.code").value("NOT_ALBUM_PARTICIPANT"))
+                        .andExpect(jsonPath("$.data.message").value("앨범에 속하지 않은 사용자입니다."));
+            }
+
+            @Test
+            void 요청자가_LIMITED_권한을_가지는_경우_예외가_발생한다() throws Exception {
+                // given
+                willThrow(new EventException(AlbumErrorCode.LIMITED_AUTHORITY))
+                        .given(eventService)
+                        .deleteEvent(1L);
+
+                // when & then
+                ResultActions perform =
+                        mockMvc.perform(
+                                delete("/events/1").contentType(MediaType.APPLICATION_JSON));
+
+                perform.andExpect(status().isForbidden())
+                        .andExpect(jsonPath("$.success").value(false))
+                        .andExpect(jsonPath("$.status").value(HttpStatus.FORBIDDEN.value()))
+                        .andExpect(jsonPath("$.data.code").value("LIMITED_AUTHORITY"))
+                        .andExpect(jsonPath("$.data.message").value("앨범에 대한 생성/수정 권한이 없습니다."));
+            }
         }
     }
 }
