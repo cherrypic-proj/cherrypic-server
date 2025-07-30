@@ -90,11 +90,9 @@ public class EventServiceTest extends IntegrationTest {
 
             // then
             Event event = eventRepository.findById(1L).orElseThrow();
-            Assertions.assertAll(
-                    () -> assertThat(event.getId()).isEqualTo(1L),
-                    () -> assertThat(event.getAlbum().getId()).isEqualTo(1L),
-                    () -> assertThat(event.getTitle()).isEqualTo("testEvent"),
-                    () -> assertThat(event.getCoverUrl()).isEqualTo("testCoverUrl"));
+            assertThat(event)
+                    .extracting("id", "album.id", "title", "coverUrl")
+                    .containsExactly(1L, 1L, "testEvent", "testCoverUrl");
         }
 
         @Test
@@ -174,11 +172,9 @@ public class EventServiceTest extends IntegrationTest {
 
             // then
             Event event = eventRepository.findById(1L).orElseThrow();
-            Assertions.assertAll(
-                    () -> assertThat(event.getId()).isEqualTo(1L),
-                    () -> assertThat(event.getAlbum().getId()).isEqualTo(1L),
-                    () -> assertThat(event.getTitle()).isEqualTo("changedTestEventTitle"),
-                    () -> assertThat(event.getCoverUrl()).isEqualTo("changedTestEventCoverUrl"));
+            assertThat(event)
+                    .extracting("id", "album.id", "title", "coverUrl")
+                    .containsExactly(1L, 1L, "changedTestEventTitle", "changedTestEventCoverUrl");
         }
 
         @Test
@@ -283,8 +279,7 @@ public class EventServiceTest extends IntegrationTest {
             assertThat(event.getEventImages())
                     .hasSize(3)
                     .extracting("id", "event.id", "image.id")
-                    .containsExactlyInAnyOrder(
-                            tuple(1L, 1L, 1L), tuple(2L, 1L, 2L), tuple(3L, 1L, 3L));
+                    .containsExactly(tuple(1L, 1L, 1L), tuple(2L, 1L, 2L), tuple(3L, 1L, 3L));
 
             // when
             eventService.deleteEvent(1L);
