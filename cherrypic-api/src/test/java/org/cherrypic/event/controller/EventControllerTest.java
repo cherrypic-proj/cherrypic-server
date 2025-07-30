@@ -1,8 +1,7 @@
 package org.cherrypic.event.controller;
 
-import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.mockito.BDDMockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -13,6 +12,7 @@ import org.cherrypic.domain.event.dto.EventCreateRequest;
 import org.cherrypic.domain.event.dto.EventCreateResponse;
 import org.cherrypic.domain.event.dto.EventUpdateRequest;
 import org.cherrypic.domain.event.dto.EventUpdateResponse;
+import org.cherrypic.domain.event.exception.EventErrorCode;
 import org.cherrypic.domain.event.exception.EventException;
 import org.cherrypic.domain.event.service.EventService;
 import org.junit.jupiter.api.Nested;
@@ -284,6 +284,44 @@ public class EventControllerTest {
                     .andExpect(jsonPath("$.status").value(HttpStatus.FORBIDDEN.value()))
                     .andExpect(jsonPath("$.data.code").value("LIMITED_AUTHORITY"))
                     .andExpect(jsonPath("$.data.message").value("앨범에 대한 생성/수정 권한이 없습니다."));
+        }
+
+        @Nested
+        class 이벤트_삭제_요청_시 {
+
+            @Test
+            void 유효한_요청이면_이벤트를_삭제하고_NO_CONTENT_로_반환한다() throws Exception {
+                // given
+                willDoNothing().given(eventService).deleteEvent(1L);
+
+                // when & then
+                ResultActions perform =
+                        mockMvc.perform(
+                                delete("/events/1").contentType(MediaType.APPLICATION_JSON));
+
+                perform.andExpect(status().isNoContent())
+                        .andExpect(jsonPath("$.success").value(true))
+                        .andExpect(jsonPath("$.status").value(HttpStatus.NO_CONTENT.value()));
+            }
+
+            @Test
+            void 이벤트가_존재하지_않는_경우_예외가_발생한다() throws Exception {
+                // given
+                willThrow(new EventException(EventErrorCode.EVENT_NOT_FOUND))
+                        .given(eventService)
+                        .deleteEvent(1L);
+
+                // when & then
+                ResultActions perform =
+                        mockMvc.perform(
+                                delete("/events/1").contentType(MediaType.APPLICATION_JSON));
+
+                perform.andExpect(status().isNotFound())
+                        .andExpect(jsonPath("$.success").value(false))
+                        .andExpect(jsonPath("$.status").value(HttpStatus.NOT_FOUND.value()))
+                        .andExpect(jsonPath("$.data.code").value("EVENT_NOT_FOUND"))
+                        .andExpect(jsonPath("$.data.message").value("존재하지 않는 이벤트입니다."));
+            }
         }
     }
 }
