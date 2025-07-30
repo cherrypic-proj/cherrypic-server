@@ -1,9 +1,9 @@
 package org.cherrypic.event.service;
 
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.BDDMockito.given;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import org.cherrypic.IntegrationTest;
 import org.cherrypic.album.entity.Album;
@@ -14,12 +14,17 @@ import org.cherrypic.domain.event.dto.EventCreateRequest;
 import org.cherrypic.domain.event.dto.EventUpdateRequest;
 import org.cherrypic.domain.event.exception.EventErrorCode;
 import org.cherrypic.domain.event.exception.EventException;
+import org.cherrypic.domain.event.repository.EventImageRepository;
 import org.cherrypic.domain.event.repository.EventRepository;
 import org.cherrypic.domain.event.service.EventService;
+import org.cherrypic.domain.image.repository.ImageRepository;
 import org.cherrypic.domain.member.repository.MemberRepository;
 import org.cherrypic.domain.participant.repository.ParticipantRepository;
 import org.cherrypic.event.entity.Event;
+import org.cherrypic.event.entity.EventImage;
 import org.cherrypic.global.util.MemberUtil;
+import org.cherrypic.global.util.TransactionUtil;
+import org.cherrypic.image.entity.Image;
 import org.cherrypic.member.entity.Member;
 import org.cherrypic.member.entity.OauthInfo;
 import org.cherrypic.participant.entity.Participant;
@@ -33,12 +38,16 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 public class EventServiceTest extends IntegrationTest {
 
+    @Autowired private TransactionUtil transactionUtil;
+
     @Autowired private EventService eventService;
 
     @Autowired private EventRepository eventRepository;
     @Autowired private AlbumRepository albumRepository;
     @Autowired private MemberRepository memberRepository;
     @Autowired private ParticipantRepository participantRepository;
+    @Autowired private ImageRepository imageRepository;
+    @Autowired private EventImageRepository eventImageRepository;
 
     @MockitoBean MemberUtil memberUtil;
 
@@ -178,7 +187,7 @@ public class EventServiceTest extends IntegrationTest {
             EventUpdateRequest request =
                     new EventUpdateRequest("changedTestEventTitle", "changedTestEventCoverUrl");
 
-            // when % then
+            // when & then
             assertThatThrownBy(() -> eventService.updateEvent(999L, request))
                     .isInstanceOf(EventException.class)
                     .hasMessage(EventErrorCode.EVENT_NOT_FOUND.getMessage());
@@ -236,7 +245,8 @@ public class EventServiceTest extends IntegrationTest {
             given(memberUtil.getCurrentMember()).willReturn(member1);
 
             Album album1 = Album.createAlbum("testAlbum1", "testURL1", AlbumPlan.BASIC);
-            albumRepository.save(album1);
+            Album album2 = Album.createAlbum("testAlbum2", "testURl2", AlbumPlan.BASIC);
+            albumRepository.saveAll(List.of(album1, album2));
 
             Participant participant1 =
                     Participant.createParticipant(member1, album1, ParticipantRole.HOST);
@@ -244,8 +254,79 @@ public class EventServiceTest extends IntegrationTest {
                     Participant.createParticipant(member2, album1, ParticipantRole.LIMITED);
             participantRepository.saveAll(List.of(participant1, participant2));
 
-            Event event = Event.createEvent(album1, "testEvent", "testEventCoverUrl");
-            eventRepository.save(event);
+            Event event1 = Event.createEvent(album1, "testEvent1", "testEventCoverUrl1");
+            Event event2 = Event.createEvent(album2, "testEvent2", "testEventCoverUrl2");
+            eventRepository.saveAll(List.of(event1, event2));
+
+            Image image1 = Image.createImage(album1, 1L, "testImageUrl1", LocalDateTime.now());
+            Image image2 = Image.createImage(album1, 1L, "testImageUrl2", LocalDateTime.now());
+            Image image3 = Image.createImage(album1, 1L, "testImageUrl3", LocalDateTime.now());
+            imageRepository.saveAll(List.of(image1, image2, image3));
+
+            EventImage eventImage1 = EventImage.createEventImage(event1, image1);
+            EventImage eventImage2 = EventImage.createEventImage(event1, image2);
+            EventImage eventImage3 = EventImage.createEventImage(event1, image3);
+            eventImageRepository.saveAll(List.of(eventImage1, eventImage2, eventImage3));
+        }
+
+        @Test
+        void 유효한_요청일_경우_이벤트와_이벤트_이미지를_모두_삭제한다() {
+            // given
+            Event event =
+                    transactionUtil.getResult(
+                            () -> {
+                                Event loadedEvent = eventRepository.findById(1L).orElseThrow();
+                                loadedEvent.getEventImages().get(0);
+                                return loadedEvent;
+                            });
+
+            assertThat(event.getEventImages())
+                    .hasSize(3)
+                    .extracting("id", "event.id", "image.id")
+                    .containsExactlyInAnyOrder(
+                            tuple(1L, 1L, 1L), tuple(2L, 1L, 2L), tuple(3L, 1L, 3L));
+
+            // when
+            eventService.deleteEvent(1L);
+
+            // then
+            Assertions.assertAll(
+                    () -> assertThat(eventRepository.findById(1L).isPresent()).isFalse(),
+                    () -> assertThat(eventImageRepository.countByEventId(1L)).isEqualTo(0L));
+        }
+
+        @Test
+        void 존재하지_않는_이벤트를_삭제_하면_예외가_발생한다() {
+            // given
+            Long nonExistingEventId = 999L;
+
+            // when & then
+            assertThatThrownBy(() -> eventService.deleteEvent(nonExistingEventId))
+                    .isInstanceOf(EventException.class)
+                    .hasMessage(EventErrorCode.EVENT_NOT_FOUND.getMessage());
+        }
+
+        @Test
+        void 앨범에_속하지_않은_사용자가_이벤트를_삭제하면_예외가_발생한다() {
+            // given
+            Long notParticipatingEventId = 2L;
+
+            // when & then
+            assertThatThrownBy(() -> eventService.deleteEvent(notParticipatingEventId))
+                    .isInstanceOf(EventException.class)
+                    .hasMessage(AlbumErrorCode.NOT_ALBUM_PARTICIPANT.getMessage());
+        }
+
+        @Test
+        void LIMITED_권한의_사용자가_이벤트를_수정하면_예외가_발생한다() {
+            // given
+            Member limitedMember = memberRepository.findById(2L).orElseThrow();
+            given(memberUtil.getCurrentMember()).willReturn(limitedMember);
+
+            // when & then
+            assertThatThrownBy(() -> eventService.deleteEvent(1L))
+                    .isInstanceOf(EventException.class)
+                    .hasMessage(AlbumErrorCode.LIMITED_AUTHORITY.getMessage());
         }
     }
 }

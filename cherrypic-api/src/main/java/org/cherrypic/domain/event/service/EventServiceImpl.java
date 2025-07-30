@@ -59,7 +59,11 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public void deleteEvent(Long eventId) {
-        Event event = getEventById(eventId);
+        final Member currentMember = memberUtil.getCurrentMember();
+        final Event event = getEventById(eventId);
+
+        validateParticipantAuthority(currentMember, event.getAlbum());
+
         eventRepository.delete(event);
     }
 
