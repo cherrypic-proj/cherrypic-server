@@ -1,9 +1,8 @@
 package org.cherrypic.album.service;
 
+import static org.assertj.core.api.Assertions.*;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.request;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -15,6 +14,7 @@ import org.cherrypic.album.entity.Album;
 import org.cherrypic.album.entity.InvitationCode;
 import org.cherrypic.album.enums.AlbumPlan;
 import org.cherrypic.domain.album.dto.request.AlbumCreateRequest;
+import org.cherrypic.domain.album.dto.response.AlbumListResponse;
 import org.cherrypic.domain.album.dto.response.InvitationLinkCreateResponse;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.album.exception.AlbumException;
@@ -26,6 +26,8 @@ import org.cherrypic.domain.participant.repository.ParticipantRepository;
 import org.cherrypic.domain.payment.exception.PaymentErrorCode;
 import org.cherrypic.domain.payment.repository.PaymentRepository;
 import org.cherrypic.domain.subscription.repository.SubscriptionRepository;
+import org.cherrypic.global.pagination.SliceResponse;
+import org.cherrypic.global.pagination.SortDirection;
 import org.cherrypic.global.util.MemberUtil;
 import org.cherrypic.global.util.TransactionUtil;
 import org.cherrypic.member.entity.Member;
@@ -93,14 +95,15 @@ class AlbumServiceTest extends IntegrationTest {
                 Participant participant = album.getParticipants().get(0);
 
                 Assertions.assertAll(
-                        () -> assertThat(album.getId()).isEqualTo(1L),
-                        () -> assertThat(album.getTitle()).isEqualTo("testTitle"),
-                        () -> assertThat(album.getCoverUrl()).isEqualTo("testCoverUrl"),
-                        () -> assertThat(album.getPlan()).isEqualTo(AlbumPlan.BASIC),
-                        () -> assertThat(participant.getId()).isEqualTo(1L),
-                        () -> assertThat(participant.getMember().getId()).isEqualTo(1L),
-                        () -> assertThat(participant.getAlbum().getId()).isEqualTo(1L),
-                        () -> assertThat(participant.getRole()).isEqualTo(ParticipantRole.HOST));
+                        () ->
+                                assertThat(album)
+                                        .extracting("id", "title", "coverUrl", "plan")
+                                        .containsExactly(
+                                                1L, "testTitle", "testCoverUrl", AlbumPlan.BASIC),
+                        () ->
+                                assertThat(participant)
+                                        .extracting("id", "member.id", "album.id", "role")
+                                        .containsExactly(1L, 1L, 1L, ParticipantRole.HOST));
             }
 
             @Test
@@ -177,22 +180,23 @@ class AlbumServiceTest extends IntegrationTest {
                 Subscription subscription = subscriptionRepository.findById(1L).orElseThrow();
 
                 Assertions.assertAll(
-                        () -> assertThat(album.getId()).isEqualTo(2L),
-                        () -> assertThat(album.getTitle()).isEqualTo("testTitle"),
-                        () -> assertThat(album.getCoverUrl()).isEqualTo("testCoverUrl"),
-                        () -> assertThat(album.getPlan()).isEqualTo(AlbumPlan.PRO),
-                        () -> assertThat(participant.getId()).isEqualTo(1L),
-                        () -> assertThat(participant.getMember().getId()).isEqualTo(1L),
-                        () -> assertThat(participant.getAlbum().getId()).isEqualTo(2L),
-                        () -> assertThat(participant.getRole()).isEqualTo(ParticipantRole.HOST),
-                        () -> assertThat(payment.getAlbum().getId()).isEqualTo(2L),
-                        () -> assertThat(payment.getStatus()).isEqualTo(PaymentStatus.PAID),
-                        () -> assertThat(subscription.getId()).isEqualTo(1L),
-                        () -> assertThat(subscription.getMember().getId()).isEqualTo(1L),
-                        () -> assertThat(subscription.getAlbum().getId()).isEqualTo(2L),
                         () ->
-                                assertThat(subscription.getStatus())
-                                        .isEqualTo(SubscriptionStatus.ACTIVE),
+                                assertThat(album)
+                                        .extracting("id", "title", "coverUrl", "plan")
+                                        .containsExactly(
+                                                2L, "testTitle", "testCoverUrl", AlbumPlan.PRO),
+                        () ->
+                                assertThat(participant)
+                                        .extracting("id", "member.id", "album.id", "role")
+                                        .containsExactly(1L, 1L, 2L, ParticipantRole.HOST),
+                        () ->
+                                assertThat(payment)
+                                        .extracting("album.id", "status")
+                                        .containsExactly(2L, PaymentStatus.PAID),
+                        () ->
+                                assertThat(subscription)
+                                        .extracting("id", "member.id", "album.id", "status")
+                                        .containsExactly(1L, 1L, 2L, SubscriptionStatus.ACTIVE),
                         () ->
                                 assertThat(
                                                 subscription
@@ -400,6 +404,114 @@ class AlbumServiceTest extends IntegrationTest {
             assertThatThrownBy(() -> albumService.createInvitationLink(3L))
                     .isInstanceOf(AlbumException.class)
                     .hasMessage(AlbumErrorCode.ALBUM_NOT_FOUND.getMessage());
+        }
+    }
+
+    @Nested
+    class 앨범_목록을_조회할_때 {
+
+        @BeforeEach
+        void setUp() {
+            Member member =
+                    Member.createMember(
+                            OauthInfo.createOauthInfo("testOauthId", "testOauthProvider"),
+                            "testNickname",
+                            "testProfileImageUrl");
+            memberRepository.save(member);
+
+            given(memberUtil.getCurrentMember()).willReturn(member);
+        }
+
+        @Test
+        void 정렬_조건이_ASC이면_albumId를_오름차순으로_조회한다() {
+            // given
+            createTestAlbums();
+
+            // when
+            SliceResponse<AlbumListResponse> response =
+                    albumService.getParticipatingAlbums(null, 2, SortDirection.ASC);
+
+            // then
+            Assertions.assertAll(
+                    () ->
+                            assertThat(response.content())
+                                    .extracting("albumId")
+                                    .containsExactly(1L, 2L),
+                    () -> assertThat(response.isLast()).isTrue());
+        }
+
+        @Test
+        void 정렬_조건이_DESC이면_albumId를_내림차순으로_조회한다() {
+            // given
+            createTestAlbums();
+
+            // when
+            SliceResponse<AlbumListResponse> response =
+                    albumService.getParticipatingAlbums(null, 2, SortDirection.DESC);
+
+            // then
+            Assertions.assertAll(
+                    () ->
+                            assertThat(response.content())
+                                    .extracting("albumId")
+                                    .containsExactly(2L, 1L),
+                    () -> assertThat(response.isLast()).isTrue());
+        }
+
+        @Test
+        void 마지막_페이지인_경우_isLast를_true로_반환한다() {
+            // given
+            createTestAlbums();
+
+            // when
+            SliceResponse<AlbumListResponse> response =
+                    albumService.getParticipatingAlbums(null, 2, SortDirection.DESC);
+
+            // then
+            Assertions.assertAll(
+                    () -> assertThat(response.content().size()).isEqualTo(2),
+                    () -> assertThat(response.isLast()).isTrue());
+        }
+
+        @Test
+        void 마지막_페이지가_아닌_경우_isLast를_false로_반환한다() {
+            // given
+            createTestAlbums();
+
+            // when
+            SliceResponse<AlbumListResponse> response =
+                    albumService.getParticipatingAlbums(null, 1, SortDirection.DESC);
+
+            // then
+            Assertions.assertAll(
+                    () -> assertThat(response.content().size()).isEqualTo(1),
+                    () -> assertThat(response.isLast()).isFalse());
+        }
+
+        @Test
+        void 앨범이_없는_경우_빈_리스트를_조회한다() {
+            // when
+            SliceResponse<AlbumListResponse> response =
+                    albumService.getParticipatingAlbums(null, 10, SortDirection.DESC);
+
+            // when & then
+            Assertions.assertAll(
+                    () -> assertThat(response.content().size()).isZero(),
+                    () -> assertThat(response.isLast()).isTrue());
+        }
+
+        private void createTestAlbums() {
+            Member member = memberRepository.findById(1L).get();
+
+            Album album1 = Album.createAlbum("testTitle1", "testCoverUrl1", AlbumPlan.BASIC);
+            Album album2 = Album.createAlbum("testTitle2", "testCoverUrl2", AlbumPlan.PRO);
+            albumRepository.saveAll(List.of(album1, album2));
+
+            Participant participant1 =
+                    Participant.createParticipant(member, album1, ParticipantRole.HOST);
+            Participant participant2 =
+                    Participant.createParticipant(member, album2, ParticipantRole.HOST);
+            participantRepository.saveAll(List.of(participant1, participant2));
         }
     }
 }

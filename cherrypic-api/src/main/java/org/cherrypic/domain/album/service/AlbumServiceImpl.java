@@ -6,6 +6,7 @@ import org.cherrypic.album.entity.InvitationCode;
 import org.cherrypic.album.enums.AlbumPlan;
 import org.cherrypic.domain.album.dto.request.AlbumCreateRequest;
 import org.cherrypic.domain.album.dto.response.AlbumCreateResponse;
+import org.cherrypic.domain.album.dto.response.AlbumListResponse;
 import org.cherrypic.domain.album.dto.response.InvitationLinkCreateResponse;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.album.exception.AlbumException;
@@ -15,6 +16,8 @@ import org.cherrypic.domain.participant.repository.ParticipantRepository;
 import org.cherrypic.domain.payment.exception.PaymentErrorCode;
 import org.cherrypic.domain.payment.repository.PaymentRepository;
 import org.cherrypic.domain.subscription.repository.SubscriptionRepository;
+import org.cherrypic.global.pagination.SliceResponse;
+import org.cherrypic.global.pagination.SortDirection;
 import org.cherrypic.global.util.MemberUtil;
 import org.cherrypic.member.entity.Member;
 import org.cherrypic.participant.entity.Participant;
@@ -22,6 +25,7 @@ import org.cherrypic.participant.enums.ParticipantRole;
 import org.cherrypic.payment.entity.Payment;
 import org.cherrypic.payment.enums.PaymentStatus;
 import org.cherrypic.subscription.entity.Subscription;
+import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -91,6 +95,19 @@ public class AlbumServiceImpl implements AlbumService {
         String invitationLink = invitationLinkService.createInvitationLink(invitationCode);
 
         return InvitationLinkCreateResponse.of(invitationLink);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public SliceResponse<AlbumListResponse> getParticipatingAlbums(
+            Long lastAlbumId, int size, SortDirection direction) {
+        final Member currentMember = memberUtil.getCurrentMember();
+
+        Slice<AlbumListResponse> results =
+                albumRepository.findAllByMemberId(
+                        currentMember.getId(), lastAlbumId, size, direction);
+
+        return SliceResponse.from(results);
     }
 
     private void validatePaymentRequirementForPlan(AlbumPlan plan, Long paymentId) {
