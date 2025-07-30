@@ -7,11 +7,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.event.controller.EventController;
 import org.cherrypic.domain.event.dto.EventCreateRequest;
 import org.cherrypic.domain.event.dto.EventCreateResponse;
 import org.cherrypic.domain.event.dto.EventUpdateRequest;
 import org.cherrypic.domain.event.dto.EventUpdateResponse;
+import org.cherrypic.domain.event.exception.EventException;
 import org.cherrypic.domain.event.service.EventService;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -124,6 +126,50 @@ public class EventControllerTest {
                     .andExpect(jsonPath("$.data.code").value("MethodArgumentNotValidException"))
                     .andExpect(jsonPath("$.data.message").value("이벤트 이름은 최대 20자까지 가능합니다."));
         }
+
+        @Test
+        void 요청자가_앨범_참가자가_아닌_경우_예외가_발생한다() throws Exception {
+            // given
+            EventCreateRequest request = new EventCreateRequest(1L, "testTitle", "testCoverUrl");
+
+            given(eventService.createEvent(request))
+                    .willThrow(new EventException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/events")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.FORBIDDEN.value()))
+                    .andExpect(jsonPath("$.data.code").value("NOT_ALBUM_PARTICIPANT"))
+                    .andExpect(jsonPath("$.data.message").value("앨범에 속하지 않은 사용자입니다."));
+        }
+
+        @Test
+        void 요청자가_LIMITED_권한을_가지는_경우_예외가_발생한다() throws Exception {
+            // given
+            EventCreateRequest request = new EventCreateRequest(1L, "testTitle", "testCoverUrl");
+
+            given(eventService.createEvent(request))
+                    .willThrow(new EventException(AlbumErrorCode.LIMITED_AUTHORITY));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/events")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.FORBIDDEN.value()))
+                    .andExpect(jsonPath("$.data.code").value("LIMITED_AUTHORITY"))
+                    .andExpect(jsonPath("$.data.message").value("앨범에 대한 생성/수정 권한이 없습니다."));
+        }
     }
 
     @Nested
@@ -194,6 +240,50 @@ public class EventControllerTest {
                     .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
                     .andExpect(jsonPath("$.data.code").value("MethodArgumentNotValidException"))
                     .andExpect(jsonPath("$.data.message").value("이벤트 이름은 최대 20자까지 가능합니다."));
+        }
+
+        @Test
+        void 요청자가_앨범_참가자가_아닌_경우_예외가_발생한다() throws Exception {
+            // given
+            EventCreateRequest request = new EventCreateRequest(1L, "testTitle", "testCoverUrl");
+
+            given(eventService.createEvent(request))
+                    .willThrow(new EventException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/events")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.FORBIDDEN.value()))
+                    .andExpect(jsonPath("$.data.code").value("NOT_ALBUM_PARTICIPANT"))
+                    .andExpect(jsonPath("$.data.message").value("앨범에 속하지 않은 사용자입니다."));
+        }
+
+        @Test
+        void 요청자가_LIMITED_권한을_가지는_경우_예외가_발생한다() throws Exception {
+            // given
+            EventCreateRequest request = new EventCreateRequest(1L, "testTitle", "testCoverUrl");
+
+            given(eventService.createEvent(request))
+                    .willThrow(new EventException(AlbumErrorCode.LIMITED_AUTHORITY));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/events")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.FORBIDDEN.value()))
+                    .andExpect(jsonPath("$.data.code").value("LIMITED_AUTHORITY"))
+                    .andExpect(jsonPath("$.data.message").value("앨범에 대한 생성/수정 권한이 없습니다."));
         }
     }
 }
