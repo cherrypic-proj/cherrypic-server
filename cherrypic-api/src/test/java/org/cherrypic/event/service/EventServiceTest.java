@@ -211,4 +211,41 @@ public class EventServiceTest extends IntegrationTest {
                     .hasMessage(AlbumErrorCode.LIMITED_AUTHORITY.getMessage());
         }
     }
+
+    @Nested
+    class 이벤트를_삭제할_때 {
+
+        @BeforeEach
+        void setUp() {
+            Member member1 =
+                    Member.createMember(
+                            OauthInfo.createOauthInfo("testOauthId1", "testOauthProvider1"),
+                            "testNickname1",
+                            "testProfileImageUrl1");
+            Member member2 =
+                    Member.createMember(
+                            OauthInfo.createOauthInfo("testOauthId2", "testOauthProvider2"),
+                            "testNickname2",
+                            "testProfileImageUrl2");
+            Member member3 =
+                    Member.createMember(
+                            OauthInfo.createOauthInfo("testOauthId3", "testOauthProvider3"),
+                            "testNickname3",
+                            "testProfileImageUrl3");
+            memberRepository.saveAll(List.of(member1, member2, member3));
+            given(memberUtil.getCurrentMember()).willReturn(member1);
+
+            Album album1 = Album.createAlbum("testAlbum1", "testURL1", AlbumPlan.BASIC);
+            albumRepository.save(album1);
+
+            Participant participant1 =
+                    Participant.createParticipant(member1, album1, ParticipantRole.HOST);
+            Participant participant2 =
+                    Participant.createParticipant(member2, album1, ParticipantRole.LIMITED);
+            participantRepository.saveAll(List.of(participant1, participant2));
+
+            Event event = Event.createEvent(album1, "testEvent", "testEventCoverUrl");
+            eventRepository.save(event);
+        }
+    }
 }
