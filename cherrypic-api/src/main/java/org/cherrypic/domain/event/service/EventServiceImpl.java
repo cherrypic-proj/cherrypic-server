@@ -57,6 +57,12 @@ public class EventServiceImpl implements EventService {
         return EventUpdateResponse.from(event);
     }
 
+    @Override
+    public void deleteEvent(Long eventId) {
+        Event event = getEventById(eventId);
+        eventRepository.delete(event);
+    }
+
     private Album getAlbumById(Long albumId) {
         return albumRepository
                 .findById(albumId)

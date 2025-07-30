@@ -9,4 +9,6 @@ public interface EventService {
     EventCreateResponse createEvent(EventCreateRequest request);
 
     EventUpdateResponse updateEvent(Long eventId, EventUpdateRequest request);
+
+    void deleteEvent(Long eventId);
 }

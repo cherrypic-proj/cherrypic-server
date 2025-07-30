@@ -35,4 +35,11 @@ public class EventController {
             @PathVariable Long eventId, @Valid @RequestBody EventUpdateRequest request) {
         return eventService.updateEvent(eventId, request);
     }
+
+    @DeleteMapping("/{eventId}")
+    @Operation(summary = "이벤트 삭제", description = "기존 이벤트를 삭제합니다.")
+    public ResponseEntity<Void> eventDelete(@PathVariable Long eventId) {
+        eventService.deleteEvent(eventId);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
+    }
 }
