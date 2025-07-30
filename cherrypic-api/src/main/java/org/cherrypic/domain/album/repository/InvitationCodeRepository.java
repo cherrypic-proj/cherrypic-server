@@ -1,4 +1,4 @@
-package org.cherrypic.album.repository;
+package org.cherrypic.domain.album.repository;
 
 import org.cherrypic.album.entity.InvitationCode;
 import org.springframework.data.repository.CrudRepository;

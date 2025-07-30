@@ -1,4 +1,4 @@
-package org.cherrypic.participant.repository;
+package org.cherrypic.domain.participant.repository;
 
 import java.util.Optional;
 import org.cherrypic.participant.entity.Participant;

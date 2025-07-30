@@ -2,22 +2,22 @@ package org.cherrypic.domain.event.service;
 
 import lombok.RequiredArgsConstructor;
 import org.cherrypic.album.entity.Album;
-import org.cherrypic.album.repository.AlbumRepository;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.album.exception.AlbumException;
+import org.cherrypic.domain.album.repository.AlbumRepository;
 import org.cherrypic.domain.event.dto.EventCreateRequest;
 import org.cherrypic.domain.event.dto.EventCreateResponse;
 import org.cherrypic.domain.event.dto.EventUpdateRequest;
 import org.cherrypic.domain.event.dto.EventUpdateResponse;
 import org.cherrypic.domain.event.exception.EventErrorCode;
 import org.cherrypic.domain.event.exception.EventException;
+import org.cherrypic.domain.event.repository.EventRepository;
+import org.cherrypic.domain.participant.repository.ParticipantRepository;
 import org.cherrypic.event.entity.Event;
-import org.cherrypic.event.repository.EventRepository;
 import org.cherrypic.global.util.MemberUtil;
 import org.cherrypic.member.entity.Member;
 import org.cherrypic.participant.entity.Participant;
 import org.cherrypic.participant.enums.ParticipantRole;
-import org.cherrypic.participant.repository.ParticipantRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
