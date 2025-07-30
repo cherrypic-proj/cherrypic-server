@@ -4,6 +4,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 import java.util.Optional;
 import org.cherrypic.IntegrationTest;
+import org.cherrypic.domain.member.repository.MemberRepository;
 import org.cherrypic.member.entity.Member;
 import org.cherrypic.member.entity.OauthInfo;
 import org.junit.jupiter.api.Nested;

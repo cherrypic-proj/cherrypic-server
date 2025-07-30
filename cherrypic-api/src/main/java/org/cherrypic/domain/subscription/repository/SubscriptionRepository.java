@@ -1,4 +1,4 @@
-package org.cherrypic.subscription.repository;
+package org.cherrypic.domain.subscription.repository;
 
 import org.cherrypic.subscription.entity.Subscription;
 import org.springframework.data.jpa.repository.JpaRepository;

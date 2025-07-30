@@ -1,4 +1,4 @@
-package org.cherrypic.album.repository;
+package org.cherrypic.domain.album.repository;
 
 import org.cherrypic.album.entity.Album;
 import org.springframework.data.jpa.repository.JpaRepository;

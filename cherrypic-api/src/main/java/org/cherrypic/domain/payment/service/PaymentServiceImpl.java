@@ -16,11 +16,11 @@ import org.cherrypic.domain.payment.dto.response.PaymentReadyResponse;
 import org.cherrypic.domain.payment.dto.response.PaymentVerificationResponse;
 import org.cherrypic.domain.payment.exception.PaymentErrorCode;
 import org.cherrypic.domain.payment.exception.PaymentException;
+import org.cherrypic.domain.payment.repository.PaymentRepository;
 import org.cherrypic.global.util.MemberUtil;
 import org.cherrypic.member.entity.Member;
 import org.cherrypic.payment.entity.Payment;
 import org.cherrypic.payment.enums.PaymentStatus;
-import org.cherrypic.payment.repository.PaymentRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

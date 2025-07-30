@@ -1,4 +1,4 @@
-package org.cherrypic.auth.repository;
+package org.cherrypic.domain.auth.repository;
 
 import org.cherrypic.auth.entity.RefreshToken;
 import org.springframework.data.repository.CrudRepository;

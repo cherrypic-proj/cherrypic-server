@@ -1,4 +1,4 @@
-package org.cherrypic.event.repository;
+package org.cherrypic.domain.event.repository;
 
 import org.cherrypic.event.entity.Event;
 import org.springframework.data.jpa.repository.JpaRepository;

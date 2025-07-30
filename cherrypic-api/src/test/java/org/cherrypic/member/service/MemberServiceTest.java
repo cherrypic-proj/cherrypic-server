@@ -4,12 +4,12 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 import org.cherrypic.IntegrationTest;
 import org.cherrypic.domain.member.dto.response.MemberInfoResponse;
+import org.cherrypic.domain.member.repository.MemberRepository;
 import org.cherrypic.domain.member.service.MemberService;
 import org.cherrypic.member.entity.Member;
 import org.cherrypic.member.entity.OauthInfo;
 import org.cherrypic.member.enums.MemberRole;
 import org.cherrypic.member.enums.MemberStatus;
-import org.cherrypic.member.repository.MemberRepository;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

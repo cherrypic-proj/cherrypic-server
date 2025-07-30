@@ -1,4 +1,4 @@
-package org.cherrypic.favorites.repsoitory;
+package org.cherrypic.domain.favorites;
 
 import org.cherrypic.favorites.entity.Favorites;
 import org.springframework.data.jpa.repository.JpaRepository;
