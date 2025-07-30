@@ -1,4 +1,4 @@
-package org.cherrypic.common.config;
+package org.cherrypic.global.config.querydsl;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
