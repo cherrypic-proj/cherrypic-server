@@ -10,16 +10,19 @@ import org.cherrypic.domain.album.dto.response.AlbumCreateResponse;
 import org.cherrypic.domain.album.dto.response.AlbumListResponse;
 import org.cherrypic.domain.album.dto.response.InvitationLinkCreateResponse;
 import org.cherrypic.domain.album.service.AlbumService;
+import org.cherrypic.global.exception.annotation.PageSize;
 import org.cherrypic.global.pagination.SliceResponse;
 import org.cherrypic.global.pagination.SortDirection;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/albums")
 @RequiredArgsConstructor
 @Tag(name = "3. 앨범 API", description = "앨범 관련 API입니다.")
+@Validated
 public class AlbumController {
 
     private final AlbumService albumService;
@@ -46,7 +49,7 @@ public class AlbumController {
             @Parameter(description = "이전 페이지의 마지막 앨범 ID (첫 요청 시 생략)")
                     @RequestParam(required = false)
                     Long lastAlbumId,
-            @Parameter(description = "페이지당 조회할 앨범 수") @RequestParam int size,
+            @Parameter(description = "페이지당 조회할 앨범 수") @RequestParam @PageSize int size,
             @Parameter(description = "정렬 방향 (ASC: 오래된순, DESC: 최신순)")
                     @RequestParam(defaultValue = "DESC")
                     SortDirection direction) {
