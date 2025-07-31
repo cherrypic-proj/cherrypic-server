@@ -13,12 +13,6 @@ public class PageSizeValidator implements ConstraintValidator<PageSize, Integer>
 
     @Override
     public boolean isValid(Integer value, ConstraintValidatorContext context) {
-        if (value <= 0) {
-            context.buildConstraintViolationWithTemplate(
-                            context.getDefaultConstraintMessageTemplate()) // 기본 메시지 사용
-                    .addConstraintViolation();
-            return false;
-        }
-        return true;
+        return value != null && value > 0;
     }
 }
