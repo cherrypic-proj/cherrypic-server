@@ -8,7 +8,7 @@ import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.cherrypic.domain.event.dto.EventListResponse;
+import org.cherrypic.domain.event.dto.response.EventListResponse;
 import org.cherrypic.global.pagination.SortDirection;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;

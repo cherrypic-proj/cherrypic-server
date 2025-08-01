@@ -8,17 +8,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.List;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.event.controller.EventController;
-import org.cherrypic.domain.event.dto.EventCreateRequest;
-import org.cherrypic.domain.event.dto.EventCreateResponse;
-import org.cherrypic.domain.event.dto.EventUpdateRequest;
-import org.cherrypic.domain.event.dto.EventUpdateResponse;
+import org.cherrypic.domain.event.dto.request.EventCreateRequest;
+import org.cherrypic.domain.event.dto.request.EventUpdateRequest;
+import org.cherrypic.domain.event.dto.response.EventCreateResponse;
+import org.cherrypic.domain.event.dto.response.EventListResponse;
+import org.cherrypic.domain.event.dto.response.EventUpdateResponse;
 import org.cherrypic.domain.event.exception.EventErrorCode;
 import org.cherrypic.domain.event.exception.EventException;
-
-import java.util.List;
-import org.cherrypic.domain.event.dto.*;
 import org.cherrypic.domain.event.service.EventService;
 import org.cherrypic.global.pagination.SliceResponse;
 import org.cherrypic.global.pagination.SortDirection;
