@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.cherrypic.album.entity.Album;
@@ -29,8 +30,26 @@ public class Image extends BaseTimeEntity {
 
     @NotNull private String url;
 
-    private LocalDateTime imageFileCreatedAt;
+    private LocalDateTime generatedAt;
 
     @OneToMany(mappedBy = "image", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<EventImage> eventImages = new ArrayList<>();
+
+    @Builder
+    private Image(Album album, Long memberId, String url, LocalDateTime generatedAt) {
+        this.album = album;
+        this.memberId = memberId;
+        this.url = url;
+        this.generatedAt = generatedAt;
+    }
+
+    public static Image createImage(
+            Album album, Long memberId, String url, LocalDateTime generatedAt) {
+        return Image.builder()
+                .album(album)
+                .memberId(memberId)
+                .url(url)
+                .generatedAt(generatedAt)
+                .build();
+    }
 }

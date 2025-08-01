@@ -31,7 +31,7 @@ public class Event extends BaseTimeEntity {
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<EventImage> eventImages = new ArrayList<>();
 
-    @Builder
+    @Builder(access = AccessLevel.PRIVATE)
     private Event(Album album, String title, String coverUrl) {
         this.album = album;
         this.title = title;

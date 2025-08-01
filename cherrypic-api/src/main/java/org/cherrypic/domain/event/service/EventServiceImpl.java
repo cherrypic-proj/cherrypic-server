@@ -57,6 +57,16 @@ public class EventServiceImpl implements EventService {
         return EventUpdateResponse.from(event);
     }
 
+    @Override
+    public void deleteEvent(Long eventId) {
+        final Member currentMember = memberUtil.getCurrentMember();
+        final Event event = getEventById(eventId);
+
+        validateParticipantAuthority(currentMember, event.getAlbum());
+
+        eventRepository.delete(event);
+    }
+
     private Album getAlbumById(Long albumId) {
         return albumRepository
                 .findById(albumId)
