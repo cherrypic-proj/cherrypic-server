@@ -287,11 +287,8 @@ public class EventServiceTest extends IntegrationTest {
 
         @Test
         void 존재하지_않는_이벤트를_삭제하면_예외가_발생한다() {
-            // given
-            Long nonExistingEventId = 999L;
-
             // when & then
-            assertThatThrownBy(() -> eventService.deleteEvent(nonExistingEventId))
+            assertThatThrownBy(() -> eventService.deleteEvent(999L))
                     .isInstanceOf(EventException.class)
                     .hasMessage(EventErrorCode.EVENT_NOT_FOUND.getMessage());
         }
