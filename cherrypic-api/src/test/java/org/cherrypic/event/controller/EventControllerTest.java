@@ -243,6 +243,29 @@ public class EventControllerTest {
         }
 
         @Test
+        void 이벤트가_존재하지_않는_경우_예외가_발생한다() throws Exception {
+            // given
+            EventUpdateRequest request =
+                    new EventUpdateRequest("testUpdatedTitle", "testUpdatedCoverUrl");
+
+            given(eventService.updateEvent(1L, request))
+                    .willThrow(new EventException(EventErrorCode.EVENT_NOT_FOUND));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            patch("/events/1")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.NOT_FOUND.value()))
+                    .andExpect(jsonPath("$.data.code").value("EVENT_NOT_FOUND"))
+                    .andExpect(jsonPath("$.data.message").value("존재하지 않는 이벤트입니다."));
+        }
+
+        @Test
         void 요청자가_앨범_참가자가_아닌_경우_예외가_발생한다() throws Exception {
             // given
             EventCreateRequest request = new EventCreateRequest(1L, "testTitle", "testCoverUrl");

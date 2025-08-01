@@ -232,12 +232,7 @@ public class EventServiceTest extends IntegrationTest {
                             OauthInfo.createOauthInfo("testOauthId2", "testOauthProvider2"),
                             "testNickname2",
                             "testProfileImageUrl2");
-            Member member3 =
-                    Member.createMember(
-                            OauthInfo.createOauthInfo("testOauthId3", "testOauthProvider3"),
-                            "testNickname3",
-                            "testProfileImageUrl3");
-            memberRepository.saveAll(List.of(member1, member2, member3));
+            memberRepository.saveAll(List.of(member1, member2));
             given(memberUtil.getCurrentMember()).willReturn(member1);
 
             Album album1 = Album.createAlbum("testAlbum1", "testURL1", AlbumPlan.BASIC);
@@ -303,11 +298,8 @@ public class EventServiceTest extends IntegrationTest {
 
         @Test
         void 앨범에_속하지_않은_사용자가_이벤트를_삭제하면_예외가_발생한다() {
-            // given
-            Long notParticipatingEventId = 2L;
-
             // when & then
-            assertThatThrownBy(() -> eventService.deleteEvent(notParticipatingEventId))
+            assertThatThrownBy(() -> eventService.deleteEvent(2L))
                     .isInstanceOf(EventException.class)
                     .hasMessage(AlbumErrorCode.NOT_ALBUM_PARTICIPANT.getMessage());
         }
