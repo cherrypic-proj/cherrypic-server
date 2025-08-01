@@ -5,8 +5,10 @@ import org.cherrypic.album.entity.Album;
 import org.cherrypic.album.entity.InvitationCode;
 import org.cherrypic.album.enums.AlbumPlan;
 import org.cherrypic.domain.album.dto.request.AlbumCreateRequest;
+import org.cherrypic.domain.album.dto.request.AlbumUpdateRequest;
 import org.cherrypic.domain.album.dto.response.AlbumCreateResponse;
 import org.cherrypic.domain.album.dto.response.AlbumListResponse;
+import org.cherrypic.domain.album.dto.response.AlbumUpdateResponse;
 import org.cherrypic.domain.album.dto.response.InvitationLinkCreateResponse;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.album.exception.AlbumException;
@@ -72,6 +74,18 @@ public class AlbumServiceImpl implements AlbumService {
         albumRepository.save(album);
 
         return AlbumCreateResponse.from(album);
+    }
+
+    @Override
+    public AlbumUpdateResponse updateAlbum(Long albumId, AlbumUpdateRequest request) {
+        final Member currentMember = memberUtil.getCurrentMember();
+        final Album album = getAlbumById(albumId);
+
+        validateAlbumHost(currentMember.getId(), album.getId());
+
+        album.updateAlbum(request.title(), request.coverUrl());
+
+        return AlbumUpdateResponse.from(album);
     }
 
     @Override
