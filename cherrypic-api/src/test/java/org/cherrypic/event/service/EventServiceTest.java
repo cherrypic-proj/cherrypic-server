@@ -384,6 +384,21 @@ public class EventServiceTest extends IntegrationTest {
         }
 
         @Test
+        void eventId를_입력하면_다음_event_부터_조회한다() {
+            // when
+            SliceResponse<EventListResponse> response =
+                    eventService.getAlbumEvents(1L, 2L, 1, SortDirection.DESC);
+
+            // then
+            Assertions.assertAll(
+                    () ->
+                            org.assertj.core.api.Assertions.assertThat(response.content())
+                                    .extracting("eventId", "numberOfImages")
+                                    .containsExactly(tuple(1L, 2)),
+                    () -> org.assertj.core.api.Assertions.assertThat(response.isLast()).isTrue());
+        }
+
+        @Test
         void 마지막_페이지인_경우_isLast를_true로_반환한다() {
             // when
             SliceResponse<EventListResponse> response =
