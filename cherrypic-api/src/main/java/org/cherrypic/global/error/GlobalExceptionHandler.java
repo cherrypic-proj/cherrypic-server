@@ -1,6 +1,8 @@
 package org.cherrypic.global.error;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.cherrypic.exception.BaseCustomException;
 import org.cherrypic.exception.BaseErrorCode;
@@ -45,6 +47,23 @@ public class GlobalExceptionHandler {
             MethodArgumentNotValidException e) {
         final String errorMessage =
                 e.getBindingResult().getAllErrors().getFirst().getDefaultMessage();
+        final ErrorResponse errorResponse =
+                ErrorResponse.of(e.getClass().getSimpleName(), errorMessage);
+        final GlobalResponse<ErrorResponse> response =
+                GlobalResponse.fail(HttpStatus.BAD_REQUEST.value(), errorResponse);
+
+        return ResponseEntity.badRequest().body(response);
+    }
+
+    /** Custom Annotation을 통해서 Constraint Violation을 발생시키고 @Validated로 받아줄 때 발생한다. */
+    @ExceptionHandler(ConstraintViolationException.class)
+    protected ResponseEntity<GlobalResponse<ErrorResponse>> handleConstraintViolationException(
+            ConstraintViolationException e) {
+        final String errorMessage =
+                e.getConstraintViolations().stream()
+                        .map(ConstraintViolation::getMessage)
+                        .findFirst()
+                        .orElseThrow(() -> new RuntimeException("Constraint Violation 추출 도중 에러"));
         final ErrorResponse errorResponse =
                 ErrorResponse.of(e.getClass().getSimpleName(), errorMessage);
         final GlobalResponse<ErrorResponse> response =

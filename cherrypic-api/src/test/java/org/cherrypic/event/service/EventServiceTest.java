@@ -10,8 +10,9 @@ import org.cherrypic.album.entity.Album;
 import org.cherrypic.album.enums.AlbumPlan;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.album.repository.AlbumRepository;
-import org.cherrypic.domain.event.dto.EventCreateRequest;
-import org.cherrypic.domain.event.dto.EventUpdateRequest;
+import org.cherrypic.domain.event.dto.request.EventCreateRequest;
+import org.cherrypic.domain.event.dto.request.EventUpdateRequest;
+import org.cherrypic.domain.event.dto.response.EventListResponse;
 import org.cherrypic.domain.event.exception.EventErrorCode;
 import org.cherrypic.domain.event.exception.EventException;
 import org.cherrypic.domain.event.repository.EventImageRepository;
@@ -22,6 +23,8 @@ import org.cherrypic.domain.member.repository.MemberRepository;
 import org.cherrypic.domain.participant.repository.ParticipantRepository;
 import org.cherrypic.event.entity.Event;
 import org.cherrypic.event.entity.EventImage;
+import org.cherrypic.global.pagination.SliceResponse;
+import org.cherrypic.global.pagination.SortDirection;
 import org.cherrypic.global.util.MemberUtil;
 import org.cherrypic.global.util.TransactionUtil;
 import org.cherrypic.image.entity.Image;
@@ -311,6 +314,124 @@ public class EventServiceTest extends IntegrationTest {
             assertThatThrownBy(() -> eventService.deleteEvent(1L))
                     .isInstanceOf(EventException.class)
                     .hasMessage(AlbumErrorCode.LIMITED_AUTHORITY.getMessage());
+        }
+    }
+
+    @Nested
+    class 이벤트_목록을_조회할_때 {
+
+        @BeforeEach
+        void setUp() {
+            Member member =
+                    Member.createMember(
+                            OauthInfo.createOauthInfo("testOauthId", "testOauthProvider"),
+                            "testNickname",
+                            "testProfileImageUrl");
+            memberRepository.save(member);
+            given(memberUtil.getCurrentMember()).willReturn(member);
+
+            Album album1 = Album.createAlbum("testTitle1", "testCoverUrl1", AlbumPlan.BASIC);
+            Album album2 = Album.createAlbum("testTitle2", "testCoverUrl2", AlbumPlan.BASIC);
+            albumRepository.saveAll(List.of(album1, album2));
+
+            Participant participant1 =
+                    Participant.createParticipant(member, album1, ParticipantRole.HOST);
+            Participant participant2 =
+                    Participant.createParticipant(member, album2, ParticipantRole.HOST);
+            participantRepository.saveAll(List.of(participant1, participant2));
+
+            Event event1 = Event.createEvent(album1, "testTitle1", "testCoverUrl1");
+            Event event2 = Event.createEvent(album1, "testTitle2", "testCoverUrl2");
+            eventRepository.saveAll(List.of(event1, event2));
+
+            Image image1 = Image.createImage(album1, 1L, "testUrl", LocalDateTime.now());
+            Image image2 = Image.createImage(album1, 1L, "testUrl2", LocalDateTime.now());
+            imageRepository.saveAll(List.of(image1, image2));
+
+            EventImage eventImage1 = EventImage.createEventImage(event1, image1);
+            EventImage eventImage2 = EventImage.createEventImage(event1, image2);
+            eventImageRepository.saveAll(List.of(eventImage1, eventImage2));
+        }
+
+        @Test
+        void 정렬_조건이_ASC이면_eventId를_오름차순으로_조회한다() {
+            // when
+            SliceResponse<EventListResponse> response =
+                    eventService.getAlbumEvents(1L, null, 2, SortDirection.ASC);
+
+            // then
+            Assertions.assertAll(
+                    () ->
+                            org.assertj.core.api.Assertions.assertThat(response.content())
+                                    .extracting("eventId", "numberOfImages")
+                                    .containsExactly(tuple(1L, 2), tuple(2L, 0)),
+                    () -> org.assertj.core.api.Assertions.assertThat(response.isLast()).isTrue());
+        }
+
+        @Test
+        void 정렬_조건이_DESC면_eventId를_내림차순으로_조회한다() {
+            // when
+            SliceResponse<EventListResponse> response =
+                    eventService.getAlbumEvents(1L, null, 2, SortDirection.DESC);
+
+            // then
+            Assertions.assertAll(
+                    () ->
+                            org.assertj.core.api.Assertions.assertThat(response.content())
+                                    .extracting("eventId", "numberOfImages")
+                                    .containsExactly(tuple(2L, 0), tuple(1L, 2)),
+                    () -> org.assertj.core.api.Assertions.assertThat(response.isLast()).isTrue());
+        }
+
+        @Test
+        void eventId를_입력하면_다음_event_부터_조회한다() {
+            // when
+            SliceResponse<EventListResponse> response =
+                    eventService.getAlbumEvents(1L, 2L, 1, SortDirection.DESC);
+
+            // then
+            Assertions.assertAll(
+                    () ->
+                            org.assertj.core.api.Assertions.assertThat(response.content())
+                                    .extracting("eventId", "numberOfImages")
+                                    .containsExactly(tuple(1L, 2)),
+                    () -> org.assertj.core.api.Assertions.assertThat(response.isLast()).isTrue());
+        }
+
+        @Test
+        void 마지막_페이지인_경우_isLast를_true로_반환한다() {
+            // when
+            SliceResponse<EventListResponse> response =
+                    eventService.getAlbumEvents(1L, null, 2, SortDirection.DESC);
+
+            // then
+            Assertions.assertAll(
+                    () -> assertThat(response.content().size()).isEqualTo(2),
+                    () -> assertThat(response.isLast()).isTrue());
+        }
+
+        @Test
+        void 마지막_페이지가_아닌_경우_isLast를_false로_반환한다() {
+            // when
+            SliceResponse<EventListResponse> response =
+                    eventService.getAlbumEvents(1L, null, 1, SortDirection.DESC);
+
+            // then
+            Assertions.assertAll(
+                    () -> assertThat(response.content().size()).isEqualTo(1),
+                    () -> assertThat(response.isLast()).isFalse());
+        }
+
+        @Test
+        void 이벤트가_없는_경우_빈_리스트를_조회한다() {
+            // when
+            SliceResponse<EventListResponse> response =
+                    eventService.getAlbumEvents(2L, null, 10, SortDirection.DESC);
+
+            // when & then
+            Assertions.assertAll(
+                    () -> assertThat(response.content().size()).isZero(),
+                    () -> assertThat(response.isLast()).isTrue());
         }
     }
 }

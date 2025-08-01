@@ -5,19 +5,23 @@ import org.cherrypic.album.entity.Album;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.album.exception.AlbumException;
 import org.cherrypic.domain.album.repository.AlbumRepository;
-import org.cherrypic.domain.event.dto.EventCreateRequest;
-import org.cherrypic.domain.event.dto.EventCreateResponse;
-import org.cherrypic.domain.event.dto.EventUpdateRequest;
-import org.cherrypic.domain.event.dto.EventUpdateResponse;
+import org.cherrypic.domain.event.dto.request.EventCreateRequest;
+import org.cherrypic.domain.event.dto.request.EventUpdateRequest;
+import org.cherrypic.domain.event.dto.response.EventCreateResponse;
+import org.cherrypic.domain.event.dto.response.EventListResponse;
+import org.cherrypic.domain.event.dto.response.EventUpdateResponse;
 import org.cherrypic.domain.event.exception.EventErrorCode;
 import org.cherrypic.domain.event.exception.EventException;
 import org.cherrypic.domain.event.repository.EventRepository;
 import org.cherrypic.domain.participant.repository.ParticipantRepository;
 import org.cherrypic.event.entity.Event;
+import org.cherrypic.global.pagination.SliceResponse;
+import org.cherrypic.global.pagination.SortDirection;
 import org.cherrypic.global.util.MemberUtil;
 import org.cherrypic.member.entity.Member;
 import org.cherrypic.participant.entity.Participant;
 import org.cherrypic.participant.enums.ParticipantRole;
+import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -55,6 +59,19 @@ public class EventServiceImpl implements EventService {
         event.updateEvent(request.title(), request.coverUrl());
 
         return EventUpdateResponse.from(event);
+    }
+
+    public SliceResponse<EventListResponse> getAlbumEvents(
+            Long albumId, Long lastEventId, int size, SortDirection direction) {
+        final Member currentMember = memberUtil.getCurrentMember();
+        final Album album = getAlbumById(albumId);
+        final Participant participant =
+                getParticipantByMemberIdAndAlbumId(currentMember.getId(), album.getId());
+
+        Slice<EventListResponse> result =
+                eventRepository.findAllByAlbumId(album.getId(), lastEventId, size, direction);
+
+        return SliceResponse.from(result);
     }
 
     @Override

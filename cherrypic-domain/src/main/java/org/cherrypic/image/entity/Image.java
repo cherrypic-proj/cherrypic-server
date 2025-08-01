@@ -35,7 +35,7 @@ public class Image extends BaseTimeEntity {
     @OneToMany(mappedBy = "image", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<EventImage> eventImages = new ArrayList<>();
 
-    @Builder
+    @Builder(access = AccessLevel.PRIVATE)
     private Image(Album album, Long memberId, String url, LocalDateTime generatedAt) {
         this.album = album;
         this.memberId = memberId;
@@ -45,6 +45,7 @@ public class Image extends BaseTimeEntity {
 
     public static Image createImage(
             Album album, Long memberId, String url, LocalDateTime generatedAt) {
+
         return Image.builder()
                 .album(album)
                 .memberId(memberId)

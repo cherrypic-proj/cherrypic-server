@@ -70,7 +70,7 @@ CREATE TABLE image (
                        member_id BIGINT NOT NULL,
                        album_id BIGINT NOT NULL,
                        url VARCHAR(255) NOT NULL,
-                       image_file_created_at DATETIME,
+                       generated_at DATETIME,
                        created_at DATETIME(6) NOT NULL,
                        updated_at DATETIME(6) NOT NULL,
                        CONSTRAINT fk_image_album FOREIGN KEY (album_id) REFERENCES album (id)
