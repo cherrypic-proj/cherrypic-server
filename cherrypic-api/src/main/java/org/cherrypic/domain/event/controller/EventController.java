@@ -7,16 +7,19 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.cherrypic.domain.event.dto.*;
 import org.cherrypic.domain.event.service.EventService;
+import org.cherrypic.global.exception.annotation.PageSize;
 import org.cherrypic.global.pagination.SliceResponse;
 import org.cherrypic.global.pagination.SortDirection;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/events")
 @RequiredArgsConstructor
 @Tag(name = "4. 이벤트 API", description = "이벤트 관련 API입니다.")
+@Validated
 public class EventController {
 
     private final EventService eventService;
@@ -43,7 +46,7 @@ public class EventController {
             @Parameter(description = "이전 페이지의 마지막 이벤트 ID (첫 요청 시 생략)")
                     @RequestParam(required = false)
                     Long lastEventId,
-            @Parameter(description = "페이지당 조회할 이벤트의 수") @RequestParam int size,
+            @Parameter(description = "페이지당 조회할 이벤트의 수") @RequestParam @PageSize int size,
             @Parameter(description = "정렬 방향 (ASC: 오래된순, DESC: 최신순)")
                     @RequestParam(defaultValue = "DESC")
                     SortDirection direction) {
