@@ -30,26 +30,26 @@ public class Image extends BaseTimeEntity {
 
     @NotNull private String url;
 
-    private LocalDateTime imageFileCreatedAt;
+    private LocalDateTime generatedAt;
 
     @OneToMany(mappedBy = "image", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<EventImage> eventImages = new ArrayList<>();
 
     @Builder
-    private Image(Album album, Long memberId, String url, LocalDateTime imageFileCreatedAt) {
+    private Image(Album album, Long memberId, String url, LocalDateTime generatedAt) {
         this.album = album;
         this.memberId = memberId;
         this.url = url;
-        this.imageFileCreatedAt = imageFileCreatedAt;
+        this.generatedAt = generatedAt;
     }
 
     public static Image createImage(
-            Album album, Long memberId, String url, LocalDateTime imageFileCreatedAt) {
+            Album album, Long memberId, String url, LocalDateTime generatedAt) {
         return Image.builder()
                 .album(album)
                 .memberId(memberId)
                 .url(url)
-                .imageFileCreatedAt(imageFileCreatedAt)
+                .generatedAt(generatedAt)
                 .build();
     }
 }

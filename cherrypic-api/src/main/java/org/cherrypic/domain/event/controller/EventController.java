@@ -40,6 +40,6 @@ public class EventController {
     @Operation(summary = "이벤트 삭제", description = "기존 이벤트를 삭제합니다.")
     public ResponseEntity<Void> eventDelete(@PathVariable Long eventId) {
         eventService.deleteEvent(eventId);
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
+        return ResponseEntity.noContent().build();
     }
 }
