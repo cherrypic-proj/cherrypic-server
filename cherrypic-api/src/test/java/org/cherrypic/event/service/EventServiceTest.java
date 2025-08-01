@@ -11,6 +11,7 @@ import org.cherrypic.album.enums.AlbumPlan;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.album.repository.AlbumRepository;
 import org.cherrypic.domain.event.dto.EventCreateRequest;
+import org.cherrypic.domain.event.dto.EventListResponse;
 import org.cherrypic.domain.event.dto.EventUpdateRequest;
 import org.cherrypic.domain.event.exception.EventErrorCode;
 import org.cherrypic.domain.event.exception.EventException;
@@ -24,6 +25,8 @@ import org.cherrypic.event.entity.Event;
 import org.cherrypic.event.entity.EventImage;
 import org.cherrypic.global.util.MemberUtil;
 import org.cherrypic.global.util.TransactionUtil;
+import org.cherrypic.global.pagination.SliceResponse;
+import org.cherrypic.global.pagination.SortDirection;
 import org.cherrypic.image.entity.Image;
 import org.cherrypic.member.entity.Member;
 import org.cherrypic.member.entity.OauthInfo;
@@ -328,24 +331,23 @@ public class EventServiceTest extends IntegrationTest {
             given(memberUtil.getCurrentMember()).willReturn(member);
         }
 
-        //        @Test
-        //        void 정렬_조건이_ASC이면_eventId를_오름차순으로_조회한다() {
-        //            // given
-        //            createTestEvents();
-        //
-        //            // when
-        //            SliceResponse<EventListResponse> response =
-        //                    eventService.getAlbumEvents(1L, null, 2, SortDirection.ASC);
-        //
-        //            // then
-        //            Assertions.assertAll(
-        //                    () ->
-        //                            org.assertj.core.api.Assertions.assertThat(response.content())
-        //                                    .extracting("eventId")
-        //                                    .containsExactly(1L, 2L),
-        //                    () ->
-        // org.assertj.core.api.Assertions.assertThat(response.isLast()).isTrue());
-        //        }
+        @Test
+        void 정렬_조건이_ASC이면_eventId를_오름차순으로_조회한다() {
+            // given
+            createTestEvents();
+
+            // when
+            SliceResponse<EventListResponse> response =
+                    eventService.getAlbumEvents(1L, null, 2, SortDirection.ASC);
+
+            // then
+            Assertions.assertAll(
+                    () ->
+                            org.assertj.core.api.Assertions.assertThat(response.content())
+                                    .extracting("eventId")
+                                    .containsExactly(1L, 2L),
+                    () ->   org.assertj.core.api.Assertions.assertThat(response.isLast()).isTrue());
+        }
 
         private void createTestEvents() {
             Member member = memberRepository.findById(1L).get();
@@ -360,6 +362,8 @@ public class EventServiceTest extends IntegrationTest {
             Event event1 = Event.createEvent(album, "testTitle1", "testCoverUrl1");
             Event event2 = Event.createEvent(album, "testTitle2", "testCoverUrl2");
             eventRepository.saveAll(List.of(event1, event2));
+
+            Image image1 =
         }
     }
 }

@@ -35,6 +35,7 @@ public class Image extends BaseTimeEntity {
     @OneToMany(mappedBy = "image", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<EventImage> eventImages = new ArrayList<>();
 
+<<<<<<< HEAD
     @Builder
     private Image(Album album, Long memberId, String url, LocalDateTime generatedAt) {
         this.album = album;
@@ -45,11 +46,27 @@ public class Image extends BaseTimeEntity {
 
     public static Image createImage(
             Album album, Long memberId, String url, LocalDateTime generatedAt) {
+=======
+    @Builder(access = AccessLevel.PRIVATE)
+    private Image(Album album, Long memberId, String url, LocalDateTime imageFileCreatedAt) {
+        this.album = album;
+        this.memberId = memberId;
+        this.url = url;
+        this.imageFileCreatedAt = imageFileCreatedAt;
+    }
+
+    public static Image createImage(
+            Album album, Long memberId, String url, LocalDateTime imageFileCreatedAt) {
+>>>>>>> 81978e8 (feat: image 엔티티 생성자 구현)
         return Image.builder()
                 .album(album)
                 .memberId(memberId)
                 .url(url)
+<<<<<<< HEAD
                 .generatedAt(generatedAt)
+=======
+                .imageFileCreatedAt(imageFileCreatedAt)
+>>>>>>> 81978e8 (feat: image 엔티티 생성자 구현)
                 .build();
     }
 }

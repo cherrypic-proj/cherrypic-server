@@ -33,13 +33,14 @@ public class EventRepositoryImpl implements EventRepositoryCustom {
                                         event.id,
                                         event.title,
                                         event.coverUrl,
-                                        eventImage.count().intValue()))
-                        .from(eventImage)
-                        .join(eventImage.event, event)
+                                        eventImage.id.count().intValue()))
+                        .from(event)
+                        .leftJoin(eventImage)
+                        .on(eventImage.event.eq(event))
                         .where(
                                 event.album.id.eq(albumId),
                                 lastEventIdCondition(lastEventId, direction))
-                        .groupBy(event.id)
+                        .groupBy(event.id, event.title, event.coverUrl)
                         .orderBy(direction == SortDirection.DESC ? event.id.desc() : event.id.asc())
                         .limit(size + 1)
                         .fetch();
