@@ -346,7 +346,7 @@ public class EventServiceTest extends IntegrationTest {
                             org.assertj.core.api.Assertions.assertThat(response.content())
                                     .extracting("eventId")
                                     .containsExactly(1L, 2L),
-                    () ->   org.assertj.core.api.Assertions.assertThat(response.isLast()).isTrue());
+                    () -> org.assertj.core.api.Assertions.assertThat(response.isLast()).isTrue());
         }
 
         private void createTestEvents() {
@@ -363,7 +363,9 @@ public class EventServiceTest extends IntegrationTest {
             Event event2 = Event.createEvent(album, "testTitle2", "testCoverUrl2");
             eventRepository.saveAll(List.of(event1, event2));
 
-            Image image1 =
+            Image image1 = Image.createImage(album, 1L, "testUrl", LocalDateTime.now());
+            Image image2 = Image.createImage(album, 1L, "testUrl2", LocalDateTime.now());
+            imageRepository.saveAll(List.of(image1, image2));
         }
     }
 }
