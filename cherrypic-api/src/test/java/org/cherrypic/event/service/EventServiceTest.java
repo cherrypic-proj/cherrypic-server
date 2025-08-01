@@ -286,7 +286,7 @@ public class EventServiceTest extends IntegrationTest {
         }
 
         @Test
-        void 존재하지_않는_이벤트를_삭제_하면_예외가_발생한다() {
+        void 존재하지_않는_이벤트를_삭제하면_예외가_발생한다() {
             // given
             Long nonExistingEventId = 999L;
 
