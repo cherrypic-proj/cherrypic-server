@@ -1,7 +1,9 @@
 package org.cherrypic.event.controller;
 
 import static org.mockito.BDDMockito.*;
+import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -14,7 +16,12 @@ import org.cherrypic.domain.event.dto.EventUpdateRequest;
 import org.cherrypic.domain.event.dto.EventUpdateResponse;
 import org.cherrypic.domain.event.exception.EventErrorCode;
 import org.cherrypic.domain.event.exception.EventException;
+
+import java.util.List;
+import org.cherrypic.domain.event.dto.*;
 import org.cherrypic.domain.event.service.EventService;
+import org.cherrypic.global.pagination.SliceResponse;
+import org.cherrypic.global.pagination.SortDirection;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -383,6 +390,155 @@ public class EventControllerTest {
                         .andExpect(jsonPath("$.data.code").value("LIMITED_AUTHORITY"))
                         .andExpect(jsonPath("$.data.message").value("앨범에 대한 생성/수정 권한이 없습니다."));
             }
+        }
+    }
+
+    @Nested
+    class 이벤트_조회_요청시 {
+
+        @Test
+        void 정렬_조건이_ASC이면_eventId를_오름차순으로_응답한다() throws Exception {
+            // given
+            List<EventListResponse> events =
+                    List.of(
+                            new EventListResponse(1L, "testEventTitle1", "testCoverUrl1", 2),
+                            new EventListResponse(2L, "testEventTitle2", "testCoverUrl2", 2));
+
+            given(eventService.getAlbumEvents(1L, null, 2, SortDirection.ASC))
+                    .willReturn(new SliceResponse<>(events, true));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            get("/events")
+                                    .param("albumId", "1")
+                                    .param("size", "2")
+                                    .param("direction", "ASC"));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
+                    .andExpect(jsonPath("$.data.content[0].eventId").value(1))
+                    .andExpect(jsonPath("$.data.content[1].eventId").value(2))
+                    .andExpect(jsonPath("$.data.isLast").value(true));
+        }
+
+        @Test
+        void 정렬_조건이_DESC이면_albumId를_내림차순으로_응답한다() throws Exception {
+            // given
+            List<EventListResponse> events =
+                    List.of(
+                            new EventListResponse(2L, "testEventTitle2", "testCoverUrl2", 2),
+                            new EventListResponse(1L, "testEventTitle1", "testCoverUrl1", 2));
+
+            given(eventService.getAlbumEvents(1L, null, 2, SortDirection.DESC))
+                    .willReturn(new SliceResponse<>(events, true));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            get("/events")
+                                    .param("albumId", "1")
+                                    .param("size", "2")
+                                    .param("direction", "DESC"));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
+                    .andExpect(jsonPath("$.data.content[0].eventId").value(2))
+                    .andExpect(jsonPath("$.data.content[1].eventId").value(1))
+                    .andExpect(jsonPath("$.data.isLast").value(true));
+        }
+
+        @Test
+        void 마지막_페이지인_경우_isLast를_true로_응답한다() throws Exception {
+            // given
+            List<EventListResponse> events =
+                    List.of(new EventListResponse(1L, "testEventTitle1", "testCoverUrl1", 2));
+
+            given(eventService.getAlbumEvents(1L, null, 1, SortDirection.DESC))
+                    .willReturn(new SliceResponse<>(events, true));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            get("/events")
+                                    .param("albumId", "1")
+                                    .param("size", "1")
+                                    .param("direction", "DESC"));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
+                    .andExpect(jsonPath("$.data.content[0].eventId").value(1))
+                    .andExpect(jsonPath("$.data.isLast").value(true));
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"-1", "-999", "0"})
+        void 페이지_크기를_0_이하로_설정하면_예외가_발생한다(String pageSize) throws Exception {
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            get("/events")
+                                    .param("albumId", "1")
+                                    .param("size", pageSize)
+                                    .param("direction", "DESC"));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("ConstraintViolationException"))
+                    .andExpect(jsonPath("$.data.message").value("페이지 크기는 0보다 큰 값만 가능합니다."));
+        }
+
+        @Test
+        void 마지막_페이지가_아닌_경우_isLast를_false로_응답한다() throws Exception {
+            // given
+            List<EventListResponse> events =
+                    List.of(
+                            new EventListResponse(2L, "testEventTitle2", "testCoverUrl2", 2),
+                            new EventListResponse(1L, "testEventTitle1", "testCoverUrl1", 2));
+
+            given(eventService.getAlbumEvents(1L, null, 1, SortDirection.DESC))
+                    .willReturn(new SliceResponse<>(events, false));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            get("/events")
+                                    .param("albumId", "1")
+                                    .param("size", "1")
+                                    .param("direction", "DESC"));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
+                    .andExpect(jsonPath("$.data.content[0].eventId").value(2))
+                    .andExpect(jsonPath("$.data.isLast").value(false));
+        }
+
+        @Test
+        void 이벤트가_없는_경우_빈_리스트를_응답한다() throws Exception {
+            // given
+            List<EventListResponse> events = List.of();
+
+            given(eventService.getAlbumEvents(1L, null, 10, SortDirection.DESC))
+                    .willReturn(new SliceResponse<>(events, true));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            get("/events")
+                                    .param("albumId", "1")
+                                    .param("size", "10")
+                                    .param("direction", "DESC"));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
+                    .andExpect(jsonPath("$.data.content").isEmpty())
+                    .andExpect(jsonPath("$.data.isLast").value(true));
         }
     }
 }

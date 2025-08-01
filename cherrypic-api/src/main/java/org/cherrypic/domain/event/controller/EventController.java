@@ -46,7 +46,10 @@ public class EventController {
             @Parameter(description = "이전 페이지의 마지막 이벤트 ID (첫 요청 시 생략)")
                     @RequestParam(required = false)
                     Long lastEventId,
-            @Parameter(description = "페이지당 조회할 이벤트의 수") @RequestParam @PageSize int size,
+            @Parameter(description = "페이지당 조회할 이벤트의 수")
+                    @RequestParam
+                    @PageSize(message = "페이지 크기는 0보다 큰 값만 가능합니다.")
+                    int size,
             @Parameter(description = "정렬 방향 (ASC: 오래된순, DESC: 최신순)")
                     @RequestParam(defaultValue = "DESC")
                     SortDirection direction) {
