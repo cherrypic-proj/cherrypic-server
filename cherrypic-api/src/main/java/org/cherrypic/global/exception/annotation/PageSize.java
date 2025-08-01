@@ -8,6 +8,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import org.cherrypic.global.exception.validator.PageSizeValidator;
 
+/** Query Parameter 의 Enum 검증을 위한 어노테이션 입니다 */
 @Constraint(validatedBy = PageSizeValidator.class)
 @Target(ElementType.PARAMETER)
 @Retention(RetentionPolicy.RUNTIME)

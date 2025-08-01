@@ -8,8 +8,9 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import org.cherrypic.global.exception.validator.EnumValidator;
 
+/** RequestBody 의 Enum 검증을 위한 어노테이션 입니다 */
 @Constraint(validatedBy = {EnumValidator.class})
-@Target({ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER})
+@Target({ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Enum {
     String message() default "적절하지 않은 Enum값 입니다.";
