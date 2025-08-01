@@ -1,8 +1,8 @@
-package org.cherrypic.global.exception.validator;
+package org.cherrypic.global.validator;
 
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
-import org.cherrypic.global.exception.annotation.PageSize;
+import org.cherrypic.global.annotation.PageSize;
 
 public class PageSizeValidator implements ConstraintValidator<PageSize, Integer> {
 

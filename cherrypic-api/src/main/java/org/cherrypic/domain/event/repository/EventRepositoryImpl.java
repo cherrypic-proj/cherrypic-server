@@ -40,7 +40,7 @@ public class EventRepositoryImpl implements EventRepositoryCustom {
                         .where(
                                 event.album.id.eq(albumId),
                                 lastEventIdCondition(lastEventId, direction))
-                        .groupBy(event.id, event.title, event.coverUrl)
+                        .groupBy(event.id)
                         .orderBy(direction == SortDirection.DESC ? event.id.desc() : event.id.asc())
                         .limit(size + 1)
                         .fetch();

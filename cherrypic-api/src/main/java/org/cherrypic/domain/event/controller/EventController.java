@@ -11,7 +11,7 @@ import org.cherrypic.domain.event.dto.response.EventCreateResponse;
 import org.cherrypic.domain.event.dto.response.EventListResponse;
 import org.cherrypic.domain.event.dto.response.EventUpdateResponse;
 import org.cherrypic.domain.event.service.EventService;
-import org.cherrypic.global.exception.annotation.PageSize;
+import org.cherrypic.global.annotation.PageSize;
 import org.cherrypic.global.pagination.SliceResponse;
 import org.cherrypic.global.pagination.SortDirection;
 import org.springframework.http.HttpStatus;
@@ -53,7 +53,7 @@ public class EventController {
             @Parameter(description = "페이지당 조회할 이벤트의 수")
                     @RequestParam
                     @PageSize(message = "페이지 크기는 0보다 큰 값만 가능합니다.")
-                    int size,
+                    Integer size,
             @Parameter(description = "정렬 방향 (ASC: 오래된순, DESC: 최신순)")
                     @RequestParam(defaultValue = "DESC")
                     SortDirection direction) {

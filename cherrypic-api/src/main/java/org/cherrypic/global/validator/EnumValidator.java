@@ -1,9 +1,9 @@
-package org.cherrypic.global.exception.validator;
+package org.cherrypic.global.validator;
 
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import java.util.Arrays;
-import org.cherrypic.global.exception.annotation.Enum;
+import org.cherrypic.global.annotation.Enum;
 
 public class EnumValidator implements ConstraintValidator<Enum, java.lang.Enum> {
     @Override
