@@ -1,6 +1,5 @@
 package org.cherrypic.domain.event.repository;
 
-import static org.cherrypic.album.entity.QAlbum.album;
 import static org.cherrypic.event.entity.QEvent.event;
 import static org.cherrypic.event.entity.QEventImage.eventImage;
 
@@ -34,14 +33,14 @@ public class EventRepositoryImpl implements EventRepositoryCustom {
                                         event.id,
                                         event.title,
                                         event.coverUrl,
-                                        eventImage.count()))
+                                        eventImage.count().intValue()))
                         .from(eventImage)
                         .join(eventImage.event, event)
                         .where(
                                 event.album.id.eq(albumId),
                                 lastEventIdCondition(lastEventId, direction))
                         .groupBy(event.id)
-                        .orderBy(direction == SortDirection.DESC ? album.id.desc() : album.id.asc())
+                        .orderBy(direction == SortDirection.DESC ? event.id.desc() : event.id.asc())
                         .limit(size + 1)
                         .fetch();
 
@@ -53,7 +52,7 @@ public class EventRepositoryImpl implements EventRepositoryCustom {
             return null;
         }
 
-        return direction == SortDirection.DESC ? event.id.lt(eventId) : album.id.gt(eventId);
+        return direction == SortDirection.DESC ? event.id.lt(eventId) : event.id.gt(eventId);
     }
 
     private Slice<EventListResponse> checkLastPage(int pageSize, List<EventListResponse> results) {

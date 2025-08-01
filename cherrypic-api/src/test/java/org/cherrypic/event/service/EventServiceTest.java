@@ -313,4 +313,53 @@ public class EventServiceTest extends IntegrationTest {
                     .hasMessage(AlbumErrorCode.LIMITED_AUTHORITY.getMessage());
         }
     }
+
+    class 이벤트_목록을_조회할_때 {
+
+        @BeforeEach
+        void setUp() {
+            Member member =
+                    Member.createMember(
+                            OauthInfo.createOauthInfo("testOauthId", "testOauthProvider"),
+                            "testNickname",
+                            "testProfileImageUrl");
+            memberRepository.save(member);
+
+            given(memberUtil.getCurrentMember()).willReturn(member);
+        }
+
+        //        @Test
+        //        void 정렬_조건이_ASC이면_eventId를_오름차순으로_조회한다() {
+        //            // given
+        //            createTestEvents();
+        //
+        //            // when
+        //            SliceResponse<EventListResponse> response =
+        //                    eventService.getAlbumEvents(1L, null, 2, SortDirection.ASC);
+        //
+        //            // then
+        //            Assertions.assertAll(
+        //                    () ->
+        //                            org.assertj.core.api.Assertions.assertThat(response.content())
+        //                                    .extracting("eventId")
+        //                                    .containsExactly(1L, 2L),
+        //                    () ->
+        // org.assertj.core.api.Assertions.assertThat(response.isLast()).isTrue());
+        //        }
+
+        private void createTestEvents() {
+            Member member = memberRepository.findById(1L).get();
+
+            Album album = Album.createAlbum("testTitle", "testCoverUrl", AlbumPlan.BASIC);
+            albumRepository.save(album);
+
+            Participant participant =
+                    Participant.createParticipant(member, album, ParticipantRole.HOST);
+            participantRepository.save(participant);
+
+            Event event1 = Event.createEvent(album, "testTitle1", "testCoverUrl1");
+            Event event2 = Event.createEvent(album, "testTitle2", "testCoverUrl2");
+            eventRepository.saveAll(List.of(event1, event2));
+        }
+    }
 }
