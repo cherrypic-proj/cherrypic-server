@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 public class InvitationLinkService {
 
     private static final String INVITATION_LINK_PREFIX =
-            "https://dev-api.cherrypic.today/participants/join?code=";
+            "https://dev-api.cherrypic.today/albums/join?albumId=%d&code=%s";
     private static final int INVITATION_LINK_DURATION = 30;
     private static final int UUID_LENGTH = 8;
 
@@ -22,6 +22,7 @@ public class InvitationLinkService {
     }
 
     public String createInvitationLink(InvitationCode invitationCode) {
-        return INVITATION_LINK_PREFIX + invitationCode.getCode();
+        return String.format(
+                INVITATION_LINK_PREFIX, invitationCode.getAlbumId(), invitationCode.getCode());
     }
 }

@@ -473,7 +473,7 @@ class AlbumControllerTest {
 
             InvitationLinkCreateResponse response =
                     new InvitationLinkCreateResponse(
-                            "https://dev-api.cherrypic.today/participants/join?code=3FA7A9");
+                            "https://dev-api.cherrypic.today/albums/join?albumId=1&code=3FA7A9");
 
             given(albumService.createInvitationLink(albumId)).willReturn(response);
 
@@ -490,7 +490,64 @@ class AlbumControllerTest {
                     .andExpect(
                             jsonPath("$.data.invitationLink")
                                     .value(
-                                            "https://dev-api.cherrypic.today/participants/join?code=3FA7A9"));
+                                            "https://dev-api.cherrypic.today/albums/join?albumId=1&code=3FA7A9"));
+        }
+
+        @Test
+        void 앨범이_존재하지_않는_경우_예외가_발생한다() throws Exception {
+            // given
+            given(albumService.createInvitationLink(999L))
+                    .willThrow(new AlbumException(AlbumErrorCode.ALBUM_NOT_FOUND));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/albums/999/invitation-link")
+                                    .contentType(MediaType.APPLICATION_JSON));
+
+            perform.andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.NOT_FOUND.value()))
+                    .andExpect(jsonPath("$.data.code").value("ALBUM_NOT_FOUND"))
+                    .andExpect(jsonPath("$.data.message").value("앨범이 존재하지 않습니다."));
+        }
+
+        @Test
+        void 앨범_참가자가_아닌_경우_예외가_발생한다() throws Exception {
+            // given
+            given(albumService.createInvitationLink(1L))
+                    .willThrow(new AlbumException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/albums/1/invitation-link")
+                                    .contentType(MediaType.APPLICATION_JSON));
+
+            perform.andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.FORBIDDEN.value()))
+                    .andExpect(jsonPath("$.data.code").value("NOT_ALBUM_PARTICIPANT"))
+                    .andExpect(jsonPath("$.data.message").value("앨범에 속하지 않은 사용자입니다."));
+        }
+
+        @Test
+        void 앨범_방장이_아닌_경우_예외가_발생한다() throws Exception {
+            // given
+            given(albumService.createInvitationLink(1L))
+                    .willThrow(new AlbumException(AlbumErrorCode.NOT_ALBUM_HOST));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/albums/1/invitation-link")
+                                    .contentType(MediaType.APPLICATION_JSON));
+
+            perform.andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.FORBIDDEN.value()))
+                    .andExpect(jsonPath("$.data.code").value("NOT_ALBUM_HOST"))
+                    .andExpect(jsonPath("$.data.message").value("방장이 아닌 경우 권한이 없습니다."));
         }
     }
 

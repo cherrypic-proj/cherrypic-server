@@ -386,6 +386,7 @@ class AlbumServiceTest extends IntegrationTest {
                             "testNickname2",
                             "testProfileImageUrl2");
             memberRepository.saveAll(List.of(member1, member2));
+            given(memberUtil.getCurrentMember()).willReturn(member1);
 
             Album album1 = Album.createAlbum("testAlbum1", "testURL1", AlbumPlan.BASIC);
             Album album2 = Album.createAlbum("testAlbum2", "testURL2", AlbumPlan.BASIC);
@@ -405,9 +406,6 @@ class AlbumServiceTest extends IntegrationTest {
 
         @Test
         void 유효한_요청이면_초대_코드를_저장하며_초대_링크가_반환된다() {
-            // given
-            given(memberUtil.getCurrentMember()).willReturn(memberRepository.findById(1L).get());
-
             // when
             InvitationLinkCreateResponse response = albumService.createInvitationLink(1L);
 
@@ -415,15 +413,13 @@ class AlbumServiceTest extends IntegrationTest {
             InvitationCode savedCode = invitationCodeRepository.findById(1L).orElseThrow();
 
             String link = response.invitationLink();
-            String codeInLink = link.substring(link.lastIndexOf("=") + 1);
-
-            assertThat(codeInLink).isEqualTo(savedCode.getCode());
+            assertThat(link)
+                    .containsPattern(String.format(".*albumId=%d&code=%s", 1, savedCode.getCode()));
         }
 
         @Test
         void 유효한_초대_코드가_이미_존재하는_경우_갱신하지_않는다() {
             // given
-            given(memberUtil.getCurrentMember()).willReturn(memberRepository.findById(1L).get());
             InvitationCode invitationCode =
                     InvitationCode.builder().albumId(1L).code("testInvitationCode").build();
             invitationCodeRepository.save(invitationCode);
@@ -441,33 +437,29 @@ class AlbumServiceTest extends IntegrationTest {
 
         @Test
         void 유효한_요청에_대해서_유효한_초대코드가_생성된다() {
-            // given
-            given(memberUtil.getCurrentMember()).willReturn(memberRepository.findById(1L).get());
-
             // when
             albumService.createInvitationLink(1L);
 
             // then
             InvitationCode createdCode = invitationCodeRepository.findById(1L).orElseThrow();
-            Assertions.assertAll(
-                    () -> assertThat(createdCode.getAlbumId()).isEqualTo(1L),
-                    () -> assertThat(createdCode.getCode().length()).isEqualTo(8),
-                    () -> assertThat(createdCode.getTtl()).isEqualTo(1800L));
+            assertThat(createdCode)
+                    .extracting("albumId", "code", "ttl")
+                    .containsExactly(1L, createdCode.getCode(), 1800L);
         }
 
         @Test
-        void 현재_유저가_HOST가_아닌_경우_예외가_발생한다() {
+        void 앨범이_존재하지_않는_경우_예외가_발생한다() {
             // given
             given(memberUtil.getCurrentMember()).willReturn(memberRepository.findById(2L).get());
 
             // when & then
-            assertThatThrownBy(() -> albumService.createInvitationLink(2L))
+            assertThatThrownBy(() -> albumService.createInvitationLink(3L))
                     .isInstanceOf(AlbumException.class)
-                    .hasMessage(AlbumErrorCode.NOT_ALBUM_HOST.getMessage());
+                    .hasMessage(AlbumErrorCode.ALBUM_NOT_FOUND.getMessage());
         }
 
         @Test
-        void 현재_유저가_앨범_소속이_아닌_경우_예외가_발생한다() {
+        void 앨범_참가자가_아닌_경우_예외가_발생한다() {
             // given
             given(memberUtil.getCurrentMember()).willReturn(memberRepository.findById(2L).get());
 
@@ -478,14 +470,14 @@ class AlbumServiceTest extends IntegrationTest {
         }
 
         @Test
-        void 존재하지_않는_앨범_ID_를_입력한_경우_예외가_발생한다() {
+        void 앨범_방장이_아닌_경우_예외가_발생한다() {
             // given
             given(memberUtil.getCurrentMember()).willReturn(memberRepository.findById(2L).get());
 
             // when & then
-            assertThatThrownBy(() -> albumService.createInvitationLink(3L))
+            assertThatThrownBy(() -> albumService.createInvitationLink(2L))
                     .isInstanceOf(AlbumException.class)
-                    .hasMessage(AlbumErrorCode.ALBUM_NOT_FOUND.getMessage());
+                    .hasMessage(AlbumErrorCode.NOT_ALBUM_HOST.getMessage());
         }
     }
 
