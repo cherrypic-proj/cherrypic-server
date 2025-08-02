@@ -130,10 +130,10 @@ public class AlbumServiceImpl implements AlbumService {
                 invitationCodeRepository
                         .findById(album.getId())
                         .orElseThrow(
-                                () -> new AlbumException(AlbumErrorCode.INVITATION_CODE_NOT_FOUND));
+                                () -> new AlbumException(AlbumErrorCode.INVITATION_CODE_OUTDATED));
 
         if (!currentInvitationCode.getCode().equals(code)) {
-            throw new AlbumException(AlbumErrorCode.INVITATION_CODE_MISMATCH);
+            throw new AlbumException(AlbumErrorCode.INVITATION_CODE_INVALID);
         }
 
         Participant participant =
