@@ -417,9 +417,8 @@ class AlbumServiceTest extends IntegrationTest {
             String link = response.invitationLink();
             Map<String, String> parameters = parseParameter(link);
 
-            Assertions.assertAll(
-                    () -> assertThat(Integer.parseInt(parameters.get("albumId"))).isEqualTo(1L),
-                    () -> assertThat(parameters.get("code")).isEqualTo(savedCode.getCode()));
+            assertThat(parameters)
+                    .containsOnly(entry("albumId", "1"), entry("code", savedCode.getCode()));
         }
 
         @Test
