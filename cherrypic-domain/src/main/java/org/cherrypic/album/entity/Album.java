@@ -65,4 +65,9 @@ public class Album extends BaseTimeEntity {
     public void addParticipant(Participant participant) {
         participants.add(participant);
     }
+
+    public void updateAlbum(String title, String coverUrl) {
+        this.title = title;
+        this.coverUrl = coverUrl;
+    }
 }

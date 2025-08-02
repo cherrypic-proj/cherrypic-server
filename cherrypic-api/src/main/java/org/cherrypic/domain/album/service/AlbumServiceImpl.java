@@ -5,8 +5,10 @@ import org.cherrypic.album.entity.Album;
 import org.cherrypic.album.entity.InvitationCode;
 import org.cherrypic.album.enums.AlbumPlan;
 import org.cherrypic.domain.album.dto.request.AlbumCreateRequest;
+import org.cherrypic.domain.album.dto.request.AlbumUpdateRequest;
 import org.cherrypic.domain.album.dto.response.AlbumCreateResponse;
 import org.cherrypic.domain.album.dto.response.AlbumListResponse;
+import org.cherrypic.domain.album.dto.response.AlbumUpdateResponse;
 import org.cherrypic.domain.album.dto.response.InvitationLinkCreateResponse;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.album.exception.AlbumException;
@@ -75,11 +77,23 @@ public class AlbumServiceImpl implements AlbumService {
     }
 
     @Override
+    public AlbumUpdateResponse updateAlbum(Long albumId, AlbumUpdateRequest request) {
+        final Member currentMember = memberUtil.getCurrentMember();
+        final Album album = getAlbumById(albumId);
+
+        validateAlbumHost(currentMember.getId(), album.getId());
+
+        album.updateAlbum(request.title(), request.coverUrl());
+
+        return AlbumUpdateResponse.from(album);
+    }
+
+    @Override
     public InvitationLinkCreateResponse createInvitationLink(Long albumId) {
         final Member currentMember = memberUtil.getCurrentMember();
         final Album album = getAlbumById(albumId);
 
-        validateInvitationAuthority(currentMember.getId(), album.getId());
+        validateAlbumHost(currentMember.getId(), album.getId());
 
         InvitationCode invitationCode =
                 invitationCodeRepository
@@ -108,6 +122,26 @@ public class AlbumServiceImpl implements AlbumService {
                         currentMember.getId(), lastAlbumId, size, direction);
 
         return SliceResponse.from(results);
+    }
+
+    private Album getAlbumById(Long albumId) {
+        return albumRepository
+                .findById(albumId)
+                .orElseThrow(() -> new AlbumException(AlbumErrorCode.ALBUM_NOT_FOUND));
+    }
+
+    private Participant getParticipantByMemberIdAndAlbumId(Long memberId, Long albumId) {
+        return participantRepository
+                .findByMemberIdAndAlbumId(memberId, albumId)
+                .orElseThrow(() -> new AlbumException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT));
+    }
+
+    private void validateAlbumHost(Long memberId, Long albumId) {
+        Participant participant = getParticipantByMemberIdAndAlbumId(memberId, albumId);
+
+        if (!participant.getRole().equals(ParticipantRole.HOST)) {
+            throw new AlbumException(AlbumErrorCode.NOT_ALBUM_HOST);
+        }
     }
 
     private void validatePaymentRequirementForPlan(AlbumPlan plan, Long paymentId) {
@@ -142,25 +176,5 @@ public class AlbumServiceImpl implements AlbumService {
         return paymentRepository
                 .findById(paymentId)
                 .orElseThrow(() -> new AlbumException(PaymentErrorCode.PAYMENT_NOT_FOUND));
-    }
-
-    private void validateInvitationAuthority(Long memberId, Long albumId) {
-        Participant participant =
-                participantRepository
-                        .findByMemberIdAndAlbumId(memberId, albumId)
-                        .orElseThrow(
-                                () -> new AlbumException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT));
-
-        boolean isHost = participant.getRole().equals(ParticipantRole.HOST);
-
-        if (!isHost) {
-            throw new AlbumException(AlbumErrorCode.NOT_ALBUM_HOST);
-        }
-    }
-
-    private Album getAlbumById(Long albumId) {
-        return albumRepository
-                .findById(albumId)
-                .orElseThrow(() -> new AlbumException(AlbumErrorCode.ALBUM_NOT_FOUND));
     }
 }

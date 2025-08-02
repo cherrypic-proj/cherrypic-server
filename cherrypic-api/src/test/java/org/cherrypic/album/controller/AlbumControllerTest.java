@@ -2,6 +2,7 @@ package org.cherrypic.album.controller;
 
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -11,8 +12,10 @@ import java.util.List;
 import org.cherrypic.album.enums.AlbumPlan;
 import org.cherrypic.domain.album.controller.AlbumController;
 import org.cherrypic.domain.album.dto.request.AlbumCreateRequest;
+import org.cherrypic.domain.album.dto.request.AlbumUpdateRequest;
 import org.cherrypic.domain.album.dto.response.AlbumCreateResponse;
 import org.cherrypic.domain.album.dto.response.AlbumListResponse;
+import org.cherrypic.domain.album.dto.response.AlbumUpdateResponse;
 import org.cherrypic.domain.album.dto.response.InvitationLinkCreateResponse;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.album.exception.AlbumException;
@@ -319,6 +322,144 @@ class AlbumControllerTest {
                     .andExpect(
                             jsonPath("$.data.message")
                                     .value("앨범 플랜은 비워둘 수 없으며, BASIC, PRO, PREMIUM만 지원됩니다."));
+        }
+    }
+
+    @Nested
+    class 앨범_수정_요청_시 {
+
+        @Test
+        void 유효한_요청이면_앨범_수정_정보를_반환한다() throws Exception {
+            // given
+            AlbumUpdateRequest request =
+                    new AlbumUpdateRequest("testUpdatedTitle", "testUpdatedCoverUrl");
+
+            AlbumUpdateResponse response =
+                    new AlbumUpdateResponse(
+                            1L, "testUpdatedTitle", "testUpdatedCoverUrl", AlbumPlan.BASIC);
+
+            given(albumService.updateAlbum(1L, request)).willReturn(response);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            patch("/albums/1")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
+                    .andExpect(jsonPath("$.data.albumId").value(1))
+                    .andExpect(jsonPath("$.data.title").value("testUpdatedTitle"))
+                    .andExpect(jsonPath("$.data.coverUrl").value("testUpdatedCoverUrl"));
+        }
+
+        @Test
+        void 앨범이_존재하지_않는_경우_예외가_발생한다() throws Exception {
+            // given
+            AlbumUpdateRequest request = new AlbumUpdateRequest("testTitle", "testCoverUrl");
+
+            given(albumService.updateAlbum(1L, request))
+                    .willThrow(new AlbumException(AlbumErrorCode.ALBUM_NOT_FOUND));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            patch("/albums/1")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.NOT_FOUND.value()))
+                    .andExpect(jsonPath("$.data.code").value("ALBUM_NOT_FOUND"))
+                    .andExpect(jsonPath("$.data.message").value("앨범이 존재하지 않습니다."));
+        }
+
+        @Test
+        void 앨범_참가자가_아닌_경우_예외가_발생한다() throws Exception {
+            // given
+            AlbumUpdateRequest request = new AlbumUpdateRequest("testTitle", "testCoverUrl");
+
+            given(albumService.updateAlbum(1L, request))
+                    .willThrow(new AlbumException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            patch("/albums/1")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.FORBIDDEN.value()))
+                    .andExpect(jsonPath("$.data.code").value("NOT_ALBUM_PARTICIPANT"))
+                    .andExpect(jsonPath("$.data.message").value("앨범에 속하지 않은 사용자입니다."));
+        }
+
+        @Test
+        void 앨범_방장이_아닌_경우_예외가_발생한다() throws Exception {
+            // given
+            AlbumUpdateRequest request = new AlbumUpdateRequest("testTitle", "testCoverUrl");
+
+            given(albumService.updateAlbum(1L, request))
+                    .willThrow(new AlbumException(AlbumErrorCode.NOT_ALBUM_HOST));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            patch("/albums/1")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.FORBIDDEN.value()))
+                    .andExpect(jsonPath("$.data.code").value("NOT_ALBUM_HOST"))
+                    .andExpect(jsonPath("$.data.message").value("방장이 아닌 경우 권한이 없습니다."));
+        }
+
+        @ParameterizedTest
+        @NullSource
+        @EmptySource
+        @ValueSource(strings = {" "})
+        void 앨범_이름이_null_또는_공백이면_예외가_발생한다(String title) throws Exception {
+            // given
+            AlbumUpdateRequest request = new AlbumUpdateRequest(title, "testCoverUrl");
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            patch("/albums/1")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("MethodArgumentNotValidException"))
+                    .andExpect(jsonPath("$.data.message").value("앨범 이름은 비워둘 수 없습니다."));
+        }
+
+        @Test
+        void 앨범_이름이_20자를_초과하면_예외가_발생한다() throws Exception {
+            // given
+            AlbumUpdateRequest request = new AlbumUpdateRequest("t".repeat(21), "testCoverUrl");
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            patch("/albums/1")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("MethodArgumentNotValidException"))
+                    .andExpect(jsonPath("$.data.message").value("앨범 이름은 최대 20자까지 가능합니다."));
         }
     }
 

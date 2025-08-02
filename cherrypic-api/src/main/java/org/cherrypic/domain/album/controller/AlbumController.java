@@ -6,8 +6,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.cherrypic.domain.album.dto.request.AlbumCreateRequest;
+import org.cherrypic.domain.album.dto.request.AlbumUpdateRequest;
 import org.cherrypic.domain.album.dto.response.AlbumCreateResponse;
 import org.cherrypic.domain.album.dto.response.AlbumListResponse;
+import org.cherrypic.domain.album.dto.response.AlbumUpdateResponse;
 import org.cherrypic.domain.album.dto.response.InvitationLinkCreateResponse;
 import org.cherrypic.domain.album.service.AlbumService;
 import org.cherrypic.global.pagination.SliceResponse;
@@ -30,6 +32,13 @@ public class AlbumController {
             @Valid @RequestBody AlbumCreateRequest request) {
         AlbumCreateResponse response = albumService.createAlbum(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PatchMapping("/{albumId}")
+    @Operation(summary = "앨범 수정", description = "앨범의 이름과 커버를 수정합니다.")
+    public AlbumUpdateResponse albumUpdate(
+            @PathVariable Long albumId, @Valid @RequestBody AlbumUpdateRequest request) {
+        return albumService.updateAlbum(albumId, request);
     }
 
     @PostMapping("/{albumId}/invitation-link")

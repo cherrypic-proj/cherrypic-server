@@ -14,6 +14,7 @@ import org.cherrypic.album.entity.Album;
 import org.cherrypic.album.entity.InvitationCode;
 import org.cherrypic.album.enums.AlbumPlan;
 import org.cherrypic.domain.album.dto.request.AlbumCreateRequest;
+import org.cherrypic.domain.album.dto.request.AlbumUpdateRequest;
 import org.cherrypic.domain.album.dto.response.AlbumListResponse;
 import org.cherrypic.domain.album.dto.response.InvitationLinkCreateResponse;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
@@ -285,6 +286,87 @@ class AlbumServiceTest extends IntegrationTest {
                         .isInstanceOf(AlbumException.class)
                         .hasMessage(PaymentErrorCode.ALREADY_USED_PAYMENT.getMessage());
             }
+        }
+    }
+
+    @Nested
+    class 앨범을_수정할_때 {
+
+        @BeforeEach
+        void setUp() {
+            Member member =
+                    Member.createMember(
+                            OauthInfo.createOauthInfo("testOauthId", "testOauthProvider"),
+                            "testNickname",
+                            "testProfileImageUrl");
+            memberRepository.save(member);
+            given(memberUtil.getCurrentMember()).willReturn(member);
+
+            Album album1 = Album.createAlbum("testAlbum1", "testURL1", AlbumPlan.BASIC);
+            Album album2 = Album.createAlbum("testAlbum2", "testURL2", AlbumPlan.BASIC);
+            Album album3 = Album.createAlbum("testAlbum3", "testURL3", AlbumPlan.BASIC);
+            albumRepository.saveAll(List.of(album1, album2, album3));
+
+            Participant participant1 =
+                    Participant.createParticipant(member, album1, ParticipantRole.HOST);
+            Participant participant2 =
+                    Participant.createParticipant(member, album2, ParticipantRole.LIMITED);
+            participantRepository.saveAll(List.of(participant1, participant2));
+        }
+
+        @Test
+        void 유효한_요청이면_앨범이_수정된다() {
+            // given
+            AlbumUpdateRequest request =
+                    new AlbumUpdateRequest("testUpdatedTitle", "testUpdatedCoverUrl");
+
+            // when
+            albumService.updateAlbum(1L, request);
+
+            // then
+            Album album = albumRepository.findById(1L).get();
+            Assertions.assertAll(
+                    () ->
+                            assertThat(album)
+                                    .extracting("id", "title", "coverUrl", "plan")
+                                    .containsExactly(
+                                            1L,
+                                            "testUpdatedTitle",
+                                            "testUpdatedCoverUrl",
+                                            AlbumPlan.BASIC));
+        }
+
+        @Test
+        void 앨범이_존재하지_않는_경우_예외가_발생한다() {
+            // given
+            AlbumUpdateRequest request = new AlbumUpdateRequest("testTitle", "testCoverUrl");
+
+            // when & then
+            assertThatThrownBy(() -> albumService.updateAlbum(999L, request))
+                    .isInstanceOf(AlbumException.class)
+                    .hasMessage(AlbumErrorCode.ALBUM_NOT_FOUND.getMessage());
+        }
+
+        @Test
+        void 앨범_참가자가_아닌_경우_예외가_발생한다() {
+            // given
+            AlbumUpdateRequest request = new AlbumUpdateRequest("testTitle", "testCoverUrl");
+
+            // when & then
+            assertThatThrownBy(() -> albumService.updateAlbum(3L, request))
+                    .isInstanceOf(AlbumException.class)
+                    .hasMessage(AlbumErrorCode.NOT_ALBUM_PARTICIPANT.getMessage());
+        }
+
+        @Test
+        void 앨범_방장이_아닌_경우_예외가_발생한다() {
+            // given
+            AlbumUpdateRequest request = new AlbumUpdateRequest("testTitle", "testCoverUrl");
+
+            // when & then
+            assertThatThrownBy(() -> albumService.updateAlbum(2L, request))
+                    .isInstanceOf(AlbumException.class)
+                    .hasMessage(AlbumErrorCode.NOT_ALBUM_HOST.getMessage());
         }
     }
 
