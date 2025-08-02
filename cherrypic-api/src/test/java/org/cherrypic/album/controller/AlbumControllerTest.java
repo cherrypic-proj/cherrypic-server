@@ -473,7 +473,7 @@ class AlbumControllerTest {
 
             InvitationLinkCreateResponse response =
                     new InvitationLinkCreateResponse(
-                            "https://dev-api.cherrypic.today/participants/join?albumId=1&code=3FA7A9");
+                            "https://dev-api.cherrypic.today/albums/join?albumId=1&code=3FA7A9");
 
             given(albumService.createInvitationLink(albumId)).willReturn(response);
 
@@ -490,7 +490,7 @@ class AlbumControllerTest {
                     .andExpect(
                             jsonPath("$.data.invitationLink")
                                     .value(
-                                            "https://dev-api.cherrypic.today/participants/join?albumId=1&code=3FA7A9"));
+                                            "https://dev-api.cherrypic.today/albums/join?albumId=1&code=3FA7A9"));
         }
 
         @Test

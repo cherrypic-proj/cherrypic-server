@@ -6,7 +6,7 @@ public record InvitationLinkCreateResponse(
         @Schema(
                         description = "엘범 초대 딥링크",
                         example =
-                                "https://dev-api.cherrypic.today/participants/join?albumId=1&code=3FA7A9")
+                                "https://dev-api.cherrypic.today/albums/join?albumId=1&code=3FA7A9")
                 String invitationLink) {
 
     public static InvitationLinkCreateResponse of(String invitationCode) {
