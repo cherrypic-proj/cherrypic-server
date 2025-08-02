@@ -1,7 +1,7 @@
 package org.cherrypic.auth.service;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.times;
@@ -25,19 +25,15 @@ import org.cherrypic.domain.auth.service.AuthService;
 import org.cherrypic.domain.auth.service.IdTokenVerifier;
 import org.cherrypic.domain.auth.service.JwtTokenService;
 import org.cherrypic.domain.member.repository.MemberRepository;
+import org.cherrypic.global.util.MemberUtil;
 import org.cherrypic.member.entity.Member;
 import org.cherrypic.member.entity.OauthInfo;
 import org.cherrypic.member.enums.MemberRole;
 import org.cherrypic.member.enums.MemberStatus;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.oidc.OidcIdToken;
 import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
@@ -52,11 +48,13 @@ public class AuthServiceTest extends IntegrationTest {
     @MockitoBean private JwtTokenService jwtTokenService;
     @MockitoBean private IdTokenVerifier idTokenVerifier;
 
+    @MockitoBean private MemberUtil memberUtil;
+
     @Nested
     class 소셜_로그인할_때 {
 
         @Test
-        void 유효한_ID_토큰이면_소셜_로그인에_성공한다() {
+        void 유효한_ID_토큰이면_엑세스와_리프레시_토큰을_반환한다() {
             // given
             given(idTokenVerifier.getOidcUser(anyString(), any()))
                     .willReturn(mockOidcUser("kakao-sub-001", "https://kauth.kakao.com"));
@@ -64,16 +62,16 @@ public class AuthServiceTest extends IntegrationTest {
                     .willReturn("fake-access-token");
             given(jwtTokenService.createRefreshToken(anyLong())).willReturn("fake-refresh-token");
 
-            IdTokenRequest request = new IdTokenRequest("testIdTokenValue");
+            IdTokenRequest request = new IdTokenRequest("testIdToken");
 
             // when
             SocialLoginResponse response =
                     authService.socialLoginMember(OauthProvider.KAKAO, request);
 
             // then
-            Assertions.assertAll(
-                    () -> assertThat(response.accessToken()).isEqualTo("fake-access-token"),
-                    () -> assertThat(response.refreshToken()).isEqualTo("fake-refresh-token"));
+            assertThat(response)
+                    .extracting("accessToken", "refreshToken")
+                    .containsExactly("fake-access-token", "fake-refresh-token");
         }
 
         @Test
@@ -85,18 +83,30 @@ public class AuthServiceTest extends IntegrationTest {
                     .willReturn("fake-access-token");
             given(jwtTokenService.createRefreshToken(anyLong())).willReturn("fake-refresh-token");
 
-            IdTokenRequest request = new IdTokenRequest("testIdTokenValue");
+            IdTokenRequest request = new IdTokenRequest("testIdToken");
 
             // when
             authService.socialLoginMember(OauthProvider.KAKAO, request);
 
             // then
             Member member = memberRepository.findById(1L).get();
-            Assertions.assertAll(
-                    () -> assertThat(member.getId()).isEqualTo(1L),
-                    () -> assertThat(member.getNickname()).isNotNull(),
-                    () -> assertThat(member.getRole()).isEqualTo(MemberRole.USER),
-                    () -> assertThat(member.getStatus()).isEqualTo(MemberStatus.NORMAL));
+            assertThat(member)
+                    .extracting("id", "role", "status")
+                    .containsExactly(1L, MemberRole.USER, MemberStatus.NORMAL);
+        }
+
+        @Test
+        void ID_토큰_검증에_실패하면_예외가_발생한다() {
+            // given
+            given(idTokenVerifier.getOidcUser(anyString(), any()))
+                    .willThrow(new AuthException(AuthErrorCode.ID_TOKEN_VERIFICATION_FAILED));
+
+            IdTokenRequest request = new IdTokenRequest("invalidIdToken");
+
+            // when & then
+            assertThatThrownBy(() -> authService.socialLoginMember(OauthProvider.KAKAO, request))
+                    .isInstanceOf(AuthException.class)
+                    .hasMessage(AuthErrorCode.ID_TOKEN_VERIFICATION_FAILED.getMessage());
         }
 
         private OidcUser mockOidcUser(String sub, String iss) {
@@ -124,7 +134,7 @@ public class AuthServiceTest extends IntegrationTest {
         }
 
         @Test
-        void 유효한_리프레시_토큰이면_새로운_토큰을_반환한다() {
+        void 유효한_리프레시_토큰이면_새로운_엑세스_토큰과_리프레시_토큰을_반환한다() {
             // given
             RefreshTokenDto oldRefreshTokenDto =
                     RefreshTokenDto.of(1L, "fake-old-register-token", 604800L);
@@ -139,18 +149,18 @@ public class AuthServiceTest extends IntegrationTest {
             given(jwtTokenService.reissueAccessToken(any())).willReturn(newAccessTokenDto);
 
             // when
-            TokenReissueResponse response = authService.reissueToken("testRefreshTokenValue");
+            TokenReissueResponse response = authService.reissueToken("testRefreshToken");
 
             // then
-            Assertions.assertAll(
-                    () -> assertThat(response.accessToken()).isEqualTo("fake-new-access-token"),
-                    () -> assertThat(response.refreshToken()).isEqualTo("fake-new-refresh-token"));
+            assertThat(response)
+                    .extracting("accessToken", "refreshToken")
+                    .containsExactly("fake-new-access-token", "fake-new-refresh-token");
         }
 
         @Test
         void 만료된_리프레시_토큰이면_예외가_발생한다() {
             // given
-            assertThatThrownBy(() -> authService.reissueToken("testRefreshTokenValue"))
+            assertThatThrownBy(() -> authService.reissueToken("testRefreshToken"))
                     .isInstanceOf(AuthException.class)
                     .hasMessage(AuthErrorCode.INVALID_REFRESH_TOKEN.getMessage());
             verify(jwtTokenService, times(1)).retrieveRefreshToken(anyString());
@@ -169,19 +179,11 @@ public class AuthServiceTest extends IntegrationTest {
                             "testProfileImageUrl");
             memberRepository.save(member);
 
-            UserDetails userDetails =
-                    User.withUsername(member.getId().toString())
-                            .password("")
-                            .authorities(member.getRole().name())
-                            .build();
-            UsernamePasswordAuthenticationToken token =
-                    new UsernamePasswordAuthenticationToken(
-                            userDetails, null, userDetails.getAuthorities());
-            SecurityContextHolder.getContext().setAuthentication(token);
+            given(memberUtil.getCurrentMember()).willReturn(member);
         }
 
         @Test
-        void 로그아웃하면_Redis에_저장된_리프레시_토큰이_삭제된다() {
+        void Redis에_저장된_리프레시_토큰이_삭제된다() {
             // given
             RefreshToken refreshToken =
                     RefreshToken.builder().memberId(1L).token("testRefreshToken").build();
@@ -191,7 +193,7 @@ public class AuthServiceTest extends IntegrationTest {
             authService.logoutMember();
 
             // then
-            assertThat(refreshTokenRepository.findById(1L).isEmpty());
+            assertThat(refreshTokenRepository.findById(1L).isEmpty()).isTrue();
         }
     }
 }
