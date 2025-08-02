@@ -454,18 +454,18 @@ class AlbumServiceTest extends IntegrationTest {
         }
 
         @Test
-        void 현재_유저가_HOST가_아닌_경우_예외가_발생한다() {
+        void 앨범이_존재하지_않는_경우_예외가_발생한다() {
             // given
             given(memberUtil.getCurrentMember()).willReturn(memberRepository.findById(2L).get());
 
             // when & then
-            assertThatThrownBy(() -> albumService.createInvitationLink(2L))
+            assertThatThrownBy(() -> albumService.createInvitationLink(3L))
                     .isInstanceOf(AlbumException.class)
-                    .hasMessage(AlbumErrorCode.NOT_ALBUM_HOST.getMessage());
+                    .hasMessage(AlbumErrorCode.ALBUM_NOT_FOUND.getMessage());
         }
 
         @Test
-        void 현재_유저가_앨범_소속이_아닌_경우_예외가_발생한다() {
+        void 앨범_참가자가_아닌_경우_예외가_발생한다() {
             // given
             given(memberUtil.getCurrentMember()).willReturn(memberRepository.findById(2L).get());
 
@@ -476,14 +476,14 @@ class AlbumServiceTest extends IntegrationTest {
         }
 
         @Test
-        void 존재하지_않는_앨범_ID_를_입력한_경우_예외가_발생한다() {
+        void 앨범_방장이_아닌_경우_예외가_발생한다() {
             // given
             given(memberUtil.getCurrentMember()).willReturn(memberRepository.findById(2L).get());
 
             // when & then
-            assertThatThrownBy(() -> albumService.createInvitationLink(3L))
+            assertThatThrownBy(() -> albumService.createInvitationLink(2L))
                     .isInstanceOf(AlbumException.class)
-                    .hasMessage(AlbumErrorCode.ALBUM_NOT_FOUND.getMessage());
+                    .hasMessage(AlbumErrorCode.NOT_ALBUM_HOST.getMessage());
         }
 
         private Map<String, String> parseParameter(String str) {
