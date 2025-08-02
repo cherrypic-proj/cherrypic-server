@@ -7,10 +7,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.cherrypic.domain.album.dto.request.AlbumCreateRequest;
 import org.cherrypic.domain.album.dto.request.AlbumUpdateRequest;
-import org.cherrypic.domain.album.dto.response.AlbumCreateResponse;
-import org.cherrypic.domain.album.dto.response.AlbumListResponse;
-import org.cherrypic.domain.album.dto.response.AlbumUpdateResponse;
-import org.cherrypic.domain.album.dto.response.InvitationLinkCreateResponse;
+import org.cherrypic.domain.album.dto.response.*;
 import org.cherrypic.domain.album.service.AlbumService;
 import org.cherrypic.global.pagination.SliceResponse;
 import org.cherrypic.global.pagination.SortDirection;
@@ -46,6 +43,15 @@ public class AlbumController {
     public ResponseEntity<InvitationLinkCreateResponse> invitationLinkCreate(
             @PathVariable Long albumId) {
         InvitationLinkCreateResponse response = albumService.createInvitationLink(albumId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PostMapping("/{albumId}/join")
+    @Operation(summary = "앨범 입장", description = "앨범에 입장합니다.")
+    public ResponseEntity<AlbumJoinResponse> albumJoin(
+            @PathVariable Long albumId,
+            @Parameter(description = "앨범의 초대 코드") @RequestParam String code) {
+        AlbumJoinResponse response = albumService.joinAlbum(albumId, code);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 

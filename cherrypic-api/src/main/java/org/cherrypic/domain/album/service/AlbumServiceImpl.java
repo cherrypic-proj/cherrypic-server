@@ -6,10 +6,7 @@ import org.cherrypic.album.entity.InvitationCode;
 import org.cherrypic.album.enums.AlbumPlan;
 import org.cherrypic.domain.album.dto.request.AlbumCreateRequest;
 import org.cherrypic.domain.album.dto.request.AlbumUpdateRequest;
-import org.cherrypic.domain.album.dto.response.AlbumCreateResponse;
-import org.cherrypic.domain.album.dto.response.AlbumListResponse;
-import org.cherrypic.domain.album.dto.response.AlbumUpdateResponse;
-import org.cherrypic.domain.album.dto.response.InvitationLinkCreateResponse;
+import org.cherrypic.domain.album.dto.response.*;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.album.exception.AlbumException;
 import org.cherrypic.domain.album.repository.AlbumRepository;
@@ -122,6 +119,28 @@ public class AlbumServiceImpl implements AlbumService {
                         currentMember.getId(), lastAlbumId, size, direction);
 
         return SliceResponse.from(results);
+    }
+
+    @Override
+    public AlbumJoinResponse joinAlbum(Long albumId, String code) {
+        final Member currentMember = memberUtil.getCurrentMember();
+        final Album album = getAlbumById(albumId);
+
+        InvitationCode currentInvitationCode =
+                invitationCodeRepository
+                        .findById(album.getId())
+                        .orElseThrow(
+                                () -> new AlbumException(AlbumErrorCode.INVITATION_CODE_NOT_FOUND));
+
+        if (!currentInvitationCode.getCode().equals(code)) {
+            throw new AlbumException(AlbumErrorCode.INVITATION_CODE_MISMATCH);
+        }
+
+        Participant participant =
+                Participant.createParticipant(currentMember, album, ParticipantRole.STANDARD);
+        participantRepository.save(participant);
+
+        return AlbumJoinResponse.from(participant);
     }
 
     private Album getAlbumById(Long albumId) {
