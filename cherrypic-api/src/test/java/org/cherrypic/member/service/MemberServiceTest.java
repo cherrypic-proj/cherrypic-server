@@ -1,28 +1,29 @@
 package org.cherrypic.member.service;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.BDDMockito.given;
 
 import org.cherrypic.IntegrationTest;
 import org.cherrypic.domain.member.dto.response.MemberInfoResponse;
 import org.cherrypic.domain.member.repository.MemberRepository;
 import org.cherrypic.domain.member.service.MemberService;
+import org.cherrypic.global.util.MemberUtil;
 import org.cherrypic.member.entity.Member;
 import org.cherrypic.member.entity.OauthInfo;
 import org.cherrypic.member.enums.MemberRole;
 import org.cherrypic.member.enums.MemberStatus;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 class MemberServiceTest extends IntegrationTest {
 
     @Autowired private MemberService memberService;
     @Autowired private MemberRepository memberRepository;
+
+    @MockitoBean private MemberUtil memberUtil;
 
     @BeforeEach
     void setUp() {
@@ -33,29 +34,33 @@ class MemberServiceTest extends IntegrationTest {
                         "testProfileImageUrl");
         memberRepository.save(member);
 
-        UserDetails userDetails =
-                User.withUsername(member.getId().toString())
-                        .password("")
-                        .authorities(member.getRole().name())
-                        .build();
-        UsernamePasswordAuthenticationToken token =
-                new UsernamePasswordAuthenticationToken(
-                        userDetails, null, userDetails.getAuthorities());
-        SecurityContextHolder.getContext().setAuthentication(token);
+        given(memberUtil.getCurrentMember()).willReturn(member);
     }
 
-    @Test
-    void 회원_정보를_조회한다() {
-        // when
-        MemberInfoResponse response = memberService.getMemberInfo();
+    @Nested
+    class 회원_정보를_조회할_때 {
 
-        // then
-        Assertions.assertAll(
-                () -> assertThat(response.memberId()).isEqualTo(1L),
-                () -> assertThat(response.oauthProvider()).isEqualTo("testOauthProvider"),
-                () -> assertThat(response.nickname()).isEqualTo("testNickname"),
-                () -> assertThat(response.profileImageUrl()).isEqualTo("testProfileImageUrl"),
-                () -> assertThat(response.role()).isEqualTo(MemberRole.USER),
-                () -> assertThat(response.status()).isEqualTo(MemberStatus.NORMAL));
+        @Test
+        void 유효한_요청이면_회원_정보를_조회한다() {
+            // when
+            MemberInfoResponse response = memberService.getMemberInfo();
+
+            // then
+            assertThat(response)
+                    .extracting(
+                            "memberId",
+                            "oauthProvider",
+                            "nickname",
+                            "profileImageUrl",
+                            "role",
+                            "status")
+                    .containsExactly(
+                            1L,
+                            "testOauthProvider",
+                            "testNickname",
+                            "testProfileImageUrl",
+                            MemberRole.USER,
+                            MemberStatus.NORMAL);
+        }
     }
 }
