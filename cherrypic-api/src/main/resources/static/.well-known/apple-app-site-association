@@ -1,0 +1,11 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "ABCDE12345.com.example.myapp",
+        "paths": [ "/albums/join/*" ]
+      }
+    ]
+  }
+}

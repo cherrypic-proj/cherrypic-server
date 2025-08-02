@@ -132,13 +132,18 @@ public class AlbumServiceImpl implements AlbumService {
                         .orElseThrow(
                                 () -> new AlbumException(AlbumErrorCode.INVITATION_CODE_OUTDATED));
 
-        if (!currentInvitationCode.getCode().equals(code)) {
-            throw new AlbumException(AlbumErrorCode.INVITATION_CODE_INVALID);
-        }
+        validateInvitationCode(currentInvitationCode, code);
 
-        Participant participant =
-                Participant.createParticipant(currentMember, album, ParticipantRole.STANDARD);
-        participantRepository.save(participant);
+        Participant participant;
+        if (album.getPlan().equals(AlbumPlan.BASIC)) {
+            participant =
+                    Participant.createParticipant(currentMember, album, ParticipantRole.STANDARD);
+            participantRepository.save(participant);
+        } else {
+            participant =
+                    Participant.createParticipant(currentMember, album, ParticipantRole.LIMITED);
+            participantRepository.save(participant);
+        }
 
         return AlbumJoinResponse.from(participant);
     }
@@ -195,5 +200,11 @@ public class AlbumServiceImpl implements AlbumService {
         return paymentRepository
                 .findById(paymentId)
                 .orElseThrow(() -> new AlbumException(PaymentErrorCode.PAYMENT_NOT_FOUND));
+    }
+
+    private void validateInvitationCode(InvitationCode currentInvitationCode, String code) {
+        if (!currentInvitationCode.getCode().equals(code)) {
+            throw new AlbumException(AlbumErrorCode.INVITATION_CODE_INVALID);
+        }
     }
 }
