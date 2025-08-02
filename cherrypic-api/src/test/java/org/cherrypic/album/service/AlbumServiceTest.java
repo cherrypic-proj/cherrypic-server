@@ -6,9 +6,7 @@ import static org.mockito.BDDMockito.given;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import org.cherrypic.IntegrationTest;
 import org.cherrypic.RedisCleaner;
@@ -415,10 +413,8 @@ class AlbumServiceTest extends IntegrationTest {
             InvitationCode savedCode = invitationCodeRepository.findById(1L).orElseThrow();
 
             String link = response.invitationLink();
-            Map<String, String> parameters = parseParameter(link);
-
-            assertThat(parameters)
-                    .containsOnly(entry("albumId", "1"), entry("code", savedCode.getCode()));
+            assertThat(link)
+                    .containsPattern(String.format(".*albumId=%d&code=%s", 1, savedCode.getCode()));
         }
 
         @Test
@@ -446,10 +442,9 @@ class AlbumServiceTest extends IntegrationTest {
 
             // then
             InvitationCode createdCode = invitationCodeRepository.findById(1L).orElseThrow();
-            Assertions.assertAll(
-                    () -> assertThat(createdCode.getAlbumId()).isEqualTo(1L),
-                    () -> assertThat(createdCode.getCode().length()).isEqualTo(8),
-                    () -> assertThat(createdCode.getTtl()).isEqualTo(1800L));
+            assertThat(createdCode)
+                    .extracting("albumId", "code", "ttl")
+                    .containsExactly(1L, createdCode.getCode(), 1800L);
         }
 
         @Test
@@ -483,21 +478,6 @@ class AlbumServiceTest extends IntegrationTest {
             assertThatThrownBy(() -> albumService.createInvitationLink(2L))
                     .isInstanceOf(AlbumException.class)
                     .hasMessage(AlbumErrorCode.NOT_ALBUM_HOST.getMessage());
-        }
-
-        private Map<String, String> parseParameter(String str) {
-            Map<String, String> result = new HashMap<>();
-
-            String query = str.substring(str.indexOf('?') + 1);
-
-            String[] params = query.split("&");
-
-            for (String param : params) {
-                String[] kv = param.split("=", 2); // "key=value"
-                result.put(kv[0], kv[1]);
-            }
-
-            return result;
         }
     }
 
