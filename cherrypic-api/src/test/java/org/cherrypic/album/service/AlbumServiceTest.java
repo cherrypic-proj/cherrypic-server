@@ -6,7 +6,9 @@ import static org.mockito.BDDMockito.given;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.cherrypic.IntegrationTest;
 import org.cherrypic.RedisCleaner;
@@ -386,6 +388,7 @@ class AlbumServiceTest extends IntegrationTest {
                             "testNickname2",
                             "testProfileImageUrl2");
             memberRepository.saveAll(List.of(member1, member2));
+            given(memberUtil.getCurrentMember()).willReturn(member1);
 
             Album album1 = Album.createAlbum("testAlbum1", "testURL1", AlbumPlan.BASIC);
             Album album2 = Album.createAlbum("testAlbum2", "testURL2", AlbumPlan.BASIC);
@@ -405,9 +408,6 @@ class AlbumServiceTest extends IntegrationTest {
 
         @Test
         void 유효한_요청이면_초대_코드를_저장하며_초대_링크가_반환된다() {
-            // given
-            given(memberUtil.getCurrentMember()).willReturn(memberRepository.findById(1L).get());
-
             // when
             InvitationLinkCreateResponse response = albumService.createInvitationLink(1L);
 
@@ -415,15 +415,16 @@ class AlbumServiceTest extends IntegrationTest {
             InvitationCode savedCode = invitationCodeRepository.findById(1L).orElseThrow();
 
             String link = response.invitationLink();
-            String codeInLink = link.substring(link.lastIndexOf("=") + 1);
+            Map<String, String> parameters = parseParameter(link);
 
-            assertThat(codeInLink).isEqualTo(savedCode.getCode());
+            Assertions.assertAll(
+                    () -> assertThat(Integer.parseInt(parameters.get("albumId"))).isEqualTo(1L),
+                    () -> assertThat(parameters.get("code")).isEqualTo(savedCode.getCode()));
         }
 
         @Test
         void 유효한_초대_코드가_이미_존재하는_경우_갱신하지_않는다() {
             // given
-            given(memberUtil.getCurrentMember()).willReturn(memberRepository.findById(1L).get());
             InvitationCode invitationCode =
                     InvitationCode.builder().albumId(1L).code("testInvitationCode").build();
             invitationCodeRepository.save(invitationCode);
@@ -441,9 +442,6 @@ class AlbumServiceTest extends IntegrationTest {
 
         @Test
         void 유효한_요청에_대해서_유효한_초대코드가_생성된다() {
-            // given
-            given(memberUtil.getCurrentMember()).willReturn(memberRepository.findById(1L).get());
-
             // when
             albumService.createInvitationLink(1L);
 
@@ -486,6 +484,21 @@ class AlbumServiceTest extends IntegrationTest {
             assertThatThrownBy(() -> albumService.createInvitationLink(3L))
                     .isInstanceOf(AlbumException.class)
                     .hasMessage(AlbumErrorCode.ALBUM_NOT_FOUND.getMessage());
+        }
+
+        private Map<String, String> parseParameter(String str) {
+            Map<String, String> result = new HashMap<>();
+
+            String query = str.substring(str.indexOf('?') + 1);
+
+            String[] params = query.split("&");
+
+            for (String param : params) {
+                String[] kv = param.split("=", 2); // "key=value"
+                result.put(kv[0], kv[1]);
+            }
+
+            return result;
         }
     }
 
