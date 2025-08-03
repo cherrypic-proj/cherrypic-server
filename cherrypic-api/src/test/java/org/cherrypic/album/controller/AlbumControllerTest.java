@@ -1,9 +1,7 @@
 package org.cherrypic.album.controller;
 
-import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.mockito.BDDMockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -935,6 +933,74 @@ class AlbumControllerTest {
                     .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
                     .andExpect(jsonPath("$.data.code").value("INVITATION_CODE_MISMATCH"))
                     .andExpect(jsonPath("$.data.message").value("초대 코드가 올바르지 않습니다."));
+        }
+    }
+
+    @Nested
+    class 앨범_삭제_요청_시 {
+
+        @Test
+        void 유효한_요청이면_앨범을_삭제하고_NO_CONTENT_로_반환한다() throws Exception {
+            // given
+            willDoNothing().given(albumService).deleteAlbum(1L);
+
+            // when & then
+            ResultActions perform = mockMvc.perform(delete("/albums/1"));
+
+            perform.andExpect(status().isNoContent())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.NO_CONTENT.value()));
+        }
+
+        @Test
+        void 앨범이_존재하지_않는_경우_예외가_발생한다() throws Exception {
+            // given
+            willThrow(new AlbumException(AlbumErrorCode.ALBUM_NOT_FOUND))
+                    .given(albumService)
+                    .deleteAlbum(1L);
+
+            // when & then
+            ResultActions perform = mockMvc.perform(delete("/albums/1"));
+
+            perform.andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.NOT_FOUND.value()))
+                    .andExpect(jsonPath("$.data.code").value("ALBUM_NOT_FOUND"))
+                    .andExpect(jsonPath("$.data.message").value("앨범이 존재하지 않습니다."));
+        }
+
+        @Test
+        void 앨범_참가자가_아닌_경우_예외가_발생한다() throws Exception {
+            // given
+            willThrow(new AlbumException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT))
+                    .given(albumService)
+                    .deleteAlbum(1L);
+
+            // when & then
+            ResultActions perform = mockMvc.perform(delete("/albums/1"));
+
+            perform.andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.FORBIDDEN.value()))
+                    .andExpect(jsonPath("$.data.code").value("NOT_ALBUM_PARTICIPANT"))
+                    .andExpect(jsonPath("$.data.message").value("앨범에 속하지 않은 사용자입니다."));
+        }
+
+        @Test
+        void 앨범_방장이_아닌_경우_예외가_발생한다() throws Exception {
+            // given
+            willThrow(new AlbumException(AlbumErrorCode.NOT_ALBUM_HOST))
+                    .given(albumService)
+                    .deleteAlbum(1L);
+
+            // when & then
+            ResultActions perform = mockMvc.perform(delete("/albums/1"));
+
+            perform.andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.FORBIDDEN.value()))
+                    .andExpect(jsonPath("$.data.code").value("NOT_ALBUM_HOST"))
+                    .andExpect(jsonPath("$.data.message").value("방장이 아닌 경우 권한이 없습니다."));
         }
     }
 }
