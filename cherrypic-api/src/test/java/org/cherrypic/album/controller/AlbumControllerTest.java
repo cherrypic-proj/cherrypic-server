@@ -13,16 +13,14 @@ import org.cherrypic.album.enums.AlbumPlan;
 import org.cherrypic.domain.album.controller.AlbumController;
 import org.cherrypic.domain.album.dto.request.AlbumCreateRequest;
 import org.cherrypic.domain.album.dto.request.AlbumUpdateRequest;
-import org.cherrypic.domain.album.dto.response.AlbumCreateResponse;
-import org.cherrypic.domain.album.dto.response.AlbumListResponse;
-import org.cherrypic.domain.album.dto.response.AlbumUpdateResponse;
-import org.cherrypic.domain.album.dto.response.InvitationLinkCreateResponse;
+import org.cherrypic.domain.album.dto.response.*;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.album.exception.AlbumException;
 import org.cherrypic.domain.album.service.AlbumService;
 import org.cherrypic.domain.payment.exception.PaymentErrorCode;
 import org.cherrypic.global.pagination.SliceResponse;
 import org.cherrypic.global.pagination.SortDirection;
+import org.cherrypic.participant.enums.ParticipantRole;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -659,6 +657,31 @@ class AlbumControllerTest {
                     .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
                     .andExpect(jsonPath("$.data.content").isEmpty())
                     .andExpect(jsonPath("$.data.isLast").value(true));
+        }
+    }
+
+    @Nested
+    class 앨범_입장_요청_시 {
+
+        @Test
+        void 유효한_요청이면_참가자_정보를_반환한다() throws Exception {
+            // given
+            AlbumJoinResponse response =
+                    new AlbumJoinResponse(1L, 1L, 1L, ParticipantRole.STANDARD);
+
+            given(albumService.joinAlbum(1L, "testInvitationCode")).willReturn(response);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(post("/albums/1/join").param("code", "testInvitationCode"));
+
+            perform.andExpect(status().isCreated())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.CREATED.value()))
+                    .andExpect(jsonPath("$.data.participantId").value(1))
+                    .andExpect(jsonPath("$.data.albumId").value(1))
+                    .andExpect(jsonPath("$.data.memberId").value(1))
+                    .andExpect(jsonPath("$.data.role").value("STANDARD"));
         }
     }
 }
