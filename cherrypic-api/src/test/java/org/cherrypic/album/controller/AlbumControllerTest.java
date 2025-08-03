@@ -660,5 +660,34 @@ class AlbumControllerTest {
                     .andExpect(jsonPath("$.data.content").isEmpty())
                     .andExpect(jsonPath("$.data.isLast").value(true));
         }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"-1", "-999", "0"})
+        void 페이지_크기가_0_이하이면_예외가_발생한다(String pageSize) throws Exception {
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            get("/albums").param("size", pageSize).param("direction", "DESC"));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("ConstraintViolationException"))
+                    .andExpect(jsonPath("$.data.message").value("페이지 크기는 0보다 큰 값만 가능합니다."));
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"ASCC", "DESCC", "OLDEST", "NEWEST"})
+        void 존재하지_않는_정렬_기준을_입력하면_예외가_발생한다(String sort) throws Exception {
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(get("/albums").param("size", "2").param("direction", sort));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("METHOD_ARGUMENT_TYPE_MISMATCH"))
+                    .andExpect(jsonPath("$.data.message").value("요청한 값의 타입이 잘못되어 처리할 수 없습니다."));
+        }
     }
 }
