@@ -76,4 +76,11 @@ public class AlbumController {
                     SortDirection direction) {
         return albumService.getParticipatingAlbums(lastAlbumId, size, direction);
     }
+
+    @DeleteMapping("/{albumId}")
+    @Operation(summary = "앨범 삭제", description = "앨범을 삭제합니다.")
+    public ResponseEntity<Void> albumDelete(@PathVariable Long albumId) {
+        albumService.deleteAlbum(albumId);
+        return ResponseEntity.noContent().build();
+    }
 }

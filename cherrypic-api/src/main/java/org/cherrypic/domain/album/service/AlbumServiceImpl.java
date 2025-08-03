@@ -165,6 +165,16 @@ public class AlbumServiceImpl implements AlbumService {
         return AlbumJoinResponse.from(participant);
     }
 
+    @Override
+    public void deleteAlbum(Long albumId) {
+        final Member currentMember = memberUtil.getCurrentMember();
+        final Album album = getAlbumById(albumId);
+
+        validateAlbumHost(currentMember.getId(), album.getId());
+
+        albumRepository.delete(album);
+    }
+
     private Album getAlbumById(Long albumId) {
         return albumRepository
                 .findById(albumId)
