@@ -79,7 +79,8 @@ class AlbumControllerTest {
                         .andExpect(jsonPath("$.data.albumId").value(1))
                         .andExpect(jsonPath("$.data.title").value("testTitle"))
                         .andExpect(jsonPath("$.data.coverUrl").value("testCoverUrl"))
-                        .andExpect(jsonPath("$.data.plan").value("BASIC"));
+                        .andExpect(jsonPath("$.data.plan").value("BASIC"))
+                        .andExpect(jsonPath("$.data.permissionControl").value("false"));
             }
 
             @Test
@@ -110,6 +111,37 @@ class AlbumControllerTest {
                         .andExpect(
                                 jsonPath("$.data.message").value("BASIC 플랜에서는 결제 ID가 필요하지 않습니다."));
             }
+
+            @Test
+            void 권한_부여_활성화_여부를_true로_요청하면_예외가_발생한다() throws Exception {
+                // given
+                AlbumCreateRequest request =
+                        new AlbumCreateRequest(
+                                "testTitle", "testCoverUrl", AlbumPlan.BASIC, null, true);
+
+                given(albumService.createAlbum(request))
+                        .willThrow(
+                                new AlbumException(
+                                        AlbumErrorCode
+                                                .PERMISSION_CONTROL_NOT_ALLOWED_FOR_BASIC_PLAN));
+
+                // when & then
+                ResultActions perform =
+                        mockMvc.perform(
+                                post("/albums")
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(objectMapper.writeValueAsString(request)));
+
+                perform.andExpect(status().isBadRequest())
+                        .andExpect(jsonPath("$.success").value(false))
+                        .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                        .andExpect(
+                                jsonPath("$.data.code")
+                                        .value("PERMISSION_CONTROL_NOT_ALLOWED_FOR_BASIC_PLAN"))
+                        .andExpect(
+                                jsonPath("$.data.message")
+                                        .value("BASIC 플랜에서는 권한 부여 활성화가 허용되지 않습니다."));
+            }
         }
 
         @Nested
@@ -120,11 +152,11 @@ class AlbumControllerTest {
                 // given
                 AlbumCreateRequest request =
                         new AlbumCreateRequest(
-                                "testTitle", "testCoverUrl", AlbumPlan.PRO, 1L, false);
+                                "testTitle", "testCoverUrl", AlbumPlan.PRO, 1L, true);
 
                 AlbumCreateResponse response =
                         new AlbumCreateResponse(
-                                1L, "testTitle", "testCoverUrl", AlbumPlan.PRO, false);
+                                1L, "testTitle", "testCoverUrl", AlbumPlan.PRO, true);
 
                 given(albumService.createAlbum(request)).willReturn(response);
 
@@ -141,7 +173,8 @@ class AlbumControllerTest {
                         .andExpect(jsonPath("$.data.albumId").value(1))
                         .andExpect(jsonPath("$.data.title").value("testTitle"))
                         .andExpect(jsonPath("$.data.coverUrl").value("testCoverUrl"))
-                        .andExpect(jsonPath("$.data.plan").value("PRO"));
+                        .andExpect(jsonPath("$.data.plan").value("PRO"))
+                        .andExpect(jsonPath("$.data.permissionControl").value("true"));
             }
 
             @Test

@@ -99,9 +99,18 @@ class AlbumServiceTest extends IntegrationTest {
                 Assertions.assertAll(
                         () ->
                                 assertThat(album)
-                                        .extracting("id", "title", "coverUrl", "plan")
+                                        .extracting(
+                                                "id",
+                                                "title",
+                                                "coverUrl",
+                                                "plan",
+                                                "permissionControl")
                                         .containsExactly(
-                                                1L, "testTitle", "testCoverUrl", AlbumPlan.BASIC),
+                                                1L,
+                                                "testTitle",
+                                                "testCoverUrl",
+                                                AlbumPlan.BASIC,
+                                                false),
                         () ->
                                 assertThat(participant)
                                         .extracting("id", "member.id", "album.id", "role")
@@ -120,6 +129,21 @@ class AlbumServiceTest extends IntegrationTest {
                         .isInstanceOf(AlbumException.class)
                         .hasMessage(
                                 AlbumErrorCode.PAYMENT_NOT_REQUIRED_FOR_BASIC_PLAN.getMessage());
+            }
+
+            @Test
+            void 권한_부여_활성화_여부를_true로_요청하면_예외가_발생한다() {
+                // given
+                AlbumCreateRequest request =
+                        new AlbumCreateRequest(
+                                "testTitle", "testCoverUrl", AlbumPlan.BASIC, null, true);
+
+                // when & then
+                assertThatThrownBy(() -> albumService.createAlbum(request))
+                        .isInstanceOf(AlbumException.class)
+                        .hasMessage(
+                                AlbumErrorCode.PERMISSION_CONTROL_NOT_ALLOWED_FOR_BASIC_PLAN
+                                        .getMessage());
             }
         }
 
@@ -166,7 +190,7 @@ class AlbumServiceTest extends IntegrationTest {
                 // given
                 AlbumCreateRequest request =
                         new AlbumCreateRequest(
-                                "testTitle", "testCoverUrl", AlbumPlan.PRO, 1L, false);
+                                "testTitle", "testCoverUrl", AlbumPlan.PRO, 1L, true);
 
                 // when
                 albumService.createAlbum(request);
@@ -188,9 +212,18 @@ class AlbumServiceTest extends IntegrationTest {
                 Assertions.assertAll(
                         () ->
                                 assertThat(album)
-                                        .extracting("id", "title", "coverUrl", "plan")
+                                        .extracting(
+                                                "id",
+                                                "title",
+                                                "coverUrl",
+                                                "plan",
+                                                "permissionControl")
                                         .containsExactly(
-                                                2L, "testTitle", "testCoverUrl", AlbumPlan.PRO),
+                                                2L,
+                                                "testTitle",
+                                                "testCoverUrl",
+                                                AlbumPlan.PRO,
+                                                true),
                         () ->
                                 assertThat(participant)
                                         .extracting("id", "member.id", "album.id", "role")
