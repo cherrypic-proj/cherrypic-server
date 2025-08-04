@@ -15,8 +15,8 @@ public enum AlbumErrorCode implements BaseErrorCode {
     PAYMENT_REQUIRED_FOR_PAID_PLAN(400, "유료 플랜은 결제 ID가 필요합니다."),
     PAYMENT_NOT_REQUIRED_FOR_BASIC_PLAN(400, "BASIC 플랜에서는 결제 ID가 필요하지 않습니다."),
 
-    INVITATION_CODE_OUTDATED(404, "앨범의 초대 코드가 만료되었습니다."),
-    INVITATION_CODE_INVALID(400, "초대코드가 올바르지 않습니다.");
+    INVITATION_CODE_NOT_FOUND(404, "앨범의 초대 코드가 만료되었습니다."),
+    INVITATION_CODE_MISMATCH(400, "초대코드가 올바르지 않습니다.");
 
     private final int status;
     private final String message;

@@ -647,11 +647,11 @@ class AlbumServiceTest extends IntegrationTest {
         }
 
         @Test
-        void 앨범_초대_코드가_존재하지_않거나_만료된_경우_예외가_발생한다() {
+        void 앨범_초대_코드가_redis에_존재하지_않는_경우_예외가_발생한다() {
             // when & then
-            assertThatThrownBy(() -> albumService.joinAlbum(2L, "expiredInvitationCode"))
+            assertThatThrownBy(() -> albumService.joinAlbum(2L, "NoneExistingCode"))
                     .isInstanceOf(AlbumException.class)
-                    .hasMessage(AlbumErrorCode.INVITATION_CODE_OUTDATED.getMessage());
+                    .hasMessage(AlbumErrorCode.INVITATION_CODE_NOT_FOUND.getMessage());
         }
 
         @Test
@@ -659,7 +659,7 @@ class AlbumServiceTest extends IntegrationTest {
             // when & then
             assertThatThrownBy(() -> albumService.joinAlbum(1L, "expiredInvitationCode"))
                     .isInstanceOf(AlbumException.class)
-                    .hasMessage(AlbumErrorCode.INVITATION_CODE_INVALID.getMessage());
+                    .hasMessage(AlbumErrorCode.INVITATION_CODE_MISMATCH.getMessage());
         }
     }
 }

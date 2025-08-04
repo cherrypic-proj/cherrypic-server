@@ -130,7 +130,7 @@ public class AlbumServiceImpl implements AlbumService {
                 invitationCodeRepository
                         .findById(album.getId())
                         .orElseThrow(
-                                () -> new AlbumException(AlbumErrorCode.INVITATION_CODE_OUTDATED));
+                                () -> new AlbumException(AlbumErrorCode.INVITATION_CODE_NOT_FOUND));
 
         validateInvitationCode(currentInvitationCode, code);
 
@@ -197,7 +197,7 @@ public class AlbumServiceImpl implements AlbumService {
 
     private void validateInvitationCode(InvitationCode currentInvitationCode, String code) {
         if (!currentInvitationCode.getCode().equals(code)) {
-            throw new AlbumException(AlbumErrorCode.INVITATION_CODE_INVALID);
+            throw new AlbumException(AlbumErrorCode.INVITATION_CODE_MISMATCH);
         }
     }
 }

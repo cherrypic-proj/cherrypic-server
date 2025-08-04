@@ -683,5 +683,56 @@ class AlbumControllerTest {
                     .andExpect(jsonPath("$.data.memberId").value(1))
                     .andExpect(jsonPath("$.data.role").value("STANDARD"));
         }
+
+        @Test
+        void 앨범이_존재하지_않는_경우_예외가_발생한다() throws Exception {
+            // given
+            given(albumService.joinAlbum(999L, "testInvitationCode"))
+                    .willThrow(new AlbumException(AlbumErrorCode.ALBUM_NOT_FOUND));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(post("/albums/999/join").param("code", "testInvitationCode"));
+
+            perform.andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.NOT_FOUND.value()))
+                    .andExpect(jsonPath("$.data.code").value("ALBUM_NOT_FOUND"))
+                    .andExpect(jsonPath("$.data.message").value("앨범이 존재하지 않습니다."));
+        }
+
+        @Test
+        void 앨범_초대_코드가_redis에_존재하지_않는_경우_예외가_발생한다() throws Exception {
+            // given
+            given(albumService.joinAlbum(1L, "NoneExistingCode"))
+                    .willThrow(new AlbumException(AlbumErrorCode.INVITATION_CODE_NOT_FOUND));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(post("/albums/1/join").param("code", "NoneExistingCode"));
+
+            perform.andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.NOT_FOUND.value()))
+                    .andExpect(jsonPath("$.data.code").value("INVITATION_CODE_NOT_FOUND"))
+                    .andExpect(jsonPath("$.data.message").value("앨범의 초대 코드가 만료되었습니다."));
+        }
+
+        @Test
+        void 앨범_초대_코드가_앨범의_현재_코드와_일치하지_않는_경우_예외가_발생한다() throws Exception {
+            // given
+            given(albumService.joinAlbum(1L, "ExpiredInvitationCode"))
+                    .willThrow(new AlbumException(AlbumErrorCode.INVITATION_CODE_MISMATCH));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(post("/albums/1/join").param("code", "ExpiredInvitationCode"));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("INVITATION_CODE_MISMATCH"))
+                    .andExpect(jsonPath("$.data.message").value("초대코드가 올바르지 않습니다."));
+        }
     }
 }
