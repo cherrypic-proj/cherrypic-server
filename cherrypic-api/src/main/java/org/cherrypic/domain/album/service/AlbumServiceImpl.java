@@ -1,5 +1,6 @@
 package org.cherrypic.domain.album.service;
 
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.cherrypic.album.entity.Album;
 import org.cherrypic.album.entity.InvitationCode;
@@ -132,13 +133,13 @@ public class AlbumServiceImpl implements AlbumService {
     public AlbumJoinResponse joinAlbum(Long albumId, String code) {
         final Member currentMember = memberUtil.getCurrentMember();
         final Album album = getAlbumById(albumId);
-
-        InvitationCode currentInvitationCode =
+        final InvitationCode currentInvitationCode =
                 invitationCodeRepository
                         .findById(album.getId())
                         .orElseThrow(
                                 () -> new AlbumException(AlbumErrorCode.INVITATION_CODE_NOT_FOUND));
 
+        validateAlbumRejoin(currentMember, album);
         validateInvitationCode(currentInvitationCode, code);
 
         Participant participant =
@@ -211,6 +212,15 @@ public class AlbumServiceImpl implements AlbumService {
     private void validateInvitationCode(InvitationCode currentInvitationCode, String code) {
         if (!currentInvitationCode.getCode().equals(code)) {
             throw new AlbumException(AlbumErrorCode.INVITATION_CODE_MISMATCH);
+        }
+    }
+
+    private void validateAlbumRejoin(Member member, Album album) {
+        Optional<Participant> participant =
+                participantRepository.findByMemberIdAndAlbumId(member.getId(), album.getId());
+
+        if (participant.isPresent()) {
+            throw new AlbumException(AlbumErrorCode.ALREADY_INVITED);
         }
     }
 }

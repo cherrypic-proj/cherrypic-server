@@ -817,6 +817,23 @@ class AlbumControllerTest {
         @Test
         void 앨범_초대_코드가_redis에_저장된_코드와_일치하지_않는_경우_예외가_발생한다() throws Exception {
             // given
+            given(albumService.joinAlbum(1L, "TestInvitationCode"))
+                    .willThrow(new AlbumException(AlbumErrorCode.ALREADY_INVITED));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(post("/albums/1/join").param("code", "TestInvitationCode"));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("ALREADY_INVITED"))
+                    .andExpect(jsonPath("$.data.message").value("이미 초대된 사용자입니다"));
+        }
+
+        @Test
+        void 이미_초대된_앨범에_재입장_하려는_경우_예외가_발생한다() throws Exception {
+            // given
             given(albumService.joinAlbum(1L, "ExpiredInvitationCode"))
                     .willThrow(new AlbumException(AlbumErrorCode.INVITATION_CODE_MISMATCH));
 
