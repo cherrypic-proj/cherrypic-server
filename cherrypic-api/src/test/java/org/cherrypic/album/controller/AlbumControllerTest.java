@@ -368,6 +368,28 @@ class AlbumControllerTest {
                             jsonPath("$.data.message")
                                     .value("앨범 플랜은 비워둘 수 없으며, BASIC, PRO, PREMIUM만 지원됩니다."));
         }
+
+        @ParameterizedTest
+        @NullSource
+        void 권한_부여_활성화_여부가_null이면_예외가_발생한다(Boolean permissionControl) throws Exception {
+            // given
+            AlbumCreateRequest request =
+                    new AlbumCreateRequest(
+                            "testTitle", "testCoverUrl", AlbumPlan.BASIC, 1L, permissionControl);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/albums")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("MethodArgumentNotValidException"))
+                    .andExpect(jsonPath("$.data.message").value("권한 부여 활성화 여부는 비워둘 수 없습니다."));
+        }
     }
 
     @Nested
