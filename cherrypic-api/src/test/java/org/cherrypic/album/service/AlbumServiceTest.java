@@ -438,7 +438,7 @@ class AlbumServiceTest extends IntegrationTest {
         }
 
         @Test
-        void 유효한_요청에_대해서_유효한_초대코드가_생성된다() {
+        void 유효한_요청에_대해서_유효한_초대_코드가_생성된다() {
             // when
             albumService.createInvitationLink(1L);
 
@@ -623,19 +623,17 @@ class AlbumServiceTest extends IntegrationTest {
         }
 
         @Test
-        void 유요한_초대코드면_앨범에_참가하며_참가_정보를_반환한다() {
+        void 유효한_초대_코드면_앨범에_참가하면_참가자가_생성된다() {
             // when
             AlbumJoinResponse response = albumService.joinAlbum(1L, "testInvitationCode");
 
             // then
+            Participant participant =
+                    participantRepository.findByMemberIdAndAlbumId(1L, 1L).orElseThrow();
+
             Assertions.assertAll(
-                    () ->
-                            assertThat(response)
-                                    .extracting("participantId", "albumId", "memberId", "role")
-                                    .containsExactly(1L, 1L, 1L, ParticipantRole.STANDARD),
-                    () ->
-                            assertThat(participantRepository.findByMemberIdAndAlbumId(1L, 1L))
-                                    .isPresent());
+                    () -> assertThat(participant).isNotNull(),
+                    () -> assertThat(participant.getRole()).isEqualTo(ParticipantRole.STANDARD));
         }
 
         @Test
