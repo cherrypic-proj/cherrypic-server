@@ -134,16 +134,9 @@ public class AlbumServiceImpl implements AlbumService {
 
         validateInvitationCode(currentInvitationCode, code);
 
-        Participant participant;
-        if (album.getPlan().equals(AlbumPlan.BASIC)) {
-            participant =
-                    Participant.createParticipant(currentMember, album, ParticipantRole.STANDARD);
-            participantRepository.save(participant);
-        } else {
-            participant =
-                    Participant.createParticipant(currentMember, album, ParticipantRole.LIMITED);
-            participantRepository.save(participant);
-        }
+        Participant participant =
+                Participant.createParticipant(currentMember, album, ParticipantRole.STANDARD);
+        participantRepository.save(participant);
 
         return AlbumJoinResponse.from(participant);
     }

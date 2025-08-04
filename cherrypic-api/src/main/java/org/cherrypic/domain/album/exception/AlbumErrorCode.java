@@ -17,7 +17,6 @@ public enum AlbumErrorCode implements BaseErrorCode {
 
     INVITATION_CODE_OUTDATED(404, "앨범의 초대 코드가 만료되었습니다."),
     INVITATION_CODE_INVALID(400, "초대코드가 올바르지 않습니다.");
-    ;
 
     private final int status;
     private final String message;
