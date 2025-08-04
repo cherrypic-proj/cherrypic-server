@@ -623,7 +623,7 @@ class AlbumServiceTest extends IntegrationTest {
         }
 
         @Test
-        void 유효한_초대_코드면_앨범에_참가하면_참가자가_생성된다() {
+        void 유효한_초대_코드면_앨범_참가자가_생성된다() {
             // when
             AlbumJoinResponse response = albumService.joinAlbum(1L, "testInvitationCode");
 
