@@ -33,6 +33,8 @@ public class Album extends BaseTimeEntity {
     @Enumerated(EnumType.STRING)
     private AlbumPlan plan;
 
+    private boolean permissionControl;
+
     @OneToMany(mappedBy = "album", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Payment> payments = new ArrayList<>();
 

@@ -17,6 +17,7 @@ CREATE TABLE album (
                        title VARCHAR(20) NOT NULL,
                        cover_url VARCHAR(255),
                        plan VARCHAR(255) CHECK (plan IN ('BASIC','PRO','PREMIUM')),
+                       permission_control BOOLEAN NOT NULL,
                        created_at DATETIME(6) NOT NULL,
                        updated_at DATETIME(6) NOT NULL
 );
