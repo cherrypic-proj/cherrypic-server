@@ -16,6 +16,6 @@ public record AlbumCreateResponse(
                 album.getTitle(),
                 album.getCoverUrl(),
                 album.getPlan(),
-                album.isPermissionControl());
+                album.getPermissionControl());
     }
 }
