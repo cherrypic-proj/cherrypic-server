@@ -16,7 +16,6 @@ import org.cherrypic.album.entity.InvitationCode;
 import org.cherrypic.album.enums.AlbumPlan;
 import org.cherrypic.domain.album.dto.request.AlbumCreateRequest;
 import org.cherrypic.domain.album.dto.request.AlbumUpdateRequest;
-import org.cherrypic.domain.album.dto.response.AlbumJoinResponse;
 import org.cherrypic.domain.album.dto.response.AlbumListResponse;
 import org.cherrypic.domain.album.dto.response.InvitationLinkCreateResponse;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
@@ -647,8 +646,8 @@ class AlbumServiceTest extends IntegrationTest {
             memberRepository.save(member);
             given(memberUtil.getCurrentMember()).willReturn(member);
 
-            Album album1 = Album.createAlbum("testAlbum1", "testURL1", AlbumPlan.BASIC);
-            Album album2 = Album.createAlbum("testAlbum2", "testURL2", AlbumPlan.BASIC);
+            Album album1 = Album.createAlbum("testAlbum1", "testURL1", AlbumPlan.BASIC, false);
+            Album album2 = Album.createAlbum("testAlbum2", "testURL2", AlbumPlan.BASIC, false);
             albumRepository.saveAll(List.of(album1, album2));
 
             InvitationCode invitationCode =
@@ -668,7 +667,7 @@ class AlbumServiceTest extends IntegrationTest {
         @Test
         void 유효한_초대_코드면_앨범_참가자가_생성된다() {
             // when
-            AlbumJoinResponse response = albumService.joinAlbum(1L, "testInvitationCode");
+            albumService.joinAlbum(1L, "testInvitationCode");
 
             // then
             Participant participant =
