@@ -13,16 +13,14 @@ import org.cherrypic.album.enums.AlbumPlan;
 import org.cherrypic.domain.album.controller.AlbumController;
 import org.cherrypic.domain.album.dto.request.AlbumCreateRequest;
 import org.cherrypic.domain.album.dto.request.AlbumUpdateRequest;
-import org.cherrypic.domain.album.dto.response.AlbumCreateResponse;
-import org.cherrypic.domain.album.dto.response.AlbumListResponse;
-import org.cherrypic.domain.album.dto.response.AlbumUpdateResponse;
-import org.cherrypic.domain.album.dto.response.InvitationLinkCreateResponse;
+import org.cherrypic.domain.album.dto.response.*;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.album.exception.AlbumException;
 import org.cherrypic.domain.album.service.AlbumService;
 import org.cherrypic.domain.payment.exception.PaymentErrorCode;
 import org.cherrypic.global.pagination.SliceResponse;
 import org.cherrypic.global.pagination.SortDirection;
+import org.cherrypic.participant.enums.ParticipantRole;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -688,6 +686,82 @@ class AlbumControllerTest {
                     .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
                     .andExpect(jsonPath("$.data.code").value("METHOD_ARGUMENT_TYPE_MISMATCH"))
                     .andExpect(jsonPath("$.data.message").value("요청한 값의 타입이 잘못되어 처리할 수 없습니다."));
+        }
+    }
+
+    @Nested
+    class 앨범_입장_요청_시 {
+
+        @Test
+        void 유효한_요청이면_참가자_정보를_반환한다() throws Exception {
+            // given
+            AlbumJoinResponse response =
+                    new AlbumJoinResponse(1L, 1L, 1L, ParticipantRole.STANDARD);
+
+            given(albumService.joinAlbum(1L, "testInvitationCode")).willReturn(response);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(post("/albums/1/join").param("code", "testInvitationCode"));
+
+            perform.andExpect(status().isCreated())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.CREATED.value()))
+                    .andExpect(jsonPath("$.data.participantId").value(1))
+                    .andExpect(jsonPath("$.data.albumId").value(1))
+                    .andExpect(jsonPath("$.data.memberId").value(1))
+                    .andExpect(jsonPath("$.data.role").value("STANDARD"));
+        }
+
+        @Test
+        void 앨범이_존재하지_않는_경우_예외가_발생한다() throws Exception {
+            // given
+            given(albumService.joinAlbum(999L, "testInvitationCode"))
+                    .willThrow(new AlbumException(AlbumErrorCode.ALBUM_NOT_FOUND));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(post("/albums/999/join").param("code", "testInvitationCode"));
+
+            perform.andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.NOT_FOUND.value()))
+                    .andExpect(jsonPath("$.data.code").value("ALBUM_NOT_FOUND"))
+                    .andExpect(jsonPath("$.data.message").value("앨범이 존재하지 않습니다."));
+        }
+
+        @Test
+        void 앨범_초대_코드가_redis에_존재하지_않는_경우_예외가_발생한다() throws Exception {
+            // given
+            given(albumService.joinAlbum(1L, "NoneExistingCode"))
+                    .willThrow(new AlbumException(AlbumErrorCode.INVITATION_CODE_NOT_FOUND));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(post("/albums/1/join").param("code", "NoneExistingCode"));
+
+            perform.andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.NOT_FOUND.value()))
+                    .andExpect(jsonPath("$.data.code").value("INVITATION_CODE_NOT_FOUND"))
+                    .andExpect(jsonPath("$.data.message").value("앨범의 초대 코드가 만료되었습니다."));
+        }
+
+        @Test
+        void 앨범_초대_코드가_redis에_저장된_코드와_일치하지_않는_경우_예외가_발생한다() throws Exception {
+            // given
+            given(albumService.joinAlbum(1L, "ExpiredInvitationCode"))
+                    .willThrow(new AlbumException(AlbumErrorCode.INVITATION_CODE_MISMATCH));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(post("/albums/1/join").param("code", "ExpiredInvitationCode"));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("INVITATION_CODE_MISMATCH"))
+                    .andExpect(jsonPath("$.data.message").value("초대 코드가 올바르지 않습니다."));
         }
     }
 }

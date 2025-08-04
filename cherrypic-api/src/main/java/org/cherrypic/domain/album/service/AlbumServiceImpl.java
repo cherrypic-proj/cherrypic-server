@@ -6,10 +6,7 @@ import org.cherrypic.album.entity.InvitationCode;
 import org.cherrypic.album.enums.AlbumPlan;
 import org.cherrypic.domain.album.dto.request.AlbumCreateRequest;
 import org.cherrypic.domain.album.dto.request.AlbumUpdateRequest;
-import org.cherrypic.domain.album.dto.response.AlbumCreateResponse;
-import org.cherrypic.domain.album.dto.response.AlbumListResponse;
-import org.cherrypic.domain.album.dto.response.AlbumUpdateResponse;
-import org.cherrypic.domain.album.dto.response.InvitationLinkCreateResponse;
+import org.cherrypic.domain.album.dto.response.*;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.album.exception.AlbumException;
 import org.cherrypic.domain.album.repository.AlbumRepository;
@@ -124,6 +121,26 @@ public class AlbumServiceImpl implements AlbumService {
         return SliceResponse.from(results);
     }
 
+    @Override
+    public AlbumJoinResponse joinAlbum(Long albumId, String code) {
+        final Member currentMember = memberUtil.getCurrentMember();
+        final Album album = getAlbumById(albumId);
+
+        InvitationCode currentInvitationCode =
+                invitationCodeRepository
+                        .findById(album.getId())
+                        .orElseThrow(
+                                () -> new AlbumException(AlbumErrorCode.INVITATION_CODE_NOT_FOUND));
+
+        validateInvitationCode(currentInvitationCode, code);
+
+        Participant participant =
+                Participant.createParticipant(currentMember, album, ParticipantRole.STANDARD);
+        participantRepository.save(participant);
+
+        return AlbumJoinResponse.from(participant);
+    }
+
     private Album getAlbumById(Long albumId) {
         return albumRepository
                 .findById(albumId)
@@ -176,5 +193,11 @@ public class AlbumServiceImpl implements AlbumService {
         return paymentRepository
                 .findById(paymentId)
                 .orElseThrow(() -> new AlbumException(PaymentErrorCode.PAYMENT_NOT_FOUND));
+    }
+
+    private void validateInvitationCode(InvitationCode currentInvitationCode, String code) {
+        if (!currentInvitationCode.getCode().equals(code)) {
+            throw new AlbumException(AlbumErrorCode.INVITATION_CODE_MISMATCH);
+        }
     }
 }

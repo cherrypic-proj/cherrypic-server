@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.*;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -15,6 +16,7 @@ import org.cherrypic.album.entity.InvitationCode;
 import org.cherrypic.album.enums.AlbumPlan;
 import org.cherrypic.domain.album.dto.request.AlbumCreateRequest;
 import org.cherrypic.domain.album.dto.request.AlbumUpdateRequest;
+import org.cherrypic.domain.album.dto.response.AlbumJoinResponse;
 import org.cherrypic.domain.album.dto.response.AlbumListResponse;
 import org.cherrypic.domain.album.dto.response.InvitationLinkCreateResponse;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
@@ -436,7 +438,7 @@ class AlbumServiceTest extends IntegrationTest {
         }
 
         @Test
-        void 유효한_요청에_대해서_유효한_초대코드가_생성된다() {
+        void 유효한_요청에_대해서_유효한_초대_코드가_생성된다() {
             // when
             albumService.createInvitationLink(1L);
 
@@ -586,6 +588,76 @@ class AlbumServiceTest extends IntegrationTest {
             Participant participant2 =
                     Participant.createParticipant(member, album2, ParticipantRole.HOST);
             participantRepository.saveAll(List.of(participant1, participant2));
+        }
+    }
+
+    @Nested
+    class 앨범에_입장할_때 {
+
+        @BeforeEach
+        void setUp() {
+            Member member =
+                    Member.createMember(
+                            OauthInfo.createOauthInfo("testOauthId", "testOauthProvider"),
+                            "testNickname",
+                            "testProfileImageUrl");
+            memberRepository.save(member);
+            given(memberUtil.getCurrentMember()).willReturn(member);
+
+            Album album1 = Album.createAlbum("testAlbum1", "testURL1", AlbumPlan.BASIC);
+            Album album2 = Album.createAlbum("testAlbum2", "testURL2", AlbumPlan.BASIC);
+            albumRepository.saveAll(List.of(album1, album2));
+
+            InvitationCode invitationCode =
+                    InvitationCode.builder()
+                            .albumId(1L)
+                            .code("testInvitationCode")
+                            .ttl(Duration.ofMinutes(30).getSeconds())
+                            .build();
+            invitationCodeRepository.save(invitationCode);
+        }
+
+        @AfterEach
+        void cleanUp() {
+            redisCleaner.flushAll();
+        }
+
+        @Test
+        void 유효한_초대_코드면_앨범_참가자가_생성된다() {
+            // when
+            AlbumJoinResponse response = albumService.joinAlbum(1L, "testInvitationCode");
+
+            // then
+            Participant participant =
+                    participantRepository.findByMemberIdAndAlbumId(1L, 1L).orElseThrow();
+
+            Assertions.assertAll(
+                    () -> assertThat(participant).isNotNull(),
+                    () -> assertThat(participant.getRole()).isEqualTo(ParticipantRole.STANDARD));
+        }
+
+        @Test
+        void 앨범이_존재하지_않는_경우_예외가_발생한다() {
+            // when & then
+            assertThatThrownBy(() -> albumService.joinAlbum(999L, "testInvitationCode"))
+                    .isInstanceOf(AlbumException.class)
+                    .hasMessage(AlbumErrorCode.ALBUM_NOT_FOUND.getMessage());
+        }
+
+        @Test
+        void 앨범_초대_코드가_redis에_존재하지_않는_경우_예외가_발생한다() {
+            // when & then
+            assertThatThrownBy(() -> albumService.joinAlbum(2L, "NoneExistingCode"))
+                    .isInstanceOf(AlbumException.class)
+                    .hasMessage(AlbumErrorCode.INVITATION_CODE_NOT_FOUND.getMessage());
+        }
+
+        @Test
+        void 앨범_초대_코드가_redis에_저장된_코드와_일치하지_않는_경우_예외가_발생한다() {
+            // when & then
+            assertThatThrownBy(() -> albumService.joinAlbum(1L, "expiredInvitationCode"))
+                    .isInstanceOf(AlbumException.class)
+                    .hasMessage(AlbumErrorCode.INVITATION_CODE_MISMATCH.getMessage());
         }
     }
 }

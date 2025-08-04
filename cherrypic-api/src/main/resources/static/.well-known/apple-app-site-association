@@ -1,0 +1,11 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "appID": "V57B45UFKH.today.cherrypic.ios",
+        "paths": [ "/albums/join/*" ]
+      }
+    ]
+  }
+}
