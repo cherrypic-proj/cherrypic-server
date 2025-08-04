@@ -732,7 +732,7 @@ class AlbumControllerTest {
                     .andExpect(jsonPath("$.success").value(false))
                     .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
                     .andExpect(jsonPath("$.data.code").value("INVITATION_CODE_MISMATCH"))
-                    .andExpect(jsonPath("$.data.message").value("초대코드가 올바르지 않습니다."));
+                    .andExpect(jsonPath("$.data.message").value("초대 코드가 올바르지 않습니다."));
         }
     }
 }
