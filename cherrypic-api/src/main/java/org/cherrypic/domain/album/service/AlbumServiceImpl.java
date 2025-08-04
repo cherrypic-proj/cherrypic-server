@@ -98,10 +98,15 @@ public class AlbumServiceImpl implements AlbumService {
         final Album album = getAlbumById(albumId);
 
         validateAlbumHost(currentMember.getId(), album.getId());
-
         validatePermissionControl(album.getPlan(), true);
 
         album.togglePermissionControl();
+
+        if (!album.getPermissionControl()) {
+            participantRepository
+                    .findByAlbumIdAndRole(albumId, ParticipantRole.LIMITED)
+                    .forEach(participant -> participant.changeRole(ParticipantRole.STANDARD));
+        }
 
         return PermissionToggleResponse.from(album);
     }
