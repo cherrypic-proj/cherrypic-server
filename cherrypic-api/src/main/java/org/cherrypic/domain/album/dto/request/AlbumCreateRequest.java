@@ -2,6 +2,7 @@ package org.cherrypic.domain.album.dto.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import org.cherrypic.album.enums.AlbumPlan;
 import org.cherrypic.global.annotation.Enum;
@@ -16,4 +17,7 @@ public record AlbumCreateRequest(
                 @Schema(description = "앨범 플랜 (BASIC: 무료, PRO/PREMIUM: 유료)", example = "BASIC")
                 AlbumPlan plan,
         @Schema(description = "유료 플랜(PRO, PREMIUM)인 경우 필수. 결제 검증 후 받은 결제 ID", example = "1")
-                Long paymentId) {}
+                Long paymentId,
+        @NotNull(message = "권한 부여 활성화 여부는 비워둘 수 없습니다.")
+                @Schema(description = "권한 부여 활성화 여부", example = "false")
+                Boolean permissionControl) {}

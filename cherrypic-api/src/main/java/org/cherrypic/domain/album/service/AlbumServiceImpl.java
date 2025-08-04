@@ -51,7 +51,14 @@ public class AlbumServiceImpl implements AlbumService {
 
         validatePaymentRequirementForPlan(request.plan(), request.paymentId());
 
-        Album album = Album.createAlbum(request.title(), request.coverUrl(), request.plan());
+        validatePermissionControl(request.plan(), request.permissionControl());
+
+        Album album =
+                Album.createAlbum(
+                        request.title(),
+                        request.coverUrl(),
+                        request.plan(),
+                        request.permissionControl());
 
         Participant participant =
                 Participant.createParticipant(currentMember, album, ParticipantRole.HOST);
@@ -151,6 +158,12 @@ public class AlbumServiceImpl implements AlbumService {
 
         if (!plan.requiresPayment() && paymentId != null) {
             throw new AlbumException(AlbumErrorCode.PAYMENT_NOT_REQUIRED_FOR_BASIC_PLAN);
+        }
+    }
+
+    private void validatePermissionControl(AlbumPlan plan, Boolean permissionControl) {
+        if (plan == AlbumPlan.BASIC && permissionControl) {
+            throw new AlbumException(AlbumErrorCode.PERMISSION_CONTROL_NOT_ALLOWED_FOR_BASIC_PLAN);
         }
     }
 
