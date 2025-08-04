@@ -719,7 +719,7 @@ class AlbumControllerTest {
         }
 
         @Test
-        void 앨범_초대_코드가_앨범의_현재_코드와_일치하지_않는_경우_예외가_발생한다() throws Exception {
+        void 앨범_초대_코드가_redis에_저장된_코드와_일치하지_않는_경우_예외가_발생한다() throws Exception {
             // given
             given(albumService.joinAlbum(1L, "ExpiredInvitationCode"))
                     .willThrow(new AlbumException(AlbumErrorCode.INVITATION_CODE_MISMATCH));

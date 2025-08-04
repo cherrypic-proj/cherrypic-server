@@ -655,7 +655,7 @@ class AlbumServiceTest extends IntegrationTest {
         }
 
         @Test
-        void 앨범_초대_코드가_앨범의_현재_코드와_일치하지_않는_경우_예외가_발생한다() {
+        void 앨범_초대_코드가_redis에_저장된_코드와_일치하지_않는_경우_예외가_발생한다() {
             // when & then
             assertThatThrownBy(() -> albumService.joinAlbum(1L, "expiredInvitationCode"))
                     .isInstanceOf(AlbumException.class)
