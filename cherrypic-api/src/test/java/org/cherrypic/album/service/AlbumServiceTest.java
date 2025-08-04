@@ -766,15 +766,26 @@ class AlbumServiceTest extends IntegrationTest {
 
             Album album1 = Album.createAlbum("testAlbum1", "testURL1", AlbumPlan.BASIC, false);
             Album album2 = Album.createAlbum("testAlbum2", "testURL2", AlbumPlan.BASIC, false);
-            albumRepository.saveAll(List.of(album1, album2));
+            Album album3 = Album.createAlbum("testAlbum3", "testURL3", AlbumPlan.BASIC, false);
+            albumRepository.saveAll(List.of(album1, album2, album3));
 
-            InvitationCode invitationCode =
+            Participant participant =
+                    Participant.createParticipant(member, album3, ParticipantRole.HOST);
+            participantRepository.save(participant);
+
+            InvitationCode invitationCode1 =
                     InvitationCode.builder()
                             .albumId(1L)
-                            .code("testInvitationCode")
+                            .code("testInvitationCode1")
                             .ttl(Duration.ofMinutes(30).getSeconds())
                             .build();
-            invitationCodeRepository.save(invitationCode);
+            InvitationCode invitationCode2 =
+                    InvitationCode.builder()
+                            .albumId(3L)
+                            .code("testInvitationCode2")
+                            .ttl(Duration.ofMinutes(30).getSeconds())
+                            .build();
+            invitationCodeRepository.saveAll(List.of(invitationCode1, invitationCode2));
         }
 
         @AfterEach
@@ -785,7 +796,7 @@ class AlbumServiceTest extends IntegrationTest {
         @Test
         void 유효한_초대_코드면_앨범_참가자가_생성된다() {
             // when
-            albumService.joinAlbum(1L, "testInvitationCode");
+            albumService.joinAlbum(1L, "testInvitationCode1");
 
             // then
             Participant participant =
@@ -799,7 +810,7 @@ class AlbumServiceTest extends IntegrationTest {
         @Test
         void 앨범이_존재하지_않는_경우_예외가_발생한다() {
             // when & then
-            assertThatThrownBy(() -> albumService.joinAlbum(999L, "testInvitationCode"))
+            assertThatThrownBy(() -> albumService.joinAlbum(999L, "testInvitationCode1"))
                     .isInstanceOf(AlbumException.class)
                     .hasMessage(AlbumErrorCode.ALBUM_NOT_FOUND.getMessage());
         }
@@ -818,6 +829,14 @@ class AlbumServiceTest extends IntegrationTest {
             assertThatThrownBy(() -> albumService.joinAlbum(1L, "expiredInvitationCode"))
                     .isInstanceOf(AlbumException.class)
                     .hasMessage(AlbumErrorCode.INVITATION_CODE_MISMATCH.getMessage());
+        }
+
+        @Test
+        void 이미_초대된_앨범에_재입장_하려는_경우_예외가_발생한다() {
+            // when & then
+            assertThatThrownBy(() -> albumService.joinAlbum(3L, "testInvitationCode2"))
+                    .isInstanceOf(AlbumException.class)
+                    .hasMessage(AlbumErrorCode.ALREADY_INVITED.getMessage());
         }
     }
 }
