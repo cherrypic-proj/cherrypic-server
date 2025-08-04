@@ -33,6 +33,8 @@ public class Album extends BaseTimeEntity {
     @Enumerated(EnumType.STRING)
     private AlbumPlan plan;
 
+    private boolean permissionControl;
+
     @OneToMany(mappedBy = "album", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Payment> payments = new ArrayList<>();
 
@@ -52,14 +54,21 @@ public class Album extends BaseTimeEntity {
     private List<Image> images = new ArrayList<>();
 
     @Builder(access = AccessLevel.PRIVATE)
-    private Album(String title, String coverUrl, AlbumPlan plan) {
+    private Album(String title, String coverUrl, AlbumPlan plan, boolean permissionControl) {
         this.title = title;
         this.coverUrl = coverUrl;
         this.plan = plan;
+        this.permissionControl = permissionControl;
     }
 
-    public static Album createAlbum(String title, String coverUrl, AlbumPlan plan) {
-        return Album.builder().title(title).coverUrl(coverUrl).plan(plan).build();
+    public static Album createAlbum(
+            String title, String coverUrl, AlbumPlan plan, boolean permissionControl) {
+        return Album.builder()
+                .title(title)
+                .coverUrl(coverUrl)
+                .plan(plan)
+                .permissionControl(permissionControl)
+                .build();
     }
 
     public void addParticipant(Participant participant) {

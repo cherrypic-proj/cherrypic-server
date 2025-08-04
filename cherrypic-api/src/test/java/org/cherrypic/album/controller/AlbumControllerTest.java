@@ -55,10 +55,12 @@ class AlbumControllerTest {
             void 결제ID_없이_요청하면_앨범_생성_정보를_반환한다() throws Exception {
                 // given
                 AlbumCreateRequest request =
-                        new AlbumCreateRequest("testTitle", "testCoverUrl", AlbumPlan.BASIC, null);
+                        new AlbumCreateRequest(
+                                "testTitle", "testCoverUrl", AlbumPlan.BASIC, null, false);
 
                 AlbumCreateResponse response =
-                        new AlbumCreateResponse(1L, "testTitle", "testCoverUrl", AlbumPlan.BASIC);
+                        new AlbumCreateResponse(
+                                1L, "testTitle", "testCoverUrl", AlbumPlan.BASIC, false);
 
                 given(albumService.createAlbum(request)).willReturn(response);
 
@@ -75,14 +77,16 @@ class AlbumControllerTest {
                         .andExpect(jsonPath("$.data.albumId").value(1))
                         .andExpect(jsonPath("$.data.title").value("testTitle"))
                         .andExpect(jsonPath("$.data.coverUrl").value("testCoverUrl"))
-                        .andExpect(jsonPath("$.data.plan").value("BASIC"));
+                        .andExpect(jsonPath("$.data.plan").value("BASIC"))
+                        .andExpect(jsonPath("$.data.permissionControl").value("false"));
             }
 
             @Test
             void 결제ID를_포함하여_요청하면_예외가_발생한다() throws Exception {
                 // given
                 AlbumCreateRequest request =
-                        new AlbumCreateRequest("testTitle", "testCoverUrl", AlbumPlan.BASIC, 1L);
+                        new AlbumCreateRequest(
+                                "testTitle", "testCoverUrl", AlbumPlan.BASIC, 1L, false);
 
                 given(albumService.createAlbum(request))
                         .willThrow(
@@ -105,6 +109,37 @@ class AlbumControllerTest {
                         .andExpect(
                                 jsonPath("$.data.message").value("BASIC 플랜에서는 결제 ID가 필요하지 않습니다."));
             }
+
+            @Test
+            void 권한_부여_활성화_여부를_true로_요청하면_예외가_발생한다() throws Exception {
+                // given
+                AlbumCreateRequest request =
+                        new AlbumCreateRequest(
+                                "testTitle", "testCoverUrl", AlbumPlan.BASIC, null, true);
+
+                given(albumService.createAlbum(request))
+                        .willThrow(
+                                new AlbumException(
+                                        AlbumErrorCode
+                                                .PERMISSION_CONTROL_NOT_ALLOWED_FOR_BASIC_PLAN));
+
+                // when & then
+                ResultActions perform =
+                        mockMvc.perform(
+                                post("/albums")
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(objectMapper.writeValueAsString(request)));
+
+                perform.andExpect(status().isBadRequest())
+                        .andExpect(jsonPath("$.success").value(false))
+                        .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                        .andExpect(
+                                jsonPath("$.data.code")
+                                        .value("PERMISSION_CONTROL_NOT_ALLOWED_FOR_BASIC_PLAN"))
+                        .andExpect(
+                                jsonPath("$.data.message")
+                                        .value("BASIC 플랜에서는 권한 부여 활성화가 허용되지 않습니다."));
+            }
         }
 
         @Nested
@@ -114,10 +149,12 @@ class AlbumControllerTest {
             void 유효한_결제ID면_앨범_생성_정보를_반환한다() throws Exception {
                 // given
                 AlbumCreateRequest request =
-                        new AlbumCreateRequest("testTitle", "testCoverUrl", AlbumPlan.PRO, 1L);
+                        new AlbumCreateRequest(
+                                "testTitle", "testCoverUrl", AlbumPlan.PRO, 1L, true);
 
                 AlbumCreateResponse response =
-                        new AlbumCreateResponse(1L, "testTitle", "testCoverUrl", AlbumPlan.PRO);
+                        new AlbumCreateResponse(
+                                1L, "testTitle", "testCoverUrl", AlbumPlan.PRO, true);
 
                 given(albumService.createAlbum(request)).willReturn(response);
 
@@ -134,14 +171,16 @@ class AlbumControllerTest {
                         .andExpect(jsonPath("$.data.albumId").value(1))
                         .andExpect(jsonPath("$.data.title").value("testTitle"))
                         .andExpect(jsonPath("$.data.coverUrl").value("testCoverUrl"))
-                        .andExpect(jsonPath("$.data.plan").value("PRO"));
+                        .andExpect(jsonPath("$.data.plan").value("PRO"))
+                        .andExpect(jsonPath("$.data.permissionControl").value("true"));
             }
 
             @Test
             void 결제ID가_null이면_예외가_발생한다() throws Exception {
                 // given
                 AlbumCreateRequest request =
-                        new AlbumCreateRequest("testTitle", "testCoverUrl", AlbumPlan.PRO, null);
+                        new AlbumCreateRequest(
+                                "testTitle", "testCoverUrl", AlbumPlan.PRO, null, false);
 
                 given(albumService.createAlbum(request))
                         .willThrow(
@@ -165,7 +204,8 @@ class AlbumControllerTest {
             void 존재하지_않는_결제ID면_예외가_발생한다() throws Exception {
                 // given
                 AlbumCreateRequest request =
-                        new AlbumCreateRequest("testTitle", "testCoverUrl", AlbumPlan.PRO, 999L);
+                        new AlbumCreateRequest(
+                                "testTitle", "testCoverUrl", AlbumPlan.PRO, 999L, false);
 
                 given(albumService.createAlbum(request))
                         .willThrow(new AlbumException(PaymentErrorCode.PAYMENT_NOT_FOUND));
@@ -188,7 +228,8 @@ class AlbumControllerTest {
             void 결제상태가_PAID가_아니면_예외가_발생한다() throws Exception {
                 // given
                 AlbumCreateRequest request =
-                        new AlbumCreateRequest("testTitle", "testCoverUrl", AlbumPlan.PRO, 1L);
+                        new AlbumCreateRequest(
+                                "testTitle", "testCoverUrl", AlbumPlan.PRO, 1L, false);
 
                 given(albumService.createAlbum(request))
                         .willThrow(new AlbumException(PaymentErrorCode.NOT_PAID));
@@ -211,7 +252,8 @@ class AlbumControllerTest {
             void 결제한_회원과_로그인_회원이_일치하지_않으면_예외가_발생한다() throws Exception {
                 // given
                 AlbumCreateRequest request =
-                        new AlbumCreateRequest("testTitle", "testCoverUrl", AlbumPlan.PRO, 1L);
+                        new AlbumCreateRequest(
+                                "testTitle", "testCoverUrl", AlbumPlan.PRO, 1L, false);
 
                 given(albumService.createAlbum(request))
                         .willThrow(new AlbumException(PaymentErrorCode.PAYMENT_MEMBER_MISMATCH));
@@ -234,7 +276,8 @@ class AlbumControllerTest {
             void 결제가_이미_사용된_경우_예외가_발생한다() throws Exception {
                 // given
                 AlbumCreateRequest request =
-                        new AlbumCreateRequest("testTitle", "testCoverUrl", AlbumPlan.PRO, 1L);
+                        new AlbumCreateRequest(
+                                "testTitle", "testCoverUrl", AlbumPlan.PRO, 1L, false);
 
                 given(albumService.createAlbum(request))
                         .willThrow(new AlbumException(PaymentErrorCode.ALREADY_USED_PAYMENT));
@@ -261,7 +304,7 @@ class AlbumControllerTest {
         void 앨범_이름이_null_또는_공백이면_예외가_발생한다(String title) throws Exception {
             // given
             AlbumCreateRequest request =
-                    new AlbumCreateRequest(title, "testCoverUrl", AlbumPlan.BASIC, null);
+                    new AlbumCreateRequest(title, "testCoverUrl", AlbumPlan.BASIC, null, false);
 
             // when & then
             ResultActions perform =
@@ -281,7 +324,8 @@ class AlbumControllerTest {
         void 앨범_이름이_20자를_초과하면_예외가_발생한다() throws Exception {
             // given
             AlbumCreateRequest request =
-                    new AlbumCreateRequest("t".repeat(21), "testCoverUrl", AlbumPlan.BASIC, null);
+                    new AlbumCreateRequest(
+                            "t".repeat(21), "testCoverUrl", AlbumPlan.BASIC, null, false);
 
             // when & then
             ResultActions perform =
@@ -304,7 +348,8 @@ class AlbumControllerTest {
         void 앨범_플랜이_null_또는_지원하지_않는_형식이면_예외가_발생한다(String plan) throws Exception {
             // given
             AlbumCreateRequest request =
-                    new AlbumCreateRequest("testTitle", "testCoverUrl", AlbumPlan.from(plan), 1L);
+                    new AlbumCreateRequest(
+                            "testTitle", "testCoverUrl", AlbumPlan.from(plan), 1L, false);
 
             // when & then
             ResultActions perform =
@@ -320,6 +365,28 @@ class AlbumControllerTest {
                     .andExpect(
                             jsonPath("$.data.message")
                                     .value("앨범 플랜은 비워둘 수 없으며, BASIC, PRO, PREMIUM만 지원됩니다."));
+        }
+
+        @ParameterizedTest
+        @NullSource
+        void 권한_부여_활성화_여부가_null이면_예외가_발생한다(Boolean permissionControl) throws Exception {
+            // given
+            AlbumCreateRequest request =
+                    new AlbumCreateRequest(
+                            "testTitle", "testCoverUrl", AlbumPlan.BASIC, 1L, permissionControl);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/albums")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("MethodArgumentNotValidException"))
+                    .andExpect(jsonPath("$.data.message").value("권한 부여 활성화 여부는 비워둘 수 없습니다."));
         }
     }
 

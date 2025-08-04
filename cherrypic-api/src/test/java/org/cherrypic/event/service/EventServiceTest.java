@@ -72,8 +72,8 @@ public class EventServiceTest extends IntegrationTest {
             memberRepository.saveAll(List.of(member1, member2));
             given(memberUtil.getCurrentMember()).willReturn(member1);
 
-            Album album1 = Album.createAlbum("testAlbum1", "testURL1", AlbumPlan.BASIC);
-            Album album2 = Album.createAlbum("testAlbum2", "testURL2", AlbumPlan.BASIC);
+            Album album1 = Album.createAlbum("testAlbum1", "testURL1", AlbumPlan.BASIC, false);
+            Album album2 = Album.createAlbum("testAlbum2", "testURL2", AlbumPlan.BASIC, false);
             albumRepository.saveAll(List.of(album1, album2));
 
             Participant participant1 =
@@ -147,8 +147,8 @@ public class EventServiceTest extends IntegrationTest {
             memberRepository.saveAll(List.of(member1, member2, member3));
             given(memberUtil.getCurrentMember()).willReturn(member1);
 
-            Album album1 = Album.createAlbum("testAlbum1", "testURL1", AlbumPlan.BASIC);
-            Album album2 = Album.createAlbum("testAlbum2", "testURL2", AlbumPlan.BASIC);
+            Album album1 = Album.createAlbum("testAlbum1", "testURL1", AlbumPlan.BASIC, false);
+            Album album2 = Album.createAlbum("testAlbum2", "testURL2", AlbumPlan.BASIC, false);
             albumRepository.saveAll(List.of(album1, album2));
 
             Participant participant1 =
@@ -238,8 +238,8 @@ public class EventServiceTest extends IntegrationTest {
             memberRepository.saveAll(List.of(member1, member2));
             given(memberUtil.getCurrentMember()).willReturn(member1);
 
-            Album album1 = Album.createAlbum("testAlbum1", "testURL1", AlbumPlan.BASIC);
-            Album album2 = Album.createAlbum("testAlbum2", "testURl2", AlbumPlan.BASIC);
+            Album album1 = Album.createAlbum("testAlbum1", "testURL1", AlbumPlan.BASIC, false);
+            Album album2 = Album.createAlbum("testAlbum2", "testURl2", AlbumPlan.BASIC, false);
             albumRepository.saveAll(List.of(album1, album2));
 
             Participant participant1 =
@@ -330,8 +330,8 @@ public class EventServiceTest extends IntegrationTest {
             memberRepository.save(member);
             given(memberUtil.getCurrentMember()).willReturn(member);
 
-            Album album1 = Album.createAlbum("testTitle1", "testCoverUrl1", AlbumPlan.BASIC);
-            Album album2 = Album.createAlbum("testTitle2", "testCoverUrl2", AlbumPlan.BASIC);
+            Album album1 = Album.createAlbum("testTitle1", "testCoverUrl1", AlbumPlan.BASIC, false);
+            Album album2 = Album.createAlbum("testTitle2", "testCoverUrl2", AlbumPlan.BASIC, false);
             albumRepository.saveAll(List.of(album1, album2));
 
             Participant participant1 =
