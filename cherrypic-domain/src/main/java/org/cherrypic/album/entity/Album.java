@@ -79,4 +79,8 @@ public class Album extends BaseTimeEntity {
         this.title = title;
         this.coverUrl = coverUrl;
     }
+
+    public void togglePermissionControl() {
+        this.permissionControl = !this.permissionControl;
+    }
 }
