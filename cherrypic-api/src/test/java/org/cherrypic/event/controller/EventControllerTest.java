@@ -14,6 +14,7 @@ import org.cherrypic.domain.event.controller.EventController;
 import org.cherrypic.domain.event.dto.request.EventCreateRequest;
 import org.cherrypic.domain.event.dto.request.EventUpdateRequest;
 import org.cherrypic.domain.event.dto.response.EventCreateResponse;
+import org.cherrypic.domain.event.dto.response.EventImageListResponse;
 import org.cherrypic.domain.event.dto.response.EventListResponse;
 import org.cherrypic.domain.event.dto.response.EventUpdateResponse;
 import org.cherrypic.domain.event.exception.EventErrorCode;
@@ -423,7 +424,7 @@ public class EventControllerTest {
         }
 
         @Test
-        void 정렬_조건이_DESC이면_albumId를_내림차순으로_응답한다() throws Exception {
+        void 정렬_조건이_DESC이면_eventId를_내림차순으로_응답한다() throws Exception {
             // given
             List<EventListResponse> events =
                     List.of(
@@ -548,6 +549,173 @@ public class EventControllerTest {
                     mockMvc.perform(
                             get("/events")
                                     .param("albumId", "1")
+                                    .param("size", "2")
+                                    .param("direction", sort));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("METHOD_ARGUMENT_TYPE_MISMATCH"))
+                    .andExpect(jsonPath("$.data.message").value("요청한 값의 타입이 잘못되어 처리할 수 없습니다."));
+        }
+    }
+
+    @Nested
+    class 이벤트_이미지_목록_조회_요청시 {
+
+        @Test
+        void 정렬_조건이_ASC이면_eventImageId를_오름차순으로_응답한다() throws Exception {
+            // given
+            List<EventImageListResponse> eventImages =
+                    List.of(
+                            new EventImageListResponse(1L, "testImageUrl1"),
+                            new EventImageListResponse(2L, "testImageUrl2"));
+
+            given(eventService.getEventImages(1L, null, 2, SortDirection.ASC))
+                    .willReturn(new SliceResponse<>(eventImages, true));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            get("/events/1")
+                                    .param("eventId", "1")
+                                    .param("size", "2")
+                                    .param("direction", "ASC"));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
+                    .andExpect(jsonPath("$.data.content[0].eventImageId").value(1))
+                    .andExpect(jsonPath("$.data.content[1].eventImageId").value(2))
+                    .andExpect(jsonPath("$.data.isLast").value(true));
+        }
+
+        @Test
+        void 정렬_조건이_DESC이면_eventImageId를_내림차순으로_응답한다() throws Exception {
+            // given
+            List<EventImageListResponse> eventImages =
+                    List.of(
+                            new EventImageListResponse(2L, "testImageUrl2"),
+                            new EventImageListResponse(1L, "testImageUrl1"));
+
+            given(eventService.getEventImages(1L, null, 2, SortDirection.DESC))
+                    .willReturn(new SliceResponse<>(eventImages, true));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            get("/events/1")
+                                    .param("eventId", "1")
+                                    .param("size", "2")
+                                    .param("direction", "DESC"));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
+                    .andExpect(jsonPath("$.data.content[0].eventImageId").value(2))
+                    .andExpect(jsonPath("$.data.content[1].eventImageId").value(1))
+                    .andExpect(jsonPath("$.data.isLast").value(true));
+        }
+
+        @Test
+        void 마지막_페이지인_경우_isLast를_true로_응답한다() throws Exception {
+            // given
+            List<EventImageListResponse> eventImages =
+                    List.of(new EventImageListResponse(1L, "testImageUrl"));
+
+            given(eventService.getEventImages(1L, null, 1, SortDirection.DESC))
+                    .willReturn(new SliceResponse<>(eventImages, true));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            get("/events/1")
+                                    .param("eventId", "1")
+                                    .param("size", "1")
+                                    .param("direction", "DESC"));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
+                    .andExpect(jsonPath("$.data.content[0].eventImageId").value(1))
+                    .andExpect(jsonPath("$.data.isLast").value(true));
+        }
+
+        @Test
+        void 마지막_페이지가_아닌_경우_isLast를_false로_응답한다() throws Exception {
+            // given
+            List<EventImageListResponse> eventImages =
+                    List.of(
+                            new EventImageListResponse(2L, "testImageUrl2"),
+                            new EventImageListResponse(1L, "testImageUrl1"));
+
+            given(eventService.getEventImages(1L, null, 1, SortDirection.DESC))
+                    .willReturn(new SliceResponse<>(eventImages, false));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            get("/events/1")
+                                    .param("eventId", "1")
+                                    .param("size", "1")
+                                    .param("direction", "DESC"));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
+                    .andExpect(jsonPath("$.data.content[0].eventImageId").value(2))
+                    .andExpect(jsonPath("$.data.isLast").value(false));
+        }
+
+        @Test
+        void 이벤트에_이미지가_없는_경우_빈_리스트를_응답한다() throws Exception {
+            // given
+            List<EventImageListResponse> eventImages = List.of();
+
+            given(eventService.getEventImages(1L, null, 10, SortDirection.DESC))
+                    .willReturn(new SliceResponse<>(eventImages, true));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            get("/events/1")
+                                    .param("eventId", "1")
+                                    .param("size", "10")
+                                    .param("direction", "DESC"));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
+                    .andExpect(jsonPath("$.data.content").isEmpty())
+                    .andExpect(jsonPath("$.data.isLast").value(true));
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"-1", "-999", "0"})
+        void 페이지_크기를_0_이하로_설정하면_예외가_발생한다(String pageSize) throws Exception {
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            get("/events/1")
+                                    .param("eventId", "1")
+                                    .param("size", pageSize)
+                                    .param("direction", "DESC"));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("ConstraintViolationException"))
+                    .andExpect(jsonPath("$.data.message").value("페이지 크기는 0보다 큰 값만 가능합니다."));
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"ASCC", "DESCC", "OLDEST", "NEWEST"})
+        void 존재하지_않는_정렬_기준을_입력한_경우_예외가_발생한다(String sort) throws Exception {
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            get("/events/1")
+                                    .param("eventId", "1")
                                     .param("size", "2")
                                     .param("direction", sort));
 
