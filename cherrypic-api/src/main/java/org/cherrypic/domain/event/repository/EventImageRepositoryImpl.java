@@ -1,7 +1,7 @@
 package org.cherrypic.domain.event.repository;
 
-import static org.cherrypic.event.entity.QEvent.event;
 import static org.cherrypic.event.entity.QEventImage.eventImage;
+import static org.cherrypic.image.entity.QImage.image;
 
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
@@ -9,7 +9,6 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.cherrypic.domain.event.dto.response.EventImageListResponse;
-import org.cherrypic.domain.event.dto.response.EventListResponse;
 import org.cherrypic.global.pagination.SortDirection;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
@@ -30,34 +29,36 @@ public class EventImageRepositoryImpl implements EventImageRepositoryCustom {
                 queryFactory
                         .select(
                                 Projections.constructor(
-                                        EventImageListResponse.class,
-                                        event.id,
-                                        event.title,
-                                        event.coverUrl,
-                                        eventImage.id.count().intValue()))
-                        .from(event)
-                        .leftJoin(eventImage)
-                        .on(eventImage.event.eq(event))
+                                        EventImageListResponse.class, eventImage.id, image.url))
+                        .from(eventImage)
+                        .join(image)
+                        .on(eventImage.image.eq(image))
                         .where(
-                                event.album.id.eq(albumId),
-                                lastEventIdCondition(lastEventId, direction))
-                        .groupBy(event.id)
-                        .orderBy(direction == SortDirection.DESC ? event.id.desc() : event.id.asc())
+                                eventImage.event.id.eq(eventId),
+                                lastEventImageIdCondition(lastEventImageId, direction))
+                        .orderBy(
+                                direction == SortDirection.DESC
+                                        ? eventImage.id.desc()
+                                        : eventImage.id.asc())
                         .limit(size + 1)
                         .fetch();
 
         return checkLastPage(size, results);
     }
 
-    private BooleanExpression lastEventIdCondition(Long eventId, SortDirection direction) {
-        if (eventId == null) {
+    private BooleanExpression lastEventImageIdCondition(
+            Long eventImageId, SortDirection direction) {
+        if (eventImageId == null) {
             return null;
         }
 
-        return direction == SortDirection.DESC ? event.id.lt(eventId) : event.id.gt(eventId);
+        return direction == SortDirection.DESC
+                ? eventImage.id.lt(eventImageId)
+                : eventImage.id.gt(eventImageId);
     }
 
-    private Slice<EventListResponse> checkLastPage(int pageSize, List<EventListResponse> results) {
+    private Slice<EventImageListResponse> checkLastPage(
+            int pageSize, List<EventImageListResponse> results) {
         boolean hasNext = false;
 
         if (results.size() > pageSize) {
