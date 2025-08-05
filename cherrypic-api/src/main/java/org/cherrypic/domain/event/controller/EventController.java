@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.cherrypic.domain.event.dto.request.EventCreateRequest;
 import org.cherrypic.domain.event.dto.request.EventUpdateRequest;
 import org.cherrypic.domain.event.dto.response.EventCreateResponse;
+import org.cherrypic.domain.event.dto.response.EventImageListResponse;
 import org.cherrypic.domain.event.dto.response.EventListResponse;
 import org.cherrypic.domain.event.dto.response.EventUpdateResponse;
 import org.cherrypic.domain.event.service.EventService;
@@ -55,6 +56,20 @@ public class EventController {
                     @RequestParam(defaultValue = "DESC")
                     SortDirection direction) {
         return eventService.getAlbumEvents(albumId, lastEventId, size, direction);
+    }
+
+    @GetMapping("/{eventId}")
+    @Operation(summary = "개별 이벤트 사진 목록 조회", description = "개별 이벤틍 내의 사진 url 목록을 조회합니다.")
+    public SliceResponse<EventImageListResponse> eventImages(
+            @PathVariable Long eventId,
+            @Parameter(description = "이전 페이지의 마지막 이벤트 이미지 ID (첫 요청 시 생략)")
+                    @RequestParam(required = false)
+                    Long lastEventImageId,
+            @Parameter(description = "페이지당 조회할 이벤트 이미지의 수") @RequestParam @PageSize Integer size,
+            @Parameter(description = "정렬 방향 (ASC: 오래된순, DESC: 최신순)")
+                    @RequestParam(defaultValue = "DESC")
+                    SortDirection direction) {
+        return eventService.getEventImages(eventId, lastEventImageId, size, direction);
     }
 
     @DeleteMapping("/{eventId}")
