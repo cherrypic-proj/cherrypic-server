@@ -1,6 +1,5 @@
 package org.cherrypic.domain.album.service;
 
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.cherrypic.album.entity.Album;
 import org.cherrypic.album.entity.InvitationCode;
@@ -216,11 +215,11 @@ public class AlbumServiceImpl implements AlbumService {
     }
 
     private void validateAlbumRejoin(Member member, Album album) {
-        Optional<Participant> participant =
-                participantRepository.findByMemberIdAndAlbumId(member.getId(), album.getId());
-
-        if (participant.isPresent()) {
-            throw new AlbumException(AlbumErrorCode.ALREADY_INVITED);
-        }
+        participantRepository
+                .findByMemberIdAndAlbumId(member.getId(), album.getId())
+                .ifPresent(
+                        p -> {
+                            throw new AlbumException(AlbumErrorCode.ALREADY_INVITED);
+                        });
     }
 }
