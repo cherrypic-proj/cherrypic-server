@@ -529,6 +529,95 @@ class AlbumControllerTest {
     }
 
     @Nested
+    class 앨범_권한_부여_토글_상태_변경_요청_시 {
+
+        @Test
+        void 유효한_요청이면_권한_부여_토글_상태를_반환한다() throws Exception {
+            // given
+            PermissionToggleResponse response = new PermissionToggleResponse(true);
+
+            given(albumService.togglePermission(1L)).willReturn(response);
+
+            // when & then
+            ResultActions perform = mockMvc.perform(patch("/albums/1/permission"));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
+                    .andExpect(jsonPath("$.data.permissionControl").value(true));
+        }
+
+        @Test
+        void 앨범이_존재하지_않는_경우_예외가_발생한다() throws Exception {
+            // given
+            given(albumService.togglePermission(1L))
+                    .willThrow(new AlbumException(AlbumErrorCode.ALBUM_NOT_FOUND));
+
+            // when & then
+            ResultActions perform = mockMvc.perform(patch("/albums/1/permission"));
+
+            perform.andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.NOT_FOUND.value()))
+                    .andExpect(jsonPath("$.data.code").value("ALBUM_NOT_FOUND"))
+                    .andExpect(jsonPath("$.data.message").value("앨범이 존재하지 않습니다."));
+        }
+
+        @Test
+        void 앨범_참가자가_아닌_경우_예외가_발생한다() throws Exception {
+            // given
+            given(albumService.togglePermission(1L))
+                    .willThrow(new AlbumException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT));
+
+            // when & then
+            ResultActions perform = mockMvc.perform(patch("/albums/1/permission"));
+
+            perform.andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.FORBIDDEN.value()))
+                    .andExpect(jsonPath("$.data.code").value("NOT_ALBUM_PARTICIPANT"))
+                    .andExpect(jsonPath("$.data.message").value("앨범에 속하지 않은 사용자입니다."));
+        }
+
+        @Test
+        void 앨범_방장이_아닌_경우_예외가_발생한다() throws Exception {
+            // given
+            given(albumService.togglePermission(1L))
+                    .willThrow(new AlbumException(AlbumErrorCode.NOT_ALBUM_HOST));
+
+            // when & then
+            ResultActions perform = mockMvc.perform(patch("/albums/1/permission"));
+
+            perform.andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.FORBIDDEN.value()))
+                    .andExpect(jsonPath("$.data.code").value("NOT_ALBUM_HOST"))
+                    .andExpect(jsonPath("$.data.message").value("방장이 아닌 경우 권한이 없습니다."));
+        }
+
+        @Test
+        void BASIC_플랜인_경우_예외가_발생한다() throws Exception {
+            // given
+            given(albumService.togglePermission(1L))
+                    .willThrow(
+                            new AlbumException(
+                                    AlbumErrorCode.PERMISSION_CONTROL_NOT_ALLOWED_FOR_BASIC_PLAN));
+
+            // when & then
+            ResultActions perform = mockMvc.perform(patch("/albums/1/permission"));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(
+                            jsonPath("$.data.code")
+                                    .value("PERMISSION_CONTROL_NOT_ALLOWED_FOR_BASIC_PLAN"))
+                    .andExpect(
+                            jsonPath("$.data.message").value("BASIC 플랜에서는 권한 부여 활성화가 허용되지 않습니다."));
+        }
+    }
+
+    @Nested
     class 앨범_초대_코드_생성_요청_시 {
 
         @Test
