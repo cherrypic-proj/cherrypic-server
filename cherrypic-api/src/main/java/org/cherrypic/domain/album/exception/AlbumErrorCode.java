@@ -19,7 +19,7 @@ public enum AlbumErrorCode implements BaseErrorCode {
 
     INVITATION_CODE_NOT_FOUND(404, "앨범의 초대 코드가 만료되었습니다."),
     INVITATION_CODE_MISMATCH(400, "초대 코드가 올바르지 않습니다."),
-    ALREADY_INVITED(400, "이미 초대된 사용자입니다");
+    ALREADY_INVITED(400, "이미 참가한 앨범입니다.");
 
     private final int status;
     private final String message;
