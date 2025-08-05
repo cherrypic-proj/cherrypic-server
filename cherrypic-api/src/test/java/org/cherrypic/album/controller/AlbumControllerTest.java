@@ -828,7 +828,7 @@ class AlbumControllerTest {
                     .andExpect(jsonPath("$.success").value(false))
                     .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
                     .andExpect(jsonPath("$.data.code").value("ALREADY_INVITED"))
-                    .andExpect(jsonPath("$.data.message").value("이미 초대된 사용자입니다"));
+                    .andExpect(jsonPath("$.data.message").value("이미 참가한 앨범입니다."));
         }
 
         @Test
