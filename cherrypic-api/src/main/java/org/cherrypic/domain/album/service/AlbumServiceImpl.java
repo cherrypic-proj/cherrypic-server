@@ -236,7 +236,7 @@ public class AlbumServiceImpl implements AlbumService {
                 .findByMemberIdAndAlbumId(member.getId(), album.getId())
                 .ifPresent(
                         p -> {
-                            throw new AlbumException(AlbumErrorCode.ALREADY_INVITED);
+                            throw new AlbumException(AlbumErrorCode.ALREADY_PARTICIPATED);
                         });
     }
 }

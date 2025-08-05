@@ -836,7 +836,7 @@ class AlbumServiceTest extends IntegrationTest {
             // when & then
             assertThatThrownBy(() -> albumService.joinAlbum(3L, "testInvitationCode2"))
                     .isInstanceOf(AlbumException.class)
-                    .hasMessage(AlbumErrorCode.ALREADY_INVITED.getMessage());
+                    .hasMessage(AlbumErrorCode.ALREADY_PARTICIPATED.getMessage());
         }
     }
 }

@@ -907,7 +907,7 @@ class AlbumControllerTest {
         void 앨범_초대_코드가_redis에_저장된_코드와_일치하지_않는_경우_예외가_발생한다() throws Exception {
             // given
             given(albumService.joinAlbum(1L, "TestInvitationCode"))
-                    .willThrow(new AlbumException(AlbumErrorCode.ALREADY_INVITED));
+                    .willThrow(new AlbumException(AlbumErrorCode.ALREADY_PARTICIPATED));
 
             // when & then
             ResultActions perform =
@@ -916,7 +916,7 @@ class AlbumControllerTest {
             perform.andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.success").value(false))
                     .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
-                    .andExpect(jsonPath("$.data.code").value("ALREADY_INVITED"))
+                    .andExpect(jsonPath("$.data.code").value("ALREADY_PARTICIPATED"))
                     .andExpect(jsonPath("$.data.message").value("이미 참가한 앨범입니다."));
         }
 
