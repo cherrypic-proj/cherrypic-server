@@ -832,7 +832,7 @@ class AlbumServiceTest extends IntegrationTest {
         }
 
         @Test
-        void 이미_초대된_앨범에_재입장_하려는_경우_예외가_발생한다() {
+        void 이미_입장한_앨범에_재입장_하려는_경우_예외가_발생한다() {
             // when & then
             assertThatThrownBy(() -> albumService.joinAlbum(3L, "testInvitationCode2"))
                     .isInstanceOf(AlbumException.class)
