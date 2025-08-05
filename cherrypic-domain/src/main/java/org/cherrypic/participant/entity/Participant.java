@@ -44,8 +44,4 @@ public class Participant extends BaseTimeEntity {
     public static Participant createParticipant(Member member, Album album, ParticipantRole role) {
         return Participant.builder().member(member).album(album).role(role).build();
     }
-
-    public void changeRole(ParticipantRole role) {
-        this.role = role;
-    }
 }

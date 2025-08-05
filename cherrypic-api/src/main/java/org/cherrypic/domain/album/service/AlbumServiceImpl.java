@@ -103,9 +103,7 @@ public class AlbumServiceImpl implements AlbumService {
         album.togglePermissionControl();
 
         if (!album.getPermissionControl()) {
-            participantRepository
-                    .findByAlbumIdAndRole(albumId, ParticipantRole.LIMITED)
-                    .forEach(participant -> participant.changeRole(ParticipantRole.STANDARD));
+            participantRepository.bulkChangeLimitedToStandard(albumId);
         }
 
         return PermissionToggleResponse.from(album);
