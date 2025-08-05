@@ -889,7 +889,7 @@ class AlbumControllerTest {
         @Test
         void 앨범_초대_코드가_redis에_존재하지_않는_경우_예외가_발생한다() throws Exception {
             // given
-            given(albumService.joinAlbum(1L, "NoneExistingCode"))
+            given(albumService.joinAlbum(1L, "noneExistingCode"))
                     .willThrow(new AlbumException(AlbumErrorCode.INVITATION_CODE_NOT_FOUND));
 
             // when & then
@@ -906,7 +906,7 @@ class AlbumControllerTest {
         @Test
         void 앨범_초대_코드가_redis에_저장된_코드와_일치하지_않는_경우_예외가_발생한다() throws Exception {
             // given
-            given(albumService.joinAlbum(1L, "TestInvitationCode"))
+            given(albumService.joinAlbum(1L, "testInvitationCode"))
                     .willThrow(new AlbumException(AlbumErrorCode.ALREADY_PARTICIPATED));
 
             // when & then
@@ -923,7 +923,7 @@ class AlbumControllerTest {
         @Test
         void 이미_입장한_앨범에_재입장_하려는_경우_예외가_발생한다() throws Exception {
             // given
-            given(albumService.joinAlbum(1L, "ExpiredInvitationCode"))
+            given(albumService.joinAlbum(1L, "expiredInvitationCode"))
                     .willThrow(new AlbumException(AlbumErrorCode.INVITATION_CODE_MISMATCH));
 
             // when & then
