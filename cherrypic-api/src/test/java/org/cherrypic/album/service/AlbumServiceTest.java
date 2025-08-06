@@ -841,68 +841,68 @@ class AlbumServiceTest extends IntegrationTest {
                     .isInstanceOf(AlbumException.class)
                     .hasMessage(AlbumErrorCode.ALREADY_PARTICIPATED.getMessage());
         }
+    }
 
-        @Nested
-        class 앨범을_삭제할_때 {
+    @Nested
+    class 앨범을_삭제할_때 {
 
-            @BeforeEach
-            void setUp() {
-                Member member =
-                        Member.createMember(
-                                OauthInfo.createOauthInfo("testOauthId", "testOauthProvider"),
-                                "testNickname",
-                                "testProfileImageUrl");
-                memberRepository.save(member);
-                given(memberUtil.getCurrentMember()).willReturn(member);
+        @BeforeEach
+        void setUp() {
+            Member member =
+                    Member.createMember(
+                            OauthInfo.createOauthInfo("testOauthId", "testOauthProvider"),
+                            "testNickname",
+                            "testProfileImageUrl");
+            memberRepository.save(member);
+            given(memberUtil.getCurrentMember()).willReturn(member);
 
-                Album album1 = Album.createAlbum("testAlbum1", "testURL1", AlbumPlan.BASIC, false);
-                Album album2 = Album.createAlbum("testAlbum2", "testURL2", AlbumPlan.BASIC, false);
-                Album album3 = Album.createAlbum("testAlbum3", "testURL3", AlbumPlan.BASIC, false);
-                albumRepository.saveAll(List.of(album1, album2, album3));
+            Album album1 = Album.createAlbum("testAlbum1", "testURL1", AlbumPlan.BASIC, false);
+            Album album2 = Album.createAlbum("testAlbum2", "testURL2", AlbumPlan.BASIC, false);
+            Album album3 = Album.createAlbum("testAlbum3", "testURL3", AlbumPlan.BASIC, false);
+            albumRepository.saveAll(List.of(album1, album2, album3));
 
-                Participant participant1 =
-                        Participant.createParticipant(member, album1, ParticipantRole.HOST);
-                Participant participant2 =
-                        Participant.createParticipant(member, album2, ParticipantRole.LIMITED);
-                participantRepository.saveAll(List.of(participant1, participant2));
+            Participant participant1 =
+                    Participant.createParticipant(member, album1, ParticipantRole.HOST);
+            Participant participant2 =
+                    Participant.createParticipant(member, album2, ParticipantRole.LIMITED);
+            participantRepository.saveAll(List.of(participant1, participant2));
 
-                eventRepository.save(Event.createEvent(album1, "testTitle1", "testCoverUrl1"));
-            }
+            eventRepository.save(Event.createEvent(album1, "testTitle1", "testCoverUrl1"));
+        }
 
-            @Test
-            void 유효한_요청일_경우_앨범과_내부_이벤트가_모두_삭제된다() {
-                // when
-                albumService.deleteAlbum(1L);
+        @Test
+        void 유효한_요청일_경우_앨범과_내부_이벤트가_모두_삭제된다() {
+            // when
+            albumService.deleteAlbum(1L);
 
-                // then
-                Assertions.assertAll(
-                        () -> assertThat(albumRepository.findById(1L).isPresent()).isFalse(),
-                        () -> assertThat(eventRepository.findById(1L).isPresent()).isFalse());
-            }
+            // then
+            Assertions.assertAll(
+                    () -> assertThat(albumRepository.findById(1L).isPresent()).isFalse(),
+                    () -> assertThat(eventRepository.findById(1L).isPresent()).isFalse());
+        }
 
-            @Test
-            void 앨범이_존재하지_않는_경우_예외가_발생한다() {
-                // when & then
-                assertThatThrownBy(() -> albumService.deleteAlbum(999L))
-                        .isInstanceOf(AlbumException.class)
-                        .hasMessage(AlbumErrorCode.ALBUM_NOT_FOUND.getMessage());
-            }
+        @Test
+        void 앨범이_존재하지_않는_경우_예외가_발생한다() {
+            // when & then
+            assertThatThrownBy(() -> albumService.deleteAlbum(999L))
+                    .isInstanceOf(AlbumException.class)
+                    .hasMessage(AlbumErrorCode.ALBUM_NOT_FOUND.getMessage());
+        }
 
-            @Test
-            void 앨범_참가자가_아닌_경우_예외가_발생한다() {
-                // when & then
-                assertThatThrownBy(() -> albumService.deleteAlbum(3L))
-                        .isInstanceOf(AlbumException.class)
-                        .hasMessage(AlbumErrorCode.NOT_ALBUM_PARTICIPANT.getMessage());
-            }
+        @Test
+        void 앨범_참가자가_아닌_경우_예외가_발생한다() {
+            // when & then
+            assertThatThrownBy(() -> albumService.deleteAlbum(3L))
+                    .isInstanceOf(AlbumException.class)
+                    .hasMessage(AlbumErrorCode.NOT_ALBUM_PARTICIPANT.getMessage());
+        }
 
-            @Test
-            void 앨범_방장이_아닌_경우_예외가_발생한다() {
-                // when & then
-                assertThatThrownBy(() -> albumService.deleteAlbum(2L))
-                        .isInstanceOf(AlbumException.class)
-                        .hasMessage(AlbumErrorCode.NOT_ALBUM_HOST.getMessage());
-            }
+        @Test
+        void 앨범_방장이_아닌_경우_예외가_발생한다() {
+            // when & then
+            assertThatThrownBy(() -> albumService.deleteAlbum(2L))
+                    .isInstanceOf(AlbumException.class)
+                    .hasMessage(AlbumErrorCode.NOT_ALBUM_HOST.getMessage());
         }
     }
 }

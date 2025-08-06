@@ -19,5 +19,6 @@ public interface AlbumService {
             Long lastAlbumId, int size, SortDirection direction);
 
     AlbumJoinResponse joinAlbum(Long albumId, String code);
+
     void deleteAlbum(Long albumId);
 }
