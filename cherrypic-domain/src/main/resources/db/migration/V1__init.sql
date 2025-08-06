@@ -70,11 +70,13 @@ CREATE TABLE image (
                        id BIGINT AUTO_INCREMENT PRIMARY KEY,
                        member_id BIGINT NOT NULL,
                        album_id BIGINT NOT NULL,
+                       event_id BIGINT,
                        url VARCHAR(255) NOT NULL,
                        generated_at DATETIME,
                        created_at DATETIME(6) NOT NULL,
                        updated_at DATETIME(6) NOT NULL,
-                       CONSTRAINT fk_image_album FOREIGN KEY (album_id) REFERENCES album (id)
+                       CONSTRAINT fk_image_album FOREIGN KEY (album_id) REFERENCES album (id),
+                       CONSTRAINT fk_image_event FOREIGN KEY (event_id) REFERENCES event (id)
 );
 
 
