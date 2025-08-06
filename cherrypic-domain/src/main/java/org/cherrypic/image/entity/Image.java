@@ -35,18 +35,19 @@ public class Image extends BaseTimeEntity {
     private LocalDateTime generatedAt;
 
     @Builder(access = AccessLevel.PRIVATE)
-    private Image(Album album, Long memberId, String url, LocalDateTime generatedAt) {
+    private Image(Album album, Event event, Long memberId, String url, LocalDateTime generatedAt) {
         this.album = album;
+        this.event = event;
         this.memberId = memberId;
         this.url = url;
         this.generatedAt = generatedAt;
     }
 
     public static Image createImage(
-            Album album, Long memberId, String url, LocalDateTime generatedAt) {
-
+            Album album, Event event, Long memberId, String url, LocalDateTime generatedAt) {
         return Image.builder()
                 .album(album)
+                .event(event)
                 .memberId(memberId)
                 .url(url)
                 .generatedAt(generatedAt)
