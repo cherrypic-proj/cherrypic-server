@@ -434,7 +434,12 @@ class AlbumServiceTest extends IntegrationTest {
                             OauthInfo.createOauthInfo("testOauthId3", "testOauthProvider3"),
                             "testNickname3",
                             "testProfileImageUrl3");
-            memberRepository.saveAll(List.of(member1, member2, member3));
+            Member member4 =
+                    Member.createMember(
+                            OauthInfo.createOauthInfo("testOauthId4", "testOauthProvider4"),
+                            "testNickname4",
+                            "testProfileImageUrl4");
+            memberRepository.saveAll(List.of(member1, member2, member3, member4));
             given(memberUtil.getCurrentMember()).willReturn(member1);
 
             Album album1 = Album.createAlbum("testAlbum1", "testURL1", AlbumPlan.PRO, true);
@@ -450,11 +455,19 @@ class AlbumServiceTest extends IntegrationTest {
             Participant participant3 =
                     Participant.createParticipant(member1, album3, ParticipantRole.HOST);
             Participant participant4 =
-                    Participant.createParticipant(member2, album1, ParticipantRole.LIMITED);
+                    Participant.createParticipant(member2, album1, ParticipantRole.HOST);
             Participant participant5 =
+                    Participant.createParticipant(member3, album1, ParticipantRole.STANDARD);
+            Participant participant6 =
                     Participant.createParticipant(member3, album1, ParticipantRole.LIMITED);
             participantRepository.saveAll(
-                    List.of(participant1, participant2, participant3, participant4, participant5));
+                    List.of(
+                            participant1,
+                            participant2,
+                            participant3,
+                            participant4,
+                            participant5,
+                            participant6));
         }
 
         @Test
@@ -478,6 +491,7 @@ class AlbumServiceTest extends IntegrationTest {
                             assertThat(participants)
                                     .extracting("role")
                                     .containsExactlyInAnyOrder(
+                                            ParticipantRole.HOST,
                                             ParticipantRole.HOST,
                                             ParticipantRole.STANDARD,
                                             ParticipantRole.STANDARD));
