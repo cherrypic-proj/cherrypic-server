@@ -458,7 +458,7 @@ class AlbumServiceTest extends IntegrationTest {
         }
 
         @Test
-        void 유효한_요청이면_권한_부여_상태가_변경되고_참가자_권한이_STANDARD로_수정된다() {
+        void 유효한_요청이면_앨범의_권한_부여_상태가_변경되고_LIMITED_참가자_권한이_STANDARD로_수정된다() {
             // when
             albumService.togglePermission(1L);
 
