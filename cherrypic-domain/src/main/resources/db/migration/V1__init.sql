@@ -77,15 +77,6 @@ CREATE TABLE image (
                        CONSTRAINT fk_image_album FOREIGN KEY (album_id) REFERENCES album (id)
 );
 
-CREATE TABLE event_image (
-                             id BIGINT AUTO_INCREMENT PRIMARY KEY,
-                             event_id BIGINT,
-                             image_id BIGINT,
-                             created_at DATETIME(6) NOT NULL,
-                             updated_at DATETIME(6) NOT NULL,
-                             CONSTRAINT fk_event_image_event FOREIGN KEY (event_id) REFERENCES event(id),
-                             CONSTRAINT fk_event_image_image FOREIGN KEY (image_id) REFERENCES image(id)
-);
 
 CREATE TABLE favorites (
                            id BIGINT AUTO_INCREMENT PRIMARY KEY,

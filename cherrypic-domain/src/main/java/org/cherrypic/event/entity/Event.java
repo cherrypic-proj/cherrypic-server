@@ -2,8 +2,6 @@ package org.cherrypic.event.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import java.util.ArrayList;
-import java.util.List;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -27,9 +25,6 @@ public class Event extends BaseTimeEntity {
     @NotNull private String title;
 
     private String coverUrl;
-
-    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<EventImage> eventImages = new ArrayList<>();
 
     @Builder(access = AccessLevel.PRIVATE)
     private Event(Album album, String title, String coverUrl) {

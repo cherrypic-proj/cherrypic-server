@@ -3,15 +3,12 @@ package org.cherrypic.image.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.cherrypic.album.entity.Album;
 import org.cherrypic.common.model.BaseTimeEntity;
-import org.cherrypic.event.entity.EventImage;
 
 @Getter
 @Entity
@@ -31,9 +28,6 @@ public class Image extends BaseTimeEntity {
     @NotNull private String url;
 
     private LocalDateTime generatedAt;
-
-    @OneToMany(mappedBy = "image", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<EventImage> eventImages = new ArrayList<>();
 
     @Builder(access = AccessLevel.PRIVATE)
     private Image(Album album, Long memberId, String url, LocalDateTime generatedAt) {
