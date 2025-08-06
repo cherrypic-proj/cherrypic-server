@@ -15,14 +15,12 @@ import org.cherrypic.domain.event.dto.request.EventUpdateRequest;
 import org.cherrypic.domain.event.dto.response.EventListResponse;
 import org.cherrypic.domain.event.exception.EventErrorCode;
 import org.cherrypic.domain.event.exception.EventException;
-import org.cherrypic.domain.event.repository.EventImageRepository;
 import org.cherrypic.domain.event.repository.EventRepository;
 import org.cherrypic.domain.event.service.EventService;
 import org.cherrypic.domain.image.repository.ImageRepository;
 import org.cherrypic.domain.member.repository.MemberRepository;
 import org.cherrypic.domain.participant.repository.ParticipantRepository;
 import org.cherrypic.event.entity.Event;
-import org.cherrypic.event.entity.EventImage;
 import org.cherrypic.global.pagination.SliceResponse;
 import org.cherrypic.global.pagination.SortDirection;
 import org.cherrypic.global.util.MemberUtil;
@@ -50,7 +48,6 @@ public class EventServiceTest extends IntegrationTest {
     @Autowired private MemberRepository memberRepository;
     @Autowired private ParticipantRepository participantRepository;
     @Autowired private ImageRepository imageRepository;
-    @Autowired private EventImageRepository eventImageRepository;
 
     @MockitoBean MemberUtil memberUtil;
 
@@ -252,40 +249,22 @@ public class EventServiceTest extends IntegrationTest {
             Event event2 = Event.createEvent(album2, "testEvent2", "testEventCoverUrl2");
             eventRepository.saveAll(List.of(event1, event2));
 
-            Image image1 = Image.createImage(album1, 1L, "testImageUrl1", LocalDateTime.now());
-            Image image2 = Image.createImage(album1, 1L, "testImageUrl2", LocalDateTime.now());
-            Image image3 = Image.createImage(album1, 1L, "testImageUrl3", LocalDateTime.now());
+            Image image1 =
+                    Image.createImage(album1, null, 1L, "testImageUrl1", LocalDateTime.now());
+            Image image2 =
+                    Image.createImage(album1, null, 1L, "testImageUrl2", LocalDateTime.now());
+            Image image3 =
+                    Image.createImage(album1, null, 1L, "testImageUrl3", LocalDateTime.now());
             imageRepository.saveAll(List.of(image1, image2, image3));
-
-            EventImage eventImage1 = EventImage.createEventImage(event1, image1);
-            EventImage eventImage2 = EventImage.createEventImage(event1, image2);
-            EventImage eventImage3 = EventImage.createEventImage(event1, image3);
-            eventImageRepository.saveAll(List.of(eventImage1, eventImage2, eventImage3));
         }
 
         @Test
-        void 유효한_요청일_경우_이벤트와_이벤트_이미지를_모두_삭제한다() {
-            // given
-            Event event =
-                    transactionUtil.getResult(
-                            () -> {
-                                Event loadedEvent = eventRepository.findById(1L).orElseThrow();
-                                loadedEvent.getEventImages().get(0);
-                                return loadedEvent;
-                            });
-
-            assertThat(event.getEventImages())
-                    .hasSize(3)
-                    .extracting("id", "event.id", "image.id")
-                    .containsExactly(tuple(1L, 1L, 1L), tuple(2L, 1L, 2L), tuple(3L, 1L, 3L));
-
+        void 유효한_요청일_경우_이벤트를_삭제한다() {
             // when
             eventService.deleteEvent(1L);
 
             // then
-            Assertions.assertAll(
-                    () -> assertThat(eventRepository.findById(1L).isPresent()).isFalse(),
-                    () -> assertThat(eventImageRepository.countByEventId(1L)).isEqualTo(0L));
+            assertThat(eventRepository.findById(1L).isPresent()).isFalse();
         }
 
         @Test
@@ -344,13 +323,9 @@ public class EventServiceTest extends IntegrationTest {
             Event event2 = Event.createEvent(album1, "testTitle2", "testCoverUrl2");
             eventRepository.saveAll(List.of(event1, event2));
 
-            Image image1 = Image.createImage(album1, 1L, "testUrl", LocalDateTime.now());
-            Image image2 = Image.createImage(album1, 1L, "testUrl2", LocalDateTime.now());
+            Image image1 = Image.createImage(album1, event1, 1L, "testUrl", LocalDateTime.now());
+            Image image2 = Image.createImage(album1, event1, 1L, "testUrl2", LocalDateTime.now());
             imageRepository.saveAll(List.of(image1, image2));
-
-            EventImage eventImage1 = EventImage.createEventImage(event1, image1);
-            EventImage eventImage2 = EventImage.createEventImage(event1, image2);
-            eventImageRepository.saveAll(List.of(eventImage1, eventImage2));
         }
 
         @Test
