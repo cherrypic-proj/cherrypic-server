@@ -889,12 +889,12 @@ class AlbumControllerTest {
         @Test
         void 앨범_초대_코드가_redis에_존재하지_않는_경우_예외가_발생한다() throws Exception {
             // given
-            given(albumService.joinAlbum(1L, "NoneExistingCode"))
+            given(albumService.joinAlbum(1L, "noneExistingCode"))
                     .willThrow(new AlbumException(AlbumErrorCode.INVITATION_CODE_NOT_FOUND));
 
             // when & then
             ResultActions perform =
-                    mockMvc.perform(post("/albums/1/join").param("code", "NoneExistingCode"));
+                    mockMvc.perform(post("/albums/1/join").param("code", "noneExistingCode"));
 
             perform.andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.success").value(false))
@@ -906,12 +906,29 @@ class AlbumControllerTest {
         @Test
         void 앨범_초대_코드가_redis에_저장된_코드와_일치하지_않는_경우_예외가_발생한다() throws Exception {
             // given
-            given(albumService.joinAlbum(1L, "ExpiredInvitationCode"))
+            given(albumService.joinAlbum(1L, "testInvitationCode"))
+                    .willThrow(new AlbumException(AlbumErrorCode.ALREADY_PARTICIPATED));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(post("/albums/1/join").param("code", "testInvitationCode"));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("ALREADY_PARTICIPATED"))
+                    .andExpect(jsonPath("$.data.message").value("이미 참가한 앨범입니다."));
+        }
+
+        @Test
+        void 이미_입장한_앨범에_재입장_하려는_경우_예외가_발생한다() throws Exception {
+            // given
+            given(albumService.joinAlbum(1L, "expiredInvitationCode"))
                     .willThrow(new AlbumException(AlbumErrorCode.INVITATION_CODE_MISMATCH));
 
             // when & then
             ResultActions perform =
-                    mockMvc.perform(post("/albums/1/join").param("code", "ExpiredInvitationCode"));
+                    mockMvc.perform(post("/albums/1/join").param("code", "expiredInvitationCode"));
 
             perform.andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.success").value(false))

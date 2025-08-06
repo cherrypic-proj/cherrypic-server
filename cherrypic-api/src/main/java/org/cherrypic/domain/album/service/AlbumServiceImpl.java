@@ -149,13 +149,13 @@ public class AlbumServiceImpl implements AlbumService {
     public AlbumJoinResponse joinAlbum(Long albumId, String code) {
         final Member currentMember = memberUtil.getCurrentMember();
         final Album album = getAlbumById(albumId);
-
-        InvitationCode currentInvitationCode =
+        final InvitationCode currentInvitationCode =
                 invitationCodeRepository
                         .findById(album.getId())
                         .orElseThrow(
                                 () -> new AlbumException(AlbumErrorCode.INVITATION_CODE_NOT_FOUND));
 
+        validateAlbumRejoin(currentMember, album);
         validateInvitationCode(currentInvitationCode, code);
 
         Participant participant =
@@ -229,5 +229,14 @@ public class AlbumServiceImpl implements AlbumService {
         if (!currentInvitationCode.getCode().equals(code)) {
             throw new AlbumException(AlbumErrorCode.INVITATION_CODE_MISMATCH);
         }
+    }
+
+    private void validateAlbumRejoin(Member member, Album album) {
+        participantRepository
+                .findByMemberIdAndAlbumId(member.getId(), album.getId())
+                .ifPresent(
+                        p -> {
+                            throw new AlbumException(AlbumErrorCode.ALREADY_PARTICIPATED);
+                        });
     }
 }
