@@ -93,6 +93,23 @@ public class AlbumServiceImpl implements AlbumService {
     }
 
     @Override
+    public PermissionToggleResponse togglePermission(Long albumId) {
+        final Member currentMember = memberUtil.getCurrentMember();
+        final Album album = getAlbumById(albumId);
+
+        validateAlbumHost(currentMember.getId(), album.getId());
+        validatePermissionControl(album.getPlan(), true);
+
+        album.togglePermissionControl();
+
+        if (!album.getPermissionControl()) {
+            participantRepository.bulkChangeLimitedToStandard(albumId);
+        }
+
+        return PermissionToggleResponse.from(album);
+    }
+
+    @Override
     public InvitationLinkCreateResponse createInvitationLink(Long albumId) {
         final Member currentMember = memberUtil.getCurrentMember();
         final Album album = getAlbumById(albumId);

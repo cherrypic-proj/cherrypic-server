@@ -11,6 +11,9 @@ spring:
     hibernate:
       ddl-auto: validate
     open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
   flyway:
     enabled: true
     baseline-on-migrate: true
@@ -57,3 +60,8 @@ spring-doc:
     operations-sorter : method
     path: /swagger-ui
     doc-expansion : none
+
+logging:
+  level:
+    org.hibernate.SQL: DEBUG
+    org.hibernate.orm.jdbc.bind: TRACE

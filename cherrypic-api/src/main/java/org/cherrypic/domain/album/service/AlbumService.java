@@ -11,6 +11,8 @@ public interface AlbumService {
 
     AlbumUpdateResponse updateAlbum(Long albumId, AlbumUpdateRequest request);
 
+    PermissionToggleResponse togglePermission(Long albumId);
+
     InvitationLinkCreateResponse createInvitationLink(Long albumId);
 
     SliceResponse<AlbumListResponse> getParticipatingAlbums(

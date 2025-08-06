@@ -41,6 +41,12 @@ public class AlbumController {
         return albumService.updateAlbum(albumId, request);
     }
 
+    @PatchMapping("/{albumId}/permission")
+    @Operation(summary = "앨범 권한 부여 토글 상태 변경", description = "앨범의 권한 부여 토글 상태를 변경합니다.")
+    public PermissionToggleResponse permissionToggle(@PathVariable Long albumId) {
+        return albumService.togglePermission(albumId);
+    }
+
     @PostMapping("/{albumId}/invitation-link")
     @Operation(summary = "앨범 초대 링크 생성", description = "앨범 초대링크를 생성합니다.")
     public ResponseEntity<InvitationLinkCreateResponse> invitationLinkCreate(
