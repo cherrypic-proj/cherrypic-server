@@ -48,30 +48,19 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 class AlbumServiceTest extends IntegrationTest {
 
-    @Autowired
-    private RedisCleaner redisCleaner;
-    @Autowired
-    private TransactionUtil transactionUtil;
+    @Autowired private RedisCleaner redisCleaner;
+    @Autowired private TransactionUtil transactionUtil;
 
-    @Autowired
-    private AlbumService albumService;
-    @Autowired
-    private AlbumRepository albumRepository;
-    @Autowired
-    private MemberRepository memberRepository;
-    @Autowired
-    private PaymentRepository paymentRepository;
-    @Autowired
-    private SubscriptionRepository subscriptionRepository;
-    @Autowired
-    private ParticipantRepository participantRepository;
-    @Autowired
-    private InvitationCodeRepository invitationCodeRepository;
-    @Autowired
-    private EventRepository eventRepository;
+    @Autowired private AlbumService albumService;
+    @Autowired private AlbumRepository albumRepository;
+    @Autowired private MemberRepository memberRepository;
+    @Autowired private PaymentRepository paymentRepository;
+    @Autowired private SubscriptionRepository subscriptionRepository;
+    @Autowired private ParticipantRepository participantRepository;
+    @Autowired private InvitationCodeRepository invitationCodeRepository;
+    @Autowired private EventRepository eventRepository;
 
-    @MockitoBean
-    MemberUtil memberUtil;
+    @MockitoBean MemberUtil memberUtil;
 
     @Nested
     class 앨범을_생성할_때 {
@@ -253,9 +242,9 @@ class AlbumServiceTest extends IntegrationTest {
                                         .containsExactly(1L, 1L, 2L, SubscriptionStatus.ACTIVE),
                         () ->
                                 assertThat(
-                                        subscription
-                                                .getStartAt()
-                                                .truncatedTo(ChronoUnit.MINUTES))
+                                                subscription
+                                                        .getStartAt()
+                                                        .truncatedTo(ChronoUnit.MINUTES))
                                         .isEqualTo(
                                                 LocalDateTime.now()
                                                         .truncatedTo(ChronoUnit.MINUTES)),
@@ -267,9 +256,9 @@ class AlbumServiceTest extends IntegrationTest {
                                                         .plusMonths(1)),
                         () ->
                                 assertThat(
-                                        subscription
-                                                .getNextBillingAt()
-                                                .truncatedTo(ChronoUnit.MINUTES))
+                                                subscription
+                                                        .getNextBillingAt()
+                                                        .truncatedTo(ChronoUnit.MINUTES))
                                         .isEqualTo(
                                                 LocalDateTime.now()
                                                         .truncatedTo(ChronoUnit.MINUTES)
@@ -853,7 +842,6 @@ class AlbumServiceTest extends IntegrationTest {
                     .hasMessage(AlbumErrorCode.ALREADY_PARTICIPATED.getMessage());
         }
 
-
         @Nested
         class 앨범을_삭제할_때 {
 
@@ -867,9 +855,9 @@ class AlbumServiceTest extends IntegrationTest {
                 memberRepository.save(member);
                 given(memberUtil.getCurrentMember()).willReturn(member);
 
-                Album album1 = Album.createAlbum("testAlbum1", "testURL1", AlbumPlan.BASIC);
-                Album album2 = Album.createAlbum("testAlbum2", "testURL2", AlbumPlan.BASIC);
-                Album album3 = Album.createAlbum("testAlbum3", "testURL3", AlbumPlan.BASIC);
+                Album album1 = Album.createAlbum("testAlbum1", "testURL1", AlbumPlan.BASIC, false);
+                Album album2 = Album.createAlbum("testAlbum2", "testURL2", AlbumPlan.BASIC, false);
+                Album album3 = Album.createAlbum("testAlbum3", "testURL3", AlbumPlan.BASIC, false);
                 albumRepository.saveAll(List.of(album1, album2, album3));
 
                 Participant participant1 =
