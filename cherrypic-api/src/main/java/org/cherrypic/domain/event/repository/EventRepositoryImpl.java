@@ -1,6 +1,7 @@
 package org.cherrypic.domain.event.repository;
 
 import static org.cherrypic.event.entity.QEvent.event;
+import static org.cherrypic.image.entity.QImage.image;
 
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
@@ -31,8 +32,11 @@ public class EventRepositoryImpl implements EventRepositoryCustom {
                                         EventListResponse.class,
                                         event.id,
                                         event.title,
-                                        event.coverUrl))
+                                        event.coverUrl,
+                                        image.count().intValue()))
                         .from(event)
+                        .leftJoin(image)
+                        .on(image.event.eq(event))
                         .where(
                                 event.album.id.eq(albumId),
                                 lastEventIdCondition(lastEventId, direction))
