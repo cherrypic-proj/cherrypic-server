@@ -149,11 +149,23 @@ class ImageServiceTest extends IntegrationTest {
         void 앨범에_이미지가_없는_경우_빈_리스트를_조회한다() {
             // when
             SliceResponse<ImageListResponse> response =
-                    imageService.getImages(2L, null, 1L, 2, SortDirection.ASC);
+                    imageService.getImages(2L, null, null, 3, SortDirection.ASC);
 
             // when & then
             Assertions.assertAll(
                     () -> assertThat(response.content().size()).isZero(),
+                    () -> assertThat(response.isLast()).isTrue());
+        }
+
+        @Test
+        void 마지막_페이지인_경우_isLast를_true로_반환한다() {
+            // when
+            SliceResponse<ImageListResponse> response =
+                    imageService.getImages(1L, null, null, 3, SortDirection.ASC);
+
+            // then
+            Assertions.assertAll(
+                    () -> assertThat(response.content().size()).isEqualTo(3),
                     () -> assertThat(response.isLast()).isTrue());
         }
 
@@ -244,6 +256,18 @@ class ImageServiceTest extends IntegrationTest {
             // when & then
             Assertions.assertAll(
                     () -> assertThat(response.content().size()).isZero(),
+                    () -> assertThat(response.isLast()).isTrue());
+        }
+
+        @Test
+        void 마지막_페이지인_경우_isLast를_true로_반환한다() {
+            // when
+            SliceResponse<ImageListResponse> response =
+                    imageService.getImages(1L, 1L, null, 2, SortDirection.ASC);
+
+            // then
+            Assertions.assertAll(
+                    () -> assertThat(response.content().size()).isEqualTo(2),
                     () -> assertThat(response.isLast()).isTrue());
         }
 
