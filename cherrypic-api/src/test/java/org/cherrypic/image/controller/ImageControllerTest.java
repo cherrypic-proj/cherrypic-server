@@ -340,7 +340,7 @@ class ImageControllerTest {
         void 이벤트가_앨범에_속하지_않는_경우_예외가_발생한다() throws Exception {
             // given
             given(imageService.getImages(1L, 1L, null, 2, SortDirection.ASC))
-                    .willThrow(new EventException(EventErrorCode.EVENT_NOT_FOUND_IN_ALBUM));
+                    .willThrow(new EventException(EventErrorCode.EVENT_DOESNT_BELONG_TO_ALBUM));
 
             // when & then
             ResultActions perform =
@@ -351,10 +351,10 @@ class ImageControllerTest {
                                     .param("size", "2")
                                     .param("direction", "ASC"));
 
-            perform.andExpect(status().isNotFound())
+            perform.andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.success").value(false))
-                    .andExpect(jsonPath("$.status").value(HttpStatus.NOT_FOUND.value()))
-                    .andExpect(jsonPath("$.data.code").value("EVENT_NOT_FOUND_IN_ALBUM"))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("EVENT_DOESNT_BELONG_TO_ALBUM"))
                     .andExpect(jsonPath("$.data.message").value("앨범에 해당 이벤트가 존재하지 않습니다."));
         }
     }

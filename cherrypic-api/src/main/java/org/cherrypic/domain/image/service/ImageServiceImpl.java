@@ -153,7 +153,7 @@ public class ImageServiceImpl implements ImageService {
 
     private void validateAlbumEvent(Album album, Event event) {
         if (!event.getAlbum().getId().equals(album.getId())) {
-            throw new EventException(EventErrorCode.EVENT_NOT_FOUND_IN_ALBUM);
+            throw new EventException(EventErrorCode.EVENT_DOESNT_BELONG_TO_ALBUM);
         }
     }
 }

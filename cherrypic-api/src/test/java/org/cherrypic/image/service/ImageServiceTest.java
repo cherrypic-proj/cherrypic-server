@@ -281,7 +281,7 @@ class ImageServiceTest extends IntegrationTest {
             // when & then
             assertThatThrownBy(() -> imageService.getImages(1L, 3L, null, 2, SortDirection.ASC))
                     .isInstanceOf(EventException.class)
-                    .hasMessage(EventErrorCode.EVENT_NOT_FOUND_IN_ALBUM.getMessage());
+                    .hasMessage(EventErrorCode.EVENT_DOESNT_BELONG_TO_ALBUM.getMessage());
         }
     }
 }
