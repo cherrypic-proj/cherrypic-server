@@ -16,6 +16,7 @@ import org.cherrypic.album.entity.InvitationCode;
 import org.cherrypic.album.enums.AlbumPlan;
 import org.cherrypic.domain.album.dto.request.AlbumCreateRequest;
 import org.cherrypic.domain.album.dto.request.AlbumUpdateRequest;
+import org.cherrypic.domain.album.dto.response.AlbumJoinResponse;
 import org.cherrypic.domain.album.dto.response.AlbumListResponse;
 import org.cherrypic.domain.album.dto.response.InvitationLinkCreateResponse;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
@@ -418,7 +419,7 @@ class AlbumServiceTest extends IntegrationTest {
     }
 
     @Nested
-    class 앨범_권한_부여_토글_상태_변경_요청_시 {
+    class 앨범_권한_부여_토글_상태를_변경_할_때 {
 
         @BeforeEach
         void setUp() {
@@ -799,7 +800,7 @@ class AlbumServiceTest extends IntegrationTest {
         @Test
         void 유효한_초대_코드면_앨범_참가자가_생성된다() {
             // when
-            albumService.joinAlbum(1L, "testInvitationCode1");
+            AlbumJoinResponse response = albumService.joinAlbum(1L, "testInvitationCode1");
 
             // then
             Participant participant =

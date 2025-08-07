@@ -423,7 +423,7 @@ public class EventControllerTest {
         }
 
         @Test
-        void 정렬_조건이_DESC이면_albumId를_내림차순으로_응답한다() throws Exception {
+        void 정렬_조건이_DESC이면_eventId를_내림차순으로_응답한다() throws Exception {
             // given
             List<EventListResponse> events =
                     List.of(
