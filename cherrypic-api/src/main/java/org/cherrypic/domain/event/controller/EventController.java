@@ -45,7 +45,7 @@ public class EventController {
 
     @GetMapping
     @Operation(summary = "이벤트 목록 조회", description = "회원이 참여 중인 앨범의 이벤트를 커서 기반 페이징 방식으로 조회합니다.")
-    public SliceResponse<EventListResponse> events(
+    public SliceResponse<EventListResponse> eventsGet(
             @Parameter(description = "조회중인 앨범의 ID") @RequestParam Long albumId,
             @Parameter(description = "이전 페이지의 마지막 이벤트 ID (첫 요청 시 생략)")
                     @RequestParam(required = false)

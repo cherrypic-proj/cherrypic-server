@@ -34,7 +34,7 @@ public class ImageController {
 
     @GetMapping("/images")
     @Operation(summary = "사진 목록 조회", description = "사진 목록을 조회합니다.")
-    public SliceResponse<ImageListResponse> images(
+    public SliceResponse<ImageListResponse> imagesGet(
             @RequestParam Long albumId,
             @RequestParam(required = false) Long eventId,
             @Parameter(description = "이전 페이지의 마지막 이미지 ID (첫 요청 시 생략)")
