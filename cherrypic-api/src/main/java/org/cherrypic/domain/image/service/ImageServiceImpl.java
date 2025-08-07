@@ -61,11 +61,12 @@ public class ImageServiceImpl implements ImageService {
     public SliceResponse<ImageListResponse> getImages(
             Long albumId, Long eventId, Long lastImageId, int size, SortDirection direction) {
         final Member currentMember = memberUtil.getCurrentMember();
-        getAlbumById(albumId);
+        final Album album = getAlbumById(albumId);
         getParticipantByMemberIdAndAlbumId(currentMember.getId(), albumId);
 
         if (eventId != null) {
-            getEventById(eventId);
+            final Event event = getEventById(eventId);
+            validateAlbumEvent(album, event);
             Slice<ImageListResponse> result =
                     imageRepository.findAllByEventId(eventId, lastImageId, size, direction);
             return SliceResponse.from(result);
@@ -145,5 +146,11 @@ public class ImageServiceImpl implements ImageService {
         return participantRepository
                 .findByMemberIdAndAlbumId(memberId, albumId)
                 .orElseThrow(() -> new AlbumException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT));
+    }
+
+    private void validateAlbumEvent(Album album, Event event) {
+        if (!event.getAlbum().getId().equals(album.getId())) {
+            throw new EventException(EventErrorCode.EVENT_NOT_FOUND_IN_ALBUM);
+        }
     }
 }

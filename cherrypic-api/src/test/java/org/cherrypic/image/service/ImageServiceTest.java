@@ -1,5 +1,6 @@
 package org.cherrypic.image.service;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.BDDMockito.given;
 
@@ -9,7 +10,11 @@ import org.assertj.core.api.Assertions;
 import org.cherrypic.IntegrationTest;
 import org.cherrypic.album.entity.Album;
 import org.cherrypic.album.enums.AlbumPlan;
+import org.cherrypic.domain.album.exception.AlbumErrorCode;
+import org.cherrypic.domain.album.exception.AlbumException;
 import org.cherrypic.domain.album.repository.AlbumRepository;
+import org.cherrypic.domain.event.exception.EventErrorCode;
+import org.cherrypic.domain.event.exception.EventException;
 import org.cherrypic.domain.event.repository.EventRepository;
 import org.cherrypic.domain.image.dto.request.MemberProfileImageUploadRequest;
 import org.cherrypic.domain.image.dto.response.ImageListResponse;
@@ -32,14 +37,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 class ImageServiceTest extends IntegrationTest {
 
-    @Autowired MemberUtil memberUtil;
+    @MockitoBean MemberUtil memberUtil;
 
     @Autowired private ImageService imageService;
     @Autowired private ParticipantRepository participantRepository;
@@ -48,28 +50,19 @@ class ImageServiceTest extends IntegrationTest {
     @Autowired private AlbumRepository albumRepository;
     @Autowired private MemberRepository memberRepository;
 
-    @BeforeEach
-    void setUp() {
-        Member member =
-                Member.createMember(
-                        OauthInfo.createOauthInfo("testOauthId", "testOauthProvider"),
-                        "testNickname",
-                        "testProfileImageUrl");
-        memberRepository.save(member);
-
-        UserDetails userDetails =
-                User.withUsername(member.getId().toString())
-                        .password("")
-                        .authorities(member.getRole().name())
-                        .build();
-        UsernamePasswordAuthenticationToken token =
-                new UsernamePasswordAuthenticationToken(
-                        userDetails, null, userDetails.getAuthorities());
-        SecurityContextHolder.getContext().setAuthentication(token);
-    }
-
     @Nested
     class Presigned_URL을_생성할_때 {
+
+        @BeforeEach
+        void setUp() {
+            Member member =
+                    Member.createMember(
+                            OauthInfo.createOauthInfo("testOauthId", "testOauthProvider"),
+                            "testNickname",
+                            "testProfileImageUrl");
+            memberRepository.save(member);
+            given(memberUtil.getCurrentMember()).willReturn(member);
+        }
 
         @Test
         void 유효한_요청이면_회원_프로필_이미지용_Presigned_URL을_생성한다() {
@@ -89,7 +82,7 @@ class ImageServiceTest extends IntegrationTest {
     }
 
     @Nested
-    class 이미지_목록_조회_요청시 {
+    class 앨범_이미지_목록_조회_요청시 {
 
         @BeforeEach
         void setUp() {
@@ -101,94 +94,194 @@ class ImageServiceTest extends IntegrationTest {
             memberRepository.save(member);
             given(memberUtil.getCurrentMember()).willReturn(member);
 
-            Album album = Album.createAlbum("testTitle", "testCoverUrl", AlbumPlan.BASIC, false);
-            albumRepository.save(album);
+            Album album1 = Album.createAlbum("testTitle1", "testCoverUrl1", AlbumPlan.BASIC, false);
+            Album album2 = Album.createAlbum("testTitle2", "testCoverUrl2", AlbumPlan.BASIC, false);
+            Album album3 = Album.createAlbum("testTitle2", "testCoverUrl2", AlbumPlan.BASIC, false);
+            albumRepository.saveAll(List.of(album1, album2, album3));
 
-            Participant participant =
-                    Participant.createParticipant(member, album, ParticipantRole.HOST);
-            participantRepository.save(participant);
+            Participant participant1 =
+                    Participant.createParticipant(member, album1, ParticipantRole.HOST);
+            Participant participant2 =
+                    Participant.createParticipant(member, album2, ParticipantRole.HOST);
+            participantRepository.saveAll(List.of(participant1, participant2));
 
-            Event event1 = Event.createEvent(album, "testTitle1", "testCoverUrl1");
-            Event event2 = Event.createEvent(album, "testTitle2", "testCoverUrl2");
-            Event event3 = Event.createEvent(album, "testTitle3", "testCoverUrl3");
+            Event event1 = Event.createEvent(album1, "testTitle1", "testCoverUrl1");
+            Event event2 = Event.createEvent(album1, "testTitle2", "testCoverUrl2");
+            Event event3 = Event.createEvent(album1, "testTitle3", "testCoverUrl3");
             eventRepository.saveAll(List.of(event1, event2, event3));
 
-            Image image1 = Image.createImage(album, event1, 1L, "testUrl", LocalDateTime.now());
-            Image image2 = Image.createImage(album, event2, 1L, "testUrl2", LocalDateTime.now());
-            Image image3 = Image.createImage(album, null, 1L, "testUrl2", LocalDateTime.now());
+            Image image1 = Image.createImage(album1, event1, 1L, "testUrl", LocalDateTime.now());
+            Image image2 = Image.createImage(album1, event2, 1L, "testUrl2", LocalDateTime.now());
+            Image image3 = Image.createImage(album1, null, 1L, "testUrl2", LocalDateTime.now());
             imageRepository.saveAll(List.of(image1, image2, image3));
         }
 
         @Test
-        void eventId를_입력하지_않으면_앨범의_모든_이미지를_조회한다() {
+        void 정렬_조건이_ASC이면_imageId를_오름차순으로_조회한다() {
             // when
             SliceResponse<ImageListResponse> response =
                     imageService.getImages(1L, null, null, 3, SortDirection.ASC);
 
             // then
             Assertions.assertThat(response.content())
-                    .extracting("eventImageId")
+                    .extracting("imageId")
                     .containsExactly(1L, 2L, 3L);
         }
 
         @Test
-        void eventId를_입력하면_특정_이벤트의_모든_이미지를_조회한다() {
+        void 정렬_조건이_DESC면_imageId를_내림차순으로_조회한다() {
             // when
             SliceResponse<ImageListResponse> response =
-                    imageService.getImages(1L, 1L, null, 3, SortDirection.ASC);
+                    imageService.getImages(1L, null, null, 3, SortDirection.DESC);
 
             // then
             Assertions.assertThat(response.content())
-                    .extracting("eventImageId")
-                    .containsExactly(1L);
+                    .extracting("imageId")
+                    .containsExactly(3L, 2L, 1L);
         }
 
         @Test
-        void 정렬_조건이_ASC이면_ImageId를_오름차순으로_조회한다() {
+        void imageId를_입력하면_다음_Image_부터_조회한다() {
             // when
             SliceResponse<ImageListResponse> response =
-                    imageService.getImages(1L, null, 2, SortDirection.ASC);
+                    imageService.getImages(1L, null, 1L, 2, SortDirection.ASC);
 
             // then
-            Assertions.assertThat(response.content())
-                    .extracting("eventImageId")
-                    .containsExactly(1L, 2L);
+            Assertions.assertThat(response.content()).extracting("imageId").containsExactly(2L, 3L);
         }
 
         @Test
-        void 정렬_조건이_DESC면_eventImageId를_내림차순으로_조회한다() {
+        void 앨범에_이미지가_없는_경우_빈_리스트를_조회한다() {
             // when
             SliceResponse<ImageListResponse> response =
-                    eventService.getEventImages(1L, null, 2, SortDirection.DESC);
+                    imageService.getImages(2L, null, 1L, 2, SortDirection.ASC);
 
-            // then
-            Assertions.assertThat(response.content())
-                    .extracting("eventImageId")
-                    .containsExactly(2L, 1L);
+            // when & then
+            org.junit.jupiter.api.Assertions.assertAll(
+                    () -> Assertions.assertThat(response.content().size()).isZero(),
+                    () -> Assertions.assertThat(response.isLast()).isTrue());
         }
 
         @Test
-        void eventImageId를_입력하면_다음_eventImage_부터_조회한다() {
+        void 앨범이_존재하지_않을_경우_예외가_발생한다() {
+            // when & then
+            assertThatThrownBy(() -> imageService.getImages(999L, null, null, 2, SortDirection.ASC))
+                    .isInstanceOf(AlbumException.class)
+                    .hasMessage(AlbumErrorCode.ALBUM_NOT_FOUND.getMessage());
+        }
+
+        @Test
+        void 앨범_참가자가_아닌_경우_예외가_발생한다() {
+            // when & then
+            assertThatThrownBy(() -> imageService.getImages(3L, null, null, 2, SortDirection.ASC))
+                    .isInstanceOf(AlbumException.class)
+                    .hasMessage(AlbumErrorCode.NOT_ALBUM_PARTICIPANT.getMessage());
+        }
+    }
+
+    @Nested
+    class 이벤트_이미지_목록_조회_요청시 {
+
+        @BeforeEach
+        void setUp() {
+            Member member =
+                    Member.createMember(
+                            OauthInfo.createOauthInfo("testOauthId", "testOauthProvider"),
+                            "testNickname",
+                            "testProfileImageUrl");
+            memberRepository.save(member);
+            given(memberUtil.getCurrentMember()).willReturn(member);
+
+            Album album1 = Album.createAlbum("testTitle1", "testCoverUrl1", AlbumPlan.BASIC, false);
+            Album album2 = Album.createAlbum("testTitle2", "testCoverUrl2", AlbumPlan.BASIC, false);
+            albumRepository.saveAll(List.of(album1, album2));
+
+            Participant participant =
+                    Participant.createParticipant(member, album1, ParticipantRole.HOST);
+            participantRepository.save(participant);
+
+            Event event1 = Event.createEvent(album1, "testTitle1", "testCoverUrl1");
+            Event event2 = Event.createEvent(album1, "testTitle2", "testCoverUrl2");
+            Event event3 = Event.createEvent(album2, "testTitle3", "testCoverUrl3");
+            eventRepository.saveAll(List.of(event1, event2, event3));
+
+            Image image1 = Image.createImage(album1, event1, 1L, "testUrl", LocalDateTime.now());
+            Image image2 = Image.createImage(album1, event1, 1L, "testUrl2", LocalDateTime.now());
+            imageRepository.saveAll(List.of(image1, image2));
+        }
+
+        @Test
+        void 정렬_조건이_ASC이면_imageId를_오름차순으로_조회한다() {
             // when
             SliceResponse<ImageListResponse> response =
-                    eventService.getEventImages(1L, 2L, 1, SortDirection.DESC);
+                    imageService.getImages(1L, 1L, null, 2, SortDirection.ASC);
 
             // then
-            Assertions.assertThat(response.content())
-                    .extracting("eventImageId")
-                    .containsExactly(1L);
+            Assertions.assertThat(response.content()).extracting("imageId").containsExactly(1L, 2L);
+        }
+
+        @Test
+        void 정렬_조건이_DESC면_imageId를_내림차순으로_조회한다() {
+            // when
+            SliceResponse<ImageListResponse> response =
+                    imageService.getImages(1L, 1L, null, 2, SortDirection.DESC);
+
+            // then
+            Assertions.assertThat(response.content()).extracting("imageId").containsExactly(2L, 1L);
+        }
+
+        @Test
+        void imageId를_입력하면_다음_Image_부터_조회한다() {
+            // when
+            SliceResponse<ImageListResponse> response =
+                    imageService.getImages(1L, 1L, 1L, 1, SortDirection.ASC);
+
+            // then
+            Assertions.assertThat(response.content()).extracting("imageId").containsExactly(2L);
         }
 
         @Test
         void 이벤트에_이미지가_없는_경우_빈_리스트를_조회한다() {
             // when
             SliceResponse<ImageListResponse> response =
-                    eventService.getEventImages(2L, null, 10, SortDirection.DESC);
+                    imageService.getImages(1L, 2L, 1L, 2, SortDirection.ASC);
 
             // when & then
             org.junit.jupiter.api.Assertions.assertAll(
                     () -> Assertions.assertThat(response.content().size()).isZero(),
                     () -> Assertions.assertThat(response.isLast()).isTrue());
+        }
+
+        @Test
+        void 앨범이_존재하지_않을_경우_예외가_발생한다() {
+            // when & then
+            assertThatThrownBy(() -> imageService.getImages(999L, null, null, 2, SortDirection.ASC))
+                    .isInstanceOf(AlbumException.class)
+                    .hasMessage(AlbumErrorCode.ALBUM_NOT_FOUND.getMessage());
+        }
+
+        @Test
+        void 앨범_참가자가_아닌_경우_예외가_발생한다() {
+            // when & then
+            assertThatThrownBy(() -> imageService.getImages(2L, null, null, 2, SortDirection.ASC))
+                    .isInstanceOf(AlbumException.class)
+                    .hasMessage(AlbumErrorCode.NOT_ALBUM_PARTICIPANT.getMessage());
+        }
+
+        @Test
+        void 이벤트가_존재하지_않을_경우_예외가_발생한다() {
+            // when & then
+            assertThatThrownBy(() -> imageService.getImages(1L, 999L, null, 2, SortDirection.ASC))
+                    .isInstanceOf(EventException.class)
+                    .hasMessage(EventErrorCode.EVENT_NOT_FOUND.getMessage());
+        }
+
+        @Test
+        void 이벤트가_앨범에_속하지_않는_경우_예외가_발생한다() {
+            // when & then
+            assertThatThrownBy(() -> imageService.getImages(1L, 3L, null, 2, SortDirection.ASC))
+                    .isInstanceOf(EventException.class)
+                    .hasMessage(EventErrorCode.EVENT_NOT_FOUND_IN_ALBUM.getMessage());
         }
     }
 }
