@@ -33,9 +33,11 @@ import org.cherrypic.participant.entity.Participant;
 import org.cherrypic.s3.S3Properties;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class ImageServiceImpl implements ImageService {
 
     private final MemberUtil memberUtil;
@@ -58,6 +60,7 @@ public class ImageServiceImpl implements ImageService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public SliceResponse<ImageListResponse> getImages(
             Long albumId, Long eventId, Long lastImageId, int size, SortDirection direction) {
         final Member currentMember = memberUtil.getCurrentMember();

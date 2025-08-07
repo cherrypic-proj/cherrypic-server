@@ -61,6 +61,8 @@ public class EventServiceImpl implements EventService {
         return EventUpdateResponse.from(event);
     }
 
+    @Override
+    @Transactional(readOnly = true)
     public SliceResponse<EventListResponse> getAlbumEvents(
             Long albumId, Long lastEventId, int size, SortDirection direction) {
         final Member currentMember = memberUtil.getCurrentMember();
