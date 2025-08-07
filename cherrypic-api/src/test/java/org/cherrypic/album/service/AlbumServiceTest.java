@@ -820,5 +820,13 @@ class AlbumServiceTest extends IntegrationTest {
                     .isInstanceOf(AlbumException.class)
                     .hasMessage(AlbumErrorCode.INVITATION_CODE_MISMATCH.getMessage());
         }
+
+        @Test
+        void 이미_입장한_앨범에_재입장_하려는_경우_예외가_발생한다() {
+            // when & then
+            assertThatThrownBy(() -> albumService.joinAlbum(3L, "testInvitationCode2"))
+                    .isInstanceOf(AlbumException.class)
+                    .hasMessage(AlbumErrorCode.ALREADY_PARTICIPATED.getMessage());
+        }
     }
 }
