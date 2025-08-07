@@ -16,4 +16,6 @@ public interface ParticipantRepository extends JpaRepository<Participant, Long> 
                     "UPDATE participant SET role = 'STANDARD' WHERE album_id = :albumId AND role = 'LIMITED'",
             nativeQuery = true)
     void bulkChangeLimitedToStandard(@Param("albumId") Long albumId);
+
+    boolean existsByAlbumIdAndMemberIdIsNot(Long AlbumId, Long memberId);
 }

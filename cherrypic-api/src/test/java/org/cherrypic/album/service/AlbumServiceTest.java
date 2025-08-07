@@ -848,24 +848,35 @@ class AlbumServiceTest extends IntegrationTest {
 
         @BeforeEach
         void setUp() {
-            Member member =
+            Member member1 =
                     Member.createMember(
                             OauthInfo.createOauthInfo("testOauthId", "testOauthProvider"),
                             "testNickname",
                             "testProfileImageUrl");
-            memberRepository.save(member);
-            given(memberUtil.getCurrentMember()).willReturn(member);
+            Member member2 =
+                    Member.createMember(
+                            OauthInfo.createOauthInfo("testOauthId", "testOauthProvider"),
+                            "testNickname",
+                            "testProfileImageUrl");
+            memberRepository.saveAll(List.of(member1, member2));
+            given(memberUtil.getCurrentMember()).willReturn(member1);
 
             Album album1 = Album.createAlbum("testAlbum1", "testURL1", AlbumPlan.BASIC, false);
             Album album2 = Album.createAlbum("testAlbum2", "testURL2", AlbumPlan.BASIC, false);
             Album album3 = Album.createAlbum("testAlbum3", "testURL3", AlbumPlan.BASIC, false);
-            albumRepository.saveAll(List.of(album1, album2, album3));
+            Album album4 = Album.createAlbum("testAlbum4", "testURL4", AlbumPlan.BASIC, false);
+            albumRepository.saveAll(List.of(album1, album2, album3, album4));
 
             Participant participant1 =
-                    Participant.createParticipant(member, album1, ParticipantRole.HOST);
+                    Participant.createParticipant(member1, album1, ParticipantRole.HOST);
             Participant participant2 =
-                    Participant.createParticipant(member, album2, ParticipantRole.LIMITED);
-            participantRepository.saveAll(List.of(participant1, participant2));
+                    Participant.createParticipant(member1, album2, ParticipantRole.LIMITED);
+            Participant participant3 =
+                    Participant.createParticipant(member1, album3, ParticipantRole.HOST);
+            Participant participant4 =
+                    Participant.createParticipant(member2, album3, ParticipantRole.LIMITED);
+            participantRepository.saveAll(
+                    List.of(participant1, participant2, participant3, participant4));
 
             eventRepository.save(Event.createEvent(album1, "testTitle1", "testCoverUrl1"));
         }
@@ -892,7 +903,7 @@ class AlbumServiceTest extends IntegrationTest {
         @Test
         void 앨범_참가자가_아닌_경우_예외가_발생한다() {
             // when & then
-            assertThatThrownBy(() -> albumService.deleteAlbum(3L))
+            assertThatThrownBy(() -> albumService.deleteAlbum(4L))
                     .isInstanceOf(AlbumException.class)
                     .hasMessage(AlbumErrorCode.NOT_ALBUM_PARTICIPANT.getMessage());
         }
@@ -903,6 +914,14 @@ class AlbumServiceTest extends IntegrationTest {
             assertThatThrownBy(() -> albumService.deleteAlbum(2L))
                     .isInstanceOf(AlbumException.class)
                     .hasMessage(AlbumErrorCode.NOT_ALBUM_HOST.getMessage());
+        }
+
+        @Test
+        void 다른_참가자가_남아있는_경우_예외가_발생한다() {
+            // when & then
+            assertThatThrownBy(() -> albumService.deleteAlbum(3L))
+                    .isInstanceOf(AlbumException.class)
+                    .hasMessage(AlbumErrorCode.OTHER_PARTICIPANTS_EXIST.getMessage());
         }
     }
 }

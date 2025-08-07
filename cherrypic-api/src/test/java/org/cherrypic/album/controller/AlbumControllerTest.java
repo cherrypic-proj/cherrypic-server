@@ -1002,5 +1002,22 @@ class AlbumControllerTest {
                     .andExpect(jsonPath("$.data.code").value("NOT_ALBUM_HOST"))
                     .andExpect(jsonPath("$.data.message").value("방장이 아닌 경우 권한이 없습니다."));
         }
+
+        @Test
+        void 다른_참가자가_남아있는_경우_예외가_발생한다() throws Exception {
+            // given
+            willThrow(new AlbumException(AlbumErrorCode.OTHER_PARTICIPANTS_EXIST))
+                    .given(albumService)
+                    .deleteAlbum(1L);
+
+            // when & then
+            ResultActions perform = mockMvc.perform(delete("/albums/1"));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("OTHER_PARTICIPANTS_EXIST"))
+                    .andExpect(jsonPath("$.data.message").value("다른 참가자가 남아 있어 앨범을 삭제할 수 없습니다."));
+        }
     }
 }

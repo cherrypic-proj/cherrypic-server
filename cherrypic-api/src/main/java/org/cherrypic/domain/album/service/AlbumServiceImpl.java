@@ -171,6 +171,7 @@ public class AlbumServiceImpl implements AlbumService {
         final Album album = getAlbumById(albumId);
 
         validateAlbumHost(currentMember.getId(), album.getId());
+        validateRemainingParticipants(album.getId(), currentMember.getId());
 
         albumRepository.delete(album);
     }
@@ -248,5 +249,11 @@ public class AlbumServiceImpl implements AlbumService {
                         p -> {
                             throw new AlbumException(AlbumErrorCode.ALREADY_PARTICIPATED);
                         });
+    }
+
+    private void validateRemainingParticipants(Long albumId, Long memberId) {
+        if (participantRepository.existsByAlbumIdAndMemberIdIsNot(albumId, memberId)) {
+            throw new AlbumException(AlbumErrorCode.OTHER_PARTICIPANTS_EXIST);
+        }
     }
 }
