@@ -23,11 +23,13 @@ import org.cherrypic.domain.album.exception.AlbumException;
 import org.cherrypic.domain.album.repository.AlbumRepository;
 import org.cherrypic.domain.album.repository.InvitationCodeRepository;
 import org.cherrypic.domain.album.service.AlbumService;
+import org.cherrypic.domain.event.repository.EventRepository;
 import org.cherrypic.domain.member.repository.MemberRepository;
 import org.cherrypic.domain.participant.repository.ParticipantRepository;
 import org.cherrypic.domain.payment.exception.PaymentErrorCode;
 import org.cherrypic.domain.payment.repository.PaymentRepository;
 import org.cherrypic.domain.subscription.repository.SubscriptionRepository;
+import org.cherrypic.event.entity.Event;
 import org.cherrypic.global.pagination.SliceResponse;
 import org.cherrypic.global.pagination.SortDirection;
 import org.cherrypic.global.util.MemberUtil;
@@ -56,6 +58,7 @@ class AlbumServiceTest extends IntegrationTest {
     @Autowired private SubscriptionRepository subscriptionRepository;
     @Autowired private ParticipantRepository participantRepository;
     @Autowired private InvitationCodeRepository invitationCodeRepository;
+    @Autowired private EventRepository eventRepository;
 
     @MockitoBean MemberUtil memberUtil;
 
@@ -837,6 +840,102 @@ class AlbumServiceTest extends IntegrationTest {
             assertThatThrownBy(() -> albumService.joinAlbum(3L, "testInvitationCode2"))
                     .isInstanceOf(AlbumException.class)
                     .hasMessage(AlbumErrorCode.ALREADY_PARTICIPATED.getMessage());
+        }
+    }
+
+    @Nested
+    class 앨범을_삭제할_때 {
+
+        @BeforeEach
+        void setUp() {
+            Member member1 =
+                    Member.createMember(
+                            OauthInfo.createOauthInfo("testOauthId", "testOauthProvider"),
+                            "testNickname",
+                            "testProfileImageUrl");
+            Member member2 =
+                    Member.createMember(
+                            OauthInfo.createOauthInfo("testOauthId", "testOauthProvider"),
+                            "testNickname",
+                            "testProfileImageUrl");
+            memberRepository.saveAll(List.of(member1, member2));
+            given(memberUtil.getCurrentMember()).willReturn(member1);
+
+            Album album1 = Album.createAlbum("testAlbum1", "testURL1", AlbumPlan.BASIC, false);
+            Album album2 = Album.createAlbum("testAlbum2", "testURL2", AlbumPlan.BASIC, false);
+            Album album3 = Album.createAlbum("testAlbum3", "testURL3", AlbumPlan.BASIC, false);
+            Album album4 = Album.createAlbum("testAlbum4", "testURL4", AlbumPlan.BASIC, false);
+            Album album5 = Album.createAlbum("testAlbum5", "testURL5", AlbumPlan.PRO, false);
+            albumRepository.saveAll(List.of(album1, album2, album3, album4, album5));
+
+            subscriptionRepository.save(
+                    Subscription.createSubscription(member1, album5, LocalDateTime.now()));
+
+            Participant participant1 =
+                    Participant.createParticipant(member1, album1, ParticipantRole.HOST);
+            Participant participant2 =
+                    Participant.createParticipant(member1, album2, ParticipantRole.LIMITED);
+            Participant participant3 =
+                    Participant.createParticipant(member1, album3, ParticipantRole.HOST);
+            Participant participant4 =
+                    Participant.createParticipant(member2, album3, ParticipantRole.LIMITED);
+            Participant participant5 =
+                    Participant.createParticipant(member1, album5, ParticipantRole.HOST);
+            participantRepository.saveAll(
+                    List.of(participant1, participant2, participant3, participant4, participant5));
+
+            eventRepository.save(Event.createEvent(album1, "testTitle1", "testCoverUrl1"));
+        }
+
+        @Test
+        void 유효한_요청일_경우_앨범과_내부_이벤트가_모두_삭제된다() {
+            // when
+            albumService.deleteAlbum(1L);
+
+            // then
+            Assertions.assertAll(
+                    () -> assertThat(albumRepository.findById(1L).isPresent()).isFalse(),
+                    () -> assertThat(eventRepository.findById(1L).isPresent()).isFalse());
+        }
+
+        @Test
+        void 앨범이_존재하지_않는_경우_예외가_발생한다() {
+            // when & then
+            assertThatThrownBy(() -> albumService.deleteAlbum(999L))
+                    .isInstanceOf(AlbumException.class)
+                    .hasMessage(AlbumErrorCode.ALBUM_NOT_FOUND.getMessage());
+        }
+
+        @Test
+        void 앨범_참가자가_아닌_경우_예외가_발생한다() {
+            // when & then
+            assertThatThrownBy(() -> albumService.deleteAlbum(4L))
+                    .isInstanceOf(AlbumException.class)
+                    .hasMessage(AlbumErrorCode.NOT_ALBUM_PARTICIPANT.getMessage());
+        }
+
+        @Test
+        void 앨범_방장이_아닌_경우_예외가_발생한다() {
+            // when & then
+            assertThatThrownBy(() -> albumService.deleteAlbum(2L))
+                    .isInstanceOf(AlbumException.class)
+                    .hasMessage(AlbumErrorCode.NOT_ALBUM_HOST.getMessage());
+        }
+
+        @Test
+        void 다른_참가자가_남아있는_경우_예외가_발생한다() {
+            // when & then
+            assertThatThrownBy(() -> albumService.deleteAlbum(3L))
+                    .isInstanceOf(AlbumException.class)
+                    .hasMessage(AlbumErrorCode.OTHER_PARTICIPANTS_EXIST.getMessage());
+        }
+
+        @Test
+        void 구독_중인_경우_예외가_발생한다() {
+            // when & then
+            assertThatThrownBy(() -> albumService.deleteAlbum(5L))
+                    .isInstanceOf(AlbumException.class)
+                    .hasMessage(AlbumErrorCode.SUBSCRIPTION_ACTIVE.getMessage());
         }
     }
 }
