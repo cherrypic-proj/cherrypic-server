@@ -3,7 +3,6 @@ package org.cherrypic.image.controller;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -125,8 +124,7 @@ class ImageControllerTest {
                     .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
                     .andExpect(jsonPath("$.data.content[0].imageId").value(1))
                     .andExpect(jsonPath("$.data.content[1].imageId").value(2))
-                    .andExpect(jsonPath("$.data.isLast").value(true))
-                    .andDo(print());
+                    .andExpect(jsonPath("$.data.isLast").value(true));
             ;
         }
 
@@ -234,44 +232,6 @@ class ImageControllerTest {
                     .andExpect(jsonPath("$.data.isLast").value(true));
         }
 
-        @ParameterizedTest
-        @ValueSource(strings = {"-1", "-999", "0"})
-        void 페이지_크기를_0_이하로_설정하면_예외가_발생한다(String pageSize) throws Exception {
-            // when & then
-            ResultActions perform =
-                    mockMvc.perform(
-                            get("/images")
-                                    .param("albumId", "1")
-                                    .param("eventId", "1")
-                                    .param("size", pageSize)
-                                    .param("direction", "ASC"));
-
-            perform.andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.success").value(false))
-                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
-                    .andExpect(jsonPath("$.data.code").value("ConstraintViolationException"))
-                    .andExpect(jsonPath("$.data.message").value("페이지 크기는 0보다 큰 값만 가능합니다."));
-        }
-
-        @ParameterizedTest
-        @ValueSource(strings = {"ASCC", "DESCC", "OLDEST", "NEWEST"})
-        void 존재하지_않는_정렬_기준을_입력한_경우_예외가_발생한다(String sort) throws Exception {
-            // when & then
-            ResultActions perform =
-                    mockMvc.perform(
-                            get("/images")
-                                    .param("albumId", "1")
-                                    .param("eventId", "1")
-                                    .param("size", "1")
-                                    .param("direction", sort));
-
-            perform.andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.success").value(false))
-                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
-                    .andExpect(jsonPath("$.data.code").value("METHOD_ARGUMENT_TYPE_MISMATCH"))
-                    .andExpect(jsonPath("$.data.message").value("요청한 값의 타입이 잘못되어 처리할 수 없습니다."));
-        }
-
         @Test
         void 앨범이_존재하지_않을_경우_예외가_발생한다() throws Exception {
             // given
@@ -356,6 +316,44 @@ class ImageControllerTest {
                     .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
                     .andExpect(jsonPath("$.data.code").value("EVENT_DOESNT_BELONG_TO_ALBUM"))
                     .andExpect(jsonPath("$.data.message").value("앨범에 해당 이벤트가 존재하지 않습니다."));
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"-1", "-999", "0"})
+        void 페이지_크기를_0_이하로_설정하면_예외가_발생한다(String pageSize) throws Exception {
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            get("/images")
+                                    .param("albumId", "1")
+                                    .param("eventId", "1")
+                                    .param("size", pageSize)
+                                    .param("direction", "ASC"));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("ConstraintViolationException"))
+                    .andExpect(jsonPath("$.data.message").value("페이지 크기는 0보다 큰 값만 가능합니다."));
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"ASCC", "DESCC", "OLDEST", "NEWEST"})
+        void 존재하지_않는_정렬_기준을_입력한_경우_예외가_발생한다(String sort) throws Exception {
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            get("/images")
+                                    .param("albumId", "1")
+                                    .param("eventId", "1")
+                                    .param("size", "1")
+                                    .param("direction", sort));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("METHOD_ARGUMENT_TYPE_MISMATCH"))
+                    .andExpect(jsonPath("$.data.message").value("요청한 값의 타입이 잘못되어 처리할 수 없습니다."));
         }
     }
 }
