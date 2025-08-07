@@ -865,7 +865,11 @@ class AlbumServiceTest extends IntegrationTest {
             Album album2 = Album.createAlbum("testAlbum2", "testURL2", AlbumPlan.BASIC, false);
             Album album3 = Album.createAlbum("testAlbum3", "testURL3", AlbumPlan.BASIC, false);
             Album album4 = Album.createAlbum("testAlbum4", "testURL4", AlbumPlan.BASIC, false);
-            albumRepository.saveAll(List.of(album1, album2, album3, album4));
+            Album album5 = Album.createAlbum("testAlbum5", "testURL5", AlbumPlan.PRO, false);
+            albumRepository.saveAll(List.of(album1, album2, album3, album4, album5));
+
+            subscriptionRepository.save(
+                    Subscription.createSubscription(member1, album5, LocalDateTime.now()));
 
             Participant participant1 =
                     Participant.createParticipant(member1, album1, ParticipantRole.HOST);
@@ -875,8 +879,10 @@ class AlbumServiceTest extends IntegrationTest {
                     Participant.createParticipant(member1, album3, ParticipantRole.HOST);
             Participant participant4 =
                     Participant.createParticipant(member2, album3, ParticipantRole.LIMITED);
+            Participant participant5 =
+                    Participant.createParticipant(member1, album5, ParticipantRole.HOST);
             participantRepository.saveAll(
-                    List.of(participant1, participant2, participant3, participant4));
+                    List.of(participant1, participant2, participant3, participant4, participant5));
 
             eventRepository.save(Event.createEvent(album1, "testTitle1", "testCoverUrl1"));
         }
@@ -922,6 +928,14 @@ class AlbumServiceTest extends IntegrationTest {
             assertThatThrownBy(() -> albumService.deleteAlbum(3L))
                     .isInstanceOf(AlbumException.class)
                     .hasMessage(AlbumErrorCode.OTHER_PARTICIPANTS_EXIST.getMessage());
+        }
+
+        @Test
+        void 구독_중인_경우_예외가_발생한다() {
+            // when & then
+            assertThatThrownBy(() -> albumService.deleteAlbum(5L))
+                    .isInstanceOf(AlbumException.class)
+                    .hasMessage(AlbumErrorCode.SUBSCRIPTION_ACTIVE.getMessage());
         }
     }
 }

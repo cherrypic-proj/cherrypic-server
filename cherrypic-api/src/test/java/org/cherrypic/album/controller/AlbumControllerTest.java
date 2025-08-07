@@ -1019,5 +1019,22 @@ class AlbumControllerTest {
                     .andExpect(jsonPath("$.data.code").value("OTHER_PARTICIPANTS_EXIST"))
                     .andExpect(jsonPath("$.data.message").value("다른 참가자가 남아 있어 앨범을 삭제할 수 없습니다."));
         }
+
+        @Test
+        void 구독_중인_경우_예외가_발생한다() throws Exception {
+            // given
+            willThrow(new AlbumException(AlbumErrorCode.SUBSCRIPTION_ACTIVE))
+                    .given(albumService)
+                    .deleteAlbum(1L);
+
+            // when & then
+            ResultActions perform = mockMvc.perform(delete("/albums/1"));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("SUBSCRIPTION_ACTIVE"))
+                    .andExpect(jsonPath("$.data.message").value("구독 중인 앨범은 삭제할 수 없습니다."));
+        }
     }
 }

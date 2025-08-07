@@ -22,6 +22,7 @@ public enum AlbumErrorCode implements BaseErrorCode {
     ALREADY_PARTICIPATED(400, "이미 참가한 앨범입니다."),
 
     OTHER_PARTICIPANTS_EXIST(400, "다른 참가자가 남아 있어 앨범을 삭제할 수 없습니다."),
+    SUBSCRIPTION_ACTIVE(400, "구독 중인 앨범은 삭제할 수 없습니다."),
     ;
 
     private final int status;

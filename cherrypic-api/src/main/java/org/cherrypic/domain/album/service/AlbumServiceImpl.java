@@ -24,6 +24,7 @@ import org.cherrypic.participant.enums.ParticipantRole;
 import org.cherrypic.payment.entity.Payment;
 import org.cherrypic.payment.enums.PaymentStatus;
 import org.cherrypic.subscription.entity.Subscription;
+import org.cherrypic.subscription.enums.SubscriptionStatus;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -171,6 +172,7 @@ public class AlbumServiceImpl implements AlbumService {
         final Album album = getAlbumById(albumId);
 
         validateAlbumHost(currentMember.getId(), album.getId());
+        validateSubscriptionInactive(album);
         validateRemainingParticipants(album.getId(), currentMember.getId());
 
         albumRepository.delete(album);
@@ -254,6 +256,14 @@ public class AlbumServiceImpl implements AlbumService {
     private void validateRemainingParticipants(Long albumId, Long memberId) {
         if (participantRepository.existsByAlbumIdAndMemberIdIsNot(albumId, memberId)) {
             throw new AlbumException(AlbumErrorCode.OTHER_PARTICIPANTS_EXIST);
+        }
+    }
+
+    private void validateSubscriptionInactive(Album album) {
+        if (album.getPlan() == AlbumPlan.BASIC) return;
+
+        if (album.getSubscription().getStatus() == SubscriptionStatus.ACTIVE) {
+            throw new AlbumException(AlbumErrorCode.SUBSCRIPTION_ACTIVE);
         }
     }
 }
