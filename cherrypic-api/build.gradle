@@ -37,4 +37,6 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
     implementation 'com.github.iamport:iamport-rest-client-java:0.2.23'
+
+    implementation 'com.google.firebase:firebase-admin:9.4.3'
 }

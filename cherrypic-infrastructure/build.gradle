@@ -18,4 +18,6 @@ dependencies {
 	implementation 'io.awspring.cloud:spring-cloud-starter-aws:2.4.4'
 
 	implementation 'com.github.iamport:iamport-rest-client-java:0.2.23'
+
+	implementation 'com.google.firebase:firebase-admin:9.4.3'
 }
