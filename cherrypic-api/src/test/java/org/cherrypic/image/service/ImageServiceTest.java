@@ -5,7 +5,6 @@ import static org.mockito.BDDMockito.given;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import org.assertj.core.api.Assertions;
 import org.cherrypic.IntegrationTest;
 import org.cherrypic.album.entity.Album;
 import org.cherrypic.album.enums.AlbumPlan;
@@ -32,7 +31,10 @@ import org.cherrypic.member.entity.Member;
 import org.cherrypic.member.entity.OauthInfo;
 import org.cherrypic.participant.entity.Participant;
 import org.cherrypic.participant.enums.ParticipantRole;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
@@ -120,9 +122,7 @@ class ImageServiceTest extends IntegrationTest {
                     imageService.getImages(1L, null, null, 3, SortDirection.ASC);
 
             // then
-            Assertions.assertThat(response.content())
-                    .extracting("imageId")
-                    .containsExactly(1L, 2L, 3L);
+            assertThat(response.content()).extracting("imageId").containsExactly(1L, 2L, 3L);
         }
 
         @Test
@@ -132,9 +132,7 @@ class ImageServiceTest extends IntegrationTest {
                     imageService.getImages(1L, null, null, 3, SortDirection.DESC);
 
             // then
-            Assertions.assertThat(response.content())
-                    .extracting("imageId")
-                    .containsExactly(3L, 2L, 1L);
+            assertThat(response.content()).extracting("imageId").containsExactly(3L, 2L, 1L);
         }
 
         @Test
@@ -144,7 +142,7 @@ class ImageServiceTest extends IntegrationTest {
                     imageService.getImages(1L, null, 1L, 2, SortDirection.ASC);
 
             // then
-            Assertions.assertThat(response.content()).extracting("imageId").containsExactly(2L, 3L);
+            assertThat(response.content()).extracting("imageId").containsExactly(2L, 3L);
         }
 
         @Test
@@ -154,9 +152,9 @@ class ImageServiceTest extends IntegrationTest {
                     imageService.getImages(2L, null, 1L, 2, SortDirection.ASC);
 
             // when & then
-            org.junit.jupiter.api.Assertions.assertAll(
-                    () -> Assertions.assertThat(response.content().size()).isZero(),
-                    () -> Assertions.assertThat(response.isLast()).isTrue());
+            Assertions.assertAll(
+                    () -> assertThat(response.content().size()).isZero(),
+                    () -> assertThat(response.isLast()).isTrue());
         }
 
         @Test
@@ -214,7 +212,7 @@ class ImageServiceTest extends IntegrationTest {
                     imageService.getImages(1L, 1L, null, 2, SortDirection.ASC);
 
             // then
-            Assertions.assertThat(response.content()).extracting("imageId").containsExactly(1L, 2L);
+            assertThat(response.content()).extracting("imageId").containsExactly(1L, 2L);
         }
 
         @Test
@@ -224,7 +222,7 @@ class ImageServiceTest extends IntegrationTest {
                     imageService.getImages(1L, 1L, null, 2, SortDirection.DESC);
 
             // then
-            Assertions.assertThat(response.content()).extracting("imageId").containsExactly(2L, 1L);
+            assertThat(response.content()).extracting("imageId").containsExactly(2L, 1L);
         }
 
         @Test
@@ -234,7 +232,7 @@ class ImageServiceTest extends IntegrationTest {
                     imageService.getImages(1L, 1L, 1L, 1, SortDirection.ASC);
 
             // then
-            Assertions.assertThat(response.content()).extracting("imageId").containsExactly(2L);
+            assertThat(response.content()).extracting("imageId").containsExactly(2L);
         }
 
         @Test
@@ -244,9 +242,9 @@ class ImageServiceTest extends IntegrationTest {
                     imageService.getImages(1L, 2L, 1L, 2, SortDirection.ASC);
 
             // when & then
-            org.junit.jupiter.api.Assertions.assertAll(
-                    () -> Assertions.assertThat(response.content().size()).isZero(),
-                    () -> Assertions.assertThat(response.isLast()).isTrue());
+            Assertions.assertAll(
+                    () -> assertThat(response.content().size()).isZero(),
+                    () -> assertThat(response.isLast()).isTrue());
         }
 
         @Test
