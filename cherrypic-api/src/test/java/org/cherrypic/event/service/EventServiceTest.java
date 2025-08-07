@@ -12,7 +12,6 @@ import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.album.repository.AlbumRepository;
 import org.cherrypic.domain.event.dto.request.EventCreateRequest;
 import org.cherrypic.domain.event.dto.request.EventUpdateRequest;
-import org.cherrypic.domain.event.dto.response.EventImageListResponse;
 import org.cherrypic.domain.event.dto.response.EventListResponse;
 import org.cherrypic.domain.event.exception.EventErrorCode;
 import org.cherrypic.domain.event.exception.EventException;
@@ -403,82 +402,6 @@ public class EventServiceTest extends IntegrationTest {
             // when
             SliceResponse<EventListResponse> response =
                     eventService.getAlbumEvents(2L, null, 10, SortDirection.DESC);
-
-            // when & then
-            Assertions.assertAll(
-                    () -> assertThat(response.content().size()).isZero(),
-                    () -> assertThat(response.isLast()).isTrue());
-        }
-    }
-
-    @Nested
-    class 개별_이벤트_사진_목록을_조회할_때 {
-
-        @BeforeEach
-        void setUp() {
-            Member member =
-                    Member.createMember(
-                            OauthInfo.createOauthInfo("testOauthId", "testOauthProvider"),
-                            "testNickname",
-                            "testProfileImageUrl");
-            memberRepository.save(member);
-            given(memberUtil.getCurrentMember()).willReturn(member);
-
-            Album album = Album.createAlbum("testTitle", "testCoverUrl", AlbumPlan.BASIC, false);
-            albumRepository.save(album);
-
-            Participant participant =
-                    Participant.createParticipant(member, album, ParticipantRole.HOST);
-            participantRepository.save(participant);
-
-            Event event1 = Event.createEvent(album, "testTitle1", "testCoverUrl1");
-            Event event2 = Event.createEvent(album, "testTitle2", "testCoverUrl2");
-            eventRepository.saveAll(List.of(event1, event2));
-
-            Image image1 = Image.createImage(album, 1L, "testUrl", LocalDateTime.now());
-            Image image2 = Image.createImage(album, 1L, "testUrl2", LocalDateTime.now());
-            imageRepository.saveAll(List.of(image1, image2));
-
-            EventImage eventImage1 = EventImage.createEventImage(event1, image1);
-            EventImage eventImage2 = EventImage.createEventImage(event1, image2);
-            eventImageRepository.saveAll(List.of(eventImage1, eventImage2));
-        }
-
-        @Test
-        void 정렬_조건이_ASC이면_eventImageId를_오름차순으로_조회한다() {
-            // when
-            SliceResponse<EventImageListResponse> response =
-                    eventService.getEventImages(1L, null, 2, SortDirection.ASC);
-
-            // then
-            assertThat(response.content()).extracting("eventImageId").containsExactly(1L, 2L);
-        }
-
-        @Test
-        void 정렬_조건이_DESC면_eventImageId를_내림차순으로_조회한다() {
-            // when
-            SliceResponse<EventImageListResponse> response =
-                    eventService.getEventImages(1L, null, 2, SortDirection.DESC);
-
-            // then
-            assertThat(response.content()).extracting("eventImageId").containsExactly(2L, 1L);
-        }
-
-        @Test
-        void eventImageId를_입력하면_다음_eventImage_부터_조회한다() {
-            // when
-            SliceResponse<EventImageListResponse> response =
-                    eventService.getEventImages(1L, 2L, 1, SortDirection.DESC);
-
-            // then
-            assertThat(response.content()).extracting("eventImageId").containsExactly(1L);
-        }
-
-        @Test
-        void 이벤트에_이미지가_없는_경우_빈_리스트를_조회한다() {
-            // when
-            SliceResponse<EventImageListResponse> response =
-                    eventService.getEventImages(2L, null, 10, SortDirection.DESC);
 
             // when & then
             Assertions.assertAll(

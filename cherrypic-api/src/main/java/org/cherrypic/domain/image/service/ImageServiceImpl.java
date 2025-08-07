@@ -9,14 +9,29 @@ import java.util.Date;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
+import org.cherrypic.album.entity.Album;
+import org.cherrypic.domain.album.exception.AlbumErrorCode;
+import org.cherrypic.domain.album.exception.AlbumException;
+import org.cherrypic.domain.album.repository.AlbumRepository;
+import org.cherrypic.domain.event.exception.EventErrorCode;
+import org.cherrypic.domain.event.exception.EventException;
+import org.cherrypic.domain.event.repository.EventRepository;
 import org.cherrypic.domain.image.dto.request.MemberProfileImageUploadRequest;
+import org.cherrypic.domain.image.dto.response.ImageListResponse;
 import org.cherrypic.domain.image.dto.response.PresignedUrlResponse;
 import org.cherrypic.domain.image.enums.ImageFileExtension;
 import org.cherrypic.domain.image.enums.ImageType;
+import org.cherrypic.domain.image.repository.ImageRepository;
+import org.cherrypic.domain.participant.repository.ParticipantRepository;
+import org.cherrypic.event.entity.Event;
+import org.cherrypic.global.pagination.SliceResponse;
+import org.cherrypic.global.pagination.SortDirection;
 import org.cherrypic.global.util.MemberUtil;
 import org.cherrypic.helper.SpringEnvironmentHelper;
 import org.cherrypic.member.entity.Member;
+import org.cherrypic.participant.entity.Participant;
 import org.cherrypic.s3.S3Properties;
+import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -28,6 +43,11 @@ public class ImageServiceImpl implements ImageService {
     private final AmazonS3 amazonS3;
     private final S3Properties s3Properties;
 
+    private final AlbumRepository albumRepository;
+    private final ImageRepository imageRepository;
+    private final EventRepository eventRepository;
+    private final ParticipantRepository participantRepository;
+
     @Override
     public PresignedUrlResponse createMemberProfileImageUploadUrl(
             MemberProfileImageUploadRequest request) {
@@ -35,6 +55,25 @@ public class ImageServiceImpl implements ImageService {
 
         return createPresignedUrl(
                 ImageType.MEMBER_PROFILE, currentMember.getId(), request.imageFileExtension());
+    }
+
+    @Override
+    public SliceResponse<ImageListResponse> getImages(
+            Long albumId, Long eventId, Long lastImageId, int size, SortDirection direction) {
+        final Member currentMember = memberUtil.getCurrentMember();
+        getAlbumById(albumId);
+        getParticipantByMemberIdAndAlbumId(currentMember.getId(), albumId);
+
+        if (eventId != null) {
+            getEventById(eventId);
+            Slice<ImageListResponse> result =
+                    imageRepository.findAllByEventId(eventId, lastImageId, size, direction);
+            return SliceResponse.from(result);
+        }
+
+        Slice<ImageListResponse> result =
+                imageRepository.findAllByAlbumId(albumId, lastImageId, size, direction);
+        return SliceResponse.from(result);
     }
 
     private PresignedUrlResponse createPresignedUrl(
@@ -88,5 +127,23 @@ public class ImageServiceImpl implements ImageService {
         expiration.setTime(expTimeMillis);
 
         return expiration;
+    }
+
+    private Album getAlbumById(Long albumId) {
+        return albumRepository
+                .findById(albumId)
+                .orElseThrow(() -> new AlbumException(AlbumErrorCode.ALBUM_NOT_FOUND));
+    }
+
+    private Event getEventById(Long eventId) {
+        return eventRepository
+                .findById(eventId)
+                .orElseThrow(() -> new EventException(EventErrorCode.EVENT_NOT_FOUND));
+    }
+
+    private Participant getParticipantByMemberIdAndAlbumId(Long memberId, Long albumId) {
+        return participantRepository
+                .findByMemberIdAndAlbumId(memberId, albumId)
+                .orElseThrow(() -> new AlbumException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT));
     }
 }

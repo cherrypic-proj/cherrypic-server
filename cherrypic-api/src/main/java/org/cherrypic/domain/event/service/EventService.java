@@ -3,7 +3,6 @@ package org.cherrypic.domain.event.service;
 import org.cherrypic.domain.event.dto.request.EventCreateRequest;
 import org.cherrypic.domain.event.dto.request.EventUpdateRequest;
 import org.cherrypic.domain.event.dto.response.EventCreateResponse;
-import org.cherrypic.domain.event.dto.response.EventImageListResponse;
 import org.cherrypic.domain.event.dto.response.EventListResponse;
 import org.cherrypic.domain.event.dto.response.EventUpdateResponse;
 import org.cherrypic.global.pagination.SliceResponse;
@@ -16,9 +15,6 @@ public interface EventService {
 
     SliceResponse<EventListResponse> getAlbumEvents(
             Long albumId, Long lastEventId, int size, SortDirection direction);
-
-    SliceResponse<EventImageListResponse> getEventImages(
-            Long eventId, Long lastEventImageId, int size, SortDirection direction);
 
     void deleteEvent(Long eventId);
 }
