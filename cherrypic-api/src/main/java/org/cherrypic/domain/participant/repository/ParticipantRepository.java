@@ -1,5 +1,6 @@
 package org.cherrypic.domain.participant.repository;
 
+import java.util.List;
 import java.util.Optional;
 import org.cherrypic.participant.entity.Participant;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -13,9 +14,12 @@ public interface ParticipantRepository extends JpaRepository<Participant, Long> 
     @Modifying(clearAutomatically = true)
     @Query(
             value =
-                    "UPDATE participant SET role = 'STANDARD' WHERE album_id = :albumId AND role = 'LIMITED'",
+                    "update participant set role = 'STANDARD' where album_id = :albumId and role = 'LIMITED'",
             nativeQuery = true)
     void bulkChangeLimitedToStandard(@Param("albumId") Long albumId);
 
-    boolean existsByAlbumIdAndMemberIdIsNot(Long AlbumId, Long memberId);
+    @Query(
+            "select p.member.id from Participant p where p.album.id = :albumId and p.member.id <> :memberId")
+    List<Long> findOtherParticipantMemberIds(
+            @Param("albumId") Long albumId, @Param("memberId") Long memberId);
 }
