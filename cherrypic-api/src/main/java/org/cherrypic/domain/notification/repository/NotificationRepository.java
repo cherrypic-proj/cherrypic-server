@@ -1,0 +1,24 @@
+package org.cherrypic.domain.notification.repository;
+
+import org.cherrypic.notification.entity.Notification;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+public interface NotificationRepository extends JpaRepository<Notification, Long> {
+
+    @Modifying(clearAutomatically = true)
+    @Query(
+            value =
+                    """
+            insert into notification (sender_id, receiver_id, album_id, type, created_at, updated_at)
+            select :senderId, p.member_id, :albumId, 'ALBUM', CURRENT_TIMESTAMP(6), CURRENT_TIMESTAMP(6)
+            from participant p
+            where p.album_id = :albumId
+              and p.member_id <> :senderId
+            """,
+            nativeQuery = true)
+    void bulkInsertAlbumDeleteNotifications(
+            @Param("albumId") Long albumId, @Param("senderId") Long senderId);
+}
