@@ -11,16 +11,19 @@ import org.cherrypic.album.enums.AlbumPlan;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.album.repository.AlbumRepository;
 import org.cherrypic.domain.event.dto.request.EventCreateRequest;
+import org.cherrypic.domain.event.dto.request.EventIncludeRequest;
 import org.cherrypic.domain.event.dto.request.EventUpdateRequest;
 import org.cherrypic.domain.event.dto.response.EventListResponse;
 import org.cherrypic.domain.event.exception.EventErrorCode;
 import org.cherrypic.domain.event.exception.EventException;
 import org.cherrypic.domain.event.repository.EventRepository;
 import org.cherrypic.domain.event.service.EventService;
+import org.cherrypic.domain.image.exception.ImageErrorCode;
 import org.cherrypic.domain.image.repository.ImageRepository;
 import org.cherrypic.domain.member.repository.MemberRepository;
 import org.cherrypic.domain.participant.repository.ParticipantRepository;
 import org.cherrypic.event.entity.Event;
+import org.cherrypic.exception.BaseCustomException;
 import org.cherrypic.global.pagination.SliceResponse;
 import org.cherrypic.global.pagination.SortDirection;
 import org.cherrypic.global.util.MemberUtil;
@@ -407,6 +410,95 @@ public class EventServiceTest extends IntegrationTest {
             Assertions.assertAll(
                     () -> assertThat(response.content().size()).isZero(),
                     () -> assertThat(response.isLast()).isTrue());
+        }
+    }
+
+    @Nested
+    class 이벤트에_이미지를_추가할_때 {
+
+        @BeforeEach
+        void setUp() {
+            Member member =
+                    Member.createMember(
+                            OauthInfo.createOauthInfo("testOauthId", "testOauthProvider"),
+                            "testNickname",
+                            "testProfileImageUrl");
+            memberRepository.save(member);
+            given(memberUtil.getCurrentMember()).willReturn(member);
+
+            Album album1 = Album.createAlbum("testTitle1", "testCoverUrl1", AlbumPlan.BASIC, false);
+            Album album2 = Album.createAlbum("testTitle2", "testCoverUrl2", AlbumPlan.BASIC, false);
+            albumRepository.saveAll(List.of(album1, album2));
+
+            Participant participant1 =
+                    Participant.createParticipant(member, album1, ParticipantRole.HOST);
+            Participant participant2 =
+                    Participant.createParticipant(member, album2, ParticipantRole.LIMITED);
+            participantRepository.saveAll(List.of(participant1, participant2));
+
+            Event event1 = Event.createEvent(album1, "testTitle1", "testCoverUrl1");
+            Event event2 = Event.createEvent(album2, "testTitle2", "testCoverUrl2");
+            eventRepository.saveAll(List.of(event1, event2));
+
+            Image image1 = Image.createImage(album1, null, 1L, "testUrl", LocalDateTime.now());
+            Image image2 = Image.createImage(album1, event1, 1L, "testUrl2", LocalDateTime.now());
+            Image image3 = Image.createImage(album2, null, 1L, "testUrl2", LocalDateTime.now());
+            imageRepository.saveAll(List.of(image1, image2, image3));
+        }
+
+        @Test
+        void 존재하지_않는_앨범에_추가하면_예외가_발생한다() {
+            // given
+            EventIncludeRequest request = new EventIncludeRequest(999L, List.of(1L));
+
+            // when & then
+            assertThatThrownBy(() -> eventService.includeEvent(request))
+                    .isInstanceOf(EventException.class)
+                    .hasMessage(EventErrorCode.EVENT_NOT_FOUND.getMessage());
+        }
+
+        @Test
+        void 존재하지_않는_이미지를_추가하면_예외가_발생한다() {
+            // given
+            EventIncludeRequest request = new EventIncludeRequest(1L, List.of(1L, 999L));
+
+            // when & then
+            assertThatThrownBy(() -> eventService.includeEvent(request))
+                    .isInstanceOf(BaseCustomException.class)
+                    .hasMessage(ImageErrorCode.SOME_IMAGES_ARE_NOT_FOUND.getMessage());
+        }
+
+        @Test
+        void LIMITED_권한의_사용자가_이벤트에_이미지를_추가하면_예외가_발생한다() {
+            // given
+            EventIncludeRequest request = new EventIncludeRequest(2L, List.of(3L));
+
+            // when & then
+            assertThatThrownBy(() -> eventService.includeEvent(request))
+                    .isInstanceOf(EventException.class)
+                    .hasMessage(AlbumErrorCode.LIMITED_AUTHORITY.getMessage());
+        }
+
+        @Test
+        void 다른_이벤트에_속한_이미지를_추가하면_예외가_발생한다() {
+            // given
+            EventIncludeRequest request = new EventIncludeRequest(1L, List.of(2L));
+
+            // when & then
+            assertThatThrownBy(() -> eventService.includeEvent(request))
+                    .isInstanceOf(BaseCustomException.class)
+                    .hasMessage(ImageErrorCode.SOME_IMAGES_HAS_EVENT.getMessage());
+        }
+
+        @Test
+        void 다른_앨범에_속한_이미지를_추가하면_예외가_발생한다() {
+            // given
+            EventIncludeRequest request = new EventIncludeRequest(1L, List.of(3L));
+
+            // when & then
+            assertThatThrownBy(() -> eventService.includeEvent(request))
+                    .isInstanceOf(BaseCustomException.class)
+                    .hasMessage(ImageErrorCode.SOME_IMAGES_NOT_FROM_CURRENT_ALBUM.getMessage());
         }
     }
 }

@@ -58,7 +58,7 @@ public class EventController {
         return eventService.getAlbumEvents(albumId, lastEventId, size, direction);
     }
 
-    @GetMapping
+    @PatchMapping("/include")
     @Operation(summary = "이벤트에 이미지 추가", description = "앨범의 이미지를 이벤트로 추가합니다.")
     public ResponseEntity<Void> eventInclude(@Valid @RequestBody EventIncludeRequest request) {
         eventService.includeEvent(request);

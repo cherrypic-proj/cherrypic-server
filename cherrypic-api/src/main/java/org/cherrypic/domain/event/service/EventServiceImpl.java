@@ -96,9 +96,11 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public void includeEvent(EventIncludeRequest request) {
+        final Member currentMember = memberUtil.getCurrentMember();
         final Event event = getEventById(request.eventId());
         final List<Image> images = getAllImagesById(request.imageIds());
 
+        validateParticipantAuthority(currentMember, event.getAlbum());
         validateImageEvent(images);
         validateImageAlbum(images, event);
 
@@ -152,7 +154,7 @@ public class EventServiceImpl implements EventService {
                 .ifPresent(
                         img -> {
                             throw new BaseCustomException(
-                                    ImageErrorCode.SOME_IMAGES_NOT_FROM_ALBUM);
+                                    ImageErrorCode.SOME_IMAGES_NOT_FROM_CURRENT_ALBUM);
                         });
     }
 
@@ -160,6 +162,6 @@ public class EventServiceImpl implements EventService {
         return Optional.of(imageRepository.findAllById(imageIds))
                 .filter(images -> images.size() == imageIds.size())
                 .orElseThrow(
-                        () -> new BaseCustomException(ImageErrorCode.SOME_IMAGES_WERE_NOT_FOUND));
+                        () -> new BaseCustomException(ImageErrorCode.SOME_IMAGES_ARE_NOT_FOUND));
     }
 }
