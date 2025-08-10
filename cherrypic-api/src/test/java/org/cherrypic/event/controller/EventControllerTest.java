@@ -12,6 +12,7 @@ import java.util.List;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.event.controller.EventController;
 import org.cherrypic.domain.event.dto.request.EventCreateRequest;
+import org.cherrypic.domain.event.dto.request.EventIncludeRequest;
 import org.cherrypic.domain.event.dto.request.EventUpdateRequest;
 import org.cherrypic.domain.event.dto.response.EventCreateResponse;
 import org.cherrypic.domain.event.dto.response.EventListResponse;
@@ -19,6 +20,8 @@ import org.cherrypic.domain.event.dto.response.EventUpdateResponse;
 import org.cherrypic.domain.event.exception.EventErrorCode;
 import org.cherrypic.domain.event.exception.EventException;
 import org.cherrypic.domain.event.service.EventService;
+import org.cherrypic.domain.image.exception.ImageErrorCode;
+import org.cherrypic.exception.BaseCustomException;
 import org.cherrypic.global.pagination.SliceResponse;
 import org.cherrypic.global.pagination.SortDirection;
 import org.junit.jupiter.api.Nested;
@@ -556,6 +559,176 @@ public class EventControllerTest {
                     .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
                     .andExpect(jsonPath("$.data.code").value("METHOD_ARGUMENT_TYPE_MISMATCH"))
                     .andExpect(jsonPath("$.data.message").value("요청한 값의 타입이 잘못되어 처리할 수 없습니다."));
+        }
+    }
+
+    @Nested
+    class 이벤트_이미지_추가_요청_시 {
+
+        @Test
+        void 유효한_요청이면_이벤트에_이미지를_추가하고_NO_CONTENT_로_반환한다() throws Exception {
+            // given
+            EventIncludeRequest request = new EventIncludeRequest(1L, List.of(1L));
+            willDoNothing().given(eventService).includeEvent(request);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            patch("/events/include")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isNoContent())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.NO_CONTENT.value()));
+        }
+
+        @Test
+        void 존재하지_않는_이벤트에_추가하면_예외가_발생한다() throws Exception {
+            // given
+            EventIncludeRequest request = new EventIncludeRequest(1L, List.of(1L));
+            willThrow(new EventException(EventErrorCode.EVENT_NOT_FOUND))
+                    .given(eventService)
+                    .includeEvent(request);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            patch("/events/include")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.NOT_FOUND.value()))
+                    .andExpect(jsonPath("$.data.code").value("EVENT_NOT_FOUND"))
+                    .andExpect(jsonPath("$.data.message").value("존재하지 않는 이벤트입니다."));
+        }
+
+        @Test
+        void 존재하지_않는_이미지를_추가하면_예외가_발생한다() throws Exception {
+            // given
+            EventIncludeRequest request = new EventIncludeRequest(1L, List.of(999L));
+            willThrow(new BaseCustomException(ImageErrorCode.SOME_IMAGES_ARE_NOT_FOUND))
+                    .given(eventService)
+                    .includeEvent(request);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            patch("/events/include")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.NOT_FOUND.value()))
+                    .andExpect(jsonPath("$.data.code").value("SOME_IMAGES_ARE_NOT_FOUND"))
+                    .andExpect(jsonPath("$.data.message").value("존재하지 않는 이미지를 포함하고 있습니다."));
+        }
+
+        @Test
+        void LIMITED_권한의_사용자가_이벤트에_이미지를_추가하면_예외가_발생한다() throws Exception {
+            // given
+            EventIncludeRequest request = new EventIncludeRequest(1L, List.of(1L));
+            willThrow(new EventException(AlbumErrorCode.LIMITED_AUTHORITY))
+                    .given(eventService)
+                    .includeEvent(request);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            patch("/events/include")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.FORBIDDEN.value()))
+                    .andExpect(jsonPath("$.data.code").value("LIMITED_AUTHORITY"))
+                    .andExpect(jsonPath("$.data.message").value("앨범에 대한 생성/수정 권한이 없습니다."));
+        }
+
+        @Test
+        void 이미_이벤트에_속한_이미지를_추가하면_예외가_발생한다() throws Exception {
+            // given
+            EventIncludeRequest request = new EventIncludeRequest(1L, List.of(1L));
+            willThrow(new BaseCustomException(ImageErrorCode.SOME_IMAGES_HAS_EVENT))
+                    .given(eventService)
+                    .includeEvent(request);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            patch("/events/include")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("SOME_IMAGES_HAS_EVENT"))
+                    .andExpect(jsonPath("$.data.message").value("이미 이벤트에 소속된 이미지를 포함하고 있습니다."));
+        }
+
+        @Test
+        void 다른_앨범에_속한_이미지를_추가하면_예외가_발생한다() throws Exception {
+            // given
+            EventIncludeRequest request = new EventIncludeRequest(1L, List.of(1L));
+            willThrow(new BaseCustomException(ImageErrorCode.SOME_IMAGES_NOT_FROM_CURRENT_ALBUM))
+                    .given(eventService)
+                    .includeEvent(request);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            patch("/events/include")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("SOME_IMAGES_NOT_FROM_CURRENT_ALBUM"))
+                    .andExpect(jsonPath("$.data.message").value("앨범 소속이 아닌 이미지를 포함하고 있습니다."));
+        }
+
+        @Test
+        void 이벤트_ID를_입력하지_않은_경우_예외가_발생한다() throws Exception {
+            // given
+            EventIncludeRequest request = new EventIncludeRequest(null, List.of(1L));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            patch("/events/include")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("MethodArgumentNotValidException"))
+                    .andExpect(jsonPath("$.data.message").value("이벤트 ID는 비워둘 수 없습니다."));
+        }
+
+        @Test
+        void 추가할_이미지를_입력하지_않은_경우_예외가_발생한다() throws Exception {
+            // given
+            EventIncludeRequest request = new EventIncludeRequest(1L, List.of());
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            patch("/events/include")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("MethodArgumentNotValidException"))
+                    .andExpect(jsonPath("$.data.message").value("추가할 이미지 ID는 비워둘 수 없습니다."));
         }
     }
 }

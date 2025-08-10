@@ -442,12 +442,26 @@ public class EventServiceTest extends IntegrationTest {
 
             Image image1 = Image.createImage(album1, null, 1L, "testUrl", LocalDateTime.now());
             Image image2 = Image.createImage(album1, event1, 1L, "testUrl2", LocalDateTime.now());
-            Image image3 = Image.createImage(album2, null, 1L, "testUrl2", LocalDateTime.now());
-            imageRepository.saveAll(List.of(image1, image2, image3));
+            Image image3 = Image.createImage(album2, null, 1L, "testUrl3", LocalDateTime.now());
+            Image image4 = Image.createImage(album1, null, 1L, "testUrl4", LocalDateTime.now());
+            imageRepository.saveAll(List.of(image1, image2, image3, image4));
         }
 
         @Test
-        void 존재하지_않는_앨범에_추가하면_예외가_발생한다() {
+        void 유효한_요청이면_이벤트에_이미지를_추가한다() {
+            // given
+            EventIncludeRequest request = new EventIncludeRequest(1L, List.of(1L, 4L));
+
+            // when
+            eventService.includeEvent(request);
+
+            // then
+            List<Image> images = imageRepository.findAllById(List.of(1L, 4L));
+            assertThat(images).extracting("event.id").containsExactly(1L, 1L);
+        }
+
+        @Test
+        void 존재하지_않는_이벤트에_추가하면_예외가_발생한다() {
             // given
             EventIncludeRequest request = new EventIncludeRequest(999L, List.of(1L));
 
@@ -480,7 +494,7 @@ public class EventServiceTest extends IntegrationTest {
         }
 
         @Test
-        void 다른_이벤트에_속한_이미지를_추가하면_예외가_발생한다() {
+        void 이미_이벤트에_속한_이미지를_추가하면_예외가_발생한다() {
             // given
             EventIncludeRequest request = new EventIncludeRequest(1L, List.of(2L));
 
