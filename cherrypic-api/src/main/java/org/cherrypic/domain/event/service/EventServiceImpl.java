@@ -9,7 +9,7 @@ import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.album.exception.AlbumException;
 import org.cherrypic.domain.album.repository.AlbumRepository;
 import org.cherrypic.domain.event.dto.request.EventCreateRequest;
-import org.cherrypic.domain.event.dto.request.EventIncludeRequest;
+import org.cherrypic.domain.event.dto.request.EventImageAddRequest;
 import org.cherrypic.domain.event.dto.request.EventUpdateRequest;
 import org.cherrypic.domain.event.dto.response.EventCreateResponse;
 import org.cherrypic.domain.event.dto.response.EventListResponse;
@@ -95,16 +95,16 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public void includeEvent(EventIncludeRequest request) {
+    public void addImages(Long eventId, EventImageAddRequest request) {
         final Member currentMember = memberUtil.getCurrentMember();
-        final Event event = getEventById(request.eventId());
+        final Event event = getEventById(eventId);
         final List<Image> images = getAllImagesById(request.imageIds());
 
         validateParticipantAuthority(currentMember, event.getAlbum());
         validateImageEvent(images);
         validateImageAlbum(images, event);
 
-        imageRepository.bulkChangeImageEvent(request.imageIds(), request.eventId());
+        imageRepository.bulkChangeImageEvent(request.imageIds(), eventId);
     }
 
     private Album getAlbumById(Long albumId) {

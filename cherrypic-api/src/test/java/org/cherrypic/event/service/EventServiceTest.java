@@ -11,7 +11,7 @@ import org.cherrypic.album.enums.AlbumPlan;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.album.repository.AlbumRepository;
 import org.cherrypic.domain.event.dto.request.EventCreateRequest;
-import org.cherrypic.domain.event.dto.request.EventIncludeRequest;
+import org.cherrypic.domain.event.dto.request.EventImageAddRequest;
 import org.cherrypic.domain.event.dto.request.EventUpdateRequest;
 import org.cherrypic.domain.event.dto.response.EventListResponse;
 import org.cherrypic.domain.event.exception.EventErrorCode;
@@ -450,10 +450,10 @@ public class EventServiceTest extends IntegrationTest {
         @Test
         void 유효한_요청이면_이벤트에_이미지를_추가한다() {
             // given
-            EventIncludeRequest request = new EventIncludeRequest(1L, List.of(1L, 4L));
+            EventImageAddRequest request = new EventImageAddRequest(List.of(1L, 4L));
 
             // when
-            eventService.includeEvent(request);
+            eventService.addImages(1L, request);
 
             // then
             List<Image> images = imageRepository.findAllById(List.of(1L, 4L));
@@ -463,10 +463,10 @@ public class EventServiceTest extends IntegrationTest {
         @Test
         void 존재하지_않는_이벤트에_추가하면_예외가_발생한다() {
             // given
-            EventIncludeRequest request = new EventIncludeRequest(999L, List.of(1L));
+            EventImageAddRequest request = new EventImageAddRequest(List.of(1L));
 
             // when & then
-            assertThatThrownBy(() -> eventService.includeEvent(request))
+            assertThatThrownBy(() -> eventService.addImages(999L, request))
                     .isInstanceOf(EventException.class)
                     .hasMessage(EventErrorCode.EVENT_NOT_FOUND.getMessage());
         }
@@ -474,10 +474,10 @@ public class EventServiceTest extends IntegrationTest {
         @Test
         void 존재하지_않는_이미지를_추가하면_예외가_발생한다() {
             // given
-            EventIncludeRequest request = new EventIncludeRequest(1L, List.of(1L, 999L));
+            EventImageAddRequest request = new EventImageAddRequest(List.of(1L, 999L));
 
             // when & then
-            assertThatThrownBy(() -> eventService.includeEvent(request))
+            assertThatThrownBy(() -> eventService.addImages(1L, request))
                     .isInstanceOf(BaseCustomException.class)
                     .hasMessage(ImageErrorCode.SOME_IMAGES_ARE_NOT_FOUND.getMessage());
         }
@@ -485,10 +485,10 @@ public class EventServiceTest extends IntegrationTest {
         @Test
         void LIMITED_권한의_사용자가_이벤트에_이미지를_추가하면_예외가_발생한다() {
             // given
-            EventIncludeRequest request = new EventIncludeRequest(2L, List.of(3L));
+            EventImageAddRequest request = new EventImageAddRequest(List.of(3L));
 
             // when & then
-            assertThatThrownBy(() -> eventService.includeEvent(request))
+            assertThatThrownBy(() -> eventService.addImages(2L, request))
                     .isInstanceOf(EventException.class)
                     .hasMessage(AlbumErrorCode.LIMITED_AUTHORITY.getMessage());
         }
@@ -496,10 +496,10 @@ public class EventServiceTest extends IntegrationTest {
         @Test
         void 이미_이벤트에_속한_이미지를_추가하면_예외가_발생한다() {
             // given
-            EventIncludeRequest request = new EventIncludeRequest(1L, List.of(2L));
+            EventImageAddRequest request = new EventImageAddRequest(List.of(2L));
 
             // when & then
-            assertThatThrownBy(() -> eventService.includeEvent(request))
+            assertThatThrownBy(() -> eventService.addImages(1L, request))
                     .isInstanceOf(BaseCustomException.class)
                     .hasMessage(ImageErrorCode.SOME_IMAGES_HAS_EVENT.getMessage());
         }
@@ -507,10 +507,10 @@ public class EventServiceTest extends IntegrationTest {
         @Test
         void 다른_앨범에_속한_이미지를_추가하면_예외가_발생한다() {
             // given
-            EventIncludeRequest request = new EventIncludeRequest(1L, List.of(3L));
+            EventImageAddRequest request = new EventImageAddRequest(List.of(3L));
 
             // when & then
-            assertThatThrownBy(() -> eventService.includeEvent(request))
+            assertThatThrownBy(() -> eventService.addImages(1L, request))
                     .isInstanceOf(BaseCustomException.class)
                     .hasMessage(ImageErrorCode.SOME_IMAGES_NOT_FROM_CURRENT_ALBUM.getMessage());
         }

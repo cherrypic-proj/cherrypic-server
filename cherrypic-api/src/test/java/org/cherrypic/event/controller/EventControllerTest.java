@@ -12,7 +12,7 @@ import java.util.List;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.event.controller.EventController;
 import org.cherrypic.domain.event.dto.request.EventCreateRequest;
-import org.cherrypic.domain.event.dto.request.EventIncludeRequest;
+import org.cherrypic.domain.event.dto.request.EventImageAddRequest;
 import org.cherrypic.domain.event.dto.request.EventUpdateRequest;
 import org.cherrypic.domain.event.dto.response.EventCreateResponse;
 import org.cherrypic.domain.event.dto.response.EventListResponse;
@@ -568,13 +568,13 @@ public class EventControllerTest {
         @Test
         void 유효한_요청이면_이벤트에_이미지를_추가하고_NO_CONTENT_로_반환한다() throws Exception {
             // given
-            EventIncludeRequest request = new EventIncludeRequest(1L, List.of(1L));
-            willDoNothing().given(eventService).includeEvent(request);
+            EventImageAddRequest request = new EventImageAddRequest(List.of(1L));
+            willDoNothing().given(eventService).addImages(1L, request);
 
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            patch("/events/include")
+                            post("/events/1/add-images")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -586,15 +586,15 @@ public class EventControllerTest {
         @Test
         void 존재하지_않는_이벤트에_추가하면_예외가_발생한다() throws Exception {
             // given
-            EventIncludeRequest request = new EventIncludeRequest(1L, List.of(1L));
+            EventImageAddRequest request = new EventImageAddRequest(List.of(1L));
             willThrow(new EventException(EventErrorCode.EVENT_NOT_FOUND))
                     .given(eventService)
-                    .includeEvent(request);
+                    .addImages(1L, request);
 
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            patch("/events/include")
+                            post("/events/1/add-images")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -608,15 +608,15 @@ public class EventControllerTest {
         @Test
         void 존재하지_않는_이미지를_추가하면_예외가_발생한다() throws Exception {
             // given
-            EventIncludeRequest request = new EventIncludeRequest(1L, List.of(999L));
+            EventImageAddRequest request = new EventImageAddRequest(List.of(999L));
             willThrow(new BaseCustomException(ImageErrorCode.SOME_IMAGES_ARE_NOT_FOUND))
                     .given(eventService)
-                    .includeEvent(request);
+                    .addImages(1L, request);
 
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            patch("/events/include")
+                            post("/events/1/add-images")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -630,15 +630,15 @@ public class EventControllerTest {
         @Test
         void LIMITED_권한의_사용자가_이벤트에_이미지를_추가하면_예외가_발생한다() throws Exception {
             // given
-            EventIncludeRequest request = new EventIncludeRequest(1L, List.of(1L));
+            EventImageAddRequest request = new EventImageAddRequest(List.of(1L));
             willThrow(new EventException(AlbumErrorCode.LIMITED_AUTHORITY))
                     .given(eventService)
-                    .includeEvent(request);
+                    .addImages(1L, request);
 
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            patch("/events/include")
+                            post("/events/1/add-images")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -652,15 +652,15 @@ public class EventControllerTest {
         @Test
         void 이미_이벤트에_속한_이미지를_추가하면_예외가_발생한다() throws Exception {
             // given
-            EventIncludeRequest request = new EventIncludeRequest(1L, List.of(1L));
+            EventImageAddRequest request = new EventImageAddRequest(List.of(1L));
             willThrow(new BaseCustomException(ImageErrorCode.SOME_IMAGES_HAS_EVENT))
                     .given(eventService)
-                    .includeEvent(request);
+                    .addImages(1L, request);
 
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            patch("/events/include")
+                            post("/events/1/add-images")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -674,15 +674,15 @@ public class EventControllerTest {
         @Test
         void 다른_앨범에_속한_이미지를_추가하면_예외가_발생한다() throws Exception {
             // given
-            EventIncludeRequest request = new EventIncludeRequest(1L, List.of(1L));
+            EventImageAddRequest request = new EventImageAddRequest(List.of(1L));
             willThrow(new BaseCustomException(ImageErrorCode.SOME_IMAGES_NOT_FROM_CURRENT_ALBUM))
                     .given(eventService)
-                    .includeEvent(request);
+                    .addImages(1L, request);
 
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            patch("/events/include")
+                            post("/events/1/add-images")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -694,33 +694,14 @@ public class EventControllerTest {
         }
 
         @Test
-        void 이벤트_ID를_입력하지_않은_경우_예외가_발생한다() throws Exception {
-            // given
-            EventIncludeRequest request = new EventIncludeRequest(null, List.of(1L));
-
-            // when & then
-            ResultActions perform =
-                    mockMvc.perform(
-                            patch("/events/include")
-                                    .contentType(MediaType.APPLICATION_JSON)
-                                    .content(objectMapper.writeValueAsString(request)));
-
-            perform.andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.success").value(false))
-                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
-                    .andExpect(jsonPath("$.data.code").value("MethodArgumentNotValidException"))
-                    .andExpect(jsonPath("$.data.message").value("이벤트 ID는 비워둘 수 없습니다."));
-        }
-
-        @Test
         void 추가할_이미지를_입력하지_않은_경우_예외가_발생한다() throws Exception {
             // given
-            EventIncludeRequest request = new EventIncludeRequest(1L, List.of());
+            EventImageAddRequest request = new EventImageAddRequest(List.of());
 
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            patch("/events/include")
+                            post("/events/1/add-images")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
