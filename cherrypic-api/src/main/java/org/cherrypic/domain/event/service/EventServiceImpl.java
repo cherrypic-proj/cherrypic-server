@@ -1,11 +1,15 @@
 package org.cherrypic.domain.event.service;
 
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.cherrypic.album.entity.Album;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.album.exception.AlbumException;
 import org.cherrypic.domain.album.repository.AlbumRepository;
 import org.cherrypic.domain.event.dto.request.EventCreateRequest;
+import org.cherrypic.domain.event.dto.request.EventIncludeRequest;
 import org.cherrypic.domain.event.dto.request.EventUpdateRequest;
 import org.cherrypic.domain.event.dto.response.EventCreateResponse;
 import org.cherrypic.domain.event.dto.response.EventListResponse;
@@ -13,11 +17,15 @@ import org.cherrypic.domain.event.dto.response.EventUpdateResponse;
 import org.cherrypic.domain.event.exception.EventErrorCode;
 import org.cherrypic.domain.event.exception.EventException;
 import org.cherrypic.domain.event.repository.EventRepository;
+import org.cherrypic.domain.image.exception.ImageErrorCode;
+import org.cherrypic.domain.image.repository.ImageRepository;
 import org.cherrypic.domain.participant.repository.ParticipantRepository;
 import org.cherrypic.event.entity.Event;
+import org.cherrypic.exception.BaseCustomException;
 import org.cherrypic.global.pagination.SliceResponse;
 import org.cherrypic.global.pagination.SortDirection;
 import org.cherrypic.global.util.MemberUtil;
+import org.cherrypic.image.entity.Image;
 import org.cherrypic.member.entity.Member;
 import org.cherrypic.participant.entity.Participant;
 import org.cherrypic.participant.enums.ParticipantRole;
@@ -35,6 +43,7 @@ public class EventServiceImpl implements EventService {
     private final AlbumRepository albumRepository;
     private final ParticipantRepository participantRepository;
     private final EventRepository eventRepository;
+    private final ImageRepository imageRepository;
 
     @Override
     public EventCreateResponse createEvent(EventCreateRequest request) {
@@ -85,6 +94,17 @@ public class EventServiceImpl implements EventService {
         eventRepository.delete(event);
     }
 
+    @Override
+    public void includeEvent(EventIncludeRequest request) {
+        final Event event = getEventById(request.eventId());
+        final List<Image> images = getAllImagesById(request.imageIds());
+
+        validateImageEvent(images);
+        validateImageAlbum(images, event);
+
+        imageRepository.bulkChangeImageEvent(request.imageIds(), request.eventId());
+    }
+
     private Album getAlbumById(Long albumId) {
         return albumRepository
                 .findById(albumId)
@@ -111,5 +131,35 @@ public class EventServiceImpl implements EventService {
         if (isLimited) {
             throw new EventException(AlbumErrorCode.LIMITED_AUTHORITY);
         }
+    }
+
+    private void validateImageEvent(List<Image> images) {
+        images.stream()
+                .filter(image -> image.getEvent() != null)
+                .findAny()
+                .ifPresent(
+                        img -> {
+                            throw new BaseCustomException(ImageErrorCode.SOME_IMAGES_HAS_EVENT);
+                        });
+    }
+
+    private void validateImageAlbum(List<Image> images, Event event) {
+        images.stream()
+                .filter(
+                        image ->
+                                !Objects.equals(image.getAlbum().getId(), event.getAlbum().getId()))
+                .findAny()
+                .ifPresent(
+                        img -> {
+                            throw new BaseCustomException(
+                                    ImageErrorCode.SOME_IMAGES_NOT_FROM_ALBUM);
+                        });
+    }
+
+    private List<Image> getAllImagesById(List<Long> imageIds) {
+        return Optional.of(imageRepository.findAllById(imageIds))
+                .filter(images -> images.size() == imageIds.size())
+                .orElseThrow(
+                        () -> new BaseCustomException(ImageErrorCode.SOME_IMAGES_WERE_NOT_FOUND));
     }
 }
