@@ -18,6 +18,7 @@ public class NotificationServiceImpl implements NotificationService {
             "%s님이 '%s' 앨범을 삭제하려고 합니다. 이미지를 백업한 후 앨범에서 나가주세요.";
 
     private final FcmService fcmService;
+    private final FcmTokenService fcmTokenService;
 
     private final MemberRepository memberRepository;
     private final AlbumRepository albumRepository;
@@ -30,8 +31,13 @@ public class NotificationServiceImpl implements NotificationService {
 
         notificationRepository.bulkInsertAlbumDeleteNotifications(albumId, senderId);
 
+        List<String> tokens = fcmTokenService.getFcmTokens(receiverIds);
+        if (tokens.isEmpty()) {
+            return;
+        }
+
         fcmService.sendGroupMessageAsync(
-                List.of("FCM 토큰 저장 로직을 아직 구현하지 않아 임시로 남겨두겠습니다."),
+                tokens,
                 PUSH_ALBUM_DELETE_TITLE,
                 String.format(PUSH_ALBUM_DELETE_BODY, hostNickname, albumTitle));
     }
