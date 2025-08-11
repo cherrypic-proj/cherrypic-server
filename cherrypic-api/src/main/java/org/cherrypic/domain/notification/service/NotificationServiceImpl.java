@@ -15,7 +15,7 @@ public class NotificationServiceImpl implements NotificationService {
 
     private static final String PUSH_ALBUM_DELETE_TITLE = "앨범 삭제 안내";
     private static final String PUSH_ALBUM_DELETE_BODY =
-            "%s님이 '%s' 앨범을 삭제하려고 합니다. 이미지를 백업한 후 앨범에서 나가주세요.";
+            "%s님이 %s 앨범을 삭제하려고 합니다. 이미지를 백업한 후 앨범에서 나가주세요.";
 
     private final FcmService fcmService;
     private final FcmTokenService fcmTokenService;
