@@ -32,10 +32,10 @@ public interface ImageRepository extends JpaRepository<Image, Long>, ImageReposi
          SET event_id   = :eventId,
              version    = version + 1,
              updated_at = CURRENT_TIMESTAMP(6)
-       WHERE id IN (:imageIds)
-       AND (event_id IS NULL OR event_id = :eventId)
+       WHERE CONCAT(id, ':', version) IN (:keys)
+         AND (event_id IS NULL OR event_id = :eventId)
     """,
             nativeQuery = true)
-    int bulkChangeImageEvent(
-            @Param("imageIds") List<Long> imageIds, @Param("eventId") Long eventId);
+    int bulkChangeImageEventWithVersionCheck(
+            @Param("keys") List<String> keys, @Param("eventId") Long eventId);
 }

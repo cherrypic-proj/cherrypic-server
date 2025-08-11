@@ -528,7 +528,8 @@ public class EventServiceTest extends IntegrationTest {
                     es.submit(
                             () -> {
                                 barrier.await();
-                                imageRepository.bulkChangeImageEvent(List.of(4L), 2L);
+                                imageRepository.bulkChangeImageEventWithVersionCheck(
+                                        List.of("1:1"), 2L);
                                 return null;
                             });
 

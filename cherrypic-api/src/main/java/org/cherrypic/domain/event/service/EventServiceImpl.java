@@ -105,7 +105,10 @@ public class EventServiceImpl implements EventService {
         validateImageEvent(images);
         validateImageAlbum(images, event);
 
-        int updated = imageRepository.bulkChangeImageEvent(request.imageIds(), eventId);
+        List<String> keys =
+                images.stream().map(img -> img.getId() + ":" + img.getVersion()).toList();
+
+        int updated = imageRepository.bulkChangeImageEventWithVersionCheck(keys, eventId);
         if (updated != request.imageIds().size()) {
             throw new BaseCustomException(ImageErrorCode.SOME_IMAGES_HAS_CONFLICT);
         }
