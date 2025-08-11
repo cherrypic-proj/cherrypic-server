@@ -73,6 +73,7 @@ CREATE TABLE image (
                        event_id BIGINT,
                        url VARCHAR(255) NOT NULL,
                        generated_at DATETIME,
+                       version BIGINT NOT NULL DEFAULT 0,
                        created_at DATETIME(6) NOT NULL,
                        updated_at DATETIME(6) NOT NULL,
                        CONSTRAINT fk_image_album FOREIGN KEY (album_id) REFERENCES album (id),

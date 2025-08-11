@@ -6,19 +6,36 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 
 public interface ImageRepository extends JpaRepository<Image, Long>, ImageRepositoryCustom {
     List<Image> findAllById(Iterable<Long> imageIds);
 
+    @Query(
+            """
+    select case
+             when count(i) = :expectedSize then true
+             else false
+           end
+    from Image i
+    where function('concat', i.id, ':', i.version) in :keys
+    """)
+    boolean checkImageVersionByKeys(
+            @Param("keys") List<String> keys, @Param("expectedSize") long expectedSize);
+
+    @Transactional
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query(
             value =
                     """
-            UPDATE image
-               SET event_id = :eventId
-             WHERE id IN (:imageIds)
-            """,
+      UPDATE image
+         SET event_id   = :eventId,
+             version    = version + 1,
+             updated_at = CURRENT_TIMESTAMP(6)
+       WHERE id IN (:imageIds)
+       AND (event_id IS NULL OR event_id = :eventId)
+    """,
             nativeQuery = true)
-    void bulkChangeImageEvent(
+    int bulkChangeImageEvent(
             @Param("imageIds") List<Long> imageIds, @Param("eventId") Long eventId);
 }

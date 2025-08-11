@@ -711,5 +711,27 @@ public class EventControllerTest {
                     .andExpect(jsonPath("$.data.code").value("MethodArgumentNotValidException"))
                     .andExpect(jsonPath("$.data.message").value("추가할 이미지 ID는 비워둘 수 없습니다."));
         }
+
+        @Test
+        void 앨범에_이미지를_추가하던_와중_다른_사람이_해당_이미지를_조작하면_예외가_발생한다() throws Exception {
+            // given
+            EventImageAddRequest request = new EventImageAddRequest(List.of(1L));
+            willThrow(new BaseCustomException(ImageErrorCode.SOME_IMAGES_HAS_CONFLICT))
+                    .given(eventService)
+                    .addImages(1L, request);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/events/1/add-images")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isConflict())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.CONFLICT.value()))
+                    .andExpect(jsonPath("$.data.code").value("SOME_IMAGES_HAS_CONFLICT"))
+                    .andExpect(jsonPath("$.data.message").value("다른 요청에서 조작된 이미지를 포함하고 있습니다."));
+        }
     }
 }

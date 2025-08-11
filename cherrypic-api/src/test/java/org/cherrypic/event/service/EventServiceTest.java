@@ -514,5 +514,37 @@ public class EventServiceTest extends IntegrationTest {
                     .isInstanceOf(BaseCustomException.class)
                     .hasMessage(ImageErrorCode.SOME_IMAGES_NOT_FROM_CURRENT_ALBUM.getMessage());
         }
+
+        @Test
+        void 앨범에_이미지를_추가하던_와중_다른_사람이_해당_이미지를_조작하면_예외가_발생한다() throws Exception {
+            // given:
+            EventImageAddRequest request = new EventImageAddRequest(List.of(1L, 4L));
+
+            var barrier = new java.util.concurrent.CyclicBarrier(2);
+            var es = java.util.concurrent.Executors.newFixedThreadPool(2);
+
+            // when & then
+            var f1 =
+                    es.submit(
+                            () -> {
+                                barrier.await();
+                                imageRepository.bulkChangeImageEvent(List.of(4L), 2L);
+                                return null;
+                            });
+
+            var f2 =
+                    es.submit(
+                            () -> {
+                                barrier.await();
+                                f1.get();
+
+                                assertThatThrownBy(() -> eventService.addImages(1L, request))
+                                        .isInstanceOf(BaseCustomException.class)
+                                        .hasMessage(
+                                                ImageErrorCode.SOME_IMAGES_HAS_CONFLICT
+                                                        .getMessage());
+                                return null;
+                            });
+        }
     }
 }
