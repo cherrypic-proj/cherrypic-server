@@ -623,7 +623,7 @@ public class EventControllerTest {
             perform.andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.success").value(false))
                     .andExpect(jsonPath("$.status").value(HttpStatus.NOT_FOUND.value()))
-                    .andExpect(jsonPath("$.data.code").value("SOME_IMAGES_ARE_NOT_FOUND"))
+                    .andExpect(jsonPath("$.data.code").value("IMAGES_NOT_FOUND"))
                     .andExpect(jsonPath("$.data.message").value("존재하지 않는 이미지를 포함하고 있습니다."));
         }
 
@@ -667,7 +667,7 @@ public class EventControllerTest {
             perform.andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.success").value(false))
                     .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
-                    .andExpect(jsonPath("$.data.code").value("SOME_IMAGES_HAS_EVENT"))
+                    .andExpect(jsonPath("$.data.code").value("IMAGES_ASSIGNED_TO_EVENT"))
                     .andExpect(jsonPath("$.data.message").value("이미 이벤트에 소속된 이미지를 포함하고 있습니다."));
         }
 
@@ -689,7 +689,7 @@ public class EventControllerTest {
             perform.andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.success").value(false))
                     .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
-                    .andExpect(jsonPath("$.data.code").value("SOME_IMAGES_NOT_FROM_CURRENT_ALBUM"))
+                    .andExpect(jsonPath("$.data.code").value("IMAGES_FROM_OTHER_ALBUM"))
                     .andExpect(jsonPath("$.data.message").value("앨범 소속이 아닌 이미지를 포함하고 있습니다."));
         }
 
@@ -730,7 +730,7 @@ public class EventControllerTest {
             perform.andExpect(status().isConflict())
                     .andExpect(jsonPath("$.success").value(false))
                     .andExpect(jsonPath("$.status").value(HttpStatus.CONFLICT.value()))
-                    .andExpect(jsonPath("$.data.code").value("SOME_IMAGES_HAS_CONFLICT"))
+                    .andExpect(jsonPath("$.data.code").value("CONFLICTING_IMAGES"))
                     .andExpect(jsonPath("$.data.message").value("다른 요청에서 조작된 이미지를 포함하고 있습니다."));
         }
     }

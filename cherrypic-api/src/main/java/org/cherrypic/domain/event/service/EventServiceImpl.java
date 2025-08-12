@@ -152,15 +152,14 @@ public class EventServiceImpl implements EventService {
     }
 
     private void validateImageAlbum(List<Image> images, Event event) {
-        images.stream()
-                .filter(
-                        image ->
-                                !Objects.equals(image.getAlbum().getId(), event.getAlbum().getId()))
-                .findAny()
-                .ifPresent(
-                        img -> {
-                            throw new BaseCustomException(ImageErrorCode.IMAGES_FROM_OTHER_ALBUM);
-                        });
+        Long albumId = event.getAlbum().getId();
+        if (images.stream()
+                .anyMatch(
+                        img ->
+                                img.getAlbum() == null
+                                        || !Objects.equals(img.getAlbum().getId(), albumId))) {
+            throw new BaseCustomException(ImageErrorCode.IMAGES_FROM_OTHER_ALBUM);
+        }
     }
 
     private List<Image> getAllImagesById(List<Long> imageIds) {
