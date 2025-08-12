@@ -6,25 +6,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.transaction.annotation.Transactional;
 
 public interface ImageRepository extends JpaRepository<Image, Long>, ImageRepositoryCustom {
     List<Image> findAllById(Iterable<Long> imageIds);
 
-    @Query(
-            """
-    select case
-             when count(i) = :expectedSize then true
-             else false
-           end
-    from Image i
-    where function('concat', i.id, ':', i.version) in :keys
-    """)
-    boolean checkImageVersionByKeys(
-            @Param("keys") List<String> keys, @Param("expectedSize") long expectedSize);
-
-    @Transactional
-    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Modifying(clearAutomatically = true)
     @Query(
             value =
                     """
