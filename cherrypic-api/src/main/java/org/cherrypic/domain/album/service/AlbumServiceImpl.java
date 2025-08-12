@@ -178,7 +178,7 @@ public class AlbumServiceImpl implements AlbumService {
 
         validateAlbumHost(currentMember.getId(), album.getId());
         validateSubscriptionInactive(album);
-        validateRemainingParticipants(album.getId(), currentMember.getId());
+        validateRemainingParticipants(album, currentMember);
 
         albumRepository.delete(album);
     }
@@ -258,12 +258,18 @@ public class AlbumServiceImpl implements AlbumService {
                         });
     }
 
-    private void validateRemainingParticipants(Long albumId, Long memberId) {
+    private void validateRemainingParticipants(Album album, Member member) {
         List<Long> otherMemberIds =
-                participantRepository.findOtherParticipantMemberIds(albumId, memberId);
+                participantRepository.findOtherParticipantMemberIds(album.getId(), member.getId());
 
         if (!otherMemberIds.isEmpty()) {
-            eventPublisher.publishEvent(AlbumDeleteEvent.of(albumId, memberId, otherMemberIds));
+            eventPublisher.publishEvent(
+                    AlbumDeleteEvent.of(
+                            album.getId(),
+                            member.getId(),
+                            member.getNickname(),
+                            album.getTitle(),
+                            otherMemberIds));
             throw new AlbumException(AlbumErrorCode.OTHER_PARTICIPANTS_EXIST);
         }
     }

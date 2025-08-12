@@ -25,9 +25,12 @@ public class NotificationServiceImpl implements NotificationService {
     private final NotificationRepository notificationRepository;
 
     @Override
-    public void sendAlbumDeleteNotification(Long albumId, Long senderId, List<Long> receiverIds) {
-        final String hostNickname = getMemberNicknameById(senderId);
-        final String albumTitle = getAlbumTitleById(albumId);
+    public void sendAlbumDeleteNotification(
+            Long albumId,
+            Long senderId,
+            String hostNickname,
+            String albumTitle,
+            List<Long> receiverIds) {
         final String content = String.format(PUSH_ALBUM_DELETE_BODY, hostNickname, albumTitle);
 
         notificationRepository.bulkInsertAlbumDeleteNotifications(
@@ -39,13 +42,5 @@ public class NotificationServiceImpl implements NotificationService {
         }
 
         fcmService.sendGroupMessageAsync(tokens, PUSH_ALBUM_DELETE_TITLE, content);
-    }
-
-    private String getMemberNicknameById(Long senderId) {
-        return memberRepository.findNicknameById(senderId);
-    }
-
-    private String getAlbumTitleById(Long albumId) {
-        return albumRepository.findTitleById(albumId);
     }
 }

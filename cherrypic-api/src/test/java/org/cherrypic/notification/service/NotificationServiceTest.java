@@ -93,7 +93,8 @@ class NotificationServiceTest extends IntegrationTest {
             List<Long> receiverIds = List.of(2L, 3L);
 
             // when
-            notificationService.sendAlbumDeleteNotification(albumId, senderId, receiverIds);
+            notificationService.sendAlbumDeleteNotification(
+                    albumId, senderId, "hostNickname", "testAlbum", receiverIds);
 
             // then
             List<Notification> notifications = notificationRepository.findAll();

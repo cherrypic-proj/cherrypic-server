@@ -21,6 +21,10 @@ public class AlbumDeleteEventListener {
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void handleAlbumDeleteEvent(AlbumDeleteEvent event) {
         notificationService.sendAlbumDeleteNotification(
-                event.albumId(), event.senderId(), event.receiverIds());
+                event.albumId(),
+                event.senderId(),
+                event.hostNickname(),
+                event.albumTitle(),
+                event.receiverIds());
     }
 }
