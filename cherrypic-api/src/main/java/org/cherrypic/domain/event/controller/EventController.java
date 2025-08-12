@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.cherrypic.domain.event.dto.request.EventCreateRequest;
+import org.cherrypic.domain.event.dto.request.EventImageAddRequest;
 import org.cherrypic.domain.event.dto.request.EventUpdateRequest;
 import org.cherrypic.domain.event.dto.response.EventCreateResponse;
 import org.cherrypic.domain.event.dto.response.EventListResponse;
@@ -55,6 +56,14 @@ public class EventController {
                     @RequestParam(defaultValue = "DESC")
                     SortDirection direction) {
         return eventService.getAlbumEvents(albumId, lastEventId, size, direction);
+    }
+
+    @PostMapping("/{eventId}/add-images")
+    @Operation(summary = "이벤트에 이미지 추가", description = "앨범의 이미지를 이벤트로 추가합니다.")
+    public ResponseEntity<Void> imagesAdd(
+            @PathVariable Long eventId, @Valid @RequestBody EventImageAddRequest request) {
+        eventService.addImages(eventId, request);
+        return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/{eventId}")
