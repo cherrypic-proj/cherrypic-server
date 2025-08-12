@@ -107,8 +107,8 @@ public class EventServiceImpl implements EventService {
         List<String> keys =
                 images.stream().map(img -> img.getId() + ":" + img.getVersion()).toList();
 
-        int updated = imageRepository.bulkChangeImageEventWithVersionCheck(keys, eventId);
-        if (updated != request.imageIds().size()) {
+        int updatedImages = imageRepository.bulkChangeImageEventWithVersionCheck(keys, eventId);
+        if (updatedImages != request.imageIds().size()) {
             throw new BaseCustomException(ImageErrorCode.CONFLICTING_IMAGES);
         }
     }
@@ -142,13 +142,9 @@ public class EventServiceImpl implements EventService {
     }
 
     private void validateImageEvent(List<Image> images) {
-        images.stream()
-                .filter(image -> image.getEvent() != null)
-                .findAny()
-                .ifPresent(
-                        img -> {
-                            throw new BaseCustomException(ImageErrorCode.IMAGES_ASSIGNED_TO_EVENT);
-                        });
+        if (images.stream().anyMatch(img -> img.getEvent() != null)) {
+            throw new BaseCustomException(ImageErrorCode.IMAGES_ASSIGNED_TO_EVENT);
+        }
     }
 
     private void validateImageAlbum(List<Image> images, Event event) {
