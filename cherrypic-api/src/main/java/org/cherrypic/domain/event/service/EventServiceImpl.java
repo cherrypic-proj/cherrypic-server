@@ -109,7 +109,7 @@ public class EventServiceImpl implements EventService {
 
         int updated = imageRepository.bulkChangeImageEventWithVersionCheck(keys, eventId);
         if (updated != request.imageIds().size()) {
-            throw new BaseCustomException(ImageErrorCode.SOME_IMAGES_HAS_CONFLICT);
+            throw new BaseCustomException(ImageErrorCode.CONFLICTING_IMAGES);
         }
     }
 
@@ -147,7 +147,7 @@ public class EventServiceImpl implements EventService {
                 .findAny()
                 .ifPresent(
                         img -> {
-                            throw new BaseCustomException(ImageErrorCode.SOME_IMAGES_HAS_EVENT);
+                            throw new BaseCustomException(ImageErrorCode.IMAGES_ASSIGNED_TO_EVENT);
                         });
     }
 
@@ -159,15 +159,13 @@ public class EventServiceImpl implements EventService {
                 .findAny()
                 .ifPresent(
                         img -> {
-                            throw new BaseCustomException(
-                                    ImageErrorCode.SOME_IMAGES_NOT_FROM_CURRENT_ALBUM);
+                            throw new BaseCustomException(ImageErrorCode.IMAGES_FROM_OTHER_ALBUM);
                         });
     }
 
     private List<Image> getAllImagesById(List<Long> imageIds) {
         return Optional.of(imageRepository.findAllById(imageIds))
                 .filter(images -> images.size() == imageIds.size())
-                .orElseThrow(
-                        () -> new BaseCustomException(ImageErrorCode.SOME_IMAGES_ARE_NOT_FOUND));
+                .orElseThrow(() -> new BaseCustomException(ImageErrorCode.IMAGES_NOT_FOUND));
     }
 }

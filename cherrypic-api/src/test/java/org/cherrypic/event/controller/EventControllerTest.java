@@ -609,7 +609,7 @@ public class EventControllerTest {
         void 존재하지_않는_이미지를_추가하면_예외가_발생한다() throws Exception {
             // given
             EventImageAddRequest request = new EventImageAddRequest(List.of(999L));
-            willThrow(new BaseCustomException(ImageErrorCode.SOME_IMAGES_ARE_NOT_FOUND))
+            willThrow(new BaseCustomException(ImageErrorCode.IMAGES_NOT_FOUND))
                     .given(eventService)
                     .addImages(1L, request);
 
@@ -653,7 +653,7 @@ public class EventControllerTest {
         void 이미_이벤트에_속한_이미지를_추가하면_예외가_발생한다() throws Exception {
             // given
             EventImageAddRequest request = new EventImageAddRequest(List.of(1L));
-            willThrow(new BaseCustomException(ImageErrorCode.SOME_IMAGES_HAS_EVENT))
+            willThrow(new BaseCustomException(ImageErrorCode.IMAGES_ASSIGNED_TO_EVENT))
                     .given(eventService)
                     .addImages(1L, request);
 
@@ -675,7 +675,7 @@ public class EventControllerTest {
         void 다른_앨범에_속한_이미지를_추가하면_예외가_발생한다() throws Exception {
             // given
             EventImageAddRequest request = new EventImageAddRequest(List.of(1L));
-            willThrow(new BaseCustomException(ImageErrorCode.SOME_IMAGES_NOT_FROM_CURRENT_ALBUM))
+            willThrow(new BaseCustomException(ImageErrorCode.IMAGES_FROM_OTHER_ALBUM))
                     .given(eventService)
                     .addImages(1L, request);
 
@@ -716,7 +716,7 @@ public class EventControllerTest {
         void 앨범에_이미지를_추가하던_와중_다른_사람이_해당_이미지를_조작하면_예외가_발생한다() throws Exception {
             // given
             EventImageAddRequest request = new EventImageAddRequest(List.of(1L));
-            willThrow(new BaseCustomException(ImageErrorCode.SOME_IMAGES_HAS_CONFLICT))
+            willThrow(new BaseCustomException(ImageErrorCode.CONFLICTING_IMAGES))
                     .given(eventService)
                     .addImages(1L, request);
 

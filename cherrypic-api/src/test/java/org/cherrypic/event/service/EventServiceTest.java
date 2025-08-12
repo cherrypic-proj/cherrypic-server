@@ -479,7 +479,7 @@ public class EventServiceTest extends IntegrationTest {
             // when & then
             assertThatThrownBy(() -> eventService.addImages(1L, request))
                     .isInstanceOf(BaseCustomException.class)
-                    .hasMessage(ImageErrorCode.SOME_IMAGES_ARE_NOT_FOUND.getMessage());
+                    .hasMessage(ImageErrorCode.IMAGES_NOT_FOUND.getMessage());
         }
 
         @Test
@@ -501,7 +501,7 @@ public class EventServiceTest extends IntegrationTest {
             // when & then
             assertThatThrownBy(() -> eventService.addImages(1L, request))
                     .isInstanceOf(BaseCustomException.class)
-                    .hasMessage(ImageErrorCode.SOME_IMAGES_HAS_EVENT.getMessage());
+                    .hasMessage(ImageErrorCode.IMAGES_ASSIGNED_TO_EVENT.getMessage());
         }
 
         @Test
@@ -512,7 +512,7 @@ public class EventServiceTest extends IntegrationTest {
             // when & then
             assertThatThrownBy(() -> eventService.addImages(1L, request))
                     .isInstanceOf(BaseCustomException.class)
-                    .hasMessage(ImageErrorCode.SOME_IMAGES_NOT_FROM_CURRENT_ALBUM.getMessage());
+                    .hasMessage(ImageErrorCode.IMAGES_FROM_OTHER_ALBUM.getMessage());
         }
 
         @Test
@@ -541,9 +541,7 @@ public class EventServiceTest extends IntegrationTest {
 
                                 assertThatThrownBy(() -> eventService.addImages(1L, request))
                                         .isInstanceOf(BaseCustomException.class)
-                                        .hasMessage(
-                                                ImageErrorCode.SOME_IMAGES_HAS_CONFLICT
-                                                        .getMessage());
+                                        .hasMessage(ImageErrorCode.CONFLICTING_IMAGES.getMessage());
                                 return null;
                             });
         }
