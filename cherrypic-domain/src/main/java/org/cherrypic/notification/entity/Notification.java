@@ -31,6 +31,10 @@ public class Notification extends BaseTimeEntity {
     @JoinColumn(name = "album_id")
     private Album album;
 
+    @NotNull private String title;
+
+    @NotNull private String content;
+
     @NotNull
     @Enumerated(EnumType.STRING)
     private NotificationType type;

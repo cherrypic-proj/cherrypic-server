@@ -108,6 +108,8 @@ CREATE TABLE notification (
                              sender_id BIGINT NOT NULL,
                              receiver_id BIGINT NOT NULL,
                              album_id BIGINT,
+                             title VARCHAR(30) NOT NULL,
+                             content VARCHAR(100) NOT NULL,
                              type VARCHAR(20) NOT NULL CHECK (type IN ('ALBUM')),
                              created_at DATETIME(6) NOT NULL,
                              updated_at DATETIME(6) NOT NULL,
