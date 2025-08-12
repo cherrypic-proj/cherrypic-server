@@ -100,7 +100,6 @@ public class EventServiceImpl implements EventService {
         final Event event = getEventById(eventId);
         final List<Image> images = getAllImagesById(request.imageIds());
 
-        validateImageConcurrency(images);
         validateParticipantAuthority(currentMember, event.getAlbum());
         validateImageEvent(images);
         validateImageAlbum(images, event);
@@ -170,15 +169,5 @@ public class EventServiceImpl implements EventService {
                 .filter(images -> images.size() == imageIds.size())
                 .orElseThrow(
                         () -> new BaseCustomException(ImageErrorCode.SOME_IMAGES_ARE_NOT_FOUND));
-    }
-
-    private void validateImageConcurrency(List<Image> images) {
-        List<String> keys =
-                images.stream().map(img -> img.getId() + ":" + img.getVersion()).toList();
-
-        boolean allMatch = imageRepository.checkImageVersionByKeys(keys, keys.size());
-        if (!allMatch) {
-            throw new BaseCustomException(ImageErrorCode.SOME_IMAGES_HAS_CONFLICT);
-        }
     }
 }
