@@ -112,7 +112,8 @@ class NotificationServiceTest extends IntegrationTest {
                     .sendGroupMessageAsync(
                             eq(List.of("testFcmToken2")),
                             eq("앨범 삭제 안내"),
-                            eq("hostNickname님이 testAlbum 앨범을 삭제하려고 합니다. 이미지를 백업한 후 앨범에서 나가주세요."));
+                            eq(
+                                    "hostNickname님이 testAlbum 앨범을 삭제하려고 합니다. 중요한 사진은 미리 다운로드받은 뒤 앨범에서 나가주세요."));
         }
     }
 }
