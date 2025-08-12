@@ -1,5 +1,6 @@
 package org.cherrypic.domain.album.service;
 
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.cherrypic.album.entity.Album;
 import org.cherrypic.album.entity.InvitationCode;
@@ -7,6 +8,7 @@ import org.cherrypic.album.enums.AlbumPlan;
 import org.cherrypic.domain.album.dto.request.AlbumCreateRequest;
 import org.cherrypic.domain.album.dto.request.AlbumUpdateRequest;
 import org.cherrypic.domain.album.dto.response.*;
+import org.cherrypic.domain.album.event.AlbumDeleteEvent;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.album.exception.AlbumException;
 import org.cherrypic.domain.album.repository.AlbumRepository;
@@ -25,6 +27,7 @@ import org.cherrypic.payment.entity.Payment;
 import org.cherrypic.payment.enums.PaymentStatus;
 import org.cherrypic.subscription.entity.Subscription;
 import org.cherrypic.subscription.enums.SubscriptionStatus;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,6 +45,8 @@ public class AlbumServiceImpl implements AlbumService {
     private final ParticipantRepository participantRepository;
     private final SubscriptionRepository subscriptionRepository;
     private final InvitationCodeRepository invitationCodeRepository;
+
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     public AlbumCreateResponse createAlbum(AlbumCreateRequest request) {
@@ -173,7 +178,7 @@ public class AlbumServiceImpl implements AlbumService {
 
         validateAlbumHost(currentMember.getId(), album.getId());
         validateSubscriptionInactive(album);
-        validateRemainingParticipants(album.getId(), currentMember.getId());
+        validateRemainingParticipants(album, currentMember);
 
         albumRepository.delete(album);
     }
@@ -253,8 +258,18 @@ public class AlbumServiceImpl implements AlbumService {
                         });
     }
 
-    private void validateRemainingParticipants(Long albumId, Long memberId) {
-        if (participantRepository.existsByAlbumIdAndMemberIdIsNot(albumId, memberId)) {
+    private void validateRemainingParticipants(Album album, Member member) {
+        List<Long> otherMemberIds =
+                participantRepository.findOtherParticipantMemberIds(album.getId(), member.getId());
+
+        if (!otherMemberIds.isEmpty()) {
+            eventPublisher.publishEvent(
+                    AlbumDeleteEvent.of(
+                            album.getId(),
+                            member.getId(),
+                            member.getNickname(),
+                            album.getTitle(),
+                            otherMemberIds));
             throw new AlbumException(AlbumErrorCode.OTHER_PARTICIPANTS_EXIST);
         }
     }

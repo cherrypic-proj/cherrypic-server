@@ -101,3 +101,19 @@ CREATE TABLE participant (
                              CONSTRAINT fk_participant_member FOREIGN KEY (member_id) REFERENCES member (id),
                              CONSTRAINT fk_participant_album FOREIGN KEY (album_id) REFERENCES album (id)
 );
+
+
+CREATE TABLE notification (
+                             id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                             sender_id BIGINT NOT NULL,
+                             receiver_id BIGINT NOT NULL,
+                             album_id BIGINT,
+                             title VARCHAR(30) NOT NULL,
+                             content VARCHAR(100) NOT NULL,
+                             type VARCHAR(20) NOT NULL CHECK (type IN ('ALBUM')),
+                             created_at DATETIME(6) NOT NULL,
+                             updated_at DATETIME(6) NOT NULL,
+                             CONSTRAINT fk_notification_sender FOREIGN KEY (sender_id) REFERENCES member (id),
+                             CONSTRAINT fk_notification_receiver FOREIGN KEY (receiver_id) REFERENCES member (id),
+                             CONSTRAINT fk_notification_album FOREIGN KEY (album_id) REFERENCES album (id)
+);

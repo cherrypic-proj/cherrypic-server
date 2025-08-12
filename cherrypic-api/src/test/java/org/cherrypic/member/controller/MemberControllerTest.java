@@ -1,20 +1,28 @@
 package org.cherrypic.member.controller;
 
 import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.mockito.BDDMockito.willDoNothing;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.cherrypic.domain.member.controller.MemberController;
+import org.cherrypic.domain.member.dto.request.FcmTokenSaveRequest;
 import org.cherrypic.domain.member.dto.response.MemberInfoResponse;
 import org.cherrypic.domain.member.service.MemberService;
 import org.cherrypic.member.enums.MemberRole;
 import org.cherrypic.member.enums.MemberStatus;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EmptySource;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
@@ -57,6 +65,51 @@ class MemberControllerTest {
                     .andExpect(jsonPath("$.data.profileImageUrl").value("testProfileImageUrl"))
                     .andExpect(jsonPath("$.data.status").value("NORMAL"))
                     .andExpect(jsonPath("$.data.role").value("USER"));
+        }
+    }
+
+    @Nested
+    class FCM_토큰_저장_요청_시 {
+
+        @Test
+        void 유효한_요청이면_FCM_토큰을_저장하고_NO_CONTENT로_반환한다() throws Exception {
+            // given
+            FcmTokenSaveRequest request = new FcmTokenSaveRequest("testFcmToken");
+
+            willDoNothing().given(memberService).saveFcmToken(request);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/members/fcm-tokens")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isNoContent())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.NO_CONTENT.value()));
+        }
+
+        @ParameterizedTest
+        @NullSource
+        @EmptySource
+        @ValueSource(strings = {" "})
+        void FCM_토큰이_null_또는_공백이면_예외가_발생한다(String fcmToken) throws Exception {
+            // given
+            FcmTokenSaveRequest request = new FcmTokenSaveRequest(fcmToken);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/members/fcm-tokens")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("MethodArgumentNotValidException"))
+                    .andExpect(jsonPath("$.data.message").value("FCM Token은 비워둘 수 없습니다."));
         }
     }
 }

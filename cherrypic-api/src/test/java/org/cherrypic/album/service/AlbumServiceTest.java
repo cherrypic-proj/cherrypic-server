@@ -19,6 +19,7 @@ import org.cherrypic.domain.album.dto.request.AlbumUpdateRequest;
 import org.cherrypic.domain.album.dto.response.AlbumJoinResponse;
 import org.cherrypic.domain.album.dto.response.AlbumListResponse;
 import org.cherrypic.domain.album.dto.response.InvitationLinkCreateResponse;
+import org.cherrypic.domain.album.event.AlbumDeleteEvent;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.album.exception.AlbumException;
 import org.cherrypic.domain.album.repository.AlbumRepository;
@@ -46,13 +47,17 @@ import org.cherrypic.subscription.enums.SubscriptionStatus;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.event.ApplicationEvents;
+import org.springframework.test.context.event.RecordApplicationEvents;
 
+@RecordApplicationEvents
 class AlbumServiceTest extends IntegrationTest {
 
     @Autowired private RedisCleaner redisCleaner;
     @Autowired private TransactionUtil transactionUtil;
 
     @Autowired private AlbumService albumService;
+    @Autowired private ApplicationEvents applicationEvents;
     @Autowired private AlbumRepository albumRepository;
     @Autowired private MemberRepository memberRepository;
     @Autowired private PaymentRepository paymentRepository;
@@ -61,7 +66,7 @@ class AlbumServiceTest extends IntegrationTest {
     @Autowired private InvitationCodeRepository invitationCodeRepository;
     @Autowired private EventRepository eventRepository;
 
-    @MockitoBean MemberUtil memberUtil;
+    @MockitoBean private MemberUtil memberUtil;
 
     @Nested
     class 앨범을_생성할_때 {
@@ -924,11 +929,16 @@ class AlbumServiceTest extends IntegrationTest {
         }
 
         @Test
-        void 다른_참가자가_남아있는_경우_예외가_발생한다() {
+        void 다른_참가자가_남아있는_경우_이벤트가_발행되고_예외가_발생한다() {
             // when & then
             assertThatThrownBy(() -> albumService.deleteAlbum(3L))
                     .isInstanceOf(AlbumException.class)
                     .hasMessage(AlbumErrorCode.OTHER_PARTICIPANTS_EXIST.getMessage());
+
+            var events = applicationEvents.stream(AlbumDeleteEvent.class).toList();
+            Assertions.assertAll(
+                    () -> assertThat(events).hasSize(1),
+                    () -> assertThat(events.getFirst().albumId()).isEqualTo(3L));
         }
 
         @Test
