@@ -101,8 +101,8 @@ public class EventServiceImpl implements EventService {
         final List<Image> images = getAllImagesById(request.imageIds());
 
         validateParticipantAuthority(currentMember, event.getAlbum());
-        validateImageEvent(images);
         validateImageAlbum(images, event);
+        validateImageEvent(images);
 
         List<String> keys =
                 images.stream().map(img -> img.getId() + ":" + img.getVersion()).toList();
