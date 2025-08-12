@@ -34,9 +34,7 @@ public class Image extends BaseTimeEntity {
 
     private LocalDateTime generatedAt;
 
-    @Version
-    @Column(name = "version", nullable = false)
-    private long version;
+    @Version @NotNull private long version;
 
     @Builder(access = AccessLevel.PRIVATE)
     private Image(Album album, Event event, Long memberId, String url, LocalDateTime generatedAt) {
