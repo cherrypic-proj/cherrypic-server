@@ -12,13 +12,16 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     @Query(
             value =
                     """
-            insert into notification (sender_id, receiver_id, album_id, type, created_at, updated_at)
-            select :senderId, p.member_id, :albumId, 'ALBUM', CURRENT_TIMESTAMP(6), CURRENT_TIMESTAMP(6)
+            insert into notification (sender_id, receiver_id, album_id, title, content, type, created_at, updated_at)
+            select :senderId, p.member_id, :albumId, :title, :content, 'ALBUM', CURRENT_TIMESTAMP(6), CURRENT_TIMESTAMP(6)
             from participant p
             where p.album_id = :albumId
               and p.member_id <> :senderId
             """,
             nativeQuery = true)
     void bulkInsertAlbumDeleteNotifications(
-            @Param("albumId") Long albumId, @Param("senderId") Long senderId);
+            @Param("albumId") Long albumId,
+            @Param("senderId") Long senderId,
+            @Param("title") String title,
+            @Param("content") String content);
 }

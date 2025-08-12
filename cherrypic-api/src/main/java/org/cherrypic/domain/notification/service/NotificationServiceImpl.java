@@ -28,18 +28,17 @@ public class NotificationServiceImpl implements NotificationService {
     public void sendAlbumDeleteNotification(Long albumId, Long senderId, List<Long> receiverIds) {
         final String hostNickname = getMemberNicknameById(senderId);
         final String albumTitle = getAlbumTitleById(albumId);
+        final String content = String.format(PUSH_ALBUM_DELETE_BODY, hostNickname, albumTitle);
 
-        notificationRepository.bulkInsertAlbumDeleteNotifications(albumId, senderId);
+        notificationRepository.bulkInsertAlbumDeleteNotifications(
+                albumId, senderId, PUSH_ALBUM_DELETE_TITLE, content);
 
         List<String> tokens = fcmTokenService.getFcmTokens(receiverIds);
         if (tokens.isEmpty()) {
             return;
         }
 
-        fcmService.sendGroupMessageAsync(
-                tokens,
-                PUSH_ALBUM_DELETE_TITLE,
-                String.format(PUSH_ALBUM_DELETE_BODY, hostNickname, albumTitle));
+        fcmService.sendGroupMessageAsync(tokens, PUSH_ALBUM_DELETE_TITLE, content);
     }
 
     private String getMemberNicknameById(Long senderId) {
