@@ -164,8 +164,11 @@ public class EventServiceImpl implements EventService {
     }
 
     private List<Image> getAllImagesById(List<Long> imageIds) {
-        return Optional.of(imageRepository.findAllById(imageIds))
-                .filter(images -> images.size() == imageIds.size())
+
+        List<Long> distinctIds = imageIds.stream().filter(Objects::nonNull).distinct().toList();
+
+        return Optional.of(imageRepository.findAllById(distinctIds))
+                .filter(list -> list.size() == distinctIds.size())
                 .orElseThrow(() -> new BaseCustomException(ImageErrorCode.IMAGES_NOT_FOUND));
     }
 }
