@@ -64,9 +64,9 @@ public class ImageServiceImpl implements ImageService {
     public SliceResponse<AlbumImageListResponse> getAlbumImages(
             Long albumId, Long lastImageId, int size, SortDirection direction) {
         final Member currentMember = memberUtil.getCurrentMember();
+        final Album album = getAlbumById(albumId);
 
-        getAlbumById(albumId);
-        getParticipantByMemberIdAndAlbumId(currentMember.getId(), albumId);
+        getParticipantByMemberIdAndAlbumId(currentMember.getId(), album.getId());
 
         Slice<AlbumImageListResponse> result =
                 imageRepository.findAllByAlbumId(albumId, lastImageId, size, direction);
