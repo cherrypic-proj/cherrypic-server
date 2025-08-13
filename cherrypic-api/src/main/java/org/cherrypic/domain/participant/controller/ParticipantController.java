@@ -24,4 +24,12 @@ public class ParticipantController {
         participantService.leaveAlbum(albumId);
         return ResponseEntity.noContent().build();
     }
+
+    @DeleteMapping("/{participantId}")
+    @Operation(summary = "참가자 강퇴", description = "앨범 방장이 특정 참가자를 강퇴합니다.")
+    public ResponseEntity<Void> participantKick(
+            @PathVariable Long albumId, @PathVariable Long participantId) {
+        participantService.kickParticipant(albumId, participantId);
+        return ResponseEntity.noContent().build();
+    }
 }
