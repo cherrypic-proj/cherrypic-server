@@ -37,18 +37,13 @@ class ParticipantServiceTest extends IntegrationTest {
 
         @BeforeEach
         void setUp() {
-            Member member1 =
+            Member member =
                     Member.createMember(
                             OauthInfo.createOauthInfo("testOauthId1", "testOauthProvider1"),
                             "testNickname1",
                             "testProfileImageUrl1");
-            Member member2 =
-                    Member.createMember(
-                            OauthInfo.createOauthInfo("testOauthId2", "testOauthProvider2"),
-                            "testNickname2",
-                            "testProfileImageUrl2");
-            memberRepository.saveAll(List.of(member1, member2));
-            given(memberUtil.getCurrentMember()).willReturn(member1);
+            memberRepository.save(member);
+            given(memberUtil.getCurrentMember()).willReturn(member);
 
             Album album1 = Album.createAlbum("testAlbum1", "testURL1", AlbumPlan.BASIC, false);
             Album album2 = Album.createAlbum("testAlbum2", "testURL2", AlbumPlan.BASIC, false);
@@ -56,12 +51,10 @@ class ParticipantServiceTest extends IntegrationTest {
             albumRepository.saveAll(List.of(album1, album2, album3));
 
             Participant participant1 =
-                    Participant.createParticipant(member1, album1, ParticipantRole.STANDARD);
+                    Participant.createParticipant(member, album1, ParticipantRole.STANDARD);
             Participant participant2 =
-                    Participant.createParticipant(member2, album1, ParticipantRole.HOST);
-            Participant participant3 =
-                    Participant.createParticipant(member1, album3, ParticipantRole.HOST);
-            participantRepository.saveAll(List.of(participant1, participant2, participant3));
+                    Participant.createParticipant(member, album3, ParticipantRole.HOST);
+            participantRepository.saveAll(List.of(participant1, participant2));
         }
 
         @Test
