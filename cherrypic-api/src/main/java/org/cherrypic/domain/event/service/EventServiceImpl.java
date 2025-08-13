@@ -30,6 +30,8 @@ import org.cherrypic.participant.entity.Participant;
 import org.cherrypic.participant.enums.ParticipantRole;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Slice;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -96,6 +98,10 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    @Retryable(
+            retryFor = {DataIntegrityViolationException.class},
+            maxAttempts = 2,
+            backoff = @Backoff(delay = 0))
     public void addImages(Long eventId, EventImageAddRequest request) {
         final Member currentMember = memberUtil.getCurrentMember();
         final Event event = getEventById(eventId);
@@ -124,8 +130,7 @@ public class EventServiceImpl implements EventService {
                 throw new CustomException(ImageErrorCode.IMAGE_DELETED);
             }
             if ("uk_event_image_event_id_image_id".equalsIgnoreCase(constraint)) {
-                addImages(eventId, request);
-                return;
+                throw e;
             }
             throw new CustomException(ImageErrorCode.IMAGE_CONFLICT);
         }
