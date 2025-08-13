@@ -9,7 +9,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.cherrypic.album.entity.Album;
 import org.cherrypic.common.model.BaseTimeEntity;
-import org.cherrypic.event.entity.Event;
 
 @Getter
 @Entity
@@ -24,10 +23,6 @@ public class Image extends BaseTimeEntity {
     @JoinColumn(name = "album_id")
     private Album album;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "event_id")
-    private Event event;
-
     @NotNull private Long memberId;
 
     @NotNull private String url;
@@ -37,19 +32,17 @@ public class Image extends BaseTimeEntity {
     @Version @NotNull private long version;
 
     @Builder(access = AccessLevel.PRIVATE)
-    private Image(Album album, Event event, Long memberId, String url, LocalDateTime generatedAt) {
+    private Image(Album album, Long memberId, String url, LocalDateTime generatedAt) {
         this.album = album;
-        this.event = event;
         this.memberId = memberId;
         this.url = url;
         this.generatedAt = generatedAt;
     }
 
     public static Image createImage(
-            Album album, Event event, Long memberId, String url, LocalDateTime generatedAt) {
+            Album album, Long memberId, String url, LocalDateTime generatedAt) {
         return Image.builder()
                 .album(album)
-                .event(event)
                 .memberId(memberId)
                 .url(url)
                 .generatedAt(generatedAt)
