@@ -10,6 +10,7 @@ import org.cherrypic.global.util.MemberUtil;
 import org.cherrypic.member.entity.Member;
 import org.cherrypic.participant.entity.Participant;
 import org.cherrypic.participant.enums.ParticipantRole;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,7 +34,10 @@ public class ParticipantServiceImpl implements ParticipantService {
 
         validateNotAlbumHost(participant);
 
-        participantRepository.delete(participant);
+        try {
+            participantRepository.delete(participant);
+        } catch (ObjectOptimisticLockingFailureException ignored) {
+        }
     }
 
     private Album getAlbumById(Long albumId) {
