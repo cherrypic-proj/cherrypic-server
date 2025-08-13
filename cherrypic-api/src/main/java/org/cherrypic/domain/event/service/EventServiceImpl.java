@@ -1,8 +1,7 @@
 package org.cherrypic.domain.event.service;
 
 import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.cherrypic.album.entity.Album;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
@@ -16,9 +15,11 @@ import org.cherrypic.domain.event.dto.response.EventUpdateResponse;
 import org.cherrypic.domain.event.exception.EventErrorCode;
 import org.cherrypic.domain.event.repository.EventRepository;
 import org.cherrypic.domain.image.exception.ImageErrorCode;
+import org.cherrypic.domain.image.repository.EventImageRepository;
 import org.cherrypic.domain.image.repository.ImageRepository;
 import org.cherrypic.domain.participant.repository.ParticipantRepository;
 import org.cherrypic.event.entity.Event;
+import org.cherrypic.event.entity.EventImage;
 import org.cherrypic.exception.CustomException;
 import org.cherrypic.global.pagination.SliceResponse;
 import org.cherrypic.global.pagination.SortDirection;
@@ -42,6 +43,7 @@ public class EventServiceImpl implements EventService {
     private final ParticipantRepository participantRepository;
     private final EventRepository eventRepository;
     private final ImageRepository imageRepository;
+    private final EventImageRepository eventImageRepository;
 
     @Override
     public EventCreateResponse createEvent(EventCreateRequest request) {
@@ -96,19 +98,18 @@ public class EventServiceImpl implements EventService {
     public void addImages(Long eventId, EventImageAddRequest request) {
         final Member currentMember = memberUtil.getCurrentMember();
         final Event event = getEventById(eventId);
-        final List<Image> images = getAllImagesById(request.imageIds());
 
         validateParticipantAuthority(currentMember, event.getAlbum());
-        validateImageAlbum(images, event);
-        validateImageEvent(images);
+        validateAllImageExistence(request.imageIds());
+        validateAllImageAlbum(request.imageIds(), eventId);
 
-        List<String> keys =
-                images.stream().map(img -> img.getId() + ":" + img.getVersion()).toList();
+        List<Image> images = getAllUnmappedImagesById(eventId, request.imageIds());
+        if (images.isEmpty()) return; // 사용자가 모두 해당 event에 이미 속하는 사진만 고른 경우
 
-        int updatedImages = imageRepository.bulkChangeImageEventWithVersionCheck(keys, eventId);
-        if (updatedImages != request.imageIds().size()) {
-            throw new CustomException(ImageErrorCode.CONFLICTING_IMAGES);
-        }
+        List<EventImage> eventImages =
+                images.stream().map(image -> EventImage.createEventImage(event, image)).toList();
+
+        eventImageRepository.saveAll(eventImages);
     }
 
     private Album getAlbumById(Long albumId) {
@@ -139,29 +140,19 @@ public class EventServiceImpl implements EventService {
         }
     }
 
-    private void validateImageEvent(List<Image> images) {
-        if (images.stream().anyMatch(img -> img.getEvent() != null)) {
-            throw new CustomException(ImageErrorCode.IMAGES_ASSIGNED_TO_EVENT);
-        }
-    }
-
-    private void validateImageAlbum(List<Image> images, Event event) {
-        Long albumId = event.getAlbum().getId();
-        if (images.stream()
-                .anyMatch(
-                        img ->
-                                img.getAlbum() == null
-                                        || !Objects.equals(img.getAlbum().getId(), albumId))) {
+    private void validateAllImageAlbum(Set<Long> imageIds, Long albumId) {
+        if (imageRepository.countByIdInAndAlbumId(imageIds, albumId) != imageIds.size()) {
             throw new CustomException(ImageErrorCode.IMAGES_FROM_OTHER_ALBUM);
         }
     }
 
-    private List<Image> getAllImagesById(List<Long> imageIds) {
+    private void validateAllImageExistence(Set<Long> imageIds) {
+        if (imageRepository.countByIdIn(imageIds) != imageIds.size()) {
+            throw new CustomException(ImageErrorCode.IMAGES_NOT_FOUND);
+        }
+    }
 
-        List<Long> distinctIds = imageIds.stream().filter(Objects::nonNull).distinct().toList();
-
-        return Optional.of(imageRepository.findAllById(distinctIds))
-                .filter(list -> list.size() == distinctIds.size())
-                .orElseThrow(() -> new CustomException(ImageErrorCode.IMAGES_NOT_FOUND));
+    private List<Image> getAllUnmappedImagesById(Long eventId, Set<Long> imageIds) {
+        return imageRepository.findAllUnmappedToEvent(eventId, imageIds);
     }
 }

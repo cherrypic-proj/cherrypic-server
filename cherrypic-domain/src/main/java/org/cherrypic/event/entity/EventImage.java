@@ -31,7 +31,7 @@ public class EventImage extends BaseTimeEntity {
         this.image = image;
     }
 
-    private static EventImage createEventImage(Event event, Image image) {
+    public static EventImage createEventImage(Event event, Image image) {
         return EventImage.builder().event(event).image(image).build();
     }
 }

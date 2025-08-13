@@ -29,8 +29,6 @@ public class Image extends BaseTimeEntity {
 
     private LocalDateTime generatedAt;
 
-    @Version @NotNull private long version;
-
     @Builder(access = AccessLevel.PRIVATE)
     private Image(Album album, Long memberId, String url, LocalDateTime generatedAt) {
         this.album = album;

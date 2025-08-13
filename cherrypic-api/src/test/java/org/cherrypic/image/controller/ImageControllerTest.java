@@ -12,7 +12,7 @@ import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.event.exception.EventErrorCode;
 import org.cherrypic.domain.image.controller.ImageController;
 import org.cherrypic.domain.image.dto.request.MemberProfileImageUploadRequest;
-import org.cherrypic.domain.image.dto.response.ImageListResponse;
+import org.cherrypic.domain.image.dto.response.AlbumImageListResponse;
 import org.cherrypic.domain.image.dto.response.PresignedUrlResponse;
 import org.cherrypic.domain.image.enums.ImageFileExtension;
 import org.cherrypic.domain.image.service.ImageService;
@@ -101,12 +101,12 @@ class ImageControllerTest {
         @Test
         void 정렬_조건이_ASC이면_ImageId를_오름차순으로_응답한다() throws Exception {
             // given
-            List<ImageListResponse> images =
+            List<AlbumImageListResponse> images =
                     List.of(
-                            new ImageListResponse(1L, "testImageUrl1"),
-                            new ImageListResponse(2L, "testImageUrl2"));
+                            new AlbumImageListResponse(1L, "testImageUrl1"),
+                            new AlbumImageListResponse(2L, "testImageUrl2"));
 
-            given(imageService.getImages(1L, 1L, null, 2, SortDirection.ASC))
+            given(imageService.getAlbumImages(1L, 1L, null, 2, SortDirection.ASC))
                     .willReturn(new SliceResponse<>(images, true));
 
             // when & then
@@ -130,12 +130,12 @@ class ImageControllerTest {
         @Test
         void 정렬_조건이_DESC이면_imageId를_내림차순으로_응답한다() throws Exception {
             // given
-            List<ImageListResponse> images =
+            List<AlbumImageListResponse> images =
                     List.of(
-                            new ImageListResponse(2L, "testImageUrl2"),
-                            new ImageListResponse(1L, "testImageUrl1"));
+                            new AlbumImageListResponse(2L, "testImageUrl2"),
+                            new AlbumImageListResponse(1L, "testImageUrl1"));
 
-            given(imageService.getImages(1L, 1L, null, 2, SortDirection.DESC))
+            given(imageService.getAlbumImages(1L, 1L, null, 2, SortDirection.DESC))
                     .willReturn(new SliceResponse<>(images, true));
 
             // when & then
@@ -158,9 +158,10 @@ class ImageControllerTest {
         @Test
         void 마지막_페이지인_경우_isLast를_true로_응답한다() throws Exception {
             // given
-            List<ImageListResponse> images = List.of(new ImageListResponse(1L, "testImageUrl1"));
+            List<AlbumImageListResponse> images =
+                    List.of(new AlbumImageListResponse(1L, "testImageUrl1"));
 
-            given(imageService.getImages(1L, 1L, null, 1, SortDirection.ASC))
+            given(imageService.getAlbumImages(1L, 1L, null, 1, SortDirection.ASC))
                     .willReturn(new SliceResponse<>(images, true));
 
             // when & then
@@ -182,12 +183,12 @@ class ImageControllerTest {
         @Test
         void 마지막_페이지가_아닌_경우_isLast를_false로_응답한다() throws Exception {
             // given
-            List<ImageListResponse> images =
+            List<AlbumImageListResponse> images =
                     List.of(
-                            new ImageListResponse(1L, "testImageUrl1"),
-                            new ImageListResponse(2L, "testImageUrl2"));
+                            new AlbumImageListResponse(1L, "testImageUrl1"),
+                            new AlbumImageListResponse(2L, "testImageUrl2"));
 
-            given(imageService.getImages(1L, 1L, null, 1, SortDirection.ASC))
+            given(imageService.getAlbumImages(1L, 1L, null, 1, SortDirection.ASC))
                     .willReturn(new SliceResponse<>(images, false));
 
             // when & then
@@ -210,9 +211,9 @@ class ImageControllerTest {
         @Test
         void 이미지가_없는_경우_빈_리스트를_응답한다() throws Exception {
             // given
-            List<ImageListResponse> images = List.of();
+            List<AlbumImageListResponse> images = List.of();
 
-            given(imageService.getImages(1L, 1L, null, 1, SortDirection.ASC))
+            given(imageService.getAlbumImages(1L, 1L, null, 1, SortDirection.ASC))
                     .willReturn(new SliceResponse<>(images, true));
 
             // when & then
@@ -234,7 +235,7 @@ class ImageControllerTest {
         @Test
         void 앨범이_존재하지_않을_경우_예외가_발생한다() throws Exception {
             // given
-            given(imageService.getImages(999L, null, null, 2, SortDirection.ASC))
+            given(imageService.getAlbumImages(999L, null, null, 2, SortDirection.ASC))
                     .willThrow(new CustomException(AlbumErrorCode.ALBUM_NOT_FOUND));
 
             // when & then
@@ -255,7 +256,7 @@ class ImageControllerTest {
         @Test
         void 앨범_참가자가_아닌_경우_예외가_발생한다() throws Exception {
             // given
-            given(imageService.getImages(1L, null, null, 2, SortDirection.ASC))
+            given(imageService.getAlbumImages(1L, null, null, 2, SortDirection.ASC))
                     .willThrow(new CustomException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT));
 
             // when & then
@@ -276,7 +277,7 @@ class ImageControllerTest {
         @Test
         void 이벤트가_존재하지_않을_경우_예외가_발생한다() throws Exception {
             // given
-            given(imageService.getImages(1L, 1L, null, 2, SortDirection.ASC))
+            given(imageService.getAlbumImages(1L, 1L, null, 2, SortDirection.ASC))
                     .willThrow(new CustomException(EventErrorCode.EVENT_NOT_FOUND));
 
             // when & then
@@ -298,7 +299,7 @@ class ImageControllerTest {
         @Test
         void 이벤트가_앨범에_속하지_않는_경우_예외가_발생한다() throws Exception {
             // given
-            given(imageService.getImages(1L, 1L, null, 2, SortDirection.ASC))
+            given(imageService.getAlbumImages(1L, 1L, null, 2, SortDirection.ASC))
                     .willThrow(new CustomException(EventErrorCode.EVENT_DOESNT_BELONG_TO_ALBUM));
 
             // when & then

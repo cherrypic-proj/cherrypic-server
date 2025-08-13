@@ -15,7 +15,8 @@ import org.cherrypic.domain.album.repository.AlbumRepository;
 import org.cherrypic.domain.event.exception.EventErrorCode;
 import org.cherrypic.domain.event.repository.EventRepository;
 import org.cherrypic.domain.image.dto.request.MemberProfileImageUploadRequest;
-import org.cherrypic.domain.image.dto.response.ImageListResponse;
+import org.cherrypic.domain.image.dto.response.AlbumImageListResponse;
+import org.cherrypic.domain.image.dto.response.EventImageListResponse;
 import org.cherrypic.domain.image.dto.response.PresignedUrlResponse;
 import org.cherrypic.domain.image.enums.ImageFileExtension;
 import org.cherrypic.domain.image.enums.ImageType;
@@ -60,22 +61,27 @@ public class ImageServiceImpl implements ImageService {
 
     @Override
     @Transactional(readOnly = true)
-    public SliceResponse<ImageListResponse> getImages(
-            Long albumId, Long eventId, Long lastImageId, int size, SortDirection direction) {
+    public SliceResponse<AlbumImageListResponse> getAlbumImages(
+            Long albumId, Long lastImageId, int size, SortDirection direction) {
         final Member currentMember = memberUtil.getCurrentMember();
-        final Album album = getAlbumById(albumId);
+
+        getAlbumById(albumId);
         getParticipantByMemberIdAndAlbumId(currentMember.getId(), albumId);
 
-        if (eventId != null) {
-            final Event event = getEventById(eventId);
-            validateAlbumEvent(album, event);
-            Slice<ImageListResponse> result =
-                    imageRepository.findAllByEventId(eventId, lastImageId, size, direction);
-            return SliceResponse.from(result);
-        }
-
-        Slice<ImageListResponse> result =
+        Slice<AlbumImageListResponse> result =
                 imageRepository.findAllByAlbumId(albumId, lastImageId, size, direction);
+        return SliceResponse.from(result);
+    }
+
+    @Override
+    public SliceResponse<EventImageListResponse> getEventImages(
+            Long eventId, Long lastImageId, int size, SortDirection direction) {
+        final Member currentMember = memberUtil.getCurrentMember();
+        final Event event = getEventById(eventId);
+        getParticipantByMemberIdAndAlbumId(currentMember.getId(), event.getAlbum().getId());
+
+        Slice<EventImageListResponse> result =
+                imageRepository.findAllByEventId(eventId, lastImageId, size, direction);
         return SliceResponse.from(result);
     }
 
