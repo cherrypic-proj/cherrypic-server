@@ -14,5 +14,5 @@ public interface ImageRepositoryCustom {
     Slice<AlbumImageListResponse> findAllByAlbumId(
             Long albumId, Long lastImageId, int size, SortDirection direction);
 
-    List<Image> findAllUnmappedToEvent(Long eventId, Iterable<Long> imageIds);
+    List<Image> findAllUnmappedToEvent(Long eventId, List<Long> imageIds);
 }

@@ -65,7 +65,7 @@ public class ImageRepositoryImpl implements ImageRepositoryCustom {
     }
 
     @Override
-    public List<Image> findAllUnmappedToEvent(Long eventId, Iterable<Long> imageIds) {
+    public List<Image> findAllUnmappedToEvent(Long eventId, List<Long> imageIds) {
 
         return queryFactory
                 .selectFrom(image)
