@@ -9,10 +9,8 @@ import org.cherrypic.IntegrationTest;
 import org.cherrypic.album.entity.Album;
 import org.cherrypic.album.enums.AlbumPlan;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
-import org.cherrypic.domain.album.exception.AlbumException;
 import org.cherrypic.domain.album.repository.AlbumRepository;
 import org.cherrypic.domain.event.exception.EventErrorCode;
-import org.cherrypic.domain.event.exception.EventException;
 import org.cherrypic.domain.event.repository.EventRepository;
 import org.cherrypic.domain.image.dto.request.MemberProfileImageUploadRequest;
 import org.cherrypic.domain.image.dto.response.ImageListResponse;
@@ -23,6 +21,7 @@ import org.cherrypic.domain.image.service.ImageService;
 import org.cherrypic.domain.member.repository.MemberRepository;
 import org.cherrypic.domain.participant.repository.ParticipantRepository;
 import org.cherrypic.event.entity.Event;
+import org.cherrypic.exception.CustomException;
 import org.cherrypic.global.pagination.SliceResponse;
 import org.cherrypic.global.pagination.SortDirection;
 import org.cherrypic.global.util.MemberUtil;
@@ -173,7 +172,7 @@ class ImageServiceTest extends IntegrationTest {
         void 앨범이_존재하지_않을_경우_예외가_발생한다() {
             // when & then
             assertThatThrownBy(() -> imageService.getImages(999L, null, null, 2, SortDirection.ASC))
-                    .isInstanceOf(AlbumException.class)
+                    .isInstanceOf(CustomException.class)
                     .hasMessage(AlbumErrorCode.ALBUM_NOT_FOUND.getMessage());
         }
 
@@ -181,7 +180,7 @@ class ImageServiceTest extends IntegrationTest {
         void 앨범_참가자가_아닌_경우_예외가_발생한다() {
             // when & then
             assertThatThrownBy(() -> imageService.getImages(3L, null, null, 2, SortDirection.ASC))
-                    .isInstanceOf(AlbumException.class)
+                    .isInstanceOf(CustomException.class)
                     .hasMessage(AlbumErrorCode.NOT_ALBUM_PARTICIPANT.getMessage());
         }
     }
@@ -275,7 +274,7 @@ class ImageServiceTest extends IntegrationTest {
         void 앨범이_존재하지_않을_경우_예외가_발생한다() {
             // when & then
             assertThatThrownBy(() -> imageService.getImages(999L, null, null, 2, SortDirection.ASC))
-                    .isInstanceOf(AlbumException.class)
+                    .isInstanceOf(CustomException.class)
                     .hasMessage(AlbumErrorCode.ALBUM_NOT_FOUND.getMessage());
         }
 
@@ -283,7 +282,7 @@ class ImageServiceTest extends IntegrationTest {
         void 앨범_참가자가_아닌_경우_예외가_발생한다() {
             // when & then
             assertThatThrownBy(() -> imageService.getImages(2L, null, null, 2, SortDirection.ASC))
-                    .isInstanceOf(AlbumException.class)
+                    .isInstanceOf(CustomException.class)
                     .hasMessage(AlbumErrorCode.NOT_ALBUM_PARTICIPANT.getMessage());
         }
 
@@ -291,7 +290,7 @@ class ImageServiceTest extends IntegrationTest {
         void 이벤트가_존재하지_않을_경우_예외가_발생한다() {
             // when & then
             assertThatThrownBy(() -> imageService.getImages(1L, 999L, null, 2, SortDirection.ASC))
-                    .isInstanceOf(EventException.class)
+                    .isInstanceOf(CustomException.class)
                     .hasMessage(EventErrorCode.EVENT_NOT_FOUND.getMessage());
         }
 
@@ -299,7 +298,7 @@ class ImageServiceTest extends IntegrationTest {
         void 이벤트가_앨범에_속하지_않는_경우_예외가_발생한다() {
             // when & then
             assertThatThrownBy(() -> imageService.getImages(1L, 3L, null, 2, SortDirection.ASC))
-                    .isInstanceOf(EventException.class)
+                    .isInstanceOf(CustomException.class)
                     .hasMessage(EventErrorCode.EVENT_DOESNT_BELONG_TO_ALBUM.getMessage());
         }
     }

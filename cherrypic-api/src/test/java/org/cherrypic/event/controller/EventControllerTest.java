@@ -18,7 +18,6 @@ import org.cherrypic.domain.event.dto.response.EventCreateResponse;
 import org.cherrypic.domain.event.dto.response.EventListResponse;
 import org.cherrypic.domain.event.dto.response.EventUpdateResponse;
 import org.cherrypic.domain.event.exception.EventErrorCode;
-import org.cherrypic.domain.event.exception.EventException;
 import org.cherrypic.domain.event.service.EventService;
 import org.cherrypic.domain.image.exception.ImageErrorCode;
 import org.cherrypic.exception.CustomException;
@@ -142,7 +141,7 @@ public class EventControllerTest {
             EventCreateRequest request = new EventCreateRequest(1L, "testTitle", "testCoverUrl");
 
             given(eventService.createEvent(request))
-                    .willThrow(new EventException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT));
+                    .willThrow(new CustomException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT));
 
             // when & then
             ResultActions perform =
@@ -164,7 +163,7 @@ public class EventControllerTest {
             EventCreateRequest request = new EventCreateRequest(1L, "testTitle", "testCoverUrl");
 
             given(eventService.createEvent(request))
-                    .willThrow(new EventException(AlbumErrorCode.LIMITED_AUTHORITY));
+                    .willThrow(new CustomException(AlbumErrorCode.LIMITED_AUTHORITY));
 
             // when & then
             ResultActions perform =
@@ -258,7 +257,7 @@ public class EventControllerTest {
                     new EventUpdateRequest("testUpdatedTitle", "testUpdatedCoverUrl");
 
             given(eventService.updateEvent(1L, request))
-                    .willThrow(new EventException(EventErrorCode.EVENT_NOT_FOUND));
+                    .willThrow(new CustomException(EventErrorCode.EVENT_NOT_FOUND));
 
             // when & then
             ResultActions perform =
@@ -280,7 +279,7 @@ public class EventControllerTest {
             EventCreateRequest request = new EventCreateRequest(1L, "testTitle", "testCoverUrl");
 
             given(eventService.createEvent(request))
-                    .willThrow(new EventException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT));
+                    .willThrow(new CustomException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT));
 
             // when & then
             ResultActions perform =
@@ -302,7 +301,7 @@ public class EventControllerTest {
             EventCreateRequest request = new EventCreateRequest(1L, "testTitle", "testCoverUrl");
 
             given(eventService.createEvent(request))
-                    .willThrow(new EventException(AlbumErrorCode.LIMITED_AUTHORITY));
+                    .willThrow(new CustomException(AlbumErrorCode.LIMITED_AUTHORITY));
 
             // when & then
             ResultActions perform =
@@ -339,7 +338,7 @@ public class EventControllerTest {
             @Test
             void 이벤트가_존재하지_않는_경우_예외가_발생한다() throws Exception {
                 // given
-                willThrow(new EventException(EventErrorCode.EVENT_NOT_FOUND))
+                willThrow(new CustomException(EventErrorCode.EVENT_NOT_FOUND))
                         .given(eventService)
                         .deleteEvent(1L);
 
@@ -358,7 +357,7 @@ public class EventControllerTest {
             @Test
             void 요청자가_앨범_참가자가_아닌_경우_예외가_발생한다() throws Exception {
                 // given
-                willThrow(new EventException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT))
+                willThrow(new CustomException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT))
                         .given(eventService)
                         .deleteEvent(1L);
 
@@ -377,7 +376,7 @@ public class EventControllerTest {
             @Test
             void 요청자가_LIMITED_권한을_가지는_경우_예외가_발생한다() throws Exception {
                 // given
-                willThrow(new EventException(AlbumErrorCode.LIMITED_AUTHORITY))
+                willThrow(new CustomException(AlbumErrorCode.LIMITED_AUTHORITY))
                         .given(eventService)
                         .deleteEvent(1L);
 
@@ -587,7 +586,7 @@ public class EventControllerTest {
         void 존재하지_않는_이벤트에_추가하면_예외가_발생한다() throws Exception {
             // given
             EventImageAddRequest request = new EventImageAddRequest(List.of(1L));
-            willThrow(new EventException(EventErrorCode.EVENT_NOT_FOUND))
+            willThrow(new CustomException(EventErrorCode.EVENT_NOT_FOUND))
                     .given(eventService)
                     .addImages(1L, request);
 
@@ -631,7 +630,7 @@ public class EventControllerTest {
         void LIMITED_권한의_사용자가_이벤트에_이미지를_추가하면_예외가_발생한다() throws Exception {
             // given
             EventImageAddRequest request = new EventImageAddRequest(List.of(1L));
-            willThrow(new EventException(AlbumErrorCode.LIMITED_AUTHORITY))
+            willThrow(new CustomException(AlbumErrorCode.LIMITED_AUTHORITY))
                     .given(eventService)
                     .addImages(1L, request);
 

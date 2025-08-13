@@ -6,7 +6,7 @@ import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.cherrypic.domain.auth.enums.OauthProvider;
 import org.cherrypic.domain.auth.exception.AuthErrorCode;
-import org.cherrypic.domain.auth.exception.AuthException;
+import org.cherrypic.exception.CustomException;
 import org.cherrypic.oidc.OidcProperties;
 import org.springframework.security.oauth2.core.oidc.OidcIdToken;
 import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
@@ -71,7 +71,7 @@ public class IdTokenVerifier {
         String audience = oidcIdToken.getAudience().getFirst();
 
         if (!targetAudience.equals(audience)) {
-            throw new AuthException(AuthErrorCode.ID_TOKEN_VERIFICATION_FAILED);
+            throw new CustomException(AuthErrorCode.ID_TOKEN_VERIFICATION_FAILED);
         }
     }
 
@@ -79,7 +79,7 @@ public class IdTokenVerifier {
         String issuer = oidcIdToken.getIssuer().toString();
 
         if (!targetIssuer.equals(issuer)) {
-            throw new AuthException(AuthErrorCode.ID_TOKEN_VERIFICATION_FAILED);
+            throw new CustomException(AuthErrorCode.ID_TOKEN_VERIFICATION_FAILED);
         }
     }
 
@@ -87,7 +87,7 @@ public class IdTokenVerifier {
         Instant expiresAt = oidcIdToken.getExpiresAt();
 
         if (expiresAt == null || expiresAt.isBefore(Instant.now())) {
-            throw new AuthException(AuthErrorCode.ID_TOKEN_VERIFICATION_FAILED);
+            throw new CustomException(AuthErrorCode.ID_TOKEN_VERIFICATION_FAILED);
         }
     }
 }

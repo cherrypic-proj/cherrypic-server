@@ -9,15 +9,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
-import org.cherrypic.domain.album.exception.AlbumException;
 import org.cherrypic.domain.event.exception.EventErrorCode;
-import org.cherrypic.domain.event.exception.EventException;
 import org.cherrypic.domain.image.controller.ImageController;
 import org.cherrypic.domain.image.dto.request.MemberProfileImageUploadRequest;
 import org.cherrypic.domain.image.dto.response.ImageListResponse;
 import org.cherrypic.domain.image.dto.response.PresignedUrlResponse;
 import org.cherrypic.domain.image.enums.ImageFileExtension;
 import org.cherrypic.domain.image.service.ImageService;
+import org.cherrypic.exception.CustomException;
 import org.cherrypic.global.pagination.SliceResponse;
 import org.cherrypic.global.pagination.SortDirection;
 import org.junit.jupiter.api.Nested;
@@ -236,7 +235,7 @@ class ImageControllerTest {
         void 앨범이_존재하지_않을_경우_예외가_발생한다() throws Exception {
             // given
             given(imageService.getImages(999L, null, null, 2, SortDirection.ASC))
-                    .willThrow(new AlbumException(AlbumErrorCode.ALBUM_NOT_FOUND));
+                    .willThrow(new CustomException(AlbumErrorCode.ALBUM_NOT_FOUND));
 
             // when & then
             ResultActions perform =
@@ -257,7 +256,7 @@ class ImageControllerTest {
         void 앨범_참가자가_아닌_경우_예외가_발생한다() throws Exception {
             // given
             given(imageService.getImages(1L, null, null, 2, SortDirection.ASC))
-                    .willThrow(new AlbumException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT));
+                    .willThrow(new CustomException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT));
 
             // when & then
             ResultActions perform =
@@ -278,7 +277,7 @@ class ImageControllerTest {
         void 이벤트가_존재하지_않을_경우_예외가_발생한다() throws Exception {
             // given
             given(imageService.getImages(1L, 1L, null, 2, SortDirection.ASC))
-                    .willThrow(new EventException(EventErrorCode.EVENT_NOT_FOUND));
+                    .willThrow(new CustomException(EventErrorCode.EVENT_NOT_FOUND));
 
             // when & then
             ResultActions perform =
@@ -300,7 +299,7 @@ class ImageControllerTest {
         void 이벤트가_앨범에_속하지_않는_경우_예외가_발생한다() throws Exception {
             // given
             given(imageService.getImages(1L, 1L, null, 2, SortDirection.ASC))
-                    .willThrow(new EventException(EventErrorCode.EVENT_DOESNT_BELONG_TO_ALBUM));
+                    .willThrow(new CustomException(EventErrorCode.EVENT_DOESNT_BELONG_TO_ALBUM));
 
             // when & then
             ResultActions perform =

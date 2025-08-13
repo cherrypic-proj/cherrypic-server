@@ -21,7 +21,6 @@ import org.cherrypic.domain.album.dto.response.AlbumListResponse;
 import org.cherrypic.domain.album.dto.response.InvitationLinkCreateResponse;
 import org.cherrypic.domain.album.event.AlbumDeleteEvent;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
-import org.cherrypic.domain.album.exception.AlbumException;
 import org.cherrypic.domain.album.repository.AlbumRepository;
 import org.cherrypic.domain.album.repository.InvitationCodeRepository;
 import org.cherrypic.domain.album.service.AlbumService;
@@ -32,6 +31,7 @@ import org.cherrypic.domain.payment.exception.PaymentErrorCode;
 import org.cherrypic.domain.payment.repository.PaymentRepository;
 import org.cherrypic.domain.subscription.repository.SubscriptionRepository;
 import org.cherrypic.event.entity.Event;
+import org.cherrypic.exception.CustomException;
 import org.cherrypic.global.pagination.SliceResponse;
 import org.cherrypic.global.pagination.SortDirection;
 import org.cherrypic.global.util.MemberUtil;
@@ -136,7 +136,7 @@ class AlbumServiceTest extends IntegrationTest {
 
                 // when & then
                 assertThatThrownBy(() -> albumService.createAlbum(request))
-                        .isInstanceOf(AlbumException.class)
+                        .isInstanceOf(CustomException.class)
                         .hasMessage(
                                 AlbumErrorCode.PAYMENT_NOT_REQUIRED_FOR_BASIC_PLAN.getMessage());
             }
@@ -150,7 +150,7 @@ class AlbumServiceTest extends IntegrationTest {
 
                 // when & then
                 assertThatThrownBy(() -> albumService.createAlbum(request))
-                        .isInstanceOf(AlbumException.class)
+                        .isInstanceOf(CustomException.class)
                         .hasMessage(
                                 AlbumErrorCode.PERMISSION_CONTROL_NOT_ALLOWED_FOR_BASIC_PLAN
                                         .getMessage());
@@ -281,7 +281,7 @@ class AlbumServiceTest extends IntegrationTest {
 
                 // when & then
                 assertThatThrownBy(() -> albumService.createAlbum(request))
-                        .isInstanceOf(AlbumException.class)
+                        .isInstanceOf(CustomException.class)
                         .hasMessage(AlbumErrorCode.PAYMENT_REQUIRED_FOR_PAID_PLAN.getMessage());
             }
 
@@ -294,7 +294,7 @@ class AlbumServiceTest extends IntegrationTest {
 
                 // when & then
                 assertThatThrownBy(() -> albumService.createAlbum(request))
-                        .isInstanceOf(AlbumException.class)
+                        .isInstanceOf(CustomException.class)
                         .hasMessage(PaymentErrorCode.PAYMENT_NOT_FOUND.getMessage());
             }
 
@@ -307,7 +307,7 @@ class AlbumServiceTest extends IntegrationTest {
 
                 // when & then
                 assertThatThrownBy(() -> albumService.createAlbum(request))
-                        .isInstanceOf(AlbumException.class)
+                        .isInstanceOf(CustomException.class)
                         .hasMessage(PaymentErrorCode.NOT_PAID.getMessage());
             }
 
@@ -323,7 +323,7 @@ class AlbumServiceTest extends IntegrationTest {
 
                 // when & then
                 assertThatThrownBy(() -> albumService.createAlbum(request))
-                        .isInstanceOf(AlbumException.class)
+                        .isInstanceOf(CustomException.class)
                         .hasMessage(PaymentErrorCode.PAYMENT_MEMBER_MISMATCH.getMessage());
             }
 
@@ -336,7 +336,7 @@ class AlbumServiceTest extends IntegrationTest {
 
                 // when & then
                 assertThatThrownBy(() -> albumService.createAlbum(request))
-                        .isInstanceOf(AlbumException.class)
+                        .isInstanceOf(CustomException.class)
                         .hasMessage(PaymentErrorCode.ALREADY_USED_PAYMENT.getMessage());
             }
         }
@@ -396,7 +396,7 @@ class AlbumServiceTest extends IntegrationTest {
 
             // when & then
             assertThatThrownBy(() -> albumService.updateAlbum(999L, request))
-                    .isInstanceOf(AlbumException.class)
+                    .isInstanceOf(CustomException.class)
                     .hasMessage(AlbumErrorCode.ALBUM_NOT_FOUND.getMessage());
         }
 
@@ -407,7 +407,7 @@ class AlbumServiceTest extends IntegrationTest {
 
             // when & then
             assertThatThrownBy(() -> albumService.updateAlbum(3L, request))
-                    .isInstanceOf(AlbumException.class)
+                    .isInstanceOf(CustomException.class)
                     .hasMessage(AlbumErrorCode.NOT_ALBUM_PARTICIPANT.getMessage());
         }
 
@@ -418,7 +418,7 @@ class AlbumServiceTest extends IntegrationTest {
 
             // when & then
             assertThatThrownBy(() -> albumService.updateAlbum(2L, request))
-                    .isInstanceOf(AlbumException.class)
+                    .isInstanceOf(CustomException.class)
                     .hasMessage(AlbumErrorCode.NOT_ALBUM_HOST.getMessage());
         }
     }
@@ -510,7 +510,7 @@ class AlbumServiceTest extends IntegrationTest {
         void 앨범이_존재하지_않는_경우_예외가_발생한다() {
             // when & then
             assertThatThrownBy(() -> albumService.togglePermission(999L))
-                    .isInstanceOf(AlbumException.class)
+                    .isInstanceOf(CustomException.class)
                     .hasMessage(AlbumErrorCode.ALBUM_NOT_FOUND.getMessage());
         }
 
@@ -518,7 +518,7 @@ class AlbumServiceTest extends IntegrationTest {
         void 앨범_참가자가_아닌_경우_예외가_발생한다() {
             // when & then
             assertThatThrownBy(() -> albumService.togglePermission(4L))
-                    .isInstanceOf(AlbumException.class)
+                    .isInstanceOf(CustomException.class)
                     .hasMessage(AlbumErrorCode.NOT_ALBUM_PARTICIPANT.getMessage());
         }
 
@@ -526,7 +526,7 @@ class AlbumServiceTest extends IntegrationTest {
         void 앨범_방장이_아닌_경우_예외가_발생한다() {
             // when & then
             assertThatThrownBy(() -> albumService.togglePermission(2L))
-                    .isInstanceOf(AlbumException.class)
+                    .isInstanceOf(CustomException.class)
                     .hasMessage(AlbumErrorCode.NOT_ALBUM_HOST.getMessage());
         }
 
@@ -534,7 +534,7 @@ class AlbumServiceTest extends IntegrationTest {
         void BASIC_플랜인_경우_예외가_발생한다() {
             // when & then
             assertThatThrownBy(() -> albumService.togglePermission(3L))
-                    .isInstanceOf(AlbumException.class)
+                    .isInstanceOf(CustomException.class)
                     .hasMessage(
                             AlbumErrorCode.PERMISSION_CONTROL_NOT_ALLOWED_FOR_BASIC_PLAN
                                     .getMessage());
@@ -625,7 +625,7 @@ class AlbumServiceTest extends IntegrationTest {
 
             // when & then
             assertThatThrownBy(() -> albumService.createInvitationLink(3L))
-                    .isInstanceOf(AlbumException.class)
+                    .isInstanceOf(CustomException.class)
                     .hasMessage(AlbumErrorCode.ALBUM_NOT_FOUND.getMessage());
         }
 
@@ -636,7 +636,7 @@ class AlbumServiceTest extends IntegrationTest {
 
             // when & then
             assertThatThrownBy(() -> albumService.createInvitationLink(1L))
-                    .isInstanceOf(AlbumException.class)
+                    .isInstanceOf(CustomException.class)
                     .hasMessage(AlbumErrorCode.NOT_ALBUM_PARTICIPANT.getMessage());
         }
 
@@ -647,7 +647,7 @@ class AlbumServiceTest extends IntegrationTest {
 
             // when & then
             assertThatThrownBy(() -> albumService.createInvitationLink(2L))
-                    .isInstanceOf(AlbumException.class)
+                    .isInstanceOf(CustomException.class)
                     .hasMessage(AlbumErrorCode.NOT_ALBUM_HOST.getMessage());
         }
     }
@@ -820,7 +820,7 @@ class AlbumServiceTest extends IntegrationTest {
         void 앨범이_존재하지_않는_경우_예외가_발생한다() {
             // when & then
             assertThatThrownBy(() -> albumService.joinAlbum(999L, "testInvitationCode1"))
-                    .isInstanceOf(AlbumException.class)
+                    .isInstanceOf(CustomException.class)
                     .hasMessage(AlbumErrorCode.ALBUM_NOT_FOUND.getMessage());
         }
 
@@ -828,7 +828,7 @@ class AlbumServiceTest extends IntegrationTest {
         void 앨범_초대_코드가_redis에_존재하지_않는_경우_예외가_발생한다() {
             // when & then
             assertThatThrownBy(() -> albumService.joinAlbum(2L, "NoneExistingCode"))
-                    .isInstanceOf(AlbumException.class)
+                    .isInstanceOf(CustomException.class)
                     .hasMessage(AlbumErrorCode.INVITATION_CODE_NOT_FOUND.getMessage());
         }
 
@@ -836,7 +836,7 @@ class AlbumServiceTest extends IntegrationTest {
         void 앨범_초대_코드가_redis에_저장된_코드와_일치하지_않는_경우_예외가_발생한다() {
             // when & then
             assertThatThrownBy(() -> albumService.joinAlbum(1L, "expiredInvitationCode"))
-                    .isInstanceOf(AlbumException.class)
+                    .isInstanceOf(CustomException.class)
                     .hasMessage(AlbumErrorCode.INVITATION_CODE_MISMATCH.getMessage());
         }
 
@@ -844,7 +844,7 @@ class AlbumServiceTest extends IntegrationTest {
         void 이미_입장한_앨범에_재입장_하려는_경우_예외가_발생한다() {
             // when & then
             assertThatThrownBy(() -> albumService.joinAlbum(3L, "testInvitationCode2"))
-                    .isInstanceOf(AlbumException.class)
+                    .isInstanceOf(CustomException.class)
                     .hasMessage(AlbumErrorCode.ALREADY_PARTICIPATED.getMessage());
         }
     }
@@ -908,7 +908,7 @@ class AlbumServiceTest extends IntegrationTest {
         void 앨범이_존재하지_않는_경우_예외가_발생한다() {
             // when & then
             assertThatThrownBy(() -> albumService.deleteAlbum(999L))
-                    .isInstanceOf(AlbumException.class)
+                    .isInstanceOf(CustomException.class)
                     .hasMessage(AlbumErrorCode.ALBUM_NOT_FOUND.getMessage());
         }
 
@@ -916,7 +916,7 @@ class AlbumServiceTest extends IntegrationTest {
         void 앨범_참가자가_아닌_경우_예외가_발생한다() {
             // when & then
             assertThatThrownBy(() -> albumService.deleteAlbum(4L))
-                    .isInstanceOf(AlbumException.class)
+                    .isInstanceOf(CustomException.class)
                     .hasMessage(AlbumErrorCode.NOT_ALBUM_PARTICIPANT.getMessage());
         }
 
@@ -924,7 +924,7 @@ class AlbumServiceTest extends IntegrationTest {
         void 앨범_방장이_아닌_경우_예외가_발생한다() {
             // when & then
             assertThatThrownBy(() -> albumService.deleteAlbum(2L))
-                    .isInstanceOf(AlbumException.class)
+                    .isInstanceOf(CustomException.class)
                     .hasMessage(AlbumErrorCode.NOT_ALBUM_HOST.getMessage());
         }
 
@@ -932,7 +932,7 @@ class AlbumServiceTest extends IntegrationTest {
         void 다른_참가자가_남아있는_경우_이벤트가_발행되고_예외가_발생한다() {
             // when & then
             assertThatThrownBy(() -> albumService.deleteAlbum(3L))
-                    .isInstanceOf(AlbumException.class)
+                    .isInstanceOf(CustomException.class)
                     .hasMessage(AlbumErrorCode.OTHER_PARTICIPANTS_EXIST.getMessage());
 
             var events = applicationEvents.stream(AlbumDeleteEvent.class).toList();
@@ -945,7 +945,7 @@ class AlbumServiceTest extends IntegrationTest {
         void 구독_중인_경우_예외가_발생한다() {
             // when & then
             assertThatThrownBy(() -> albumService.deleteAlbum(5L))
-                    .isInstanceOf(AlbumException.class)
+                    .isInstanceOf(CustomException.class)
                     .hasMessage(AlbumErrorCode.SUBSCRIPTION_ACTIVE.getMessage());
         }
     }
