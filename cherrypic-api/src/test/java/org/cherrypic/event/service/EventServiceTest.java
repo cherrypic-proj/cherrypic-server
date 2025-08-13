@@ -1,10 +1,15 @@
 package org.cherrypic.event.service;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.doAnswer;
 
+import jakarta.persistence.EntityManager;
+import java.sql.SQLIntegrityConstraintViolationException;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.cherrypic.IntegrationTest;
 import org.cherrypic.album.entity.Album;
 import org.cherrypic.album.enums.AlbumPlan;
@@ -39,7 +44,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 public class EventServiceTest extends IntegrationTest {
 
@@ -52,7 +59,8 @@ public class EventServiceTest extends IntegrationTest {
     @Autowired private MemberRepository memberRepository;
     @Autowired private ParticipantRepository participantRepository;
     @Autowired private ImageRepository imageRepository;
-    @Autowired private EventImageRepository eventImageRepository;
+    @MockitoSpyBean private EventImageRepository eventImageRepository;
+    @Autowired private EntityManager em;
 
     @MockitoBean MemberUtil memberUtil;
 
@@ -506,6 +514,117 @@ public class EventServiceTest extends IntegrationTest {
 
             // then
             assertThat(eventImageRepository.findById(2L).isPresent()).isFalse();
+        }
+
+        @Test
+        void 추가하고자_하는_이미지가_이미_추가된_동시성_충돌_시_재실행_된다() {
+            // given
+            EventImageAddRequest request = new EventImageAddRequest(List.of(1L, 4L));
+
+            AtomicBoolean firstCall = new AtomicBoolean(true);
+            doAnswer(
+                            invocation -> {
+                                if (firstCall.getAndSet(false)) {
+                                    var sqlEx =
+                                            new SQLIntegrityConstraintViolationException(
+                                                    "Duplicate entry '1-4' for key 'uk_event_image_event_id_image_id'",
+                                                    "23000",
+                                                    1062);
+                                    throw new DataIntegrityViolationException(
+                                            "constraint violation", sqlEx);
+                                } else {
+                                    List<EventImage> args = invocation.getArgument(0);
+                                    args.forEach(em::persist);
+                                    em.flush();
+                                    return args;
+                                }
+                            })
+                    .when(eventImageRepository)
+                    .saveAllAndFlush(anyList());
+
+            // when
+            eventService.addImages(1L, request);
+
+            // then
+            List<EventImage> eventImages = eventImageRepository.findAllById(List.of(2L, 3L));
+            assertThat(eventImages)
+                    .extracting("event.id", "image.id")
+                    .containsExactly(tuple(1L, 1L), tuple(1L, 4L));
+        }
+
+        @Test
+        void 추가하고자_하는_이미지가_삭제되는_동시성_충돌_시_예외를_반환한다() {
+            // given
+            EventImageAddRequest request = new EventImageAddRequest(List.of(1L, 4L));
+
+            doAnswer(
+                            invocation -> {
+                                var sqlEx =
+                                        new SQLIntegrityConstraintViolationException(
+                                                "Cannot add or update a child row: a foreign key constraint fails "
+                                                        + "(`testdb`.`event_image`, CONSTRAINT `fk_event_image_image` FOREIGN KEY (`image_id`) "
+                                                        + "REFERENCES `image` (`id`))",
+                                                "23000",
+                                                1452);
+                                throw new DataIntegrityViolationException(
+                                        "constraint violation", sqlEx);
+                            })
+                    .when(eventImageRepository)
+                    .saveAllAndFlush(anyList());
+            // when & then
+            assertThatThrownBy(() -> eventService.addImages(1L, request))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(ImageErrorCode.IMAGE_DELETED.getMessage());
+        }
+
+        @Test
+        void 추가하고자_하는_이벤트가_삭제되는_동시성_충돌_시_예외를_반환한다() {
+            // given
+            EventImageAddRequest request = new EventImageAddRequest(List.of(1L, 4L));
+
+            doAnswer(
+                            invocation -> {
+                                var sqlEx =
+                                        new SQLIntegrityConstraintViolationException(
+                                                "Cannot add or update a child row: a foreign key constraint fails "
+                                                        + "(`testdb`.`event_image`, CONSTRAINT `fk_event_image_event` FOREIGN KEY (`event_id`) "
+                                                        + "REFERENCES `event` (`id`))",
+                                                "23000",
+                                                1452);
+                                throw new DataIntegrityViolationException(
+                                        "constraint violation", sqlEx);
+                            })
+                    .when(eventImageRepository)
+                    .saveAllAndFlush(anyList());
+
+            // when & then
+            assertThatThrownBy(() -> eventService.addImages(1L, request))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(EventErrorCode.EVENT_DELETED.getMessage());
+        }
+
+        @Test
+        void 예상하지_못한_DB_동시성_에러_발생시_예외가_발생한다() {
+            // given
+            EventImageAddRequest request = new EventImageAddRequest(List.of(1L, 4L));
+
+            doAnswer(
+                            invocation -> {
+                                var sqlEx =
+                                        new SQLIntegrityConstraintViolationException(
+                                                "random test SQL constraint message that does not contain known constraint names",
+                                                "23000",
+                                                9999);
+                                throw new DataIntegrityViolationException(
+                                        "constraint violation", sqlEx);
+                            })
+                    .when(eventImageRepository)
+                    .saveAllAndFlush(anyList());
+
+            // when & then
+            assertThatThrownBy(() -> eventService.addImages(1L, request))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(ImageErrorCode.IMAGE_CONFLICT.getMessage());
         }
     }
 }

@@ -117,16 +117,15 @@ public class EventServiceImpl implements EventService {
             eventImageRepository.saveAllAndFlush(eventImages);
         } catch (DataIntegrityViolationException e) {
             String constraint = getMySqlConstraint(e);
-
             if ("fk_event_image_event".equalsIgnoreCase(constraint)) {
                 throw new CustomException(EventErrorCode.EVENT_DELETED);
             }
             if ("fk_event_image_image".equalsIgnoreCase(constraint)) {
                 throw new CustomException(ImageErrorCode.IMAGE_DELETED);
             }
-            if ("uk_event_image_event_id_image_id".equalsIgnoreCase(constraint)
-                    || "1062".equals(constraint)) {
+            if ("uk_event_image_event_id_image_id".equalsIgnoreCase(constraint)) {
                 addImages(eventId, request);
+                return;
             }
             throw new CustomException(ImageErrorCode.IMAGE_CONFLICT);
         }
@@ -180,16 +179,15 @@ public class EventServiceImpl implements EventService {
         Throwable t = ex;
         while (t != null) {
             if (t instanceof java.sql.SQLIntegrityConstraintViolationException sql) {
-                // MySQL UK 위반: errorCode=1062, FK 위반: errorCode=1452
                 String msg = sql.getMessage();
                 if (msg != null) {
-                    // 메시지에 제약명 포함됨
-                    if (msg.contains("fk_event_image_event")) return "fk_event_image_event";
-                    if (msg.contains("fk_event_image_image")) return "fk_event_image_image";
-                    if (msg.contains("uk_event_image_event_id_image_id"))
+                    String lower = msg.toLowerCase();
+                    if (lower.contains("fk_event_image_event")) return "fk_event_image_event";
+                    if (lower.contains("fk_event_image_image")) return "fk_event_image_image";
+                    if (lower.contains("uk_event_image_event_id_image_id"))
                         return "uk_event_image_event_id_image_id";
                 }
-                return String.valueOf(sql.getErrorCode());
+                return String.valueOf(sql.getErrorCode()); // fallback
             }
             t = t.getCause();
         }
