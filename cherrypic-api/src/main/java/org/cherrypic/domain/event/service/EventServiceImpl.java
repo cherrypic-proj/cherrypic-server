@@ -21,7 +21,7 @@ import org.cherrypic.domain.image.exception.ImageErrorCode;
 import org.cherrypic.domain.image.repository.ImageRepository;
 import org.cherrypic.domain.participant.repository.ParticipantRepository;
 import org.cherrypic.event.entity.Event;
-import org.cherrypic.exception.BaseCustomException;
+import org.cherrypic.exception.CustomException;
 import org.cherrypic.global.pagination.SliceResponse;
 import org.cherrypic.global.pagination.SortDirection;
 import org.cherrypic.global.util.MemberUtil;
@@ -109,7 +109,7 @@ public class EventServiceImpl implements EventService {
 
         int updatedImages = imageRepository.bulkChangeImageEventWithVersionCheck(keys, eventId);
         if (updatedImages != request.imageIds().size()) {
-            throw new BaseCustomException(ImageErrorCode.CONFLICTING_IMAGES);
+            throw new CustomException(ImageErrorCode.CONFLICTING_IMAGES);
         }
     }
 
@@ -143,7 +143,7 @@ public class EventServiceImpl implements EventService {
 
     private void validateImageEvent(List<Image> images) {
         if (images.stream().anyMatch(img -> img.getEvent() != null)) {
-            throw new BaseCustomException(ImageErrorCode.IMAGES_ASSIGNED_TO_EVENT);
+            throw new CustomException(ImageErrorCode.IMAGES_ASSIGNED_TO_EVENT);
         }
     }
 
@@ -154,7 +154,7 @@ public class EventServiceImpl implements EventService {
                         img ->
                                 img.getAlbum() == null
                                         || !Objects.equals(img.getAlbum().getId(), albumId))) {
-            throw new BaseCustomException(ImageErrorCode.IMAGES_FROM_OTHER_ALBUM);
+            throw new CustomException(ImageErrorCode.IMAGES_FROM_OTHER_ALBUM);
         }
     }
 
@@ -164,6 +164,6 @@ public class EventServiceImpl implements EventService {
 
         return Optional.of(imageRepository.findAllById(distinctIds))
                 .filter(list -> list.size() == distinctIds.size())
-                .orElseThrow(() -> new BaseCustomException(ImageErrorCode.IMAGES_NOT_FOUND));
+                .orElseThrow(() -> new CustomException(ImageErrorCode.IMAGES_NOT_FOUND));
     }
 }

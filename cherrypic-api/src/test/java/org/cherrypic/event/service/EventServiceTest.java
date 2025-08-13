@@ -23,7 +23,7 @@ import org.cherrypic.domain.image.repository.ImageRepository;
 import org.cherrypic.domain.member.repository.MemberRepository;
 import org.cherrypic.domain.participant.repository.ParticipantRepository;
 import org.cherrypic.event.entity.Event;
-import org.cherrypic.exception.BaseCustomException;
+import org.cherrypic.exception.CustomException;
 import org.cherrypic.global.pagination.SliceResponse;
 import org.cherrypic.global.pagination.SortDirection;
 import org.cherrypic.global.util.MemberUtil;
@@ -478,7 +478,7 @@ public class EventServiceTest extends IntegrationTest {
 
             // when & then
             assertThatThrownBy(() -> eventService.addImages(1L, request))
-                    .isInstanceOf(BaseCustomException.class)
+                    .isInstanceOf(CustomException.class)
                     .hasMessage(ImageErrorCode.IMAGES_NOT_FOUND.getMessage());
         }
 
@@ -500,7 +500,7 @@ public class EventServiceTest extends IntegrationTest {
 
             // when & then
             assertThatThrownBy(() -> eventService.addImages(1L, request))
-                    .isInstanceOf(BaseCustomException.class)
+                    .isInstanceOf(CustomException.class)
                     .hasMessage(ImageErrorCode.IMAGES_ASSIGNED_TO_EVENT.getMessage());
         }
 
@@ -511,7 +511,7 @@ public class EventServiceTest extends IntegrationTest {
 
             // when & then
             assertThatThrownBy(() -> eventService.addImages(1L, request))
-                    .isInstanceOf(BaseCustomException.class)
+                    .isInstanceOf(CustomException.class)
                     .hasMessage(ImageErrorCode.IMAGES_FROM_OTHER_ALBUM.getMessage());
         }
 
@@ -540,7 +540,7 @@ public class EventServiceTest extends IntegrationTest {
                                 f1.get();
 
                                 assertThatThrownBy(() -> eventService.addImages(1L, request))
-                                        .isInstanceOf(BaseCustomException.class)
+                                        .isInstanceOf(CustomException.class)
                                         .hasMessage(ImageErrorCode.CONFLICTING_IMAGES.getMessage());
                                 return null;
                             });
