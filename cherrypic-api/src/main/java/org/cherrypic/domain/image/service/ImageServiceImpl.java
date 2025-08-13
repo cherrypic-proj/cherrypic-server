@@ -156,10 +156,4 @@ public class ImageServiceImpl implements ImageService {
                 .findByMemberIdAndAlbumId(memberId, albumId)
                 .orElseThrow(() -> new CustomException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT));
     }
-
-    private void validateAlbumEvent(Album album, Event event) {
-        if (!event.getAlbum().getId().equals(album.getId())) {
-            throw new CustomException(EventErrorCode.EVENT_DOESNT_BELONG_TO_ALBUM);
-        }
-    }
 }
