@@ -18,10 +18,12 @@ import org.cherrypic.domain.event.exception.EventErrorCode;
 import org.cherrypic.domain.event.repository.EventRepository;
 import org.cherrypic.domain.event.service.EventService;
 import org.cherrypic.domain.image.exception.ImageErrorCode;
+import org.cherrypic.domain.image.repository.EventImageRepository;
 import org.cherrypic.domain.image.repository.ImageRepository;
 import org.cherrypic.domain.member.repository.MemberRepository;
 import org.cherrypic.domain.participant.repository.ParticipantRepository;
 import org.cherrypic.event.entity.Event;
+import org.cherrypic.event.entity.EventImage;
 import org.cherrypic.exception.CustomException;
 import org.cherrypic.global.pagination.SliceResponse;
 import org.cherrypic.global.pagination.SortDirection;
@@ -50,6 +52,7 @@ public class EventServiceTest extends IntegrationTest {
     @Autowired private MemberRepository memberRepository;
     @Autowired private ParticipantRepository participantRepository;
     @Autowired private ImageRepository imageRepository;
+    @Autowired private EventImageRepository eventImageRepository;
 
     @MockitoBean MemberUtil memberUtil;
 
@@ -250,14 +253,6 @@ public class EventServiceTest extends IntegrationTest {
             Event event1 = Event.createEvent(album1, "testEvent1", "testEventCoverUrl1");
             Event event2 = Event.createEvent(album2, "testEvent2", "testEventCoverUrl2");
             eventRepository.saveAll(List.of(event1, event2));
-
-            Image image1 =
-                    Image.createImage(album1, null, 1L, "testImageUrl1", LocalDateTime.now());
-            Image image2 =
-                    Image.createImage(album1, null, 1L, "testImageUrl2", LocalDateTime.now());
-            Image image3 =
-                    Image.createImage(album1, null, 1L, "testImageUrl3", LocalDateTime.now());
-            imageRepository.saveAll(List.of(image1, image2, image3));
         }
 
         @Test
@@ -325,9 +320,13 @@ public class EventServiceTest extends IntegrationTest {
             Event event2 = Event.createEvent(album1, "testTitle2", "testCoverUrl2");
             eventRepository.saveAll(List.of(event1, event2));
 
-            Image image1 = Image.createImage(album1, event1, 1L, "testUrl", LocalDateTime.now());
-            Image image2 = Image.createImage(album1, event1, 1L, "testUrl2", LocalDateTime.now());
+            Image image1 = Image.createImage(album1, 1L, "testUrl", LocalDateTime.now());
+            Image image2 = Image.createImage(album1, 1L, "testUrl2", LocalDateTime.now());
             imageRepository.saveAll(List.of(image1, image2));
+
+            EventImage eventImage1 = EventImage.createEventImage(event1, image1);
+            EventImage eventImage2 = EventImage.createEventImage(event1, image2);
+            eventImageRepository.saveAll(List.of(eventImage1, eventImage2));
         }
 
         @Test
@@ -439,11 +438,14 @@ public class EventServiceTest extends IntegrationTest {
             Event event2 = Event.createEvent(album2, "testTitle2", "testCoverUrl2");
             eventRepository.saveAll(List.of(event1, event2));
 
-            Image image1 = Image.createImage(album1, null, 1L, "testUrl", LocalDateTime.now());
-            Image image2 = Image.createImage(album1, event1, 1L, "testUrl2", LocalDateTime.now());
-            Image image3 = Image.createImage(album2, null, 1L, "testUrl3", LocalDateTime.now());
-            Image image4 = Image.createImage(album1, null, 1L, "testUrl4", LocalDateTime.now());
+            Image image1 = Image.createImage(album1, 1L, "testUrl", LocalDateTime.now());
+            Image image2 = Image.createImage(album1, 1L, "testUrl2", LocalDateTime.now());
+            Image image3 = Image.createImage(album2, 1L, "testUrl3", LocalDateTime.now());
+            Image image4 = Image.createImage(album1, 1L, "testUrl4", LocalDateTime.now());
             imageRepository.saveAll(List.of(image1, image2, image3, image4));
+
+            EventImage eventImage = EventImage.createEventImage(event1, image2);
+            eventImageRepository.save(eventImage);
         }
 
         @Test
@@ -455,8 +457,10 @@ public class EventServiceTest extends IntegrationTest {
             eventService.addImages(1L, request);
 
             // then
-            List<Image> images = imageRepository.findAllById(List.of(1L, 4L));
-            assertThat(images).extracting("event.id").containsExactly(1L, 1L);
+            List<EventImage> eventImages = eventImageRepository.findAllById(List.of(2L, 3L));
+            assertThat(eventImages)
+                    .extracting("event.id", "image.id")
+                    .containsExactly(tuple(1L, 1L), tuple(1L, 4L));
         }
 
         @Test
@@ -493,56 +497,15 @@ public class EventServiceTest extends IntegrationTest {
         }
 
         @Test
-        void 이미_이벤트에_속한_이미지를_추가하면_예외가_발생한다() {
+        void 이미_해당_이벤트에_속한_이미지를_똑같은_이벤트에_추가해도_중복으로_추가되지_않는다() {
             // given
             EventImageAddRequest request = new EventImageAddRequest(List.of(2L));
 
-            // when & then
-            assertThatThrownBy(() -> eventService.addImages(1L, request))
-                    .isInstanceOf(CustomException.class)
-                    .hasMessage(ImageErrorCode.IMAGES_ASSIGNED_TO_EVENT.getMessage());
-        }
+            // when
+            eventService.addImages(1L, request);
 
-        @Test
-        void 다른_앨범에_속한_이미지를_추가하면_예외가_발생한다() {
-            // given
-            EventImageAddRequest request = new EventImageAddRequest(List.of(3L));
-
-            // when & then
-            assertThatThrownBy(() -> eventService.addImages(1L, request))
-                    .isInstanceOf(CustomException.class)
-                    .hasMessage(ImageErrorCode.IMAGES_FROM_OTHER_ALBUM.getMessage());
-        }
-
-        @Test
-        void 앨범에_이미지를_추가하던_와중_다른_사람이_해당_이미지를_조작하면_예외가_발생한다() throws Exception {
-            // given:
-            EventImageAddRequest request = new EventImageAddRequest(List.of(1L, 4L));
-
-            var barrier = new java.util.concurrent.CyclicBarrier(2);
-            var es = java.util.concurrent.Executors.newFixedThreadPool(2);
-
-            // when & then
-            var f1 =
-                    es.submit(
-                            () -> {
-                                barrier.await();
-                                imageRepository.bulkChangeImageEventWithVersionCheck(
-                                        List.of("1:1"), 2L);
-                                return null;
-                            });
-
-            var f2 =
-                    es.submit(
-                            () -> {
-                                barrier.await();
-                                f1.get();
-
-                                assertThatThrownBy(() -> eventService.addImages(1L, request))
-                                        .isInstanceOf(CustomException.class)
-                                        .hasMessage(ImageErrorCode.CONFLICTING_IMAGES.getMessage());
-                                return null;
-                            });
+            // then
+            assertThat(eventImageRepository.findById(2L).isPresent()).isFalse();
         }
     }
 }

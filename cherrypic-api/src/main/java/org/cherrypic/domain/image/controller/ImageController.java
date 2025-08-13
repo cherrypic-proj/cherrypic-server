@@ -33,7 +33,7 @@ public class ImageController {
         return imageService.createMemberProfileImageUploadUrl(request);
     }
 
-    @GetMapping("/album/images")
+    @GetMapping("/albums/images")
     @Operation(summary = "앨범 이미지 목록 조회", description = "앨범의 이미지 목록을 조회합니다.")
     public SliceResponse<AlbumImageListResponse> albumImagesGet(
             @RequestParam Long albumId,
@@ -47,7 +47,7 @@ public class ImageController {
         return imageService.getAlbumImages(albumId, lastImageId, size, direction);
     }
 
-    @GetMapping("/event/images")
+    @GetMapping("/events/images")
     @Operation(summary = "이벤트 이미지 목록 조회", description = "이벤트 이미지 목록을 조회합니다.")
     public SliceResponse<EventImageListResponse> eventImagesGet(
             @RequestParam Long eventId,
