@@ -84,7 +84,8 @@ CREATE TABLE event_image (
                              created_at DATETIME(6) NOT NULL,
                              updated_at DATETIME(6) NOT NULL,
                              CONSTRAINT fk_event_image_event FOREIGN KEY (event_id) REFERENCES event(id),
-                             CONSTRAINT fk_event_image_image FOREIGN KEY (image_id) REFERENCES image(id)
+                             CONSTRAINT fk_event_image_image FOREIGN KEY (image_id) REFERENCES image(id),
+                             CONSTRAINT uk_event_image_event_id_image_id UNIQUE (event_id, image_id)
 );
 
 CREATE TABLE favorites (

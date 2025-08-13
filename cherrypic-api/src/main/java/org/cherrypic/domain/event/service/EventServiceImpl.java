@@ -28,6 +28,7 @@ import org.cherrypic.image.entity.Image;
 import org.cherrypic.member.entity.Member;
 import org.cherrypic.participant.entity.Participant;
 import org.cherrypic.participant.enums.ParticipantRole;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -112,7 +113,23 @@ public class EventServiceImpl implements EventService {
         List<EventImage> eventImages =
                 images.stream().map(image -> EventImage.createEventImage(event, image)).toList();
 
-        eventImageRepository.saveAll(eventImages);
+        try {
+            eventImageRepository.saveAllAndFlush(eventImages);
+        } catch (DataIntegrityViolationException e) {
+            String constraint = getMySqlConstraint(e);
+
+            if ("fk_event_image_event".equalsIgnoreCase(constraint)) {
+                throw new CustomException(EventErrorCode.EVENT_DELETED);
+            }
+            if ("fk_event_image_image".equalsIgnoreCase(constraint)) {
+                throw new CustomException(ImageErrorCode.IMAGE_DELETED);
+            }
+            if ("uk_event_image_event_id_image_id".equalsIgnoreCase(constraint)
+                    || "1062".equals(constraint)) {
+                addImages(eventId, request);
+            }
+            throw new CustomException(ImageErrorCode.IMAGE_CONFLICT);
+        }
     }
 
     private Album getAlbumById(Long albumId) {
@@ -157,5 +174,25 @@ public class EventServiceImpl implements EventService {
 
     private List<Image> getAllUnmappedImagesById(Long eventId, List<Long> imageIds) {
         return imageRepository.findAllUnmappedToEvent(eventId, imageIds);
+    }
+
+    private String getMySqlConstraint(Throwable ex) {
+        Throwable t = ex;
+        while (t != null) {
+            if (t instanceof java.sql.SQLIntegrityConstraintViolationException sql) {
+                // MySQL UK 위반: errorCode=1062, FK 위반: errorCode=1452
+                String msg = sql.getMessage();
+                if (msg != null) {
+                    // 메시지에 제약명 포함됨
+                    if (msg.contains("fk_event_image_event")) return "fk_event_image_event";
+                    if (msg.contains("fk_event_image_image")) return "fk_event_image_image";
+                    if (msg.contains("uk_event_image_event_id_image_id"))
+                        return "uk_event_image_event_id_image_id";
+                }
+                return String.valueOf(sql.getErrorCode());
+            }
+            t = t.getCause();
+        }
+        return null;
     }
 }

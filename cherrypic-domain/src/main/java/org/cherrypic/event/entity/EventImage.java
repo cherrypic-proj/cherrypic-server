@@ -10,6 +10,12 @@ import org.cherrypic.image.entity.Image;
 
 @Getter
 @Entity
+@Table(
+        name = "event_image",
+        uniqueConstraints =
+                @UniqueConstraint(
+                        name = "uk_event_image_event_id_image_id",
+                        columnNames = {"event_id", "image_id"}))
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class EventImage extends BaseTimeEntity {
 
