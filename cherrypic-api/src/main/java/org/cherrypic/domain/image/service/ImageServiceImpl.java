@@ -74,6 +74,7 @@ public class ImageServiceImpl implements ImageService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public SliceResponse<EventImageListResponse> getEventImages(
             Long eventId, Long lastImageId, int size, SortDirection direction) {
         final Member currentMember = memberUtil.getCurrentMember();
