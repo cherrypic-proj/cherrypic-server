@@ -6,7 +6,6 @@ import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.cherrypic.album.entity.Album;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
-import org.cherrypic.domain.album.exception.AlbumException;
 import org.cherrypic.domain.album.repository.AlbumRepository;
 import org.cherrypic.domain.event.dto.request.EventCreateRequest;
 import org.cherrypic.domain.event.dto.request.EventImageAddRequest;
@@ -15,13 +14,12 @@ import org.cherrypic.domain.event.dto.response.EventCreateResponse;
 import org.cherrypic.domain.event.dto.response.EventListResponse;
 import org.cherrypic.domain.event.dto.response.EventUpdateResponse;
 import org.cherrypic.domain.event.exception.EventErrorCode;
-import org.cherrypic.domain.event.exception.EventException;
 import org.cherrypic.domain.event.repository.EventRepository;
 import org.cherrypic.domain.image.exception.ImageErrorCode;
 import org.cherrypic.domain.image.repository.ImageRepository;
 import org.cherrypic.domain.participant.repository.ParticipantRepository;
 import org.cherrypic.event.entity.Event;
-import org.cherrypic.exception.BaseCustomException;
+import org.cherrypic.exception.CustomException;
 import org.cherrypic.global.pagination.SliceResponse;
 import org.cherrypic.global.pagination.SortDirection;
 import org.cherrypic.global.util.MemberUtil;
@@ -109,26 +107,26 @@ public class EventServiceImpl implements EventService {
 
         int updatedImages = imageRepository.bulkChangeImageEventWithVersionCheck(keys, eventId);
         if (updatedImages != request.imageIds().size()) {
-            throw new BaseCustomException(ImageErrorCode.CONFLICTING_IMAGES);
+            throw new CustomException(ImageErrorCode.CONFLICTING_IMAGES);
         }
     }
 
     private Album getAlbumById(Long albumId) {
         return albumRepository
                 .findById(albumId)
-                .orElseThrow(() -> new AlbumException(AlbumErrorCode.ALBUM_NOT_FOUND));
+                .orElseThrow(() -> new CustomException(AlbumErrorCode.ALBUM_NOT_FOUND));
     }
 
     private Event getEventById(Long eventId) {
         return eventRepository
                 .findById(eventId)
-                .orElseThrow(() -> new EventException(EventErrorCode.EVENT_NOT_FOUND));
+                .orElseThrow(() -> new CustomException(EventErrorCode.EVENT_NOT_FOUND));
     }
 
     private Participant getParticipantByMemberIdAndAlbumId(Long memberId, Long albumId) {
         return participantRepository
                 .findByMemberIdAndAlbumId(memberId, albumId)
-                .orElseThrow(() -> new EventException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT));
+                .orElseThrow(() -> new CustomException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT));
     }
 
     private void validateParticipantAuthority(Member member, Album album) {
@@ -137,13 +135,13 @@ public class EventServiceImpl implements EventService {
 
         boolean isLimited = participant.getRole().equals(ParticipantRole.LIMITED);
         if (isLimited) {
-            throw new EventException(AlbumErrorCode.LIMITED_AUTHORITY);
+            throw new CustomException(AlbumErrorCode.LIMITED_AUTHORITY);
         }
     }
 
     private void validateImageEvent(List<Image> images) {
         if (images.stream().anyMatch(img -> img.getEvent() != null)) {
-            throw new BaseCustomException(ImageErrorCode.IMAGES_ASSIGNED_TO_EVENT);
+            throw new CustomException(ImageErrorCode.IMAGES_ASSIGNED_TO_EVENT);
         }
     }
 
@@ -154,7 +152,7 @@ public class EventServiceImpl implements EventService {
                         img ->
                                 img.getAlbum() == null
                                         || !Objects.equals(img.getAlbum().getId(), albumId))) {
-            throw new BaseCustomException(ImageErrorCode.IMAGES_FROM_OTHER_ALBUM);
+            throw new CustomException(ImageErrorCode.IMAGES_FROM_OTHER_ALBUM);
         }
     }
 
@@ -164,6 +162,6 @@ public class EventServiceImpl implements EventService {
 
         return Optional.of(imageRepository.findAllById(distinctIds))
                 .filter(list -> list.size() == distinctIds.size())
-                .orElseThrow(() -> new BaseCustomException(ImageErrorCode.IMAGES_NOT_FOUND));
+                .orElseThrow(() -> new CustomException(ImageErrorCode.IMAGES_NOT_FOUND));
     }
 }

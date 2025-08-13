@@ -13,9 +13,9 @@ import org.cherrypic.domain.album.dto.request.AlbumCreateRequest;
 import org.cherrypic.domain.album.dto.request.AlbumUpdateRequest;
 import org.cherrypic.domain.album.dto.response.*;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
-import org.cherrypic.domain.album.exception.AlbumException;
 import org.cherrypic.domain.album.service.AlbumService;
 import org.cherrypic.domain.payment.exception.PaymentErrorCode;
+import org.cherrypic.exception.CustomException;
 import org.cherrypic.global.pagination.SliceResponse;
 import org.cherrypic.global.pagination.SortDirection;
 import org.cherrypic.participant.enums.ParticipantRole;
@@ -88,7 +88,7 @@ class AlbumControllerTest {
 
                 given(albumService.createAlbum(request))
                         .willThrow(
-                                new AlbumException(
+                                new CustomException(
                                         AlbumErrorCode.PAYMENT_NOT_REQUIRED_FOR_BASIC_PLAN));
 
                 // when & then
@@ -117,7 +117,7 @@ class AlbumControllerTest {
 
                 given(albumService.createAlbum(request))
                         .willThrow(
-                                new AlbumException(
+                                new CustomException(
                                         AlbumErrorCode
                                                 .PERMISSION_CONTROL_NOT_ALLOWED_FOR_BASIC_PLAN));
 
@@ -182,7 +182,7 @@ class AlbumControllerTest {
 
                 given(albumService.createAlbum(request))
                         .willThrow(
-                                new AlbumException(AlbumErrorCode.PAYMENT_REQUIRED_FOR_PAID_PLAN));
+                                new CustomException(AlbumErrorCode.PAYMENT_REQUIRED_FOR_PAID_PLAN));
 
                 // when & then
                 ResultActions perform =
@@ -206,7 +206,7 @@ class AlbumControllerTest {
                                 "testTitle", "testCoverUrl", AlbumPlan.PRO, 999L, false);
 
                 given(albumService.createAlbum(request))
-                        .willThrow(new AlbumException(PaymentErrorCode.PAYMENT_NOT_FOUND));
+                        .willThrow(new CustomException(PaymentErrorCode.PAYMENT_NOT_FOUND));
 
                 // when & then
                 ResultActions perform =
@@ -230,7 +230,7 @@ class AlbumControllerTest {
                                 "testTitle", "testCoverUrl", AlbumPlan.PRO, 1L, false);
 
                 given(albumService.createAlbum(request))
-                        .willThrow(new AlbumException(PaymentErrorCode.NOT_PAID));
+                        .willThrow(new CustomException(PaymentErrorCode.NOT_PAID));
 
                 // when & then
                 ResultActions perform =
@@ -254,7 +254,7 @@ class AlbumControllerTest {
                                 "testTitle", "testCoverUrl", AlbumPlan.PRO, 1L, false);
 
                 given(albumService.createAlbum(request))
-                        .willThrow(new AlbumException(PaymentErrorCode.PAYMENT_MEMBER_MISMATCH));
+                        .willThrow(new CustomException(PaymentErrorCode.PAYMENT_MEMBER_MISMATCH));
 
                 // when & then
                 ResultActions perform =
@@ -278,7 +278,7 @@ class AlbumControllerTest {
                                 "testTitle", "testCoverUrl", AlbumPlan.PRO, 1L, false);
 
                 given(albumService.createAlbum(request))
-                        .willThrow(new AlbumException(PaymentErrorCode.ALREADY_USED_PAYMENT));
+                        .willThrow(new CustomException(PaymentErrorCode.ALREADY_USED_PAYMENT));
 
                 // when & then
                 ResultActions perform =
@@ -424,7 +424,7 @@ class AlbumControllerTest {
             AlbumUpdateRequest request = new AlbumUpdateRequest("testTitle", "testCoverUrl");
 
             given(albumService.updateAlbum(1L, request))
-                    .willThrow(new AlbumException(AlbumErrorCode.ALBUM_NOT_FOUND));
+                    .willThrow(new CustomException(AlbumErrorCode.ALBUM_NOT_FOUND));
 
             // when & then
             ResultActions perform =
@@ -446,7 +446,7 @@ class AlbumControllerTest {
             AlbumUpdateRequest request = new AlbumUpdateRequest("testTitle", "testCoverUrl");
 
             given(albumService.updateAlbum(1L, request))
-                    .willThrow(new AlbumException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT));
+                    .willThrow(new CustomException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT));
 
             // when & then
             ResultActions perform =
@@ -468,7 +468,7 @@ class AlbumControllerTest {
             AlbumUpdateRequest request = new AlbumUpdateRequest("testTitle", "testCoverUrl");
 
             given(albumService.updateAlbum(1L, request))
-                    .willThrow(new AlbumException(AlbumErrorCode.NOT_ALBUM_HOST));
+                    .willThrow(new CustomException(AlbumErrorCode.NOT_ALBUM_HOST));
 
             // when & then
             ResultActions perform =
@@ -549,7 +549,7 @@ class AlbumControllerTest {
         void 앨범이_존재하지_않는_경우_예외가_발생한다() throws Exception {
             // given
             given(albumService.togglePermission(1L))
-                    .willThrow(new AlbumException(AlbumErrorCode.ALBUM_NOT_FOUND));
+                    .willThrow(new CustomException(AlbumErrorCode.ALBUM_NOT_FOUND));
 
             // when & then
             ResultActions perform = mockMvc.perform(patch("/albums/1/permission"));
@@ -565,7 +565,7 @@ class AlbumControllerTest {
         void 앨범_참가자가_아닌_경우_예외가_발생한다() throws Exception {
             // given
             given(albumService.togglePermission(1L))
-                    .willThrow(new AlbumException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT));
+                    .willThrow(new CustomException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT));
 
             // when & then
             ResultActions perform = mockMvc.perform(patch("/albums/1/permission"));
@@ -581,7 +581,7 @@ class AlbumControllerTest {
         void 앨범_방장이_아닌_경우_예외가_발생한다() throws Exception {
             // given
             given(albumService.togglePermission(1L))
-                    .willThrow(new AlbumException(AlbumErrorCode.NOT_ALBUM_HOST));
+                    .willThrow(new CustomException(AlbumErrorCode.NOT_ALBUM_HOST));
 
             // when & then
             ResultActions perform = mockMvc.perform(patch("/albums/1/permission"));
@@ -598,7 +598,7 @@ class AlbumControllerTest {
             // given
             given(albumService.togglePermission(1L))
                     .willThrow(
-                            new AlbumException(
+                            new CustomException(
                                     AlbumErrorCode.PERMISSION_CONTROL_NOT_ALLOWED_FOR_BASIC_PLAN));
 
             // when & then
@@ -649,7 +649,7 @@ class AlbumControllerTest {
         void 앨범이_존재하지_않는_경우_예외가_발생한다() throws Exception {
             // given
             given(albumService.createInvitationLink(999L))
-                    .willThrow(new AlbumException(AlbumErrorCode.ALBUM_NOT_FOUND));
+                    .willThrow(new CustomException(AlbumErrorCode.ALBUM_NOT_FOUND));
 
             // when & then
             ResultActions perform =
@@ -668,7 +668,7 @@ class AlbumControllerTest {
         void 앨범_참가자가_아닌_경우_예외가_발생한다() throws Exception {
             // given
             given(albumService.createInvitationLink(1L))
-                    .willThrow(new AlbumException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT));
+                    .willThrow(new CustomException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT));
 
             // when & then
             ResultActions perform =
@@ -687,7 +687,7 @@ class AlbumControllerTest {
         void 앨범_방장이_아닌_경우_예외가_발생한다() throws Exception {
             // given
             given(albumService.createInvitationLink(1L))
-                    .willThrow(new AlbumException(AlbumErrorCode.NOT_ALBUM_HOST));
+                    .willThrow(new CustomException(AlbumErrorCode.NOT_ALBUM_HOST));
 
             // when & then
             ResultActions perform =
@@ -871,7 +871,7 @@ class AlbumControllerTest {
         void 앨범이_존재하지_않는_경우_예외가_발생한다() throws Exception {
             // given
             given(albumService.joinAlbum(999L, "testInvitationCode"))
-                    .willThrow(new AlbumException(AlbumErrorCode.ALBUM_NOT_FOUND));
+                    .willThrow(new CustomException(AlbumErrorCode.ALBUM_NOT_FOUND));
 
             // when & then
             ResultActions perform =
@@ -888,7 +888,7 @@ class AlbumControllerTest {
         void 앨범_초대_코드가_redis에_존재하지_않는_경우_예외가_발생한다() throws Exception {
             // given
             given(albumService.joinAlbum(1L, "noneExistingCode"))
-                    .willThrow(new AlbumException(AlbumErrorCode.INVITATION_CODE_NOT_FOUND));
+                    .willThrow(new CustomException(AlbumErrorCode.INVITATION_CODE_NOT_FOUND));
 
             // when & then
             ResultActions perform =
@@ -905,7 +905,7 @@ class AlbumControllerTest {
         void 앨범_초대_코드가_redis에_저장된_코드와_일치하지_않는_경우_예외가_발생한다() throws Exception {
             // given
             given(albumService.joinAlbum(1L, "testInvitationCode"))
-                    .willThrow(new AlbumException(AlbumErrorCode.ALREADY_PARTICIPATED));
+                    .willThrow(new CustomException(AlbumErrorCode.ALREADY_PARTICIPATED));
 
             // when & then
             ResultActions perform =
@@ -922,7 +922,7 @@ class AlbumControllerTest {
         void 이미_입장한_앨범에_재입장_하려는_경우_예외가_발생한다() throws Exception {
             // given
             given(albumService.joinAlbum(1L, "expiredInvitationCode"))
-                    .willThrow(new AlbumException(AlbumErrorCode.INVITATION_CODE_MISMATCH));
+                    .willThrow(new CustomException(AlbumErrorCode.INVITATION_CODE_MISMATCH));
 
             // when & then
             ResultActions perform =
@@ -955,7 +955,7 @@ class AlbumControllerTest {
         @Test
         void 앨범이_존재하지_않는_경우_예외가_발생한다() throws Exception {
             // given
-            willThrow(new AlbumException(AlbumErrorCode.ALBUM_NOT_FOUND))
+            willThrow(new CustomException(AlbumErrorCode.ALBUM_NOT_FOUND))
                     .given(albumService)
                     .deleteAlbum(1L);
 
@@ -972,7 +972,7 @@ class AlbumControllerTest {
         @Test
         void 앨범_참가자가_아닌_경우_예외가_발생한다() throws Exception {
             // given
-            willThrow(new AlbumException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT))
+            willThrow(new CustomException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT))
                     .given(albumService)
                     .deleteAlbum(1L);
 
@@ -989,7 +989,7 @@ class AlbumControllerTest {
         @Test
         void 앨범_방장이_아닌_경우_예외가_발생한다() throws Exception {
             // given
-            willThrow(new AlbumException(AlbumErrorCode.NOT_ALBUM_HOST))
+            willThrow(new CustomException(AlbumErrorCode.NOT_ALBUM_HOST))
                     .given(albumService)
                     .deleteAlbum(1L);
 
@@ -1006,7 +1006,7 @@ class AlbumControllerTest {
         @Test
         void 다른_참가자가_남아있는_경우_예외가_발생한다() throws Exception {
             // given
-            willThrow(new AlbumException(AlbumErrorCode.OTHER_PARTICIPANTS_EXIST))
+            willThrow(new CustomException(AlbumErrorCode.OTHER_PARTICIPANTS_EXIST))
                     .given(albumService)
                     .deleteAlbum(1L);
 
@@ -1023,7 +1023,7 @@ class AlbumControllerTest {
         @Test
         void 구독_중인_경우_예외가_발생한다() throws Exception {
             // given
-            willThrow(new AlbumException(AlbumErrorCode.SUBSCRIPTION_ACTIVE))
+            willThrow(new CustomException(AlbumErrorCode.SUBSCRIPTION_ACTIVE))
                     .given(albumService)
                     .deleteAlbum(1L);
 

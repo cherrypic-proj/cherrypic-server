@@ -9,12 +9,11 @@ import org.cherrypic.domain.auth.dto.response.SocialLoginResponse;
 import org.cherrypic.domain.auth.dto.response.TokenReissueResponse;
 import org.cherrypic.domain.auth.enums.OauthProvider;
 import org.cherrypic.domain.auth.exception.AuthErrorCode;
-import org.cherrypic.domain.auth.exception.AuthException;
 import org.cherrypic.domain.auth.repository.RefreshTokenRepository;
 import org.cherrypic.domain.auth.util.NicknameGenerator;
 import org.cherrypic.domain.member.exception.MemberErrorCode;
-import org.cherrypic.domain.member.exception.MemberException;
 import org.cherrypic.domain.member.repository.MemberRepository;
+import org.cherrypic.exception.CustomException;
 import org.cherrypic.global.util.MemberUtil;
 import org.cherrypic.member.entity.Member;
 import org.cherrypic.member.entity.OauthInfo;
@@ -51,7 +50,7 @@ public class AuthServiceImpl implements AuthService {
                 jwtTokenService.retrieveRefreshToken(refreshTokenValue);
 
         if (oldRefreshTokenDto == null) {
-            throw new AuthException(AuthErrorCode.INVALID_REFRESH_TOKEN);
+            throw new CustomException(AuthErrorCode.INVALID_REFRESH_TOKEN);
         }
 
         RefreshTokenDto newRefreshTokenDto =
@@ -99,6 +98,6 @@ public class AuthServiceImpl implements AuthService {
     private Member getMember(RefreshTokenDto refreshTokenDto) {
         return memberRepository
                 .findById(refreshTokenDto.memberId())
-                .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND));
+                .orElseThrow(() -> new CustomException(MemberErrorCode.MEMBER_NOT_FOUND));
     }
 }

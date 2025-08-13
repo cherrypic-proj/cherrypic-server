@@ -12,8 +12,8 @@ import org.cherrypic.domain.payment.dto.request.PaymentReadyRequest;
 import org.cherrypic.domain.payment.dto.response.PaymentReadyResponse;
 import org.cherrypic.domain.payment.dto.response.PaymentVerificationResponse;
 import org.cherrypic.domain.payment.exception.PaymentErrorCode;
-import org.cherrypic.domain.payment.exception.PaymentException;
 import org.cherrypic.domain.payment.service.PaymentService;
+import org.cherrypic.exception.CustomException;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -100,7 +100,7 @@ class PaymentControllerTest {
             PaymentReadyRequest request = new PaymentReadyRequest(AlbumPlan.BASIC);
 
             given(paymentService.preparePayment(request))
-                    .willThrow(new PaymentException(PaymentErrorCode.UNSUPPORTED_PAYMENT_PLAN));
+                    .willThrow(new CustomException(PaymentErrorCode.UNSUPPORTED_PAYMENT_PLAN));
 
             // when & then
             ResultActions perform =
@@ -143,7 +143,7 @@ class PaymentControllerTest {
         void impUid가_아임포트에_존재하지_않으면_예외가_발생한다() throws Exception {
             // given
             given(paymentService.verifyPayment("imp_1234"))
-                    .willThrow(new PaymentException(PaymentErrorCode.PAYMENT_NOT_FOUND));
+                    .willThrow(new CustomException(PaymentErrorCode.PAYMENT_NOT_FOUND));
 
             // when & then
             ResultActions perform = mockMvc.perform(post("/payments/verify/imp_1234"));
@@ -159,7 +159,7 @@ class PaymentControllerTest {
         void merchantUid에_해당하는_결제가_DB에_없으면_예외가_발생한다() throws Exception {
             // given
             given(paymentService.verifyPayment("imp_1234"))
-                    .willThrow(new PaymentException(PaymentErrorCode.PAYMENT_NOT_FOUND));
+                    .willThrow(new CustomException(PaymentErrorCode.PAYMENT_NOT_FOUND));
 
             // when & then
             ResultActions perform = mockMvc.perform(post("/payments/verify/imp_1234"));
@@ -175,7 +175,7 @@ class PaymentControllerTest {
         void 결제_금액이_불일치하면_예외가_발생한다() throws Exception {
             // given
             given(paymentService.verifyPayment("imp_1234"))
-                    .willThrow(new PaymentException(PaymentErrorCode.AMOUNT_MISMATCH));
+                    .willThrow(new CustomException(PaymentErrorCode.AMOUNT_MISMATCH));
 
             // when & then
             ResultActions perform = mockMvc.perform(post("/payments/verify/imp_1234"));
@@ -191,7 +191,7 @@ class PaymentControllerTest {
         void 결제_상태가_PAID가_아니면_예외가_발생한다() throws Exception {
             // given
             given(paymentService.verifyPayment("imp_1234"))
-                    .willThrow(new PaymentException(PaymentErrorCode.NOT_PAID));
+                    .willThrow(new CustomException(PaymentErrorCode.NOT_PAID));
 
             // when & then
             ResultActions perform = mockMvc.perform(post("/payments/verify/imp_1234"));
@@ -207,7 +207,7 @@ class PaymentControllerTest {
         void Iamport_API_통신_장애가_발생하면_예외가_발생한다() throws Exception {
             // given
             given(paymentService.verifyPayment("imp_1234"))
-                    .willThrow(new PaymentException(PaymentErrorCode.IAMPORT_API_UNAVAILABLE));
+                    .willThrow(new CustomException(PaymentErrorCode.IAMPORT_API_UNAVAILABLE));
 
             // when & then
             ResultActions perform = mockMvc.perform(post("/payments/verify/imp_1234"));

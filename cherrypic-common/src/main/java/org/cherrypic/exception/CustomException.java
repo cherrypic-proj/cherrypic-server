@@ -3,11 +3,11 @@ package org.cherrypic.exception;
 import lombok.Getter;
 
 @Getter
-public class BaseCustomException extends RuntimeException {
+public class CustomException extends RuntimeException {
 
     private final BaseErrorCode errorCode;
 
-    public BaseCustomException(BaseErrorCode errorCode) {
+    public CustomException(BaseErrorCode errorCode) {
         super(errorCode.getMessage());
         this.errorCode = errorCode;
     }

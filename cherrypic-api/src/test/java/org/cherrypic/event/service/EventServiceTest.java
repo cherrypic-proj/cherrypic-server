@@ -15,7 +15,6 @@ import org.cherrypic.domain.event.dto.request.EventImageAddRequest;
 import org.cherrypic.domain.event.dto.request.EventUpdateRequest;
 import org.cherrypic.domain.event.dto.response.EventListResponse;
 import org.cherrypic.domain.event.exception.EventErrorCode;
-import org.cherrypic.domain.event.exception.EventException;
 import org.cherrypic.domain.event.repository.EventRepository;
 import org.cherrypic.domain.event.service.EventService;
 import org.cherrypic.domain.image.exception.ImageErrorCode;
@@ -23,7 +22,7 @@ import org.cherrypic.domain.image.repository.ImageRepository;
 import org.cherrypic.domain.member.repository.MemberRepository;
 import org.cherrypic.domain.participant.repository.ParticipantRepository;
 import org.cherrypic.event.entity.Event;
-import org.cherrypic.exception.BaseCustomException;
+import org.cherrypic.exception.CustomException;
 import org.cherrypic.global.pagination.SliceResponse;
 import org.cherrypic.global.pagination.SortDirection;
 import org.cherrypic.global.util.MemberUtil;
@@ -105,7 +104,7 @@ public class EventServiceTest extends IntegrationTest {
 
             // when & then
             assertThatThrownBy(() -> eventService.createEvent(request))
-                    .isInstanceOf(EventException.class)
+                    .isInstanceOf(CustomException.class)
                     .hasMessage(AlbumErrorCode.NOT_ALBUM_PARTICIPANT.getMessage());
         }
 
@@ -119,7 +118,7 @@ public class EventServiceTest extends IntegrationTest {
 
             // when & then
             assertThatThrownBy(() -> eventService.createEvent(request))
-                    .isInstanceOf(EventException.class)
+                    .isInstanceOf(CustomException.class)
                     .hasMessage(AlbumErrorCode.LIMITED_AUTHORITY.getMessage());
         }
     }
@@ -188,7 +187,7 @@ public class EventServiceTest extends IntegrationTest {
 
             // when & then
             assertThatThrownBy(() -> eventService.updateEvent(999L, request))
-                    .isInstanceOf(EventException.class)
+                    .isInstanceOf(CustomException.class)
                     .hasMessage(EventErrorCode.EVENT_NOT_FOUND.getMessage());
         }
 
@@ -200,7 +199,7 @@ public class EventServiceTest extends IntegrationTest {
 
             // when & then
             assertThatThrownBy(() -> eventService.updateEvent(2L, request))
-                    .isInstanceOf(EventException.class)
+                    .isInstanceOf(CustomException.class)
                     .hasMessage(AlbumErrorCode.NOT_ALBUM_PARTICIPANT.getMessage());
         }
 
@@ -215,7 +214,7 @@ public class EventServiceTest extends IntegrationTest {
 
             // when & then
             assertThatThrownBy(() -> eventService.updateEvent(1L, request))
-                    .isInstanceOf(EventException.class)
+                    .isInstanceOf(CustomException.class)
                     .hasMessage(AlbumErrorCode.LIMITED_AUTHORITY.getMessage());
         }
     }
@@ -274,7 +273,7 @@ public class EventServiceTest extends IntegrationTest {
         void 존재하지_않는_이벤트를_삭제하면_예외가_발생한다() {
             // when & then
             assertThatThrownBy(() -> eventService.deleteEvent(999L))
-                    .isInstanceOf(EventException.class)
+                    .isInstanceOf(CustomException.class)
                     .hasMessage(EventErrorCode.EVENT_NOT_FOUND.getMessage());
         }
 
@@ -282,7 +281,7 @@ public class EventServiceTest extends IntegrationTest {
         void 앨범에_속하지_않은_사용자가_이벤트를_삭제하면_예외가_발생한다() {
             // when & then
             assertThatThrownBy(() -> eventService.deleteEvent(2L))
-                    .isInstanceOf(EventException.class)
+                    .isInstanceOf(CustomException.class)
                     .hasMessage(AlbumErrorCode.NOT_ALBUM_PARTICIPANT.getMessage());
         }
 
@@ -294,7 +293,7 @@ public class EventServiceTest extends IntegrationTest {
 
             // when & then
             assertThatThrownBy(() -> eventService.deleteEvent(1L))
-                    .isInstanceOf(EventException.class)
+                    .isInstanceOf(CustomException.class)
                     .hasMessage(AlbumErrorCode.LIMITED_AUTHORITY.getMessage());
         }
     }
@@ -467,7 +466,7 @@ public class EventServiceTest extends IntegrationTest {
 
             // when & then
             assertThatThrownBy(() -> eventService.addImages(999L, request))
-                    .isInstanceOf(EventException.class)
+                    .isInstanceOf(CustomException.class)
                     .hasMessage(EventErrorCode.EVENT_NOT_FOUND.getMessage());
         }
 
@@ -478,7 +477,7 @@ public class EventServiceTest extends IntegrationTest {
 
             // when & then
             assertThatThrownBy(() -> eventService.addImages(1L, request))
-                    .isInstanceOf(BaseCustomException.class)
+                    .isInstanceOf(CustomException.class)
                     .hasMessage(ImageErrorCode.IMAGES_NOT_FOUND.getMessage());
         }
 
@@ -489,7 +488,7 @@ public class EventServiceTest extends IntegrationTest {
 
             // when & then
             assertThatThrownBy(() -> eventService.addImages(2L, request))
-                    .isInstanceOf(EventException.class)
+                    .isInstanceOf(CustomException.class)
                     .hasMessage(AlbumErrorCode.LIMITED_AUTHORITY.getMessage());
         }
 
@@ -500,7 +499,7 @@ public class EventServiceTest extends IntegrationTest {
 
             // when & then
             assertThatThrownBy(() -> eventService.addImages(1L, request))
-                    .isInstanceOf(BaseCustomException.class)
+                    .isInstanceOf(CustomException.class)
                     .hasMessage(ImageErrorCode.IMAGES_ASSIGNED_TO_EVENT.getMessage());
         }
 
@@ -511,7 +510,7 @@ public class EventServiceTest extends IntegrationTest {
 
             // when & then
             assertThatThrownBy(() -> eventService.addImages(1L, request))
-                    .isInstanceOf(BaseCustomException.class)
+                    .isInstanceOf(CustomException.class)
                     .hasMessage(ImageErrorCode.IMAGES_FROM_OTHER_ALBUM.getMessage());
         }
 
@@ -540,7 +539,7 @@ public class EventServiceTest extends IntegrationTest {
                                 f1.get();
 
                                 assertThatThrownBy(() -> eventService.addImages(1L, request))
-                                        .isInstanceOf(BaseCustomException.class)
+                                        .isInstanceOf(CustomException.class)
                                         .hasMessage(ImageErrorCode.CONFLICTING_IMAGES.getMessage());
                                 return null;
                             });

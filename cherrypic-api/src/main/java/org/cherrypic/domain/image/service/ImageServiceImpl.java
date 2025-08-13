@@ -11,10 +11,8 @@ import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import org.cherrypic.album.entity.Album;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
-import org.cherrypic.domain.album.exception.AlbumException;
 import org.cherrypic.domain.album.repository.AlbumRepository;
 import org.cherrypic.domain.event.exception.EventErrorCode;
-import org.cherrypic.domain.event.exception.EventException;
 import org.cherrypic.domain.event.repository.EventRepository;
 import org.cherrypic.domain.image.dto.request.MemberProfileImageUploadRequest;
 import org.cherrypic.domain.image.dto.response.ImageListResponse;
@@ -24,6 +22,7 @@ import org.cherrypic.domain.image.enums.ImageType;
 import org.cherrypic.domain.image.repository.ImageRepository;
 import org.cherrypic.domain.participant.repository.ParticipantRepository;
 import org.cherrypic.event.entity.Event;
+import org.cherrypic.exception.CustomException;
 import org.cherrypic.global.pagination.SliceResponse;
 import org.cherrypic.global.pagination.SortDirection;
 import org.cherrypic.global.util.MemberUtil;
@@ -136,24 +135,24 @@ public class ImageServiceImpl implements ImageService {
     private Album getAlbumById(Long albumId) {
         return albumRepository
                 .findById(albumId)
-                .orElseThrow(() -> new AlbumException(AlbumErrorCode.ALBUM_NOT_FOUND));
+                .orElseThrow(() -> new CustomException(AlbumErrorCode.ALBUM_NOT_FOUND));
     }
 
     private Event getEventById(Long eventId) {
         return eventRepository
                 .findById(eventId)
-                .orElseThrow(() -> new EventException(EventErrorCode.EVENT_NOT_FOUND));
+                .orElseThrow(() -> new CustomException(EventErrorCode.EVENT_NOT_FOUND));
     }
 
     private Participant getParticipantByMemberIdAndAlbumId(Long memberId, Long albumId) {
         return participantRepository
                 .findByMemberIdAndAlbumId(memberId, albumId)
-                .orElseThrow(() -> new AlbumException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT));
+                .orElseThrow(() -> new CustomException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT));
     }
 
     private void validateAlbumEvent(Album album, Event event) {
         if (!event.getAlbum().getId().equals(album.getId())) {
-            throw new EventException(EventErrorCode.EVENT_DOESNT_BELONG_TO_ALBUM);
+            throw new CustomException(EventErrorCode.EVENT_DOESNT_BELONG_TO_ALBUM);
         }
     }
 }

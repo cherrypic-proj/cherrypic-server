@@ -6,9 +6,9 @@ import org.cherrypic.auth.entity.RefreshToken;
 import org.cherrypic.domain.auth.dto.AccessTokenDto;
 import org.cherrypic.domain.auth.dto.RefreshTokenDto;
 import org.cherrypic.domain.auth.exception.AuthErrorCode;
-import org.cherrypic.domain.auth.exception.AuthException;
 import org.cherrypic.domain.auth.repository.RefreshTokenRepository;
 import org.cherrypic.domain.auth.util.JwtUtil;
+import org.cherrypic.exception.CustomException;
 import org.cherrypic.member.entity.Member;
 import org.cherrypic.member.enums.MemberRole;
 import org.springframework.stereotype.Service;
@@ -46,7 +46,7 @@ public class JwtTokenService {
                 refreshTokenRepository
                         .findById(oldRefreshTokenDto.memberId())
                         .orElseThrow(
-                                () -> new AuthException(AuthErrorCode.REFRESH_TOKEN_NOT_FOUND));
+                                () -> new CustomException(AuthErrorCode.REFRESH_TOKEN_NOT_FOUND));
 
         RefreshTokenDto newRefreshTokenDto =
                 jwtUtil.generateRefreshTokenDto(refreshToken.getMemberId());

@@ -10,13 +10,13 @@ import org.cherrypic.domain.album.dto.request.AlbumUpdateRequest;
 import org.cherrypic.domain.album.dto.response.*;
 import org.cherrypic.domain.album.event.AlbumDeleteEvent;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
-import org.cherrypic.domain.album.exception.AlbumException;
 import org.cherrypic.domain.album.repository.AlbumRepository;
 import org.cherrypic.domain.album.repository.InvitationCodeRepository;
 import org.cherrypic.domain.participant.repository.ParticipantRepository;
 import org.cherrypic.domain.payment.exception.PaymentErrorCode;
 import org.cherrypic.domain.payment.repository.PaymentRepository;
 import org.cherrypic.domain.subscription.repository.SubscriptionRepository;
+import org.cherrypic.exception.CustomException;
 import org.cherrypic.global.pagination.SliceResponse;
 import org.cherrypic.global.pagination.SortDirection;
 import org.cherrypic.global.util.MemberUtil;
@@ -159,7 +159,9 @@ public class AlbumServiceImpl implements AlbumService {
                 invitationCodeRepository
                         .findById(album.getId())
                         .orElseThrow(
-                                () -> new AlbumException(AlbumErrorCode.INVITATION_CODE_NOT_FOUND));
+                                () ->
+                                        new CustomException(
+                                                AlbumErrorCode.INVITATION_CODE_NOT_FOUND));
 
         validateAlbumRejoin(currentMember, album);
         validateInvitationCode(currentInvitationCode, code);
@@ -186,66 +188,66 @@ public class AlbumServiceImpl implements AlbumService {
     private Album getAlbumById(Long albumId) {
         return albumRepository
                 .findById(albumId)
-                .orElseThrow(() -> new AlbumException(AlbumErrorCode.ALBUM_NOT_FOUND));
+                .orElseThrow(() -> new CustomException(AlbumErrorCode.ALBUM_NOT_FOUND));
     }
 
     private Participant getParticipantByMemberIdAndAlbumId(Long memberId, Long albumId) {
         return participantRepository
                 .findByMemberIdAndAlbumId(memberId, albumId)
-                .orElseThrow(() -> new AlbumException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT));
+                .orElseThrow(() -> new CustomException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT));
     }
 
     private void validateAlbumHost(Long memberId, Long albumId) {
         Participant participant = getParticipantByMemberIdAndAlbumId(memberId, albumId);
 
         if (!participant.getRole().equals(ParticipantRole.HOST)) {
-            throw new AlbumException(AlbumErrorCode.NOT_ALBUM_HOST);
+            throw new CustomException(AlbumErrorCode.NOT_ALBUM_HOST);
         }
     }
 
     private void validatePaymentRequirementForPlan(AlbumPlan plan, Long paymentId) {
         if (plan.requiresPayment() && paymentId == null) {
-            throw new AlbumException(AlbumErrorCode.PAYMENT_REQUIRED_FOR_PAID_PLAN);
+            throw new CustomException(AlbumErrorCode.PAYMENT_REQUIRED_FOR_PAID_PLAN);
         }
 
         if (!plan.requiresPayment() && paymentId != null) {
-            throw new AlbumException(AlbumErrorCode.PAYMENT_NOT_REQUIRED_FOR_BASIC_PLAN);
+            throw new CustomException(AlbumErrorCode.PAYMENT_NOT_REQUIRED_FOR_BASIC_PLAN);
         }
     }
 
     private void validatePermissionControl(AlbumPlan plan, Boolean permissionControl) {
         if (plan == AlbumPlan.BASIC && permissionControl) {
-            throw new AlbumException(AlbumErrorCode.PERMISSION_CONTROL_NOT_ALLOWED_FOR_BASIC_PLAN);
+            throw new CustomException(AlbumErrorCode.PERMISSION_CONTROL_NOT_ALLOWED_FOR_BASIC_PLAN);
         }
     }
 
     private void validatePaidStatus(Payment payment) {
         if (payment.getStatus() != PaymentStatus.PAID) {
-            throw new AlbumException(PaymentErrorCode.NOT_PAID);
+            throw new CustomException(PaymentErrorCode.NOT_PAID);
         }
     }
 
     private void validatePaymentMemberMismatch(Payment payment, Member member) {
         if (!payment.getMember().getId().equals(member.getId())) {
-            throw new AlbumException(PaymentErrorCode.PAYMENT_MEMBER_MISMATCH);
+            throw new CustomException(PaymentErrorCode.PAYMENT_MEMBER_MISMATCH);
         }
     }
 
     private void validatePaymentNotUsed(Payment payment) {
         if (payment.getAlbum() != null) {
-            throw new AlbumException(PaymentErrorCode.ALREADY_USED_PAYMENT);
+            throw new CustomException(PaymentErrorCode.ALREADY_USED_PAYMENT);
         }
     }
 
     private Payment getPaidPaymentById(Long paymentId) {
         return paymentRepository
                 .findById(paymentId)
-                .orElseThrow(() -> new AlbumException(PaymentErrorCode.PAYMENT_NOT_FOUND));
+                .orElseThrow(() -> new CustomException(PaymentErrorCode.PAYMENT_NOT_FOUND));
     }
 
     private void validateInvitationCode(InvitationCode currentInvitationCode, String code) {
         if (!currentInvitationCode.getCode().equals(code)) {
-            throw new AlbumException(AlbumErrorCode.INVITATION_CODE_MISMATCH);
+            throw new CustomException(AlbumErrorCode.INVITATION_CODE_MISMATCH);
         }
     }
 
@@ -254,7 +256,7 @@ public class AlbumServiceImpl implements AlbumService {
                 .findByMemberIdAndAlbumId(member.getId(), album.getId())
                 .ifPresent(
                         p -> {
-                            throw new AlbumException(AlbumErrorCode.ALREADY_PARTICIPATED);
+                            throw new CustomException(AlbumErrorCode.ALREADY_PARTICIPATED);
                         });
     }
 
@@ -270,7 +272,7 @@ public class AlbumServiceImpl implements AlbumService {
                             member.getNickname(),
                             album.getTitle(),
                             otherMemberIds));
-            throw new AlbumException(AlbumErrorCode.OTHER_PARTICIPANTS_EXIST);
+            throw new CustomException(AlbumErrorCode.OTHER_PARTICIPANTS_EXIST);
         }
     }
 
@@ -278,7 +280,7 @@ public class AlbumServiceImpl implements AlbumService {
         if (album.getPlan() == AlbumPlan.BASIC) return;
 
         if (album.getSubscription().getStatus() == SubscriptionStatus.ACTIVE) {
-            throw new AlbumException(AlbumErrorCode.SUBSCRIPTION_ACTIVE);
+            throw new CustomException(AlbumErrorCode.SUBSCRIPTION_ACTIVE);
         }
     }
 }

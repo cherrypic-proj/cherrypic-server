@@ -4,8 +4,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
-import org.cherrypic.exception.BaseCustomException;
 import org.cherrypic.exception.BaseErrorCode;
+import org.cherrypic.exception.CustomException;
 import org.cherrypic.exception.GlobalBaseErrorCode;
 import org.cherrypic.global.response.GlobalResponse;
 import org.springframework.http.HttpStatus;
@@ -20,9 +20,9 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(BaseCustomException.class)
+    @ExceptionHandler(CustomException.class)
     protected ResponseEntity<GlobalResponse<ErrorResponse>> handleCustomException(
-            BaseCustomException e, HttpServletRequest request) {
+            CustomException e, HttpServletRequest request) {
         log.info(
                 "{}: code={}, url={}",
                 e.getClass().getSimpleName(),

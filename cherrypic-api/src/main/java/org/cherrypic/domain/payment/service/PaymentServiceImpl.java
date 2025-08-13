@@ -15,8 +15,8 @@ import org.cherrypic.domain.payment.dto.request.PaymentReadyRequest;
 import org.cherrypic.domain.payment.dto.response.PaymentReadyResponse;
 import org.cherrypic.domain.payment.dto.response.PaymentVerificationResponse;
 import org.cherrypic.domain.payment.exception.PaymentErrorCode;
-import org.cherrypic.domain.payment.exception.PaymentException;
 import org.cherrypic.domain.payment.repository.PaymentRepository;
+import org.cherrypic.exception.CustomException;
 import org.cherrypic.global.util.MemberUtil;
 import org.cherrypic.member.entity.Member;
 import org.cherrypic.payment.entity.Payment;
@@ -40,7 +40,7 @@ public class PaymentServiceImpl implements PaymentService {
 
         AlbumPlan plan = request.plan();
         if (plan.equals(AlbumPlan.BASIC)) {
-            throw new PaymentException(PaymentErrorCode.UNSUPPORTED_PAYMENT_PLAN);
+            throw new CustomException(PaymentErrorCode.UNSUPPORTED_PAYMENT_PLAN);
         }
 
         int price = plan.getPrice();
@@ -73,14 +73,14 @@ public class PaymentServiceImpl implements PaymentService {
                     paymentRepository
                             .findByMerchantUid(merchantUid)
                             .orElseThrow(
-                                    () -> new PaymentException(PaymentErrorCode.PAYMENT_NOT_FOUND));
+                                    () -> new CustomException(PaymentErrorCode.PAYMENT_NOT_FOUND));
 
             if (amount != payment.getAmount()) {
-                throw new PaymentException(PaymentErrorCode.AMOUNT_MISMATCH);
+                throw new CustomException(PaymentErrorCode.AMOUNT_MISMATCH);
             }
 
             if (status != PaymentStatus.PAID) {
-                throw new PaymentException(PaymentErrorCode.NOT_PAID);
+                throw new CustomException(PaymentErrorCode.NOT_PAID);
             }
 
             payment.updatePayment(impUid, pgProvider, PaymentStatus.PAID, paidAt);
@@ -88,9 +88,9 @@ public class PaymentServiceImpl implements PaymentService {
             return PaymentVerificationResponse.from(payment);
 
         } catch (IamportResponseException e) {
-            throw new PaymentException(PaymentErrorCode.PAYMENT_NOT_FOUND);
+            throw new CustomException(PaymentErrorCode.PAYMENT_NOT_FOUND);
         } catch (IOException e) {
-            throw new PaymentException(PaymentErrorCode.IAMPORT_API_UNAVAILABLE);
+            throw new CustomException(PaymentErrorCode.IAMPORT_API_UNAVAILABLE);
         }
     }
 

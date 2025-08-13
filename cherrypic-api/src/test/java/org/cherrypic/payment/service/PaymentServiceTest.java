@@ -20,9 +20,9 @@ import org.cherrypic.album.enums.AlbumPlan;
 import org.cherrypic.domain.member.repository.MemberRepository;
 import org.cherrypic.domain.payment.dto.request.PaymentReadyRequest;
 import org.cherrypic.domain.payment.exception.PaymentErrorCode;
-import org.cherrypic.domain.payment.exception.PaymentException;
 import org.cherrypic.domain.payment.repository.PaymentRepository;
 import org.cherrypic.domain.payment.service.PaymentService;
+import org.cherrypic.exception.CustomException;
 import org.cherrypic.global.util.MemberUtil;
 import org.cherrypic.member.entity.Member;
 import org.cherrypic.member.entity.OauthInfo;
@@ -94,7 +94,7 @@ public class PaymentServiceTest extends IntegrationTest {
 
             // when & then
             assertThatThrownBy(() -> paymentService.preparePayment(request))
-                    .isInstanceOf(PaymentException.class)
+                    .isInstanceOf(CustomException.class)
                     .hasMessage(PaymentErrorCode.UNSUPPORTED_PAYMENT_PLAN.getMessage());
         }
     }
@@ -148,7 +148,7 @@ public class PaymentServiceTest extends IntegrationTest {
 
             // when & then
             assertThatThrownBy(() -> paymentService.verifyPayment("imp_1234"))
-                    .isInstanceOf(PaymentException.class)
+                    .isInstanceOf(CustomException.class)
                     .hasMessage(PaymentErrorCode.PAYMENT_NOT_FOUND.getMessage());
         }
 
@@ -159,7 +159,7 @@ public class PaymentServiceTest extends IntegrationTest {
 
             // when & then
             assertThatThrownBy(() -> paymentService.verifyPayment("imp_1234"))
-                    .isInstanceOf(PaymentException.class)
+                    .isInstanceOf(CustomException.class)
                     .hasMessage(PaymentErrorCode.PAYMENT_NOT_FOUND.getMessage());
         }
 
@@ -170,7 +170,7 @@ public class PaymentServiceTest extends IntegrationTest {
 
             // when & then
             assertThatThrownBy(() -> paymentService.verifyPayment("imp_1234"))
-                    .isInstanceOf(PaymentException.class)
+                    .isInstanceOf(CustomException.class)
                     .hasMessage(PaymentErrorCode.AMOUNT_MISMATCH.getMessage());
         }
 
@@ -181,7 +181,7 @@ public class PaymentServiceTest extends IntegrationTest {
 
             // when & then
             assertThatThrownBy(() -> paymentService.verifyPayment("imp_1234"))
-                    .isInstanceOf(PaymentException.class)
+                    .isInstanceOf(CustomException.class)
                     .hasMessage(PaymentErrorCode.NOT_PAID.getMessage());
         }
 
@@ -193,7 +193,7 @@ public class PaymentServiceTest extends IntegrationTest {
 
             // when & then
             assertThatThrownBy(() -> paymentService.verifyPayment("imp_1234"))
-                    .isInstanceOf(PaymentException.class)
+                    .isInstanceOf(CustomException.class)
                     .hasMessage(PaymentErrorCode.IAMPORT_API_UNAVAILABLE.getMessage());
         }
 

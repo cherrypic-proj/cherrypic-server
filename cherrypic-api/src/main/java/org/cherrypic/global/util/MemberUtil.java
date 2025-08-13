@@ -2,10 +2,9 @@ package org.cherrypic.global.util;
 
 import lombok.RequiredArgsConstructor;
 import org.cherrypic.domain.auth.exception.AuthErrorCode;
-import org.cherrypic.domain.auth.exception.AuthException;
 import org.cherrypic.domain.member.exception.MemberErrorCode;
-import org.cherrypic.domain.member.exception.MemberException;
 import org.cherrypic.domain.member.repository.MemberRepository;
+import org.cherrypic.exception.CustomException;
 import org.cherrypic.member.entity.Member;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -20,20 +19,20 @@ public class MemberUtil {
     public Member getCurrentMember() {
         return memberRepository
                 .findById(getCurrentMemberId())
-                .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND));
+                .orElseThrow(() -> new CustomException(MemberErrorCode.MEMBER_NOT_FOUND));
     }
 
     private Long getCurrentMemberId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (authentication == null) {
-            throw new AuthException(AuthErrorCode.AUTH_NOT_EXIST);
+            throw new CustomException(AuthErrorCode.AUTH_NOT_EXIST);
         }
 
         try {
             return Long.parseLong(authentication.getName());
         } catch (NumberFormatException e) {
-            throw new AuthException(AuthErrorCode.AUTH_NOT_PARSABLE);
+            throw new CustomException(AuthErrorCode.AUTH_NOT_PARSABLE);
         }
     }
 }

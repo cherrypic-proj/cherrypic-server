@@ -19,12 +19,12 @@ import org.cherrypic.domain.auth.dto.response.SocialLoginResponse;
 import org.cherrypic.domain.auth.dto.response.TokenReissueResponse;
 import org.cherrypic.domain.auth.enums.OauthProvider;
 import org.cherrypic.domain.auth.exception.AuthErrorCode;
-import org.cherrypic.domain.auth.exception.AuthException;
 import org.cherrypic.domain.auth.repository.RefreshTokenRepository;
 import org.cherrypic.domain.auth.service.AuthService;
 import org.cherrypic.domain.auth.service.IdTokenVerifier;
 import org.cherrypic.domain.auth.service.JwtTokenService;
 import org.cherrypic.domain.member.repository.MemberRepository;
+import org.cherrypic.exception.CustomException;
 import org.cherrypic.global.util.MemberUtil;
 import org.cherrypic.member.entity.Member;
 import org.cherrypic.member.entity.OauthInfo;
@@ -99,13 +99,13 @@ public class AuthServiceTest extends IntegrationTest {
         void ID_토큰_검증에_실패하면_예외가_발생한다() {
             // given
             given(idTokenVerifier.getOidcUser(anyString(), any()))
-                    .willThrow(new AuthException(AuthErrorCode.ID_TOKEN_VERIFICATION_FAILED));
+                    .willThrow(new CustomException(AuthErrorCode.ID_TOKEN_VERIFICATION_FAILED));
 
             IdTokenRequest request = new IdTokenRequest("invalidIdToken");
 
             // when & then
             assertThatThrownBy(() -> authService.socialLoginMember(OauthProvider.KAKAO, request))
-                    .isInstanceOf(AuthException.class)
+                    .isInstanceOf(CustomException.class)
                     .hasMessage(AuthErrorCode.ID_TOKEN_VERIFICATION_FAILED.getMessage());
         }
 
@@ -161,7 +161,7 @@ public class AuthServiceTest extends IntegrationTest {
         void 만료된_리프레시_토큰이면_예외가_발생한다() {
             // given
             assertThatThrownBy(() -> authService.reissueToken("testRefreshToken"))
-                    .isInstanceOf(AuthException.class)
+                    .isInstanceOf(CustomException.class)
                     .hasMessage(AuthErrorCode.INVALID_REFRESH_TOKEN.getMessage());
             verify(jwtTokenService, times(1)).retrieveRefreshToken(anyString());
         }

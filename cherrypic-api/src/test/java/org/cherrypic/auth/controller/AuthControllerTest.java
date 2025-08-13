@@ -14,9 +14,9 @@ import org.cherrypic.domain.auth.dto.response.SocialLoginResponse;
 import org.cherrypic.domain.auth.dto.response.TokenReissueResponse;
 import org.cherrypic.domain.auth.enums.OauthProvider;
 import org.cherrypic.domain.auth.exception.AuthErrorCode;
-import org.cherrypic.domain.auth.exception.AuthException;
 import org.cherrypic.domain.auth.service.AuthService;
 import org.cherrypic.domain.auth.util.CookieUtil;
+import org.cherrypic.exception.CustomException;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -84,7 +84,7 @@ class AuthControllerTest {
             IdTokenRequest request = new IdTokenRequest("invalidIdToken");
 
             given(authService.socialLoginMember(eq(OauthProvider.KAKAO), any()))
-                    .willThrow(new AuthException(AuthErrorCode.ID_TOKEN_VERIFICATION_FAILED));
+                    .willThrow(new CustomException(AuthErrorCode.ID_TOKEN_VERIFICATION_FAILED));
 
             // when & then
             ResultActions perform =
@@ -163,7 +163,7 @@ class AuthControllerTest {
         void 만료된_리프레시_토큰이면_예외가_발생한다() throws Exception {
             // given
             given(authService.reissueToken(anyString()))
-                    .willThrow(new AuthException(AuthErrorCode.INVALID_REFRESH_TOKEN));
+                    .willThrow(new CustomException(AuthErrorCode.INVALID_REFRESH_TOKEN));
 
             Cookie refreshTokenCookie = new Cookie("refreshToken", "invalidRefreshToken");
 
