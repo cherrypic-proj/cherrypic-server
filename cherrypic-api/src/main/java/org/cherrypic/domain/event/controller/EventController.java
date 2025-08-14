@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.cherrypic.domain.event.dto.request.EventCreateRequest;
 import org.cherrypic.domain.event.dto.request.EventImageAddRequest;
+import org.cherrypic.domain.event.dto.request.EventImageRemoveRequest;
 import org.cherrypic.domain.event.dto.request.EventUpdateRequest;
 import org.cherrypic.domain.event.dto.response.EventCreateResponse;
 import org.cherrypic.domain.event.dto.response.EventListResponse;
@@ -63,6 +64,14 @@ public class EventController {
     public ResponseEntity<Void> imagesAdd(
             @PathVariable Long eventId, @Valid @RequestBody EventImageAddRequest request) {
         eventService.addImages(eventId, request);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{eventId}/remove-images")
+    @Operation(summary = "이벤트에 이미지 제거", description = "앨범의 이미지를 이벤트에서 제거합니다.")
+    public ResponseEntity<Void> imagesRemove(
+            @PathVariable Long eventId, @Valid @RequestBody EventImageRemoveRequest request) {
+        eventService.removeImages(eventId, request);
         return ResponseEntity.noContent().build();
     }
 

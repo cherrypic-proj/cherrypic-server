@@ -8,6 +8,7 @@ import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.album.repository.AlbumRepository;
 import org.cherrypic.domain.event.dto.request.EventCreateRequest;
 import org.cherrypic.domain.event.dto.request.EventImageAddRequest;
+import org.cherrypic.domain.event.dto.request.EventImageRemoveRequest;
 import org.cherrypic.domain.event.dto.request.EventUpdateRequest;
 import org.cherrypic.domain.event.dto.response.EventCreateResponse;
 import org.cherrypic.domain.event.dto.response.EventListResponse;
@@ -136,6 +137,24 @@ public class EventServiceImpl implements EventService {
         }
     }
 
+    @Override
+    public void removeImages(Long eventId, EventImageRemoveRequest request) {
+        final Member currentMember = memberUtil.getCurrentMember();
+        final Event event = getEventById(eventId);
+
+        validateParticipantAuthority(currentMember, event.getAlbum());
+
+        List<Long> distinctEventImagesIds =
+                request.eventImageIds().stream().filter(Objects::nonNull).distinct().toList();
+
+        List<EventImage> eventImages = eventImageRepository.findAllById(distinctEventImagesIds);
+        if (eventImages.isEmpty()) return; // 이미 모두 삭제된 경우
+
+        validateEventImageFromEvents(eventImages, event);
+
+        eventImageRepository.deleteAllInBatch(eventImages);
+    }
+
     private Album getAlbumById(Long albumId) {
         return albumRepository
                 .findById(albumId)
@@ -173,6 +192,15 @@ public class EventServiceImpl implements EventService {
     private void validateAllImageExistence(List<Long> imageIds) {
         if (imageRepository.countByIdIn(imageIds) != imageIds.size()) {
             throw new CustomException(ImageErrorCode.IMAGES_NOT_FOUND);
+        }
+    }
+
+    private void validateEventImageFromEvents(List<EventImage> eventImages, Event event) {
+        boolean containsNotFromEvent =
+                eventImages.stream().anyMatch(ei -> !ei.getEvent().getId().equals(event.getId()));
+
+        if (containsNotFromEvent) {
+            throw new CustomException(EventErrorCode.EVENT_IMAGE_NOT_FROM_EVENT);
         }
     }
 
