@@ -553,7 +553,7 @@ public class EventServiceTest extends IntegrationTest {
         }
 
         @Test
-        void 추가하고자_하는_이미지가_삭제되는_동시성_충돌_시_예외를_반환한다() {
+        void 추가하고자_하는_이미지가_삭제되는_동시성_충돌_시_예외가_발생한다() {
             // given
             EventImageAddRequest request = new EventImageAddRequest(List.of(1L, 4L));
 
@@ -571,6 +571,7 @@ public class EventServiceTest extends IntegrationTest {
                             })
                     .when(eventImageRepository)
                     .saveAllAndFlush(anyList());
+
             // when & then
             assertThatThrownBy(() -> eventService.addImages(1L, request))
                     .isInstanceOf(CustomException.class)
@@ -578,7 +579,7 @@ public class EventServiceTest extends IntegrationTest {
         }
 
         @Test
-        void 추가하고자_하는_이벤트가_삭제되는_동시성_충돌_시_예외를_반환한다() {
+        void 추가하고자_하는_이벤트가_삭제되는_동시성_충돌_시_예외가_발생한다() {
             // given
             EventImageAddRequest request = new EventImageAddRequest(List.of(1L, 4L));
 
