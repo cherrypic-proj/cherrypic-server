@@ -173,7 +173,7 @@ class ParticipantServiceTest extends IntegrationTest {
         }
 
         @Test
-        void 강퇴_요청자와_강퇴_대상이_동일한_경우_예외가_발생한다() {
+        void 앨범_방장이_자기_자신을_강퇴하려는_경우_예외가_발생한다() {
             // when & then
             assertThatThrownBy(() -> participantService.kickParticipant(1L, 1L))
                     .isInstanceOf(CustomException.class)
