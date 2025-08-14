@@ -67,7 +67,7 @@ public class EventController {
         return ResponseEntity.noContent().build();
     }
 
-    @PostMapping("/{eventId}/remove-images")
+    @DeleteMapping("/{eventId}/remove-images")
     @Operation(summary = "이벤트에 이미지 제거", description = "앨범의 이미지를 이벤트에서 제거합니다.")
     public ResponseEntity<Void> imagesRemove(
             @PathVariable Long eventId, @Valid @RequestBody EventImageRemoveRequest request) {

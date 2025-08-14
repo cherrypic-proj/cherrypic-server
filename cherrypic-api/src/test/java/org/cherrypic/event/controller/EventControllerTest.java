@@ -705,7 +705,7 @@ public class EventControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            post("/events/1/remove-images")
+                            delete("/events/1/remove-images")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -725,7 +725,7 @@ public class EventControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            post("/events/1/remove-images")
+                            delete("/events/1/remove-images")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -747,7 +747,7 @@ public class EventControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            post("/events/1/remove-images")
+                            delete("/events/1/remove-images")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -769,7 +769,7 @@ public class EventControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            post("/events/1/remove-images")
+                            delete("/events/1/remove-images")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -791,7 +791,7 @@ public class EventControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            post("/events/1/remove-images")
+                            delete("/events/1/remove-images")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
