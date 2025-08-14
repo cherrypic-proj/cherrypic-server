@@ -33,10 +33,10 @@ public class ImageController {
         return imageService.createMemberProfileImageUploadUrl(request);
     }
 
-    @GetMapping("/albums/images")
+    @GetMapping("/albums/{albumId}/images")
     @Operation(summary = "앨범 이미지 목록 조회", description = "앨범의 이미지 목록을 조회합니다.")
     public SliceResponse<AlbumImageListResponse> albumImagesGet(
-            @RequestParam Long albumId,
+            @PathVariable Long albumId,
             @Parameter(description = "이전 페이지의 마지막 이미지 ID (첫 요청 시 생략)")
                     @RequestParam(required = false)
                     Long lastImageId,
@@ -47,10 +47,10 @@ public class ImageController {
         return imageService.getAlbumImages(albumId, lastImageId, size, direction);
     }
 
-    @GetMapping("/events/images")
+    @GetMapping("/events/{eventId}/images")
     @Operation(summary = "이벤트 이미지 목록 조회", description = "이벤트 이미지 목록을 조회합니다.")
     public SliceResponse<EventImageListResponse> eventImagesGet(
-            @RequestParam Long eventId,
+            @PathVariable Long eventId,
             @Parameter(description = "이전 페이지의 마지막 이벤트 이미지 ID (첫 요청 시 생략)")
                     @RequestParam(required = false)
                     Long lastEventImageId,

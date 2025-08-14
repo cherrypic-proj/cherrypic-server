@@ -150,7 +150,7 @@ public class EventServiceImpl implements EventService {
         List<EventImage> eventImages = eventImageRepository.findAllById(distinctEventImagesIds);
         if (eventImages.isEmpty()) return; // 이미 모두 삭제된 경우
 
-        validateEventImageFromEvents(eventImages, event);
+        validateEventImagesInEvent(eventImages, event);
 
         eventImageRepository.deleteAllInBatch(eventImages);
     }
@@ -185,7 +185,7 @@ public class EventServiceImpl implements EventService {
 
     private void validateAllImageAlbum(List<Long> imageIds, Long albumId) {
         if (imageRepository.countByIdInAndAlbumId(imageIds, albumId) != imageIds.size()) {
-            throw new CustomException(ImageErrorCode.IMAGES_FROM_OTHER_ALBUM);
+            throw new CustomException(ImageErrorCode.IMAGES_IN_OTHER_ALBUM);
         }
     }
 
@@ -195,12 +195,12 @@ public class EventServiceImpl implements EventService {
         }
     }
 
-    private void validateEventImageFromEvents(List<EventImage> eventImages, Event event) {
-        boolean containsNotFromEvent =
+    private void validateEventImagesInEvent(List<EventImage> eventImages, Event event) {
+        boolean containsNotInEvent =
                 eventImages.stream().anyMatch(ei -> !ei.getEvent().getId().equals(event.getId()));
 
-        if (containsNotFromEvent) {
-            throw new CustomException(EventErrorCode.EVENT_IMAGE_NOT_IN_EVENT);
+        if (containsNotInEvent) {
+            throw new CustomException(EventErrorCode.EVENT_IMAGES_NOT_IN_EVENT);
         }
     }
 

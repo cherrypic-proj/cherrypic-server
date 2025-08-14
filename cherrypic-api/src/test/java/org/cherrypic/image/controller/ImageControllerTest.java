@@ -113,10 +113,7 @@ class ImageControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            get("/albums/images")
-                                    .param("albumId", "1")
-                                    .param("size", "2")
-                                    .param("direction", "ASC"));
+                            get("/albums/1/images").param("size", "2").param("direction", "ASC"));
 
             perform.andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
@@ -140,10 +137,7 @@ class ImageControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            get("/albums/images")
-                                    .param("albumId", "1")
-                                    .param("size", "2")
-                                    .param("direction", "DESC"));
+                            get("/albums/1/images").param("size", "2").param("direction", "DESC"));
 
             perform.andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
@@ -165,10 +159,7 @@ class ImageControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            get("/albums/images")
-                                    .param("albumId", "1")
-                                    .param("size", "1")
-                                    .param("direction", "ASC"));
+                            get("/albums/1/images").param("size", "1").param("direction", "ASC"));
 
             perform.andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
@@ -191,10 +182,7 @@ class ImageControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            get("/albums/images")
-                                    .param("albumId", "1")
-                                    .param("size", "1")
-                                    .param("direction", "ASC"));
+                            get("/albums/1/images").param("size", "1").param("direction", "ASC"));
 
             perform.andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
@@ -215,10 +203,7 @@ class ImageControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            get("/albums/images")
-                                    .param("albumId", "1")
-                                    .param("size", "1")
-                                    .param("direction", "ASC"));
+                            get("/albums/1/images").param("size", "1").param("direction", "ASC"));
 
             perform.andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
@@ -236,10 +221,7 @@ class ImageControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            get("/albums/images")
-                                    .param("albumId", "999")
-                                    .param("size", "2")
-                                    .param("direction", "ASC"));
+                            get("/albums/999/images").param("size", "2").param("direction", "ASC"));
 
             perform.andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.success").value(false))
@@ -257,10 +239,7 @@ class ImageControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            get("/albums/images")
-                                    .param("albumId", "1")
-                                    .param("size", "2")
-                                    .param("direction", "ASC"));
+                            get("/albums/1/images").param("size", "2").param("direction", "ASC"));
 
             perform.andExpect(status().isForbidden())
                     .andExpect(jsonPath("$.success").value(false))
@@ -275,8 +254,7 @@ class ImageControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            get("/albums/images")
-                                    .param("albumId", "1")
+                            get("/albums/1/images")
                                     .param("size", pageSize)
                                     .param("direction", "ASC"));
 
@@ -293,10 +271,7 @@ class ImageControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            get("/albums/images")
-                                    .param("albumId", "1")
-                                    .param("size", "1")
-                                    .param("direction", sort));
+                            get("/albums/1/images").param("size", "1").param("direction", sort));
 
             perform.andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.success").value(false))
@@ -323,10 +298,7 @@ class ImageControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            get("/events/images")
-                                    .param("eventId", "1")
-                                    .param("size", "2")
-                                    .param("direction", "ASC"));
+                            get("/events/1/images").param("size", "2").param("direction", "ASC"));
 
             perform.andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
@@ -351,10 +323,7 @@ class ImageControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            get("/events/images")
-                                    .param("eventId", "1")
-                                    .param("size", "2")
-                                    .param("direction", "DESC"));
+                            get("/events/1/images").param("size", "2").param("direction", "DESC"));
 
             perform.andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
@@ -376,10 +345,7 @@ class ImageControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            get("/events/images")
-                                    .param("eventId", "1")
-                                    .param("size", "1")
-                                    .param("direction", "ASC"));
+                            get("/events/1/images").param("size", "1").param("direction", "ASC"));
 
             perform.andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
@@ -402,10 +368,7 @@ class ImageControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            get("/events/images")
-                                    .param("eventId", "1")
-                                    .param("size", "1")
-                                    .param("direction", "ASC"));
+                            get("/events/1/images").param("size", "1").param("direction", "ASC"));
 
             perform.andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
@@ -426,10 +389,7 @@ class ImageControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            get("/events/images")
-                                    .param("eventId", "1")
-                                    .param("size", "1")
-                                    .param("direction", "ASC"));
+                            get("/events/1/images").param("size", "1").param("direction", "ASC"));
 
             perform.andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
@@ -447,10 +407,7 @@ class ImageControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            get("/events/images")
-                                    .param("eventId", "1")
-                                    .param("size", "2")
-                                    .param("direction", "ASC"));
+                            get("/events/1/images").param("size", "2").param("direction", "ASC"));
 
             perform.andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.success").value(false))
@@ -468,10 +425,7 @@ class ImageControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            get("/events/images")
-                                    .param("eventId", "1")
-                                    .param("size", "2")
-                                    .param("direction", "ASC"));
+                            get("/events/1/images").param("size", "2").param("direction", "ASC"));
 
             perform.andExpect(status().isForbidden())
                     .andExpect(jsonPath("$.success").value(false))
@@ -486,8 +440,7 @@ class ImageControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            get("/events/images")
-                                    .param("eventId", "1")
+                            get("/events/1/images")
                                     .param("size", pageSize)
                                     .param("direction", "ASC"));
 
@@ -504,10 +457,7 @@ class ImageControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            get("/events/images")
-                                    .param("eventId", "1")
-                                    .param("size", "1")
-                                    .param("direction", sort));
+                            get("/events/1/images").param("size", "1").param("direction", sort));
 
             perform.andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.success").value(false))
