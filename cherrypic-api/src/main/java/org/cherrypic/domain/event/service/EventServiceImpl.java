@@ -2,7 +2,6 @@ package org.cherrypic.domain.event.service;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.cherrypic.album.entity.Album;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
@@ -16,9 +15,11 @@ import org.cherrypic.domain.event.dto.response.EventUpdateResponse;
 import org.cherrypic.domain.event.exception.EventErrorCode;
 import org.cherrypic.domain.event.repository.EventRepository;
 import org.cherrypic.domain.image.exception.ImageErrorCode;
+import org.cherrypic.domain.image.repository.EventImageRepository;
 import org.cherrypic.domain.image.repository.ImageRepository;
 import org.cherrypic.domain.participant.repository.ParticipantRepository;
 import org.cherrypic.event.entity.Event;
+import org.cherrypic.event.entity.EventImage;
 import org.cherrypic.exception.CustomException;
 import org.cherrypic.global.pagination.SliceResponse;
 import org.cherrypic.global.pagination.SortDirection;
@@ -27,7 +28,10 @@ import org.cherrypic.image.entity.Image;
 import org.cherrypic.member.entity.Member;
 import org.cherrypic.participant.entity.Participant;
 import org.cherrypic.participant.enums.ParticipantRole;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Slice;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,6 +46,7 @@ public class EventServiceImpl implements EventService {
     private final ParticipantRepository participantRepository;
     private final EventRepository eventRepository;
     private final ImageRepository imageRepository;
+    private final EventImageRepository eventImageRepository;
 
     @Override
     public EventCreateResponse createEvent(EventCreateRequest request) {
@@ -93,21 +98,41 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    @Retryable(
+            retryFor = {DataIntegrityViolationException.class},
+            maxAttempts = 2,
+            backoff = @Backoff(delay = 0))
     public void addImages(Long eventId, EventImageAddRequest request) {
         final Member currentMember = memberUtil.getCurrentMember();
         final Event event = getEventById(eventId);
-        final List<Image> images = getAllImagesById(request.imageIds());
+
+        List<Long> distinctImageIds =
+                request.imageIds().stream().filter(Objects::nonNull).distinct().toList();
 
         validateParticipantAuthority(currentMember, event.getAlbum());
-        validateImageAlbum(images, event);
-        validateImageEvent(images);
+        validateAllImageExistence(distinctImageIds);
+        validateAllImageAlbum(distinctImageIds, eventId);
 
-        List<String> keys =
-                images.stream().map(img -> img.getId() + ":" + img.getVersion()).toList();
+        List<Image> images = getAllUnmappedImagesById(eventId, distinctImageIds);
+        if (images.isEmpty()) return; // 사용자가 모두 해당 event에 이미 속하는 사진만 고른 경우
 
-        int updatedImages = imageRepository.bulkChangeImageEventWithVersionCheck(keys, eventId);
-        if (updatedImages != request.imageIds().size()) {
-            throw new CustomException(ImageErrorCode.CONFLICTING_IMAGES);
+        List<EventImage> eventImages =
+                images.stream().map(image -> EventImage.createEventImage(event, image)).toList();
+
+        try {
+            eventImageRepository.saveAllAndFlush(eventImages);
+        } catch (DataIntegrityViolationException e) {
+            String constraint = getMySqlConstraint(e);
+            if ("fk_event_image_event".equalsIgnoreCase(constraint)) {
+                throw new CustomException(EventErrorCode.EVENT_DELETED);
+            }
+            if ("fk_event_image_image".equalsIgnoreCase(constraint)) {
+                throw new CustomException(ImageErrorCode.IMAGE_DELETED);
+            }
+            if ("uk_event_image_event_id_image_id".equalsIgnoreCase(constraint)) {
+                throw e;
+            }
+            throw new CustomException(ImageErrorCode.IMAGE_CONFLICT);
         }
     }
 
@@ -139,29 +164,38 @@ public class EventServiceImpl implements EventService {
         }
     }
 
-    private void validateImageEvent(List<Image> images) {
-        if (images.stream().anyMatch(img -> img.getEvent() != null)) {
-            throw new CustomException(ImageErrorCode.IMAGES_ASSIGNED_TO_EVENT);
-        }
-    }
-
-    private void validateImageAlbum(List<Image> images, Event event) {
-        Long albumId = event.getAlbum().getId();
-        if (images.stream()
-                .anyMatch(
-                        img ->
-                                img.getAlbum() == null
-                                        || !Objects.equals(img.getAlbum().getId(), albumId))) {
+    private void validateAllImageAlbum(List<Long> imageIds, Long albumId) {
+        if (imageRepository.countByIdInAndAlbumId(imageIds, albumId) != imageIds.size()) {
             throw new CustomException(ImageErrorCode.IMAGES_FROM_OTHER_ALBUM);
         }
     }
 
-    private List<Image> getAllImagesById(List<Long> imageIds) {
+    private void validateAllImageExistence(List<Long> imageIds) {
+        if (imageRepository.countByIdIn(imageIds) != imageIds.size()) {
+            throw new CustomException(ImageErrorCode.IMAGES_NOT_FOUND);
+        }
+    }
 
-        List<Long> distinctIds = imageIds.stream().filter(Objects::nonNull).distinct().toList();
+    private List<Image> getAllUnmappedImagesById(Long eventId, List<Long> imageIds) {
+        return imageRepository.findAllUnmappedToEvent(eventId, imageIds);
+    }
 
-        return Optional.of(imageRepository.findAllById(distinctIds))
-                .filter(list -> list.size() == distinctIds.size())
-                .orElseThrow(() -> new CustomException(ImageErrorCode.IMAGES_NOT_FOUND));
+    private String getMySqlConstraint(Throwable ex) {
+        Throwable t = ex;
+        while (t != null) {
+            if (t instanceof java.sql.SQLIntegrityConstraintViolationException sql) {
+                String msg = sql.getMessage();
+                if (msg != null) {
+                    String lower = msg.toLowerCase();
+                    if (lower.contains("fk_event_image_event")) return "fk_event_image_event";
+                    if (lower.contains("fk_event_image_image")) return "fk_event_image_image";
+                    if (lower.contains("uk_event_image_event_id_image_id"))
+                        return "uk_event_image_event_id_image_id";
+                }
+                return String.valueOf(sql.getErrorCode()); // fallback
+            }
+            t = t.getCause();
+        }
+        return null;
     }
 }

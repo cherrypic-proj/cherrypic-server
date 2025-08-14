@@ -649,28 +649,6 @@ public class EventControllerTest {
         }
 
         @Test
-        void 이미_이벤트에_속한_이미지를_추가하면_예외가_발생한다() throws Exception {
-            // given
-            EventImageAddRequest request = new EventImageAddRequest(List.of(1L));
-            willThrow(new CustomException(ImageErrorCode.IMAGES_ASSIGNED_TO_EVENT))
-                    .given(eventService)
-                    .addImages(1L, request);
-
-            // when & then
-            ResultActions perform =
-                    mockMvc.perform(
-                            post("/events/1/add-images")
-                                    .contentType(MediaType.APPLICATION_JSON)
-                                    .content(objectMapper.writeValueAsString(request)));
-
-            perform.andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.success").value(false))
-                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
-                    .andExpect(jsonPath("$.data.code").value("IMAGES_ASSIGNED_TO_EVENT"))
-                    .andExpect(jsonPath("$.data.message").value("이미 이벤트에 소속된 이미지를 포함하고 있습니다."));
-        }
-
-        @Test
         void 다른_앨범에_속한_이미지를_추가하면_예외가_발생한다() throws Exception {
             // given
             EventImageAddRequest request = new EventImageAddRequest(List.of(1L));
@@ -690,28 +668,6 @@ public class EventControllerTest {
                     .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
                     .andExpect(jsonPath("$.data.code").value("IMAGES_FROM_OTHER_ALBUM"))
                     .andExpect(jsonPath("$.data.message").value("앨범 소속이 아닌 이미지를 포함하고 있습니다."));
-        }
-
-        @Test
-        void 앨범에_이미지를_추가하던_와중_다른_사람이_해당_이미지를_조작하면_예외가_발생한다() throws Exception {
-            // given
-            EventImageAddRequest request = new EventImageAddRequest(List.of(1L));
-            willThrow(new CustomException(ImageErrorCode.CONFLICTING_IMAGES))
-                    .given(eventService)
-                    .addImages(1L, request);
-
-            // when & then
-            ResultActions perform =
-                    mockMvc.perform(
-                            post("/events/1/add-images")
-                                    .contentType(MediaType.APPLICATION_JSON)
-                                    .content(objectMapper.writeValueAsString(request)));
-
-            perform.andExpect(status().isConflict())
-                    .andExpect(jsonPath("$.success").value(false))
-                    .andExpect(jsonPath("$.status").value(HttpStatus.CONFLICT.value()))
-                    .andExpect(jsonPath("$.data.code").value("CONFLICTING_IMAGES"))
-                    .andExpect(jsonPath("$.data.message").value("다른 요청에서 조작된 이미지를 포함하고 있습니다."));
         }
 
         @ParameterizedTest

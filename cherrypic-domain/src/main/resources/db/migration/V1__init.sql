@@ -70,16 +70,23 @@ CREATE TABLE image (
                        id BIGINT AUTO_INCREMENT PRIMARY KEY,
                        member_id BIGINT NOT NULL,
                        album_id BIGINT NOT NULL,
-                       event_id BIGINT,
                        url VARCHAR(255) NOT NULL,
                        generated_at DATETIME,
-                       version BIGINT NOT NULL DEFAULT 0,
                        created_at DATETIME(6) NOT NULL,
                        updated_at DATETIME(6) NOT NULL,
-                       CONSTRAINT fk_image_album FOREIGN KEY (album_id) REFERENCES album (id),
-                       CONSTRAINT fk_image_event FOREIGN KEY (event_id) REFERENCES event (id)
+                       CONSTRAINT fk_image_album FOREIGN KEY (album_id) REFERENCES album (id)
 );
 
+CREATE TABLE event_image (
+                             id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                             event_id BIGINT,
+                             image_id BIGINT,
+                             created_at DATETIME(6) NOT NULL,
+                             updated_at DATETIME(6) NOT NULL,
+                             CONSTRAINT fk_event_image_event FOREIGN KEY (event_id) REFERENCES event(id),
+                             CONSTRAINT fk_event_image_image FOREIGN KEY (image_id) REFERENCES image(id),
+                             CONSTRAINT uk_event_image_event_id_image_id UNIQUE (event_id, image_id)
+);
 
 CREATE TABLE favorites (
                            id BIGINT AUTO_INCREMENT PRIMARY KEY,

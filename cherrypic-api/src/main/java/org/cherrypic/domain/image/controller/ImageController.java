@@ -6,7 +6,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.cherrypic.domain.image.dto.request.MemberProfileImageUploadRequest;
-import org.cherrypic.domain.image.dto.response.ImageListResponse;
+import org.cherrypic.domain.image.dto.response.AlbumImageListResponse;
+import org.cherrypic.domain.image.dto.response.EventImageListResponse;
 import org.cherrypic.domain.image.dto.response.PresignedUrlResponse;
 import org.cherrypic.domain.image.service.ImageService;
 import org.cherrypic.global.annotation.PageSize;
@@ -32,11 +33,10 @@ public class ImageController {
         return imageService.createMemberProfileImageUploadUrl(request);
     }
 
-    @GetMapping("/images")
-    @Operation(summary = "사진 목록 조회", description = "사진 목록을 조회합니다.")
-    public SliceResponse<ImageListResponse> imagesGet(
+    @GetMapping("/albums/images")
+    @Operation(summary = "앨범 이미지 목록 조회", description = "앨범의 이미지 목록을 조회합니다.")
+    public SliceResponse<AlbumImageListResponse> albumImagesGet(
             @RequestParam Long albumId,
-            @RequestParam(required = false) Long eventId,
             @Parameter(description = "이전 페이지의 마지막 이미지 ID (첫 요청 시 생략)")
                     @RequestParam(required = false)
                     Long lastImageId,
@@ -44,6 +44,20 @@ public class ImageController {
             @Parameter(description = "정렬 방향 (ASC: 오래된순, DESC: 최신순)")
                     @RequestParam(defaultValue = "DESC")
                     SortDirection direction) {
-        return imageService.getImages(albumId, eventId, lastImageId, size, direction);
+        return imageService.getAlbumImages(albumId, lastImageId, size, direction);
+    }
+
+    @GetMapping("/events/images")
+    @Operation(summary = "이벤트 이미지 목록 조회", description = "이벤트 이미지 목록을 조회합니다.")
+    public SliceResponse<EventImageListResponse> eventImagesGet(
+            @RequestParam Long eventId,
+            @Parameter(description = "이전 페이지의 마지막 이벤트 이미지 ID (첫 요청 시 생략)")
+                    @RequestParam(required = false)
+                    Long lastEventImageId,
+            @Parameter(description = "페이지당 조회할 이미지의 수") @RequestParam @PageSize Integer size,
+            @Parameter(description = "정렬 방향 (ASC: 오래된순, DESC: 최신순)")
+                    @RequestParam(defaultValue = "DESC")
+                    SortDirection direction) {
+        return imageService.getEventImages(eventId, lastEventImageId, size, direction);
     }
 }
