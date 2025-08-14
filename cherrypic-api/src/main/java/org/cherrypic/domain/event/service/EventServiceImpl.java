@@ -200,7 +200,7 @@ public class EventServiceImpl implements EventService {
                 eventImages.stream().anyMatch(ei -> !ei.getEvent().getId().equals(event.getId()));
 
         if (containsNotFromEvent) {
-            throw new CustomException(EventErrorCode.EVENT_IMAGE_NOT_FROM_EVENT);
+            throw new CustomException(EventErrorCode.EVENT_IMAGE_NOT_IN_EVENT);
         }
     }
 

@@ -784,7 +784,7 @@ public class EventControllerTest {
         void 이벤트와_EventImage의_이벤트가_일치하지_않는_경우_예외가_발생한다() throws Exception {
             // given
             EventImageRemoveRequest request = new EventImageRemoveRequest(List.of(1L));
-            willThrow(new CustomException(EventErrorCode.EVENT_IMAGE_NOT_FROM_EVENT))
+            willThrow(new CustomException(EventErrorCode.EVENT_IMAGE_NOT_IN_EVENT))
                     .given(eventService)
                     .removeImages(1L, request);
 
@@ -798,8 +798,8 @@ public class EventControllerTest {
             perform.andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.success").value(false))
                     .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
-                    .andExpect(jsonPath("$.data.code").value("EVENT_IMAGE_NOT_FROM_EVENT"))
-                    .andExpect(jsonPath("$.data.message").value("이벤트에 소속된 이벤트 이미지가 아닙니다."));
+                    .andExpect(jsonPath("$.data.code").value("EVENT_IMAGE_NOT_IN_EVENT"))
+                    .andExpect(jsonPath("$.data.message").value("해당 이미지는 이벤트에 속해 있지 않습니다."));
         }
     }
 }

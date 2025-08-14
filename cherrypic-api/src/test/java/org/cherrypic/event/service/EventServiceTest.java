@@ -725,7 +725,7 @@ public class EventServiceTest extends IntegrationTest {
             // when & then
             assertThatThrownBy(() -> eventService.removeImages(1L, request))
                     .isInstanceOf(CustomException.class)
-                    .hasMessage(EventErrorCode.EVENT_IMAGE_NOT_FROM_EVENT.getMessage());
+                    .hasMessage(EventErrorCode.EVENT_IMAGE_NOT_IN_EVENT.getMessage());
         }
     }
 }
