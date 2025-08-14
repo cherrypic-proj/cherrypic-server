@@ -72,10 +72,31 @@ class ParticipantServiceTest extends IntegrationTest {
                     Participant.createParticipant(member2, album1, ParticipantRole.HOST);
             participantRepository.saveAll(List.of(participant1, participant2, participant3));
 
-            Notification.createNotification(
-                    member2, member1, album1, "testTitle", "testContent", NotificationType.ALBUM);
-            Notification.createNotification(
-                    member1, member2, album1, "testTitle", "testContent", NotificationType.ALBUM);
+            Notification notification1 =
+                    Notification.createNotification(
+                            member2,
+                            member1,
+                            album1,
+                            "testTitle1",
+                            "testContent1",
+                            NotificationType.ALBUM);
+            Notification notification2 =
+                    Notification.createNotification(
+                            member2,
+                            member1,
+                            album1,
+                            "testTitle2",
+                            "testContent2",
+                            NotificationType.ALBUM);
+            Notification notification3 =
+                    Notification.createNotification(
+                            member1,
+                            member2,
+                            album1,
+                            "testTitle3",
+                            "testContent3",
+                            NotificationType.ALBUM);
+            notificationRepository.saveAll(List.of(notification1, notification2, notification3));
         }
 
         @Test
@@ -165,10 +186,23 @@ class ParticipantServiceTest extends IntegrationTest {
             participantRepository.saveAll(
                     List.of(participant1, participant2, participant3, participant4));
 
-            Notification.createNotification(
-                    member1, member2, album1, "testTitle", "testContent", NotificationType.ALBUM);
-            Notification.createNotification(
-                    member2, member1, album2, "testTitle", "testContent", NotificationType.ALBUM);
+            Notification notification1 =
+                    Notification.createNotification(
+                            member1,
+                            member2,
+                            album1,
+                            "testTitle1",
+                            "testContent1",
+                            NotificationType.ALBUM);
+            Notification notification2 =
+                    Notification.createNotification(
+                            member2,
+                            member1,
+                            album2,
+                            "testTitle2",
+                            "testContent2",
+                            NotificationType.ALBUM);
+            notificationRepository.saveAll(List.of(notification1, notification2));
         }
 
         @Test
