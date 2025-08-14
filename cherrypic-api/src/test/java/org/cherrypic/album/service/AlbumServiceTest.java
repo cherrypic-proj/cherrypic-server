@@ -615,7 +615,7 @@ class AlbumServiceTest extends IntegrationTest {
             InvitationCode createdCode = invitationCodeRepository.findById(1L).orElseThrow();
             assertThat(createdCode)
                     .extracting("albumId", "code", "ttl")
-                    .containsExactly(1L, createdCode.getCode(), 1800L);
+                    .containsExactly(1L, createdCode.getCode(), 86400L);
         }
 
         @Test
