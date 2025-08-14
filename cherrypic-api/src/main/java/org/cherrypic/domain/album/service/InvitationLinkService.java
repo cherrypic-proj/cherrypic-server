@@ -10,14 +10,14 @@ public class InvitationLinkService {
 
     private static final String INVITATION_LINK_PREFIX =
             "https://dev-api.cherrypic.today/albums/join?albumId=%d&code=%s";
-    private static final int INVITATION_LINK_DURATION = 30;
+    private static final int INVITATION_LINK_DURATION_HOURS = 24;
     private static final int UUID_LENGTH = 8;
 
     public InvitationCode createInvitationCode(Long albumId) {
         return InvitationCode.builder()
                 .albumId(albumId)
                 .code(UUID.randomUUID().toString().substring(0, UUID_LENGTH))
-                .ttl(Duration.ofMinutes(INVITATION_LINK_DURATION).getSeconds())
+                .ttl(Duration.ofHours(INVITATION_LINK_DURATION_HOURS).getSeconds())
                 .build();
     }
 
