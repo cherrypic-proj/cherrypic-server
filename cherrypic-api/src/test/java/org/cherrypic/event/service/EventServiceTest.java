@@ -518,6 +518,17 @@ public class EventServiceTest extends IntegrationTest {
         }
 
         @Test
+        void 앨범_속하지_않은_이미지를_추가하면_예외가_발생한다() {
+            // given
+            EventImageAddRequest request = new EventImageAddRequest(List.of(3L));
+
+            // when & then
+            assertThatThrownBy(() -> eventService.addImages(1L, request))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(ImageErrorCode.IMAGES_IN_OTHER_ALBUM.getMessage());
+        }
+
+        @Test
         void 추가하고자_하는_이미지가_이미_추가된_동시성_충돌_시_재실행_된다() {
             // given
             EventImageAddRequest request = new EventImageAddRequest(List.of(1L, 4L));

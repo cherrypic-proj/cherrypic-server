@@ -196,10 +196,10 @@ public class EventServiceImpl implements EventService {
     }
 
     private void validateEventImagesInEvent(List<EventImage> eventImages, Event event) {
-        boolean containsNotFromEvent =
+        boolean containsNotInEvent =
                 eventImages.stream().anyMatch(ei -> !ei.getEvent().getId().equals(event.getId()));
 
-        if (containsNotFromEvent) {
+        if (containsNotInEvent) {
             throw new CustomException(EventErrorCode.EVENT_IMAGES_NOT_IN_EVENT);
         }
     }
