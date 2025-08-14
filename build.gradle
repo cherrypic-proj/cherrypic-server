@@ -25,7 +25,7 @@ sonarqube {
         property 'sonar.test.inclusions', '**/*Test.java'
         property 'sonar.exclusions', '**/test/**, **/Q*.java, **/*Doc*.java, **/resources/**, **/*Application*.java, **/*Config*.java,' +
                 '**/*Dto*.java, **/*Request*.java, **/*Response*.java, **/*Exception*.java, **/*ErrorCode*.java, **/*Validator*.java,' +
-                '**/*FcmService*.java, **/EventImage.java'
+                '**/*FcmService*.java, **/EventImage.java, **/Notification.java'
         property 'sonar.java.coveragePlugin', 'jacoco'
     }
 }

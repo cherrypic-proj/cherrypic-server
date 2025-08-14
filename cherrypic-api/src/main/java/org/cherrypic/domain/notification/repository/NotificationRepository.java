@@ -24,4 +24,6 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
             @Param("senderId") Long senderId,
             @Param("title") String title,
             @Param("content") String content);
+
+    void deleteByReceiverIdAndAlbumId(Long receiverId, Long albumId);
 }
