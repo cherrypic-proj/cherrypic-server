@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.cherrypic.album.entity.Album;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.album.repository.AlbumRepository;
+import org.cherrypic.domain.notification.repository.NotificationRepository;
 import org.cherrypic.domain.participant.exception.ParticipantErrorCode;
 import org.cherrypic.domain.participant.repository.ParticipantRepository;
 import org.cherrypic.exception.CustomException;
@@ -24,6 +25,7 @@ public class ParticipantServiceImpl implements ParticipantService {
 
     private final ParticipantRepository participantRepository;
     private final AlbumRepository albumRepository;
+    private final NotificationRepository notificationRepository;
 
     @Override
     public void leaveAlbum(Long albumId) {
@@ -37,6 +39,7 @@ public class ParticipantServiceImpl implements ParticipantService {
 
         try {
             participantRepository.delete(participant);
+            notificationRepository.deleteByReceiverIdAndAlbumId(currentMember.getId(), albumId);
         } catch (ObjectOptimisticLockingFailureException ignored) {
         }
     }
@@ -55,6 +58,8 @@ public class ParticipantServiceImpl implements ParticipantService {
 
         try {
             participantRepository.delete(target);
+            notificationRepository.deleteByReceiverIdAndAlbumId(
+                    target.getMember().getId(), album.getId());
         } catch (ObjectOptimisticLockingFailureException ignored) {
         }
     }
