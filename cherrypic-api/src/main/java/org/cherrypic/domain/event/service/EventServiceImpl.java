@@ -150,7 +150,7 @@ public class EventServiceImpl implements EventService {
         List<EventImage> eventImages = eventImageRepository.findAllById(distinctEventImagesIds);
         if (eventImages.isEmpty()) return; // 이미 모두 삭제된 경우
 
-        validateEventImageFromEvents(eventImages, event);
+        validateEventImageInEvents(eventImages, event);
 
         eventImageRepository.deleteAllInBatch(eventImages);
     }
@@ -195,7 +195,7 @@ public class EventServiceImpl implements EventService {
         }
     }
 
-    private void validateEventImageFromEvents(List<EventImage> eventImages, Event event) {
+    private void validateEventImageInEvents(List<EventImage> eventImages, Event event) {
         boolean containsNotFromEvent =
                 eventImages.stream().anyMatch(ei -> !ei.getEvent().getId().equals(event.getId()));
 
