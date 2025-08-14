@@ -17,6 +17,7 @@ import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.album.repository.AlbumRepository;
 import org.cherrypic.domain.event.dto.request.EventCreateRequest;
 import org.cherrypic.domain.event.dto.request.EventImageAddRequest;
+import org.cherrypic.domain.event.dto.request.EventImageRemoveRequest;
 import org.cherrypic.domain.event.dto.request.EventUpdateRequest;
 import org.cherrypic.domain.event.dto.response.EventListResponse;
 import org.cherrypic.domain.event.exception.EventErrorCode;
@@ -626,6 +627,105 @@ public class EventServiceTest extends IntegrationTest {
             assertThatThrownBy(() -> eventService.addImages(1L, request))
                     .isInstanceOf(CustomException.class)
                     .hasMessage(ImageErrorCode.IMAGE_CONFLICT.getMessage());
+        }
+    }
+
+    @Nested
+    class 이벤트에_이미지를_제거할_때 {
+
+        @BeforeEach
+        void setUp() {
+            Member member =
+                    Member.createMember(
+                            OauthInfo.createOauthInfo("testOauthId", "testOauthProvider"),
+                            "testNickname",
+                            "testProfileImageUrl");
+            memberRepository.save(member);
+            given(memberUtil.getCurrentMember()).willReturn(member);
+
+            Album album1 = Album.createAlbum("testTitle1", "testCoverUrl1", AlbumPlan.BASIC, false);
+            Album album2 = Album.createAlbum("testTitle2", "testCoverUrl2", AlbumPlan.BASIC, false);
+            Album album3 = Album.createAlbum("testTitle3", "testCoverUrl3", AlbumPlan.BASIC, false);
+            albumRepository.saveAll(List.of(album1, album2, album3));
+
+            Participant participant1 =
+                    Participant.createParticipant(member, album1, ParticipantRole.HOST);
+            Participant participant2 =
+                    Participant.createParticipant(member, album2, ParticipantRole.LIMITED);
+            participantRepository.saveAll(List.of(participant1, participant2));
+
+            Event event1 = Event.createEvent(album1, "testTitle1", "testCoverUrl1");
+            Event event2 = Event.createEvent(album2, "testTitle2", "testCoverUrl2");
+            Event event3 = Event.createEvent(album3, "testTitle3", "testCoverUrl3");
+            Event event4 = Event.createEvent(album1, "testTitle4", "testCoverUrl4");
+            eventRepository.saveAll(List.of(event1, event2, event3, event4));
+
+            Image image1 = Image.createImage(album1, 1L, "testUrl", LocalDateTime.now());
+            Image image2 = Image.createImage(album1, 1L, "testUrl2", LocalDateTime.now());
+            Image image3 = Image.createImage(album2, 1L, "testUrl3", LocalDateTime.now());
+            imageRepository.saveAll(List.of(image1, image2, image3));
+
+            EventImage eventImage1 = EventImage.createEventImage(event1, image1);
+            EventImage eventImage2 = EventImage.createEventImage(event1, image2);
+            EventImage eventImage3 = EventImage.createEventImage(event4, image3);
+
+            eventImageRepository.saveAll(List.of(eventImage1, eventImage2, eventImage3));
+        }
+
+        @Test
+        void 유효한_요청이면_이벤트_이미지가_삭제된다() {
+            // given
+            EventImageRemoveRequest request = new EventImageRemoveRequest(List.of(1L, 2L));
+
+            // when
+            eventService.removeImages(1L, request);
+
+            // then
+            assertThat(eventImageRepository.findAllById(List.of(1L, 2L))).isEmpty();
+        }
+
+        @Test
+        void 존재하지_않는_이벤트를_입력하면_예외가_발생한다() {
+            // given
+            EventImageRemoveRequest request = new EventImageRemoveRequest(List.of(1L, 2L));
+
+            // when & then
+            assertThatThrownBy(() -> eventService.removeImages(999L, request))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(EventErrorCode.EVENT_NOT_FOUND.getMessage());
+        }
+
+        @Test
+        void 앨범에_속하지_않은_사용자가_이벤트_이미지를_삭제하면_예외가_발생한다() {
+            // given
+            EventImageRemoveRequest request = new EventImageRemoveRequest(List.of(1L, 2L));
+
+            // when & then
+            assertThatThrownBy(() -> eventService.removeImages(3L, request))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(AlbumErrorCode.NOT_ALBUM_PARTICIPANT.getMessage());
+        }
+
+        @Test
+        void LIMITED_권한의_사용자가_이벤트_이미지를_삭제하면_예외가_발생한다() {
+            // given
+            EventImageRemoveRequest request = new EventImageRemoveRequest(List.of(3L));
+
+            // when & then
+            assertThatThrownBy(() -> eventService.removeImages(2L, request))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(AlbumErrorCode.LIMITED_AUTHORITY.getMessage());
+        }
+
+        @Test
+        void 이벤트와_EventImage의_이벤트가_일치하지_않는_경우_예외가_발생한다() {
+            // given
+            EventImageRemoveRequest request = new EventImageRemoveRequest(List.of(3L));
+
+            // when & then
+            assertThatThrownBy(() -> eventService.removeImages(1L, request))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(EventErrorCode.EVENT_IMAGE_NOT_IN_EVENT.getMessage());
         }
     }
 }

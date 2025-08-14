@@ -2,6 +2,7 @@ package org.cherrypic.domain.event.service;
 
 import org.cherrypic.domain.event.dto.request.EventCreateRequest;
 import org.cherrypic.domain.event.dto.request.EventImageAddRequest;
+import org.cherrypic.domain.event.dto.request.EventImageRemoveRequest;
 import org.cherrypic.domain.event.dto.request.EventUpdateRequest;
 import org.cherrypic.domain.event.dto.response.EventCreateResponse;
 import org.cherrypic.domain.event.dto.response.EventListResponse;
@@ -20,4 +21,6 @@ public interface EventService {
     void deleteEvent(Long eventId);
 
     void addImages(Long eventId, EventImageAddRequest request);
+
+    void removeImages(Long eventId, EventImageRemoveRequest request);
 }

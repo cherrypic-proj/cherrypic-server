@@ -13,6 +13,7 @@ import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.event.controller.EventController;
 import org.cherrypic.domain.event.dto.request.EventCreateRequest;
 import org.cherrypic.domain.event.dto.request.EventImageAddRequest;
+import org.cherrypic.domain.event.dto.request.EventImageRemoveRequest;
 import org.cherrypic.domain.event.dto.request.EventUpdateRequest;
 import org.cherrypic.domain.event.dto.response.EventCreateResponse;
 import org.cherrypic.domain.event.dto.response.EventListResponse;
@@ -689,6 +690,116 @@ public class EventControllerTest {
                     .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
                     .andExpect(jsonPath("$.data.code").value("MethodArgumentNotValidException"))
                     .andExpect(jsonPath("$.data.message").value("추가할 이미지 ID는 비워둘 수 없습니다."));
+        }
+    }
+
+    @Nested
+    class 이벤트_이미지_제거_요청_시 {
+
+        @Test
+        void 유효한_요청이면_이벤트에_이미지를_제거하고_NO_CONTENT_로_반환한다() throws Exception {
+            // given
+            EventImageRemoveRequest request = new EventImageRemoveRequest(List.of(1L));
+            willDoNothing().given(eventService).removeImages(1L, request);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            delete("/events/1/remove-images")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isNoContent())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.NO_CONTENT.value()));
+        }
+
+        @Test
+        void 존재하지_않는_이벤트를_입력하면_예외가_발생한다() throws Exception {
+            // given
+            EventImageRemoveRequest request = new EventImageRemoveRequest(List.of(1L));
+            willThrow(new CustomException(EventErrorCode.EVENT_NOT_FOUND))
+                    .given(eventService)
+                    .removeImages(1L, request);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            delete("/events/1/remove-images")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.NOT_FOUND.value()))
+                    .andExpect(jsonPath("$.data.code").value("EVENT_NOT_FOUND"))
+                    .andExpect(jsonPath("$.data.message").value("존재하지 않는 이벤트입니다."));
+        }
+
+        @Test
+        void 앨범에_속하지_않은_사용자가_이벤트_이미지를_삭제하면_예외가_발생한다() throws Exception {
+            // given
+            EventImageRemoveRequest request = new EventImageRemoveRequest(List.of(1L));
+            willThrow(new CustomException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT))
+                    .given(eventService)
+                    .removeImages(1L, request);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            delete("/events/1/remove-images")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.FORBIDDEN.value()))
+                    .andExpect(jsonPath("$.data.code").value("NOT_ALBUM_PARTICIPANT"))
+                    .andExpect(jsonPath("$.data.message").value("앨범에 속하지 않은 사용자입니다."));
+        }
+
+        @Test
+        void LIMITED_권한의_사용자가_이벤트_이미지를_삭제하면_예외가_발생한다() throws Exception {
+            // given
+            EventImageRemoveRequest request = new EventImageRemoveRequest(List.of(1L));
+            willThrow(new CustomException(AlbumErrorCode.LIMITED_AUTHORITY))
+                    .given(eventService)
+                    .removeImages(1L, request);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            delete("/events/1/remove-images")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.FORBIDDEN.value()))
+                    .andExpect(jsonPath("$.data.code").value("LIMITED_AUTHORITY"))
+                    .andExpect(jsonPath("$.data.message").value("앨범에 대한 생성/수정 권한이 없습니다."));
+        }
+
+        @Test
+        void 이벤트와_EventImage의_이벤트가_일치하지_않는_경우_예외가_발생한다() throws Exception {
+            // given
+            EventImageRemoveRequest request = new EventImageRemoveRequest(List.of(1L));
+            willThrow(new CustomException(EventErrorCode.EVENT_IMAGE_NOT_IN_EVENT))
+                    .given(eventService)
+                    .removeImages(1L, request);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            delete("/events/1/remove-images")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("EVENT_IMAGE_NOT_IN_EVENT"))
+                    .andExpect(jsonPath("$.data.message").value("해당 이미지는 이벤트에 속해 있지 않습니다."));
         }
     }
 }
