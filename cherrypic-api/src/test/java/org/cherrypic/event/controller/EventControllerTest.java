@@ -574,7 +574,7 @@ public class EventControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            post("/events/1/add-images")
+                            post("/events/1/images")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -594,7 +594,7 @@ public class EventControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            post("/events/1/add-images")
+                            post("/events/1/images")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -616,7 +616,7 @@ public class EventControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            post("/events/1/add-images")
+                            post("/events/1/images")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -638,7 +638,7 @@ public class EventControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            post("/events/1/add-images")
+                            post("/events/1/images")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -660,7 +660,7 @@ public class EventControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            post("/events/1/add-images")
+                            post("/events/1/images")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -681,7 +681,7 @@ public class EventControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            post("/events/1/add-images")
+                            post("/events/1/images")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -705,7 +705,7 @@ public class EventControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            delete("/events/1/remove-images")
+                            delete("/events/1/images")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -725,7 +725,7 @@ public class EventControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            delete("/events/1/remove-images")
+                            delete("/events/1/images")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -747,7 +747,7 @@ public class EventControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            delete("/events/1/remove-images")
+                            delete("/events/1/images")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -769,7 +769,7 @@ public class EventControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            delete("/events/1/remove-images")
+                            delete("/events/1/images")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -791,7 +791,7 @@ public class EventControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            delete("/events/1/remove-images")
+                            delete("/events/1/images")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
