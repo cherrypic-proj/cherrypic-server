@@ -5,11 +5,7 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.Headers;
 import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
-import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotNull;
-import java.math.BigDecimal;
 import java.util.Date;
-import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
@@ -30,7 +26,6 @@ import org.cherrypic.domain.image.repository.ImageRepository;
 import org.cherrypic.domain.participant.repository.ParticipantRepository;
 import org.cherrypic.event.entity.Event;
 import org.cherrypic.exception.CustomException;
-import org.cherrypic.global.annotation.Enum;
 import org.cherrypic.global.pagination.SliceResponse;
 import org.cherrypic.global.pagination.SortDirection;
 import org.cherrypic.global.util.MemberUtil;
@@ -74,24 +69,23 @@ public class ImageServiceImpl implements ImageService {
 
         validateParticipantAuthority(currentMember.getId(), album.getId());
 
-        //plan에 따라서 확장자 + 확장자 자체도 업데이트 해야함
-        //이미지들의 용량합을 검사 -> 이것도 플랜에 따라서 이거 ALBUM PLAN Enum에서 관리하자.
-        //이미지 업로드 횟수
-        //앨범 존재 여부와 권한 검사 했음.
-        public record AlbumImageUploadRequest(
-                @Enum(message = "이미지 파일의 확장자는 비워둘 수 없으며, PNG, JPG, JPEG만 지원됩니다.")
-                @Schema(description = "이미지 파일의 확장자", defaultValue = "JPEG")
-                List<ImageFileExtension> imageFileExtensions,
-                @Schema(description = "업로드 하는 이미지들의 용량합(GB)", example = "1.23")
-                BigDecimal capacity,
-                @NotNull(message = "적어도 하나의 이미지를 업로드 해야합니다.")
-                @Schema(description = "업로드 하는 이미지의 개수", defaultValue = "1")
-                Integer numOfImages,
-                @NotNull(message = "앨범 ID는 비워둘 수 없습니다.")
-                @Schema(description = "이미지를 업로드 하고자 하는 앨범 ID", example = "1")
-                Long albumId) {
-        }
-
+        // plan에 따라서 확장자 + 확장자 자체도 업데이트 해야함
+        // 이미지들의 용량합을 검사 -> 이것도 플랜에 따라서 이거 ALBUM PLAN Enum에서 관리하자.
+        // 이미지 업로드 횟수
+        // 앨범 존재 여부와 권한 검사 했음.
+        //        public record AlbumImageUploadRequest(
+        //                @Enum(message = "이미지 파일의 확장자는 비워둘 수 없으며, PNG, JPG, JPEG만 지원됩니다.")
+        //                @Schema(description = "이미지 파일의 확장자", defaultValue = "JPEG")
+        //                List<ImageFileExtension> imageFileExtensions,
+        //                @Schema(description = "업로드 하는 이미지들의 용량합(GB)", example = "1.23")
+        //                BigDecimal capacity,
+        //                @NotNull(message = "적어도 하나의 이미지를 업로드 해야합니다.")
+        //                @Schema(description = "업로드 하는 이미지의 개수", defaultValue = "1")
+        //                Integer numOfImages,
+        //                @NotNull(message = "앨범 ID는 비워둘 수 없습니다.")
+        //                @Schema(description = "이미지를 업로드 하고자 하는 앨범 ID", example = "1")
+        //                Long albumId) {
+        //        }
 
         return null;
     }
