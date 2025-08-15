@@ -435,7 +435,8 @@ public class EventServiceTest extends IntegrationTest {
 
             Album album1 = Album.createAlbum("testTitle1", "testCoverUrl1", AlbumPlan.BASIC, false);
             Album album2 = Album.createAlbum("testTitle2", "testCoverUrl2", AlbumPlan.BASIC, false);
-            albumRepository.saveAll(List.of(album1, album2));
+            Album album3 = Album.createAlbum("testTitle3", "testCoverUrl3", AlbumPlan.BASIC, false);
+            albumRepository.saveAll(List.of(album1, album2, album3));
 
             Participant participant1 =
                     Participant.createParticipant(member, album1, ParticipantRole.HOST);
@@ -445,13 +446,15 @@ public class EventServiceTest extends IntegrationTest {
 
             Event event1 = Event.createEvent(album1, "testTitle1", "testCoverUrl1");
             Event event2 = Event.createEvent(album2, "testTitle2", "testCoverUrl2");
-            eventRepository.saveAll(List.of(event1, event2));
+            Event event3 = Event.createEvent(album3, "testTitle3", "testCoverUrl3");
+            eventRepository.saveAll(List.of(event1, event2, event3));
 
             Image image1 = Image.createImage(album1, 1L, "testUrl", LocalDateTime.now());
             Image image2 = Image.createImage(album1, 1L, "testUrl2", LocalDateTime.now());
             Image image3 = Image.createImage(album2, 1L, "testUrl3", LocalDateTime.now());
             Image image4 = Image.createImage(album1, 1L, "testUrl4", LocalDateTime.now());
-            imageRepository.saveAll(List.of(image1, image2, image3, image4));
+            Image image5 = Image.createImage(album3, 1L, "testUrl5", LocalDateTime.now());
+            imageRepository.saveAll(List.of(image1, image2, image3, image4, image5));
 
             EventImage eventImage = EventImage.createEventImage(event1, image2);
             eventImageRepository.save(eventImage);
@@ -492,6 +495,17 @@ public class EventServiceTest extends IntegrationTest {
             assertThatThrownBy(() -> eventService.addImages(1L, request))
                     .isInstanceOf(CustomException.class)
                     .hasMessage(ImageErrorCode.IMAGES_NOT_FOUND.getMessage());
+        }
+
+        @Test
+        void 앨범에_속하지_않은_사용자가_이벤트에_이미지를_추가하면_예외가_발생한다() {
+            // given
+            EventImageAddRequest request = new EventImageAddRequest(List.of(5L));
+
+            // when & then
+            assertThatThrownBy(() -> eventService.addImages(3L, request))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(AlbumErrorCode.NOT_ALBUM_PARTICIPANT.getMessage());
         }
 
         @Test

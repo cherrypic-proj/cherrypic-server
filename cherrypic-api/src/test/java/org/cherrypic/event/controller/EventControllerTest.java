@@ -628,6 +628,28 @@ public class EventControllerTest {
         }
 
         @Test
+        void 앨범에_속하지_않은_사용자가_이벤트에_이미지를_추가하면_예외가_발생한다() throws Exception {
+            // given
+            EventImageAddRequest request = new EventImageAddRequest(List.of(1L));
+            willThrow(new CustomException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT))
+                    .given(eventService)
+                    .addImages(1L, request);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/events/1/images")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.FORBIDDEN.value()))
+                    .andExpect(jsonPath("$.data.code").value("NOT_ALBUM_PARTICIPANT"))
+                    .andExpect(jsonPath("$.data.message").value("앨범에 속하지 않은 사용자입니다."));
+        }
+
+        @Test
         void LIMITED_권한의_사용자가_이벤트에_이미지를_추가하면_예외가_발생한다() throws Exception {
             // given
             EventImageAddRequest request = new EventImageAddRequest(List.of(1L));
@@ -801,6 +823,27 @@ public class EventControllerTest {
                     .andExpect(jsonPath("$.data.code").value("EVENT_IMAGES_NOT_IN_EVENT"))
                     .andExpect(
                             jsonPath("$.data.message").value("이벤트에 속해 있지 않은 이벤트 이미지가 포함되어 있습니다."));
+        }
+
+        @ParameterizedTest
+        @NullSource
+        @EmptySource
+        void 제거할_이미지를_입력하지_않은_경우_예외가_발생한다(List<Long> input) throws Exception {
+            // given
+            EventImageRemoveRequest request = new EventImageRemoveRequest(input);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            delete("/events/1/images")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("MethodArgumentNotValidException"))
+                    .andExpect(jsonPath("$.data.message").value("제거할 이벤트 이미지 ID는 비워둘 수 없습니다."));
         }
     }
 }
