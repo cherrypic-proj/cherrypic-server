@@ -6,7 +6,6 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.cherrypic.favorites.enums.FavoriteStatus;
 import org.cherrypic.participant.entity.Participant;
 
 @Getter
@@ -22,17 +21,15 @@ public class Favorites {
     @JoinColumn(name = "participant_id")
     private Participant participant;
 
-    @NotNull
-    @Enumerated(EnumType.STRING)
-    private FavoriteStatus status;
+    @NotNull private Boolean marked;
 
     @Builder(access = AccessLevel.PRIVATE)
-    private Favorites(Participant participant, FavoriteStatus status) {
+    private Favorites(Participant participant, Boolean marked) {
         this.participant = participant;
-        this.status = status;
+        this.marked = marked;
     }
 
     public static Favorites createFavorites(Participant participant) {
-        return Favorites.builder().participant(participant).status(FavoriteStatus.EXCLUDED).build();
+        return Favorites.builder().participant(participant).marked(false).build();
     }
 }

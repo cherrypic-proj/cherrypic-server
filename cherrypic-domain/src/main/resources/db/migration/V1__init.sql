@@ -71,7 +71,7 @@ CREATE TABLE participant (
 CREATE TABLE favorites (
                            id BIGINT AUTO_INCREMENT PRIMARY KEY,
                            participant_id BIGINT NOT NULL,
-                           status VARCHAR(255) NOT NULL CHECK (status IN ('INCLUDED','EXCLUDED')),
+                           marked BOOLEAN NOT NULL,
                            CONSTRAINT fk_favorites_participant FOREIGN KEY (participant_id) REFERENCES participant (id)
 );
 
