@@ -65,6 +65,8 @@ public class AlbumServiceImpl implements AlbumService {
 
         Participant participant =
                 Participant.createParticipant(currentMember, album, ParticipantRole.HOST);
+        participant.assignFavorites();
+
         album.addParticipant(participant);
 
         if (request.plan() != AlbumPlan.BASIC) {
@@ -169,6 +171,7 @@ public class AlbumServiceImpl implements AlbumService {
 
         Participant participant =
                 Participant.createParticipant(currentMember, album, ParticipantRole.STANDARD);
+        participant.assignFavorites();
         participantRepository.save(participant);
 
         return AlbumJoinResponse.from(participant);

@@ -46,4 +46,8 @@ public class Participant extends BaseTimeEntity {
     public static Participant createParticipant(Member member, Album album, ParticipantRole role) {
         return Participant.builder().member(member).album(album).role(role).build();
     }
+
+    public void assignFavorites() {
+        this.favorites = Favorites.createFavorites(this);
+    }
 }
