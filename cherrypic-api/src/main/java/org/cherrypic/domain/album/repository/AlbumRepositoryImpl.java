@@ -32,7 +32,8 @@ public class AlbumRepositoryImpl implements AlbumRepositoryCustom {
                                         album.id,
                                         album.title,
                                         album.coverUrl,
-                                        album.plan))
+                                        album.plan,
+                                        participant.favorites.marked))
                         .from(participant)
                         .join(participant.album, album)
                         .where(

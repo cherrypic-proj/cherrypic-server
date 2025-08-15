@@ -712,8 +712,8 @@ class AlbumControllerTest {
             // given
             List<AlbumListResponse> albums =
                     List.of(
-                            new AlbumListResponse(1L, "first", "coverUrl1", AlbumPlan.BASIC),
-                            new AlbumListResponse(2L, "second", "coverUrl2", AlbumPlan.PRO));
+                            new AlbumListResponse(1L, "first", "coverUrl1", AlbumPlan.BASIC, false),
+                            new AlbumListResponse(2L, "second", "coverUrl2", AlbumPlan.PRO, true));
 
             given(albumService.getParticipatingAlbums(null, 2, SortDirection.ASC))
                     .willReturn(new SliceResponse<>(albums, true));
@@ -735,8 +735,9 @@ class AlbumControllerTest {
             // given
             List<AlbumListResponse> albums =
                     List.of(
-                            new AlbumListResponse(2L, "second", "coverUrl2", AlbumPlan.PRO),
-                            new AlbumListResponse(1L, "first", "coverUrl1", AlbumPlan.BASIC));
+                            new AlbumListResponse(2L, "second", "coverUrl2", AlbumPlan.PRO, true),
+                            new AlbumListResponse(
+                                    1L, "first", "coverUrl1", AlbumPlan.BASIC, false));
 
             given(albumService.getParticipatingAlbums(null, 2, SortDirection.DESC))
                     .willReturn(new SliceResponse<>(albums, true));
@@ -757,7 +758,9 @@ class AlbumControllerTest {
         void 마지막_페이지인_경우_isLast를_true로_응답한다() throws Exception {
             // given
             List<AlbumListResponse> albums =
-                    List.of(new AlbumListResponse(1L, "first", "coverUrl1", AlbumPlan.BASIC));
+                    List.of(
+                            new AlbumListResponse(
+                                    1L, "first", "coverUrl1", AlbumPlan.BASIC, false));
 
             given(albumService.getParticipatingAlbums(null, 1, SortDirection.DESC))
                     .willReturn(new SliceResponse<>(albums, true));
@@ -778,8 +781,9 @@ class AlbumControllerTest {
             // given
             List<AlbumListResponse> albums =
                     List.of(
-                            new AlbumListResponse(2L, "second", "coverUrl2", AlbumPlan.PRO),
-                            new AlbumListResponse(1L, "first", "coverUrl1", AlbumPlan.BASIC));
+                            new AlbumListResponse(2L, "second", "coverUrl2", AlbumPlan.PRO, true),
+                            new AlbumListResponse(
+                                    1L, "first", "coverUrl1", AlbumPlan.BASIC, false));
 
             given(albumService.getParticipatingAlbums(null, 1, SortDirection.DESC))
                     .willReturn(new SliceResponse<>(albums, false));
