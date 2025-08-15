@@ -5,9 +5,8 @@ import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.cherrypic.album.entity.Album;
 import org.cherrypic.favorites.enums.FavoriteStatus;
-import org.cherrypic.member.entity.Member;
+import org.cherrypic.participant.entity.Participant;
 
 @Getter
 @Entity
@@ -18,13 +17,9 @@ public class Favorites {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "member_id")
-    private Member member;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "album_id")
-    private Album album;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "participant_id")
+    private Participant participant;
 
     @NotNull
     @Enumerated(EnumType.STRING)

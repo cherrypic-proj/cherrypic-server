@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.cherrypic.album.entity.Album;
 import org.cherrypic.common.model.BaseTimeEntity;
+import org.cherrypic.favorites.entity.Favorites;
 import org.cherrypic.member.entity.Member;
 import org.cherrypic.participant.enums.ParticipantRole;
 
@@ -31,6 +32,9 @@ public class Participant extends BaseTimeEntity {
     @NotNull
     @Enumerated(EnumType.STRING)
     private ParticipantRole role;
+
+    @OneToOne(mappedBy = "participant", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Favorites favorites;
 
     @Builder(access = AccessLevel.PRIVATE)
     private Participant(Member member, Album album, ParticipantRole role) {
