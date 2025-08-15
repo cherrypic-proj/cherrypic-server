@@ -5,10 +5,12 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.cherrypic.domain.image.dto.request.AlbumImageUploadRequest;
 import org.cherrypic.domain.image.dto.request.MemberProfileImageUploadRequest;
 import org.cherrypic.domain.image.dto.response.AlbumImageListResponse;
 import org.cherrypic.domain.image.dto.response.EventImageListResponse;
 import org.cherrypic.domain.image.dto.response.PresignedUrlResponse;
+import org.cherrypic.domain.image.dto.response.PresignedUrlsResponse;
 import org.cherrypic.domain.image.service.ImageService;
 import org.cherrypic.global.annotation.PageSize;
 import org.cherrypic.global.pagination.SliceResponse;
@@ -31,6 +33,15 @@ public class ImageController {
     public PresignedUrlResponse memberProfileImageUploadUrlCreate(
             @Valid @RequestBody MemberProfileImageUploadRequest request) {
         return imageService.createMemberProfileImageUploadUrl(request);
+    }
+
+    @PostMapping("/albums/{albumId}/images")
+    @Operation(
+            summary = "앨범 이미지를 업로드 Presigned URL 생성",
+            description = "앨범 이미지 업로드를 위한 Presigned URL을 생성합니다.")
+    public PresignedUrlsResponse albumImageUploadUrlsCreate(
+            @Valid @RequestBody AlbumImageUploadRequest request) {
+        return imageService.createAlbumImageUploadUrls(request);
     }
 
     @GetMapping("/albums/{albumId}/images")
