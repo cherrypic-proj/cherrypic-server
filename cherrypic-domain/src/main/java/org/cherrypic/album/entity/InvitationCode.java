@@ -7,7 +7,7 @@ import org.springframework.data.redis.core.RedisHash;
 import org.springframework.data.redis.core.TimeToLive;
 
 @Getter
-@RedisHash(value = "InvitationCode")
+@RedisHash(value = "invitationCode")
 public class InvitationCode {
 
     @Id private Long albumId;
