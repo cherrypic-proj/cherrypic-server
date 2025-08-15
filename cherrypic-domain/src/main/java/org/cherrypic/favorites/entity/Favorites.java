@@ -32,4 +32,8 @@ public class Favorites {
     public static Favorites createFavorites(Participant participant) {
         return Favorites.builder().participant(participant).marked(false).build();
     }
+
+    public void toggleMarked() {
+        this.marked = !this.marked;
+    }
 }
