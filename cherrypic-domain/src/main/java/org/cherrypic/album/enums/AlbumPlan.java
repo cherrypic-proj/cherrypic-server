@@ -8,12 +8,13 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum AlbumPlan {
-    BASIC(0),
-    PRO(5900),
-    PREMIUM(12900),
+    BASIC(0, 10),
+    PRO(5900, 50),
+    PREMIUM(12900, Integer.MAX_VALUE),
     ;
 
     private final int price;
+    private final int maxParticipants;
 
     @JsonCreator
     public static AlbumPlan from(String plan) {
