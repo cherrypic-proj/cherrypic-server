@@ -8,7 +8,8 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-public interface ParticipantRepository extends JpaRepository<Participant, Long> {
+public interface ParticipantRepository
+        extends JpaRepository<Participant, Long>, ParticipantRepositoryCustom {
     Optional<Participant> findByMemberIdAndAlbumId(Long memberId, Long albumId);
 
     @Modifying(clearAutomatically = true)

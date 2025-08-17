@@ -5,13 +5,17 @@ import org.cherrypic.album.entity.Album;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.album.repository.AlbumRepository;
 import org.cherrypic.domain.notification.repository.NotificationRepository;
+import org.cherrypic.domain.participant.dto.response.ParticipantListResponse;
 import org.cherrypic.domain.participant.exception.ParticipantErrorCode;
 import org.cherrypic.domain.participant.repository.ParticipantRepository;
 import org.cherrypic.exception.CustomException;
+import org.cherrypic.global.pagination.SliceResponse;
+import org.cherrypic.global.pagination.SortDirection;
 import org.cherrypic.global.util.MemberUtil;
 import org.cherrypic.member.entity.Member;
 import org.cherrypic.participant.entity.Participant;
 import org.cherrypic.participant.enums.ParticipantRole;
+import org.springframework.data.domain.Slice;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -62,6 +66,20 @@ public class ParticipantServiceImpl implements ParticipantService {
                     target.getMember().getId(), album.getId());
         } catch (ObjectOptimisticLockingFailureException ignored) {
         }
+    }
+
+    @Override
+    public SliceResponse<ParticipantListResponse> getParticipants(
+            Long albumId, Long lastParticipantId, int size, SortDirection direction) {
+        final Member currentMember = memberUtil.getCurrentMember();
+        final Album album = getAlbumById(albumId);
+
+        getParticipantByMemberIdAndAlbumId(currentMember.getId(), album.getId());
+
+        Slice<ParticipantListResponse> results =
+                participantRepository.findAllByAlbumId(albumId, lastParticipantId, size, direction);
+
+        return SliceResponse.from(results);
     }
 
     private Album getAlbumById(Long albumId) {
