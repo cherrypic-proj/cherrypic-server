@@ -40,10 +40,13 @@ public class ParticipantController {
     @Operation(summary = "참가자 목록 조회", description = "특정 앨범의 참가자 목록을 커서 기반 페이징 방식으로 조회합니다.")
     public SliceResponse<ParticipantListResponse> participantsGet(
             @PathVariable Long albumId,
+            @Parameter(description = "이전 페이지의 마지막 참가자 닉네임 (첫 요청 시 생략)")
+                    @RequestParam(required = false)
+                    String lastNickname,
             @Parameter(description = "이전 페이지의 마지막 참가자 ID (첫 요청 시 생략)")
                     @RequestParam(required = false)
                     Long lastParticipantId,
             @Parameter(description = "페이지당 조회할 참가자 수") @RequestParam @PageSize Integer size) {
-        return participantService.getParticipants(albumId, lastParticipantId, size);
+        return participantService.getParticipants(albumId, lastNickname, lastParticipantId, size);
     }
 }

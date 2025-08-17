@@ -25,4 +25,6 @@ public interface ParticipantRepository
             @Param("albumId") Long albumId, @Param("memberId") Long memberId);
 
     int countByAlbumId(Long albumId);
+
+    long countByAlbumIdAndMemberIdNot(Long albumId, Long excludeMemberId);
 }

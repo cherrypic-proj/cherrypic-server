@@ -9,5 +9,5 @@ public interface ParticipantService {
     void kickParticipant(Long albumId, Long participantId);
 
     SliceResponse<ParticipantListResponse> getParticipants(
-            Long albumId, Long lastParticipantId, int size);
+            Long albumId, String lastNickname, Long lastParticipantId, int size);
 }

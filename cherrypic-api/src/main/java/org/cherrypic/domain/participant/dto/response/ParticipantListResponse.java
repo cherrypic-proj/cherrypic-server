@@ -1,6 +1,7 @@
 package org.cherrypic.domain.participant.dto.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import org.cherrypic.participant.entity.Participant;
 import org.cherrypic.participant.enums.ParticipantRole;
 
 public record ParticipantListResponse(
@@ -11,4 +12,12 @@ public record ParticipantListResponse(
                         example =
                                 "http://k.kakaocdn.net/dn/ceTrU6/btsL0V0mhKO/DGqAZKAK/img_110x110.jpg")
                 String profileImageUrl,
-        @Schema(description = "참가자 역할", example = "STANDARD") ParticipantRole role) {}
+        @Schema(description = "참가자 역할", example = "STANDARD") ParticipantRole role) {
+    public static ParticipantListResponse from(Participant participant) {
+        return new ParticipantListResponse(
+                participant.getId(),
+                participant.getMember().getNickname(),
+                participant.getMember().getProfileImageUrl(),
+                participant.getRole());
+    }
+}

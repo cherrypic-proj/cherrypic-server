@@ -3,6 +3,7 @@ package org.cherrypic.domain.participant.repository;
 import static org.cherrypic.member.entity.QMember.member;
 import static org.cherrypic.participant.entity.QParticipant.participant;
 
+import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.util.List;
@@ -20,8 +21,12 @@ public class ParticipantRepositoryImpl implements ParticipantRepositoryCustom {
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public Slice<ParticipantListResponse> findAllByAlbumId(
-            Long albumId, Long lastParticipantId, int size) {
+    public Slice<ParticipantListResponse> findParticipantsByAlbumIdExcludingMemberId(
+            Long albumId,
+            Long excludeMemberId,
+            String lastNickname,
+            Long lastParticipantId,
+            int size) {
         List<ParticipantListResponse> results =
                 queryFactory
                         .select(
@@ -33,11 +38,30 @@ public class ParticipantRepositoryImpl implements ParticipantRepositoryCustom {
                                         participant.role))
                         .from(participant)
                         .join(participant.member, member)
-                        .where(participant.album.id.eq(albumId))
+                        .where(
+                                participant.album.id.eq(albumId),
+                                participant.member.id.ne(excludeMemberId),
+                                cursorCondition(lastNickname, lastParticipantId))
+                        .orderBy(participant.member.nickname.asc(), participant.id.asc())
                         .limit(size + 1)
                         .fetch();
 
         return checkLastPage(size, results);
+    }
+
+    private BooleanBuilder cursorCondition(String lastNickname, Long lastParticipantId) {
+        return new BooleanBuilder()
+                .and(
+                        participant
+                                .member
+                                .nickname
+                                .gt(lastNickname)
+                                .or(
+                                        participant
+                                                .member
+                                                .nickname
+                                                .eq(lastNickname)
+                                                .and(participant.id.gt(lastParticipantId))));
     }
 
     private Slice<ParticipantListResponse> checkLastPage(

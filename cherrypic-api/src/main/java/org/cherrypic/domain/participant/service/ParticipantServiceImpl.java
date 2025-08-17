@@ -1,5 +1,7 @@
 package org.cherrypic.domain.participant.service;
 
+import java.util.ArrayList;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.cherrypic.album.entity.Album;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
@@ -70,16 +72,43 @@ public class ParticipantServiceImpl implements ParticipantService {
     @Override
     @Transactional(readOnly = true)
     public SliceResponse<ParticipantListResponse> getParticipants(
-            Long albumId, Long lastParticipantId, int size) {
+            Long albumId, String lastNickname, Long lastParticipantId, int size) {
         final Member currentMember = memberUtil.getCurrentMember();
         final Album album = getAlbumById(albumId);
+        final Participant currentParticipant =
+                getParticipantByMemberIdAndAlbumId(currentMember.getId(), album.getId());
 
-        getParticipantByMemberIdAndAlbumId(currentMember.getId(), album.getId());
+        if ((lastNickname == null) != (lastParticipantId == null)) {
+            throw new CustomException(ParticipantErrorCode.MISSING_CURSOR_PAIR);
+        }
 
-        Slice<ParticipantListResponse> results =
-                participantRepository.findAllByAlbumId(albumId, lastParticipantId, size);
+        List<ParticipantListResponse> results = new ArrayList<>();
+        int adjustedSize = size;
 
-        return SliceResponse.from(results);
+        if (lastNickname == null) {
+            results.add(ParticipantListResponse.from(currentParticipant));
+            adjustedSize = size - 1;
+
+            if (adjustedSize == 0) {
+                boolean hasNext =
+                        participantRepository.countByAlbumIdAndMemberIdNot(
+                                        albumId, currentMember.getId())
+                                > 0;
+                return new SliceResponse<>(results, !hasNext);
+            }
+        }
+
+        Slice<ParticipantListResponse> paged =
+                participantRepository.findParticipantsByAlbumIdExcludingMemberId(
+                        albumId,
+                        currentMember.getId(),
+                        lastNickname,
+                        lastParticipantId,
+                        adjustedSize);
+
+        results.addAll(paged.getContent());
+
+        return new SliceResponse<>(results, paged.isLast());
     }
 
     private Album getAlbumById(Long albumId) {
