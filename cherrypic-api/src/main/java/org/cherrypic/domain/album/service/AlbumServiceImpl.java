@@ -154,7 +154,7 @@ public class AlbumServiceImpl implements AlbumService {
     @Override
     public AlbumJoinResponse joinAlbum(Long albumId, String code) {
         final Member currentMember = memberUtil.getCurrentMember();
-        final Album album = getAlbumById(albumId);
+        final Album album = getAlbumByIdWithLock(albumId);
         final InvitationCode currentInvitationCode =
                 invitationCodeRepository
                         .findById(album.getId())
@@ -165,6 +165,7 @@ public class AlbumServiceImpl implements AlbumService {
 
         validateAlbumRejoin(currentMember, album);
         validateInvitationCode(currentInvitationCode, code);
+        validateMaxParticipantLimit(album);
 
         Participant participant =
                 Participant.createParticipant(currentMember, album, ParticipantRole.STANDARD);
@@ -188,6 +189,12 @@ public class AlbumServiceImpl implements AlbumService {
     private Album getAlbumById(Long albumId) {
         return albumRepository
                 .findById(albumId)
+                .orElseThrow(() -> new CustomException(AlbumErrorCode.ALBUM_NOT_FOUND));
+    }
+
+    private Album getAlbumByIdWithLock(Long albumId) {
+        return albumRepository
+                .findByIdWithPessimisticLock(albumId)
                 .orElseThrow(() -> new CustomException(AlbumErrorCode.ALBUM_NOT_FOUND));
     }
 
@@ -243,6 +250,13 @@ public class AlbumServiceImpl implements AlbumService {
         return paymentRepository
                 .findById(paymentId)
                 .orElseThrow(() -> new CustomException(PaymentErrorCode.PAYMENT_NOT_FOUND));
+    }
+
+    private void validateMaxParticipantLimit(Album album) {
+        if (participantRepository.countByAlbumId(album.getId())
+                >= album.getPlan().getMaxParticipants()) {
+            throw new CustomException(AlbumErrorCode.ALBUM_PARTICIPANT_LIMIT_EXCEEDED);
+        }
     }
 
     private void validateInvitationCode(InvitationCode currentInvitationCode, String code) {

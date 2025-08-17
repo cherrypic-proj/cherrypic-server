@@ -20,6 +20,7 @@ public enum AlbumErrorCode implements BaseErrorCode {
     INVITATION_CODE_NOT_FOUND(404, "앨범의 초대 코드가 만료되었습니다."),
     INVITATION_CODE_MISMATCH(400, "초대 코드가 올바르지 않습니다."),
     ALREADY_PARTICIPATED(400, "이미 참가한 앨범입니다."),
+    ALBUM_PARTICIPANT_LIMIT_EXCEEDED(400, "앨범 인원 제한으로 더 이상 참가할 수 없습니다."),
 
     OTHER_PARTICIPANTS_EXIST(400, "다른 참가자가 남아 있어 앨범을 삭제할 수 없습니다."),
     SUBSCRIPTION_ACTIVE(400, "구독 중인 앨범은 삭제할 수 없습니다."),
