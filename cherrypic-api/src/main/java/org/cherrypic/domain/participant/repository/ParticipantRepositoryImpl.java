@@ -50,6 +50,10 @@ public class ParticipantRepositoryImpl implements ParticipantRepositoryCustom {
     }
 
     private BooleanBuilder cursorCondition(String lastNickname, Long lastParticipantId) {
+        if (lastNickname == null && lastParticipantId == null) {
+            return null;
+        }
+
         return new BooleanBuilder()
                 .and(
                         participant
