@@ -69,6 +69,7 @@ public class ParticipantServiceImpl implements ParticipantService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public SliceResponse<ParticipantListResponse> getParticipants(
             Long albumId, Long lastParticipantId, int size, SortDirection direction) {
         final Member currentMember = memberUtil.getCurrentMember();
