@@ -18,7 +18,6 @@ import org.cherrypic.domain.participant.repository.ParticipantRepository;
 import org.cherrypic.domain.participant.service.ParticipantService;
 import org.cherrypic.exception.CustomException;
 import org.cherrypic.global.pagination.SliceResponse;
-import org.cherrypic.global.pagination.SortDirection;
 import org.cherrypic.global.util.MemberUtil;
 import org.cherrypic.global.util.TransactionUtil;
 import org.cherrypic.member.entity.Member;
@@ -315,40 +314,10 @@ class ParticipantServiceTest extends IntegrationTest {
         }
 
         @Test
-        void 정렬_조건이_ASC이면_participantId를_오름차순으로_조회한다() {
-            // when
-            SliceResponse<ParticipantListResponse> response =
-                    participantService.getParticipants(1L, null, 2, SortDirection.ASC);
-
-            // then
-            Assertions.assertAll(
-                    () ->
-                            assertThat(response.content())
-                                    .extracting("participantId")
-                                    .containsExactly(1L, 2L),
-                    () -> assertThat(response.isLast()).isTrue());
-        }
-
-        @Test
-        void 정렬_조건이_DESC이면_participantId를_내림차순으로_조회한다() {
-            // when
-            SliceResponse<ParticipantListResponse> response =
-                    participantService.getParticipants(1L, null, 2, SortDirection.DESC);
-
-            // then
-            Assertions.assertAll(
-                    () ->
-                            assertThat(response.content())
-                                    .extracting("participantId")
-                                    .containsExactly(2L, 1L),
-                    () -> assertThat(response.isLast()).isTrue());
-        }
-
-        @Test
         void 마지막_페이지인_경우_isLast를_true로_반환한다() {
             // when
             SliceResponse<ParticipantListResponse> response =
-                    participantService.getParticipants(1L, null, 2, SortDirection.DESC);
+                    participantService.getParticipants(1L, null, 2);
 
             // then
             Assertions.assertAll(
@@ -360,7 +329,7 @@ class ParticipantServiceTest extends IntegrationTest {
         void 마지막_페이지가_아닌_경우_isLast를_false로_반환한다() {
             // when
             SliceResponse<ParticipantListResponse> response =
-                    participantService.getParticipants(1L, null, 1, SortDirection.DESC);
+                    participantService.getParticipants(1L, null, 1);
 
             // then
             Assertions.assertAll(
@@ -371,10 +340,7 @@ class ParticipantServiceTest extends IntegrationTest {
         @Test
         void 앨범이_존재하지_않는_경우_예외가_발생한다() {
             // when & then
-            assertThatThrownBy(
-                            () ->
-                                    participantService.getParticipants(
-                                            999L, null, 2, SortDirection.DESC))
+            assertThatThrownBy(() -> participantService.getParticipants(999L, null, 2))
                     .isInstanceOf(CustomException.class)
                     .hasMessage(AlbumErrorCode.ALBUM_NOT_FOUND.getMessage());
         }
@@ -382,10 +348,7 @@ class ParticipantServiceTest extends IntegrationTest {
         @Test
         void 앨범_참가자가_아닌_경우_예외가_발생한다() {
             // when & then
-            assertThatThrownBy(
-                            () ->
-                                    participantService.getParticipants(
-                                            2L, null, 2, SortDirection.DESC))
+            assertThatThrownBy(() -> participantService.getParticipants(2L, null, 2))
                     .isInstanceOf(CustomException.class)
                     .hasMessage(AlbumErrorCode.NOT_ALBUM_PARTICIPANT.getMessage());
         }

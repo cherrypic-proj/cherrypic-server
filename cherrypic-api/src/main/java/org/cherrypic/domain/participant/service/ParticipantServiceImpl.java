@@ -10,7 +10,6 @@ import org.cherrypic.domain.participant.exception.ParticipantErrorCode;
 import org.cherrypic.domain.participant.repository.ParticipantRepository;
 import org.cherrypic.exception.CustomException;
 import org.cherrypic.global.pagination.SliceResponse;
-import org.cherrypic.global.pagination.SortDirection;
 import org.cherrypic.global.util.MemberUtil;
 import org.cherrypic.member.entity.Member;
 import org.cherrypic.participant.entity.Participant;
@@ -71,14 +70,14 @@ public class ParticipantServiceImpl implements ParticipantService {
     @Override
     @Transactional(readOnly = true)
     public SliceResponse<ParticipantListResponse> getParticipants(
-            Long albumId, Long lastParticipantId, int size, SortDirection direction) {
+            Long albumId, Long lastParticipantId, int size) {
         final Member currentMember = memberUtil.getCurrentMember();
         final Album album = getAlbumById(albumId);
 
         getParticipantByMemberIdAndAlbumId(currentMember.getId(), album.getId());
 
         Slice<ParticipantListResponse> results =
-                participantRepository.findAllByAlbumId(albumId, lastParticipantId, size, direction);
+                participantRepository.findAllByAlbumId(albumId, lastParticipantId, size);
 
         return SliceResponse.from(results);
     }

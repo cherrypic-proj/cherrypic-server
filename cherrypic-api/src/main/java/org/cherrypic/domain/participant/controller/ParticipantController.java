@@ -8,7 +8,6 @@ import org.cherrypic.domain.participant.dto.response.ParticipantListResponse;
 import org.cherrypic.domain.participant.service.ParticipantService;
 import org.cherrypic.global.annotation.PageSize;
 import org.cherrypic.global.pagination.SliceResponse;
-import org.cherrypic.global.pagination.SortDirection;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -44,10 +43,7 @@ public class ParticipantController {
             @Parameter(description = "이전 페이지의 마지막 참가자 ID (첫 요청 시 생략)")
                     @RequestParam(required = false)
                     Long lastParticipantId,
-            @Parameter(description = "페이지당 조회할 참가자 수") @RequestParam @PageSize Integer size,
-            @Parameter(description = "정렬 방향 (ASC: 오래된순, DESC: 최신순)")
-                    @RequestParam(defaultValue = "DESC")
-                    SortDirection direction) {
-        return participantService.getParticipants(albumId, lastParticipantId, size, direction);
+            @Parameter(description = "페이지당 조회할 참가자 수") @RequestParam @PageSize Integer size) {
+        return participantService.getParticipants(albumId, lastParticipantId, size);
     }
 }

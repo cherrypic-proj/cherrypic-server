@@ -15,7 +15,6 @@ import org.cherrypic.domain.participant.exception.ParticipantErrorCode;
 import org.cherrypic.domain.participant.service.ParticipantService;
 import org.cherrypic.exception.CustomException;
 import org.cherrypic.global.pagination.SliceResponse;
-import org.cherrypic.global.pagination.SortDirection;
 import org.cherrypic.participant.enums.ParticipantRole;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -229,74 +228,6 @@ class ParticipantControllerTest {
     class 참가자_목록_조회_요청_시 {
 
         @Test
-        void 정렬_조건이_ASC이면_participantId를_오름차순으로_응답한다() throws Exception {
-            // given
-            List<ParticipantListResponse> participants =
-                    List.of(
-                            new ParticipantListResponse(
-                                    1L,
-                                    "testNickname1",
-                                    "testProfileImageUrl2",
-                                    ParticipantRole.HOST),
-                            new ParticipantListResponse(
-                                    2L,
-                                    "testNickname2",
-                                    "testProfileImageUrl1",
-                                    ParticipantRole.STANDARD));
-
-            given(participantService.getParticipants(1L, null, 2, SortDirection.ASC))
-                    .willReturn(new SliceResponse<>(participants, true));
-
-            // when & then
-            ResultActions perform =
-                    mockMvc.perform(
-                            get("/albums/1/participants")
-                                    .param("size", "2")
-                                    .param("direction", "ASC"));
-
-            perform.andExpect(status().isOk())
-                    .andExpect(jsonPath("$.success").value(true))
-                    .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
-                    .andExpect(jsonPath("$.data.content[0].participantId").value(1))
-                    .andExpect(jsonPath("$.data.content[1].participantId").value(2))
-                    .andExpect(jsonPath("$.data.isLast").value(true));
-        }
-
-        @Test
-        void 정렬_조건이_DESC이면_participantId를_내림차순으로_응답한다() throws Exception {
-            // given
-            List<ParticipantListResponse> participants =
-                    List.of(
-                            new ParticipantListResponse(
-                                    2L,
-                                    "testNickname2",
-                                    "testProfileImageUrl1",
-                                    ParticipantRole.STANDARD),
-                            new ParticipantListResponse(
-                                    1L,
-                                    "testNickname1",
-                                    "testProfileImageUrl2",
-                                    ParticipantRole.HOST));
-
-            given(participantService.getParticipants(1L, null, 2, SortDirection.DESC))
-                    .willReturn(new SliceResponse<>(participants, true));
-
-            // when & then
-            ResultActions perform =
-                    mockMvc.perform(
-                            get("/albums/1/participants")
-                                    .param("size", "2")
-                                    .param("direction", "DESC"));
-
-            perform.andExpect(status().isOk())
-                    .andExpect(jsonPath("$.success").value(true))
-                    .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
-                    .andExpect(jsonPath("$.data.content[0].participantId").value(2))
-                    .andExpect(jsonPath("$.data.content[1].participantId").value(1))
-                    .andExpect(jsonPath("$.data.isLast").value(true));
-        }
-
-        @Test
         void 마지막_페이지인_경우_isLast를_true로_응답한다() throws Exception {
             // given
             List<ParticipantListResponse> participants =
@@ -312,15 +243,12 @@ class ParticipantControllerTest {
                                     "testProfileImageUrl2",
                                     ParticipantRole.HOST));
 
-            given(participantService.getParticipants(1L, null, 2, SortDirection.DESC))
+            given(participantService.getParticipants(1L, null, 2))
                     .willReturn(new SliceResponse<>(participants, true));
 
             // when & then
             ResultActions perform =
-                    mockMvc.perform(
-                            get("/albums/1/participants")
-                                    .param("size", "2")
-                                    .param("direction", "DESC"));
+                    mockMvc.perform(get("/albums/1/participants").param("size", "2"));
 
             perform.andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
@@ -345,15 +273,12 @@ class ParticipantControllerTest {
                                     "testProfileImageUrl2",
                                     ParticipantRole.HOST));
 
-            given(participantService.getParticipants(1L, null, 1, SortDirection.DESC))
+            given(participantService.getParticipants(1L, null, 1))
                     .willReturn(new SliceResponse<>(participants, false));
 
             // when & then
             ResultActions perform =
-                    mockMvc.perform(
-                            get("/albums/1/participants")
-                                    .param("size", "1")
-                                    .param("direction", "DESC"));
+                    mockMvc.perform(get("/albums/1/participants").param("size", "1"));
 
             perform.andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
@@ -367,14 +292,11 @@ class ParticipantControllerTest {
             // given
             willThrow(new CustomException(AlbumErrorCode.ALBUM_NOT_FOUND))
                     .given(participantService)
-                    .getParticipants(1L, null, 2, SortDirection.DESC);
+                    .getParticipants(1L, null, 2);
 
             // when & then
             ResultActions perform =
-                    mockMvc.perform(
-                            get("/albums/1/participants")
-                                    .param("size", "2")
-                                    .param("direction", "DESC"));
+                    mockMvc.perform(get("/albums/1/participants").param("size", "2"));
 
             perform.andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.success").value(false))
@@ -388,14 +310,11 @@ class ParticipantControllerTest {
             // given
             willThrow(new CustomException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT))
                     .given(participantService)
-                    .getParticipants(1L, null, 2, SortDirection.DESC);
+                    .getParticipants(1L, null, 2);
 
             // when & then
             ResultActions perform =
-                    mockMvc.perform(
-                            get("/albums/1/participants")
-                                    .param("size", "2")
-                                    .param("direction", "DESC"));
+                    mockMvc.perform(get("/albums/1/participants").param("size", "2"));
 
             perform.andExpect(status().isForbidden())
                     .andExpect(jsonPath("$.success").value(false))
@@ -409,33 +328,13 @@ class ParticipantControllerTest {
         void 페이지_크기가_0_이하이면_예외가_발생한다(String pageSize) throws Exception {
             // when & then
             ResultActions perform =
-                    mockMvc.perform(
-                            get("/albums/1/participants")
-                                    .param("size", pageSize)
-                                    .param("direction", "DESC"));
+                    mockMvc.perform(get("/albums/1/participants").param("size", pageSize));
 
             perform.andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.success").value(false))
                     .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
                     .andExpect(jsonPath("$.data.code").value("ConstraintViolationException"))
                     .andExpect(jsonPath("$.data.message").value("페이지 크기는 0보다 큰 값만 가능합니다."));
-        }
-
-        @ParameterizedTest
-        @ValueSource(strings = {"ASCC", "DESCC", "OLDEST", "NEWEST"})
-        void 존재하지_않는_정렬_기준을_입력하면_예외가_발생한다(String sort) throws Exception {
-            // when & then
-            ResultActions perform =
-                    mockMvc.perform(
-                            get("/albums/1/participants")
-                                    .param("size", "2")
-                                    .param("direction", sort));
-
-            perform.andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.success").value(false))
-                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
-                    .andExpect(jsonPath("$.data.code").value("METHOD_ARGUMENT_TYPE_MISMATCH"))
-                    .andExpect(jsonPath("$.data.message").value("요청한 값의 타입이 잘못되어 처리할 수 없습니다."));
         }
     }
 }
