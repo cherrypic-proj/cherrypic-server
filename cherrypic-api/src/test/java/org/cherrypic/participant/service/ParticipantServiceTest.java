@@ -292,14 +292,24 @@ class ParticipantServiceTest extends IntegrationTest {
             Member member1 =
                     Member.createMember(
                             OauthInfo.createOauthInfo("testOauthId1", "testOauthProvider1"),
-                            "testNickname1",
+                            "가가가",
                             "testProfileImageUrl1");
             Member member2 =
                     Member.createMember(
                             OauthInfo.createOauthInfo("testOauthId2", "testOauthProvider2"),
-                            "testNickname2",
+                            "다다다",
                             "testProfileImageUrl2");
-            memberRepository.saveAll(List.of(member1, member2));
+            Member member3 =
+                    Member.createMember(
+                            OauthInfo.createOauthInfo("testOauthId3", "testOauthProvider3"),
+                            "나나나",
+                            "testProfileImageUrl3");
+            Member member4 =
+                    Member.createMember(
+                            OauthInfo.createOauthInfo("testOauthId4", "testOauthProvider4"),
+                            "다다다",
+                            "testProfileImageUrl4");
+            memberRepository.saveAll(List.of(member1, member2, member3, member4));
             given(memberUtil.getCurrentMember()).willReturn(member1);
 
             Album album1 = Album.createAlbum("testAlbum1", "testURL1", AlbumPlan.BASIC, false);
@@ -310,18 +320,51 @@ class ParticipantServiceTest extends IntegrationTest {
                     Participant.createParticipant(member1, album1, ParticipantRole.HOST);
             Participant participant2 =
                     Participant.createParticipant(member2, album1, ParticipantRole.STANDARD);
-            participantRepository.saveAll(List.of(participant1, participant2));
+            Participant participant3 =
+                    Participant.createParticipant(member3, album1, ParticipantRole.STANDARD);
+            Participant participant4 =
+                    Participant.createParticipant(member4, album1, ParticipantRole.STANDARD);
+            participantRepository.saveAll(
+                    List.of(participant1, participant2, participant3, participant4));
+        }
+
+        @Test
+        void 본인_조회_후_닉네임_오름차순으로_이후_참가자를_조회한다() {
+            // when
+            SliceResponse<ParticipantListResponse> firstPage =
+                    participantService.getParticipants(1L, null, null, 1);
+
+            // then
+            Assertions.assertAll(
+                    () -> assertThat(firstPage.content().size()).isEqualTo(1),
+                    () -> assertThat(firstPage.content().getFirst().participantId()).isEqualTo(1),
+                    () -> assertThat(firstPage.content().getFirst().nickname()).isEqualTo("가가가"),
+                    () -> assertThat(firstPage.isLast()).isFalse());
+
+            // when
+            SliceResponse<ParticipantListResponse> secondPage =
+                    participantService.getParticipants(1L, "가가가", 1L, 3);
+
+            Assertions.assertAll(
+                    () -> assertThat(secondPage.content().size()).isEqualTo(3),
+                    () -> assertThat(secondPage.content().getFirst().participantId()).isEqualTo(3),
+                    () -> assertThat(secondPage.content().getFirst().nickname()).isEqualTo("나나나"),
+                    () -> assertThat(secondPage.content().get(1).participantId()).isEqualTo(2),
+                    () -> assertThat(secondPage.content().get(1).nickname()).isEqualTo("다다다"),
+                    () -> assertThat(secondPage.content().get(2).participantId()).isEqualTo(4),
+                    () -> assertThat(secondPage.content().get(2).nickname()).isEqualTo("다다다"),
+                    () -> assertThat(secondPage.isLast()).isTrue());
         }
 
         @Test
         void 마지막_페이지인_경우_isLast를_true로_반환한다() {
             // when
             SliceResponse<ParticipantListResponse> response =
-                    participantService.getParticipants(1L, null, 2);
+                    participantService.getParticipants(1L, null, null, 4);
 
             // then
             Assertions.assertAll(
-                    () -> assertThat(response.content().size()).isEqualTo(2),
+                    () -> assertThat(response.content().size()).isEqualTo(4),
                     () -> assertThat(response.isLast()).isTrue());
         }
 
@@ -329,18 +372,18 @@ class ParticipantServiceTest extends IntegrationTest {
         void 마지막_페이지가_아닌_경우_isLast를_false로_반환한다() {
             // when
             SliceResponse<ParticipantListResponse> response =
-                    participantService.getParticipants(1L, null, 1);
+                    participantService.getParticipants(1L, null, null, 2);
 
             // then
             Assertions.assertAll(
-                    () -> assertThat(response.content().size()).isEqualTo(1),
+                    () -> assertThat(response.content().size()).isEqualTo(2),
                     () -> assertThat(response.isLast()).isFalse());
         }
 
         @Test
         void 앨범이_존재하지_않는_경우_예외가_발생한다() {
             // when & then
-            assertThatThrownBy(() -> participantService.getParticipants(999L, null, 2))
+            assertThatThrownBy(() -> participantService.getParticipants(999L, null, null, 2))
                     .isInstanceOf(CustomException.class)
                     .hasMessage(AlbumErrorCode.ALBUM_NOT_FOUND.getMessage());
         }
@@ -348,9 +391,23 @@ class ParticipantServiceTest extends IntegrationTest {
         @Test
         void 앨범_참가자가_아닌_경우_예외가_발생한다() {
             // when & then
-            assertThatThrownBy(() -> participantService.getParticipants(2L, null, 2))
+            assertThatThrownBy(() -> participantService.getParticipants(2L, null, null, 2))
                     .isInstanceOf(CustomException.class)
                     .hasMessage(AlbumErrorCode.NOT_ALBUM_PARTICIPANT.getMessage());
+        }
+
+        @Test
+        void lastNickname만_포함된_요청의_경우_예외가_발생한다() {
+            assertThatThrownBy(() -> participantService.getParticipants(1L, "가가가", null, 2))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(ParticipantErrorCode.MISSING_CURSOR_PAIR.getMessage());
+        }
+
+        @Test
+        void lastParticipantId만_포함된_요청의_경우_예외가_발생한다() {
+            assertThatThrownBy(() -> participantService.getParticipants(1L, null, 1L, 2))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(ParticipantErrorCode.MISSING_CURSOR_PAIR.getMessage());
         }
     }
 }

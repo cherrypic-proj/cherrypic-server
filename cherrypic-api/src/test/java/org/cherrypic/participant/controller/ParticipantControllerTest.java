@@ -243,7 +243,7 @@ class ParticipantControllerTest {
                                     "testProfileImageUrl2",
                                     ParticipantRole.HOST));
 
-            given(participantService.getParticipants(1L, null, 2))
+            given(participantService.getParticipants(1L, null, null, 2))
                     .willReturn(new SliceResponse<>(participants, true));
 
             // when & then
@@ -273,7 +273,7 @@ class ParticipantControllerTest {
                                     "testProfileImageUrl2",
                                     ParticipantRole.HOST));
 
-            given(participantService.getParticipants(1L, null, 1))
+            given(participantService.getParticipants(1L, null, null, 1))
                     .willReturn(new SliceResponse<>(participants, false));
 
             // when & then
@@ -290,9 +290,8 @@ class ParticipantControllerTest {
         @Test
         void 앨범이_존재하지_않는_경우_예외가_발생한다() throws Exception {
             // given
-            willThrow(new CustomException(AlbumErrorCode.ALBUM_NOT_FOUND))
-                    .given(participantService)
-                    .getParticipants(1L, null, 2);
+            given(participantService.getParticipants(1L, null, null, 2))
+                    .willThrow(new CustomException(AlbumErrorCode.ALBUM_NOT_FOUND));
 
             // when & then
             ResultActions perform =
@@ -308,9 +307,8 @@ class ParticipantControllerTest {
         @Test
         void 앨범_참가자가_아닌_경우_예외가_발생한다() throws Exception {
             // given
-            willThrow(new CustomException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT))
-                    .given(participantService)
-                    .getParticipants(1L, null, 2);
+            given(participantService.getParticipants(1L, null, null, 2))
+                    .willThrow(new CustomException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT));
 
             // when & then
             ResultActions perform =
@@ -321,6 +319,52 @@ class ParticipantControllerTest {
                     .andExpect(jsonPath("$.status").value(HttpStatus.FORBIDDEN.value()))
                     .andExpect(jsonPath("$.data.code").value("NOT_ALBUM_PARTICIPANT"))
                     .andExpect(jsonPath("$.data.message").value("앨범에 속하지 않은 사용자입니다."));
+        }
+
+        @Test
+        void lastNickname만_포함된_요청의_경우_예외가_발생한다() throws Exception {
+            // given
+            given(participantService.getParticipants(1L, "가가가", null, 2))
+                    .willThrow(new CustomException(ParticipantErrorCode.MISSING_CURSOR_PAIR));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            get("/albums/1/participants")
+                                    .param("size", "2")
+                                    .param("lastNickname", "가가가"));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("MISSING_CURSOR_PAIR"))
+                    .andExpect(
+                            jsonPath("$.data.message")
+                                    .value(
+                                            "lastNickname과 lastParticipantId는 요청에 함께 포함되어야 합니다. 하나만 포함할 수는 없습니다."));
+        }
+
+        @Test
+        void lastParticipantId만_포함된_요청의_경우_예외가_발생한다() throws Exception {
+            // given
+            given(participantService.getParticipants(1L, null, 1L, 2))
+                    .willThrow(new CustomException(ParticipantErrorCode.MISSING_CURSOR_PAIR));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            get("/albums/1/participants")
+                                    .param("size", "2")
+                                    .param("lastParticipantId", "1"));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("MISSING_CURSOR_PAIR"))
+                    .andExpect(
+                            jsonPath("$.data.message")
+                                    .value(
+                                            "lastNickname과 lastParticipantId는 요청에 함께 포함되어야 합니다. 하나만 포함할 수는 없습니다."));
         }
 
         @ParameterizedTest
