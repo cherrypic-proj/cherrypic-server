@@ -12,10 +12,13 @@ import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.album.repository.AlbumRepository;
 import org.cherrypic.domain.member.repository.MemberRepository;
 import org.cherrypic.domain.notification.repository.NotificationRepository;
+import org.cherrypic.domain.participant.dto.response.ParticipantListResponse;
 import org.cherrypic.domain.participant.exception.ParticipantErrorCode;
 import org.cherrypic.domain.participant.repository.ParticipantRepository;
 import org.cherrypic.domain.participant.service.ParticipantService;
 import org.cherrypic.exception.CustomException;
+import org.cherrypic.global.pagination.SliceResponse;
+import org.cherrypic.global.pagination.SortDirection;
 import org.cherrypic.global.util.MemberUtil;
 import org.cherrypic.global.util.TransactionUtil;
 import org.cherrypic.member.entity.Member;
@@ -279,6 +282,112 @@ class ParticipantServiceTest extends IntegrationTest {
             assertThatThrownBy(() -> participantService.kickParticipant(1L, 3L))
                     .isInstanceOf(CustomException.class)
                     .hasMessage(AlbumErrorCode.PARTICIPANT_NOT_IN_ALBUM.getMessage());
+        }
+    }
+
+    @Nested
+    class 참가자_목록을_조회할_때 {
+
+        @BeforeEach
+        void setUp() {
+            Member member1 =
+                    Member.createMember(
+                            OauthInfo.createOauthInfo("testOauthId1", "testOauthProvider1"),
+                            "testNickname1",
+                            "testProfileImageUrl1");
+            Member member2 =
+                    Member.createMember(
+                            OauthInfo.createOauthInfo("testOauthId2", "testOauthProvider2"),
+                            "testNickname2",
+                            "testProfileImageUrl2");
+            memberRepository.saveAll(List.of(member1, member2));
+            given(memberUtil.getCurrentMember()).willReturn(member1);
+
+            Album album1 = Album.createAlbum("testAlbum1", "testURL1", AlbumPlan.BASIC, false);
+            Album album2 = Album.createAlbum("testAlbum2", "testURL2", AlbumPlan.BASIC, false);
+            albumRepository.saveAll(List.of(album1, album2));
+
+            Participant participant1 =
+                    Participant.createParticipant(member1, album1, ParticipantRole.HOST);
+            Participant participant2 =
+                    Participant.createParticipant(member2, album1, ParticipantRole.STANDARD);
+            participantRepository.saveAll(List.of(participant1, participant2));
+        }
+
+        @Test
+        void 정렬_조건이_ASC이면_participantId를_오름차순으로_조회한다() {
+            // when
+            SliceResponse<ParticipantListResponse> response =
+                    participantService.getParticipants(1L, null, 2, SortDirection.ASC);
+
+            // then
+            Assertions.assertAll(
+                    () ->
+                            assertThat(response.content())
+                                    .extracting("participantId")
+                                    .containsExactly(1L, 2L),
+                    () -> assertThat(response.isLast()).isTrue());
+        }
+
+        @Test
+        void 정렬_조건이_DESC이면_participantId를_내림차순으로_조회한다() {
+            // when
+            SliceResponse<ParticipantListResponse> response =
+                    participantService.getParticipants(1L, null, 2, SortDirection.DESC);
+
+            // then
+            Assertions.assertAll(
+                    () ->
+                            assertThat(response.content())
+                                    .extracting("participantId")
+                                    .containsExactly(2L, 1L),
+                    () -> assertThat(response.isLast()).isTrue());
+        }
+
+        @Test
+        void 마지막_페이지인_경우_isLast를_true로_반환한다() {
+            // when
+            SliceResponse<ParticipantListResponse> response =
+                    participantService.getParticipants(1L, null, 2, SortDirection.DESC);
+
+            // then
+            Assertions.assertAll(
+                    () -> assertThat(response.content().size()).isEqualTo(2),
+                    () -> assertThat(response.isLast()).isTrue());
+        }
+
+        @Test
+        void 마지막_페이지가_아닌_경우_isLast를_false로_반환한다() {
+            // when
+            SliceResponse<ParticipantListResponse> response =
+                    participantService.getParticipants(1L, null, 1, SortDirection.DESC);
+
+            // then
+            Assertions.assertAll(
+                    () -> assertThat(response.content().size()).isEqualTo(1),
+                    () -> assertThat(response.isLast()).isFalse());
+        }
+
+        @Test
+        void 앨범이_존재하지_않는_경우_예외가_발생한다() {
+            // when & then
+            assertThatThrownBy(
+                            () ->
+                                    participantService.getParticipants(
+                                            999L, null, 2, SortDirection.DESC))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(AlbumErrorCode.ALBUM_NOT_FOUND.getMessage());
+        }
+
+        @Test
+        void 앨범_참가자가_아닌_경우_예외가_발생한다() {
+            // when & then
+            assertThatThrownBy(
+                            () ->
+                                    participantService.getParticipants(
+                                            2L, null, 2, SortDirection.DESC))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(AlbumErrorCode.NOT_ALBUM_PARTICIPANT.getMessage());
         }
     }
 }
