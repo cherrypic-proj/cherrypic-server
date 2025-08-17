@@ -9,8 +9,8 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum AlbumPlan {
     BASIC(0),
-    PRO(3900),
-    PREMIUM(7900),
+    PRO(5900),
+    PREMIUM(12900),
     ;
 
     private final int price;
