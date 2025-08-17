@@ -103,7 +103,6 @@ CREATE TABLE participant (
                              member_id BIGINT NOT NULL,
                              album_id BIGINT NOT NULL,
                              role VARCHAR(255) NOT NULL CHECK (role IN ('HOST','STANDARD','LIMITED')),
-                             password VARCHAR(255),
                              created_at DATETIME(6) NOT NULL,
                              updated_at DATETIME(6) NOT NULL,
                              CONSTRAINT fk_participant_member FOREIGN KEY (member_id) REFERENCES member (id),
