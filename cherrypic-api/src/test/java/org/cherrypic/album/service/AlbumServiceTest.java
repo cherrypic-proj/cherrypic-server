@@ -16,7 +16,6 @@ import org.cherrypic.album.entity.InvitationCode;
 import org.cherrypic.album.enums.AlbumPlan;
 import org.cherrypic.domain.album.dto.request.AlbumCreateRequest;
 import org.cherrypic.domain.album.dto.request.AlbumUpdateRequest;
-import org.cherrypic.domain.album.dto.response.AlbumJoinResponse;
 import org.cherrypic.domain.album.dto.response.AlbumListResponse;
 import org.cherrypic.domain.album.dto.response.InvitationLinkCreateResponse;
 import org.cherrypic.domain.album.event.AlbumDeleteEvent;
@@ -805,7 +804,7 @@ class AlbumServiceTest extends IntegrationTest {
         @Test
         void 유효한_초대_코드면_앨범_참가자가_생성된다() {
             // when
-            AlbumJoinResponse response = albumService.joinAlbum(1L, "testInvitationCode1");
+            albumService.joinAlbum(1L, "testInvitationCode1");
 
             // then
             Participant participant =
@@ -846,6 +845,31 @@ class AlbumServiceTest extends IntegrationTest {
             assertThatThrownBy(() -> albumService.joinAlbum(3L, "testInvitationCode2"))
                     .isInstanceOf(CustomException.class)
                     .hasMessage(AlbumErrorCode.ALREADY_PARTICIPATED.getMessage());
+        }
+
+        @Test
+        void 최대_참가자_수를_초과하면_예외가_발생한다() {
+            // given
+            Album album = albumRepository.findById(1L).orElseThrow();
+            int maxParticipants = album.getPlan().getMaxParticipants();
+
+            for (int i = 0; i < maxParticipants; i++) {
+                Member member =
+                        Member.createMember(
+                                OauthInfo.createOauthInfo("testOauthId", "testOauthProvider"),
+                                "testNickname",
+                                "testProfileImageUrl");
+                memberRepository.save(member);
+
+                Participant participant =
+                        Participant.createParticipant(member, album, ParticipantRole.STANDARD);
+                participantRepository.save(participant);
+            }
+
+            // when & then
+            assertThatThrownBy(() -> albumService.joinAlbum(album.getId(), "testInvitationCode1"))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(AlbumErrorCode.ALBUM_PARTICIPANT_LIMIT_EXCEEDED.getMessage());
         }
     }
 

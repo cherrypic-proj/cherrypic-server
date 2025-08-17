@@ -934,6 +934,24 @@ class AlbumControllerTest {
                     .andExpect(jsonPath("$.data.code").value("INVITATION_CODE_MISMATCH"))
                     .andExpect(jsonPath("$.data.message").value("초대 코드가 올바르지 않습니다."));
         }
+
+        @Test
+        void 최대_참가자_수를_초과하면_예외가_발생한다() throws Exception {
+            // given
+            given(albumService.joinAlbum(1L, "testInvitationCode"))
+                    .willThrow(
+                            new CustomException(AlbumErrorCode.ALBUM_PARTICIPANT_LIMIT_EXCEEDED));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(post("/albums/1/join").param("code", "testInvitationCode"));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("ALBUM_PARTICIPANT_LIMIT_EXCEEDED"))
+                    .andExpect(jsonPath("$.data.message").value("앨범 인원 제한으로 더 이상 참가할 수 없습니다."));
+        }
     }
 
     @Nested
