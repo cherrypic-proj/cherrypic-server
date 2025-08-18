@@ -11,7 +11,9 @@ public enum ImageFileExtension {
     PNG("png"),
     JPG("jpg"),
     JPEG("jpeg"),
-    ;
+    WEBP("webp"),
+    HEIC("heic"),
+    HEIF("heif");
 
     private final String extension;
 

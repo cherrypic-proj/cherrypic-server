@@ -28,7 +28,9 @@ public enum AlbumErrorCode implements BaseErrorCode {
     HOST_LEAVE_NOT_ALLOWED(403, "방장은 앨범을 나갈 수 없습니다."),
     HOST_SELF_KICK_NOT_ALLOWED(400, "방장은 자기 자신을 강퇴할 수 없습니다."),
 
-    PARTICIPANT_NOT_IN_ALBUM(400, "해당 참가자는 이 앨범에 속해 있지 않습니다.");
+    PARTICIPANT_NOT_IN_ALBUM(400, "해당 참가자는 이 앨범에 속해 있지 않습니다."),
+
+    ALBUM_CAPACITY_EXCEEDED(400, "앨범의 용량을 초과했습니다.");
 
     private final int status;
     private final String message;

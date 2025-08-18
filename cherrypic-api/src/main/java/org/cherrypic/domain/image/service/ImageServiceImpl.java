@@ -5,7 +5,9 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.Headers;
 import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
+import java.math.BigDecimal;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
@@ -14,10 +16,12 @@ import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.album.repository.AlbumRepository;
 import org.cherrypic.domain.event.exception.EventErrorCode;
 import org.cherrypic.domain.event.repository.EventRepository;
+import org.cherrypic.domain.image.dto.request.AlbumImageUploadRequest;
 import org.cherrypic.domain.image.dto.request.MemberProfileImageUploadRequest;
 import org.cherrypic.domain.image.dto.response.AlbumImageListResponse;
 import org.cherrypic.domain.image.dto.response.EventImageListResponse;
 import org.cherrypic.domain.image.dto.response.PresignedUrlResponse;
+import org.cherrypic.domain.image.dto.response.PresignedUrlsResponse;
 import org.cherrypic.domain.image.enums.ImageFileExtension;
 import org.cherrypic.domain.image.enums.ImageType;
 import org.cherrypic.domain.image.repository.ImageRepository;
@@ -30,6 +34,7 @@ import org.cherrypic.global.util.MemberUtil;
 import org.cherrypic.helper.SpringEnvironmentHelper;
 import org.cherrypic.member.entity.Member;
 import org.cherrypic.participant.entity.Participant;
+import org.cherrypic.participant.enums.ParticipantRole;
 import org.cherrypic.s3.S3Properties;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
@@ -55,8 +60,37 @@ public class ImageServiceImpl implements ImageService {
             MemberProfileImageUploadRequest request) {
         final Member currentMember = memberUtil.getCurrentMember();
 
-        return createPresignedUrl(
-                ImageType.MEMBER_PROFILE, currentMember.getId(), request.imageFileExtension());
+        String presignedUrl =
+                createPresignedUrl(
+                        ImageType.MEMBER_PROFILE,
+                        currentMember.getId(),
+                        request.imageFileExtension());
+
+        return PresignedUrlResponse.of(presignedUrl);
+    }
+
+    @Override
+    public PresignedUrlsResponse createAlbumImageUploadUrls(
+            Long albumId, AlbumImageUploadRequest request) {
+        final Member currentMember = memberUtil.getCurrentMember();
+        final Album album = getAlbumByIdWithLock(albumId);
+
+        validateParticipantAuthority(currentMember.getId(), album.getId());
+        validateAlbumCapacity(album, request.capacity());
+
+        album.increaseCapacity(request.capacity());
+
+        List<String> presignedUrls =
+                request.imageFileExtensions().stream()
+                        .map(
+                                extension ->
+                                        createPresignedUrl(
+                                                ImageType.ALBUM_IMAGE,
+                                                currentMember.getId(),
+                                                extension))
+                        .toList();
+
+        return PresignedUrlsResponse.of(presignedUrls);
     }
 
     @Override
@@ -86,7 +120,7 @@ public class ImageServiceImpl implements ImageService {
         return SliceResponse.from(result);
     }
 
-    private PresignedUrlResponse createPresignedUrl(
+    private String createPresignedUrl(
             ImageType imageType, Long targetId, ImageFileExtension imageFileExtension) {
         String imageKey = UUID.randomUUID().toString();
         String fileName = createFileName(imageType, targetId, imageKey, imageFileExtension);
@@ -95,9 +129,7 @@ public class ImageServiceImpl implements ImageService {
                 generatePresignedUrlRequest(
                         s3Properties.bucket(), fileName, imageFileExtension.getExtension());
 
-        String presignedUrl = amazonS3.generatePresignedUrl(generatePresignedUrlRequest).toString();
-
-        return new PresignedUrlResponse(presignedUrl);
+        return amazonS3.generatePresignedUrl(generatePresignedUrlRequest).toString();
     }
 
     private String createFileName(
@@ -145,6 +177,12 @@ public class ImageServiceImpl implements ImageService {
                 .orElseThrow(() -> new CustomException(AlbumErrorCode.ALBUM_NOT_FOUND));
     }
 
+    private Album getAlbumByIdWithLock(Long albumId) {
+        return albumRepository
+                .findByIdWithPessimisticLock(albumId)
+                .orElseThrow(() -> new CustomException(AlbumErrorCode.ALBUM_NOT_FOUND));
+    }
+
     private Event getEventById(Long eventId) {
         return eventRepository
                 .findById(eventId)
@@ -155,5 +193,23 @@ public class ImageServiceImpl implements ImageService {
         return participantRepository
                 .findByMemberIdAndAlbumId(memberId, albumId)
                 .orElseThrow(() -> new CustomException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT));
+    }
+
+    private void validateParticipantAuthority(Long memberId, Long albumId) {
+        Participant participant = getParticipantByMemberIdAndAlbumId(memberId, albumId);
+
+        if (participant.getRole().equals(ParticipantRole.LIMITED)) {
+            throw new CustomException(AlbumErrorCode.LIMITED_AUTHORITY);
+        }
+    }
+
+    private void validateAlbumCapacity(Album album, BigDecimal additionalUpload) {
+        BigDecimal maxCapacity = album.getPlan().getCapacityGb();
+        BigDecimal current = album.getCapacityGb();
+        BigDecimal afterUpload = current.add(additionalUpload);
+
+        if (afterUpload.compareTo(maxCapacity) > 0) {
+            throw new CustomException(AlbumErrorCode.ALBUM_CAPACITY_EXCEEDED);
+        }
     }
 }
