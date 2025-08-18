@@ -112,7 +112,7 @@ class ImageControllerTest {
             PresignedUrlsResponse response =
                     new PresignedUrlsResponse(List.of("testPresignedUrl1", "testPresignedUrl2"));
 
-            given(imageService.createAlbumImageUploadUrls(request, 1L)).willReturn(response);
+            given(imageService.createAlbumImageUploadUrls(1L, request)).willReturn(response);
 
             // when & then
             ResultActions perform =
@@ -133,7 +133,7 @@ class ImageControllerTest {
             AlbumImageUploadRequest request =
                     new AlbumImageUploadRequest(List.of(ImageFileExtension.JPEG), BigDecimal.ONE);
 
-            given(imageService.createAlbumImageUploadUrls(request, 1L))
+            given(imageService.createAlbumImageUploadUrls(1L, request))
                     .willThrow(new CustomException(AlbumErrorCode.ALBUM_NOT_FOUND));
 
             // when & then
@@ -156,7 +156,7 @@ class ImageControllerTest {
             AlbumImageUploadRequest request =
                     new AlbumImageUploadRequest(List.of(ImageFileExtension.JPEG), BigDecimal.ONE);
 
-            given(imageService.createAlbumImageUploadUrls(request, 1L))
+            given(imageService.createAlbumImageUploadUrls(1L, request))
                     .willThrow(new CustomException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT));
 
             // when & then
@@ -179,7 +179,7 @@ class ImageControllerTest {
             AlbumImageUploadRequest request =
                     new AlbumImageUploadRequest(List.of(ImageFileExtension.JPEG), BigDecimal.ONE);
 
-            given(imageService.createAlbumImageUploadUrls(request, 1L))
+            given(imageService.createAlbumImageUploadUrls(1L, request))
                     .willThrow(new CustomException(AlbumErrorCode.LIMITED_AUTHORITY));
 
             // when & then
@@ -202,7 +202,7 @@ class ImageControllerTest {
             AlbumImageUploadRequest request =
                     new AlbumImageUploadRequest(List.of(ImageFileExtension.JPEG), BigDecimal.ONE);
 
-            given(imageService.createAlbumImageUploadUrls(request, 1L))
+            given(imageService.createAlbumImageUploadUrls(1L, request))
                     .willThrow(new CustomException(AlbumErrorCode.ALBUM_CAPACITY_EXCEEDED));
 
             // when & then

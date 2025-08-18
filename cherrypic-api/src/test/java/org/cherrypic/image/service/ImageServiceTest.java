@@ -121,7 +121,7 @@ class ImageServiceTest extends IntegrationTest {
                             BigDecimal.ONE);
 
             // when & then
-            PresignedUrlsResponse response = imageService.createAlbumImageUploadUrls(request, 1L);
+            PresignedUrlsResponse response = imageService.createAlbumImageUploadUrls(1L, request);
 
             assertThat(response.presignedUrls())
                     .hasSize(2)
@@ -149,7 +149,7 @@ class ImageServiceTest extends IntegrationTest {
                             BigDecimal.ONE);
 
             // when & then
-            assertThatThrownBy(() -> imageService.createAlbumImageUploadUrls(request, 999L))
+            assertThatThrownBy(() -> imageService.createAlbumImageUploadUrls(999L, request))
                     .isInstanceOf(CustomException.class)
                     .hasMessage(AlbumErrorCode.ALBUM_NOT_FOUND.getMessage());
         }
@@ -163,7 +163,7 @@ class ImageServiceTest extends IntegrationTest {
                             BigDecimal.ONE);
 
             // when & then
-            assertThatThrownBy(() -> imageService.createAlbumImageUploadUrls(request, 3L))
+            assertThatThrownBy(() -> imageService.createAlbumImageUploadUrls(3L, request))
                     .isInstanceOf(CustomException.class)
                     .hasMessage(AlbumErrorCode.NOT_ALBUM_PARTICIPANT.getMessage());
         }
@@ -177,7 +177,7 @@ class ImageServiceTest extends IntegrationTest {
                             BigDecimal.ONE);
 
             // when & then
-            assertThatThrownBy(() -> imageService.createAlbumImageUploadUrls(request, 2L))
+            assertThatThrownBy(() -> imageService.createAlbumImageUploadUrls(2L, request))
                     .isInstanceOf(CustomException.class)
                     .hasMessage(AlbumErrorCode.LIMITED_AUTHORITY.getMessage());
         }
@@ -191,7 +191,7 @@ class ImageServiceTest extends IntegrationTest {
                             BigDecimal.TEN);
 
             // when & then
-            assertThatThrownBy(() -> imageService.createAlbumImageUploadUrls(request, 1L))
+            assertThatThrownBy(() -> imageService.createAlbumImageUploadUrls(1L, request))
                     .isInstanceOf(CustomException.class)
                     .hasMessage(AlbumErrorCode.ALBUM_CAPACITY_EXCEEDED.getMessage());
         }

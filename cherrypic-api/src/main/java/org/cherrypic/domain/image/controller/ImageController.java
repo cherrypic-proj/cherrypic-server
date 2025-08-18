@@ -41,7 +41,7 @@ public class ImageController {
             description = "앨범 이미지 업로드를 위한 Presigned URL들을 생성합니다.")
     public PresignedUrlsResponse albumImageUploadUrlsCreate(
             @PathVariable Long albumId, @Valid @RequestBody AlbumImageUploadRequest request) {
-        return imageService.createAlbumImageUploadUrls(request, albumId);
+        return imageService.createAlbumImageUploadUrls(albumId, request);
     }
 
     @GetMapping("/albums/{albumId}/images")

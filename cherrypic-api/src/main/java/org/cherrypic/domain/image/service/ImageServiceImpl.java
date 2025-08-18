@@ -71,7 +71,7 @@ public class ImageServiceImpl implements ImageService {
 
     @Override
     public PresignedUrlsResponse createAlbumImageUploadUrls(
-            AlbumImageUploadRequest request, Long albumId) {
+            Long albumId, AlbumImageUploadRequest request) {
         final Member currentMember = memberUtil.getCurrentMember();
         final Album album = getAlbumByIdWithLock(albumId);
 
