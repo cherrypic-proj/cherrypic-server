@@ -188,7 +188,7 @@ class ImageServiceTest extends IntegrationTest {
             AlbumImageUploadRequest request =
                     new AlbumImageUploadRequest(
                             List.of(ImageFileExtension.JPG, ImageFileExtension.JPEG),
-                            BigDecimal.ONE);
+                            BigDecimal.TEN);
 
             // when & then
             assertThatThrownBy(() -> imageService.createAlbumImageUploadUrls(request, 1L))
