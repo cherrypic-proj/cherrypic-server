@@ -83,12 +83,11 @@ public class ImageServiceImpl implements ImageService {
         List<String> presignedUrls =
                 request.imageFileExtensions().stream()
                         .map(
-                                extension -> {
-                                    return createPresignedUrl(
-                                            ImageType.ALBUM_IMAGE,
-                                            currentMember.getId(),
-                                            extension);
-                                })
+                                extension ->
+                                        createPresignedUrl(
+                                                ImageType.ALBUM_IMAGE,
+                                                currentMember.getId(),
+                                                extension))
                         .toList();
 
         return PresignedUrlsResponse.of(presignedUrls);
