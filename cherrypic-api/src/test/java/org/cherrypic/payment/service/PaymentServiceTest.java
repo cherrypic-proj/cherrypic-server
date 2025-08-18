@@ -83,7 +83,7 @@ public class PaymentServiceTest extends IntegrationTest {
                     () -> assertThat(payment.getMember().getId()).isEqualTo(1L),
                     () -> assertThat(payment.getMerchantUid()).startsWith("album_"),
                     () -> assertThat(payment.getMerchantUid()).contains("pro"),
-                    () -> assertThat(payment.getAmount()).isEqualTo(3900),
+                    () -> assertThat(payment.getAmount()).isEqualTo(5900),
                     () -> assertThat(payment.getStatus()).isEqualTo(PaymentStatus.READY));
         }
 
