@@ -32,8 +32,6 @@ public class Participant extends BaseTimeEntity {
     @Enumerated(EnumType.STRING)
     private ParticipantRole role;
 
-    private String password;
-
     @Builder(access = AccessLevel.PRIVATE)
     private Participant(Member member, Album album, ParticipantRole role) {
         this.member = member;

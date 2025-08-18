@@ -1,17 +1,22 @@
 package org.cherrypic.domain.participant.service;
 
+import java.util.ArrayList;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.cherrypic.album.entity.Album;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.album.repository.AlbumRepository;
 import org.cherrypic.domain.notification.repository.NotificationRepository;
+import org.cherrypic.domain.participant.dto.response.ParticipantListResponse;
 import org.cherrypic.domain.participant.exception.ParticipantErrorCode;
 import org.cherrypic.domain.participant.repository.ParticipantRepository;
 import org.cherrypic.exception.CustomException;
+import org.cherrypic.global.pagination.SliceResponse;
 import org.cherrypic.global.util.MemberUtil;
 import org.cherrypic.member.entity.Member;
 import org.cherrypic.participant.entity.Participant;
 import org.cherrypic.participant.enums.ParticipantRole;
+import org.springframework.data.domain.Slice;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -62,6 +67,48 @@ public class ParticipantServiceImpl implements ParticipantService {
                     target.getMember().getId(), album.getId());
         } catch (ObjectOptimisticLockingFailureException ignored) {
         }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public SliceResponse<ParticipantListResponse> getParticipants(
+            Long albumId, String lastNickname, Long lastParticipantId, int size) {
+        final Member currentMember = memberUtil.getCurrentMember();
+        final Album album = getAlbumById(albumId);
+        final Participant currentParticipant =
+                getParticipantByMemberIdAndAlbumId(currentMember.getId(), album.getId());
+
+        if ((lastNickname == null) != (lastParticipantId == null)) {
+            throw new CustomException(ParticipantErrorCode.MISSING_CURSOR_PAIR);
+        }
+
+        List<ParticipantListResponse> results = new ArrayList<>();
+        int adjustedSize = size;
+
+        if (lastNickname == null) {
+            results.add(ParticipantListResponse.from(currentParticipant));
+            adjustedSize = size - 1;
+
+            if (adjustedSize == 0) {
+                boolean hasNext =
+                        participantRepository.countByAlbumIdAndMemberIdNot(
+                                        albumId, currentMember.getId())
+                                > 0;
+                return new SliceResponse<>(results, !hasNext);
+            }
+        }
+
+        Slice<ParticipantListResponse> paged =
+                participantRepository.findParticipantsByAlbumIdExcludingMemberId(
+                        albumId,
+                        currentMember.getId(),
+                        lastNickname,
+                        lastParticipantId,
+                        adjustedSize);
+
+        results.addAll(paged.getContent());
+
+        return new SliceResponse<>(results, paged.isLast());
     }
 
     private Album getAlbumById(Long albumId) {
