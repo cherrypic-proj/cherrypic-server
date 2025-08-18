@@ -12,7 +12,7 @@ import org.cherrypic.global.pagination.SortDirection;
 public interface ImageService {
     PresignedUrlResponse createMemberProfileImageUploadUrl(MemberProfileImageUploadRequest request);
 
-    PresignedUrlsResponse createAlbumImageUploadUrls(AlbumImageUploadRequest request);
+    PresignedUrlsResponse createAlbumImageUploadUrls(AlbumImageUploadRequest request, Long albumId);
 
     SliceResponse<AlbumImageListResponse> getAlbumImages(
             Long albumId, Long lastImageId, int size, SortDirection direction);

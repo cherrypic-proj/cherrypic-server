@@ -7,14 +7,17 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.math.BigDecimal;
 import java.util.List;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.event.exception.EventErrorCode;
 import org.cherrypic.domain.image.controller.ImageController;
+import org.cherrypic.domain.image.dto.request.AlbumImageUploadRequest;
 import org.cherrypic.domain.image.dto.request.MemberProfileImageUploadRequest;
 import org.cherrypic.domain.image.dto.response.AlbumImageListResponse;
 import org.cherrypic.domain.image.dto.response.EventImageListResponse;
 import org.cherrypic.domain.image.dto.response.PresignedUrlResponse;
+import org.cherrypic.domain.image.dto.response.PresignedUrlsResponse;
 import org.cherrypic.domain.image.enums.ImageFileExtension;
 import org.cherrypic.domain.image.service.ImageService;
 import org.cherrypic.exception.CustomException;
@@ -45,7 +48,7 @@ class ImageControllerTest {
     @MockitoBean private ImageService imageService;
 
     @Nested
-    class Presigned_URL을_생성할_때 {
+    class Presigned_URL을_생성_요청_시 {
 
         @Test
         void 유효한_요청이면_회원_프로필_이미지용_Presigned_URL을_반환한다() throws Exception {
@@ -94,6 +97,166 @@ class ImageControllerTest {
                             jsonPath("$.data.message")
                                     .value(
                                             "이미지 파일의 확장자는 비워둘 수 없으며, PNG, JPG, JPEG, WEBP, HEIC, HEIF만 지원됩니다."));
+        }
+    }
+
+    @Nested
+    class 앨범_이미지_업로드_Presigned_URL을_생성_요청_시 {
+
+        @Test
+        void 유효한_요청이면_이미지_업로드_Presigned_URL들을_반환한다() throws Exception {
+            // given
+            AlbumImageUploadRequest request =
+                    new AlbumImageUploadRequest(List.of(ImageFileExtension.JPEG), BigDecimal.ONE);
+
+            PresignedUrlsResponse response =
+                    new PresignedUrlsResponse(List.of("testPresignedUrl1", "testPresignedUrl2"));
+
+            given(imageService.createAlbumImageUploadUrls(request, 1L)).willReturn(response);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/albums/1/image-upload-urls")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
+                    .andExpect(jsonPath("$.data.presignedUrls").isNotEmpty());
+        }
+
+        @Test
+        void 앨범이_존재하지_않는_경우_예외가_발생한다() throws Exception {
+            // given
+            AlbumImageUploadRequest request =
+                    new AlbumImageUploadRequest(List.of(ImageFileExtension.JPEG), BigDecimal.ONE);
+
+            given(imageService.createAlbumImageUploadUrls(request, 1L))
+                    .willThrow(new CustomException(AlbumErrorCode.ALBUM_NOT_FOUND));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/albums/1/image-upload-urls")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.NOT_FOUND.value()))
+                    .andExpect(jsonPath("$.data.code").value("ALBUM_NOT_FOUND"))
+                    .andExpect(jsonPath("$.data.message").value("앨범이 존재하지 않습니다."));
+        }
+
+        @Test
+        void 앨범에_속하지_않은_사용자가_앨범_이미지_업로드_URL을_요청하면_예외가_발생한다() throws Exception {
+            // given
+            AlbumImageUploadRequest request =
+                    new AlbumImageUploadRequest(List.of(ImageFileExtension.JPEG), BigDecimal.ONE);
+
+            given(imageService.createAlbumImageUploadUrls(request, 1L))
+                    .willThrow(new CustomException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/albums/1/image-upload-urls")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.FORBIDDEN.value()))
+                    .andExpect(jsonPath("$.data.code").value("NOT_ALBUM_PARTICIPANT"))
+                    .andExpect(jsonPath("$.data.message").value("앨범에 속하지 않은 사용자입니다."));
+        }
+
+        @Test
+        void LIMITED_권한의_사용자가_앨범_이미지_업로드_URL을_요청하면_예외가_발생한다() throws Exception {
+            // given
+            AlbumImageUploadRequest request =
+                    new AlbumImageUploadRequest(List.of(ImageFileExtension.JPEG), BigDecimal.ONE);
+
+            given(imageService.createAlbumImageUploadUrls(request, 1L))
+                    .willThrow(new CustomException(AlbumErrorCode.LIMITED_AUTHORITY));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/albums/1/image-upload-urls")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.FORBIDDEN.value()))
+                    .andExpect(jsonPath("$.data.code").value("LIMITED_AUTHORITY"))
+                    .andExpect(jsonPath("$.data.message").value("앨범에 대한 생성/수정 권한이 없습니다."));
+        }
+
+        @Test
+        void 앨범의_남은_용량을_초과해서_요청하면_예외가_발생한다() throws Exception {
+            // given
+            AlbumImageUploadRequest request =
+                    new AlbumImageUploadRequest(List.of(ImageFileExtension.JPEG), BigDecimal.ONE);
+
+            given(imageService.createAlbumImageUploadUrls(request, 1L))
+                    .willThrow(new CustomException(AlbumErrorCode.ALBUM_CAPACITY_EXCEEDED));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/albums/1/image-upload-urls")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("ALBUM_CAPACITY_EXCEEDED"))
+                    .andExpect(jsonPath("$.data.message").value("앨범의 용량을 초과했습니다."));
+        }
+
+        @Test
+        void 이미지들의_확장자를_비워두면_예외가_발생한다() throws Exception {
+            // given
+            AlbumImageUploadRequest request =
+                    new AlbumImageUploadRequest(List.of(), BigDecimal.ONE);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/albums/1/image-upload-urls")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("MethodArgumentNotValidException"))
+                    .andExpect(jsonPath("$.data.message").value("이미지 파일들의 확장자는 비워둘 수 없습니다."));
+        }
+
+        @Test
+        void 이미지_용량_총합을_비워두면_예외가_발생한다() throws Exception {
+            // given
+            AlbumImageUploadRequest request =
+                    new AlbumImageUploadRequest(List.of(ImageFileExtension.JPG), null);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/albums/1/image-upload-urls")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("MethodArgumentNotValidException"))
+                    .andExpect(jsonPath("$.data.message").value("이미지 파일들의 용량은 비워둘 수 없습니다."));
         }
     }
 

@@ -35,13 +35,13 @@ public class ImageController {
         return imageService.createMemberProfileImageUploadUrl(request);
     }
 
-    @PostMapping("/albums/{albumId}/images-upload-url")
+    @PostMapping("/albums/{albumId}/image-upload-urls")
     @Operation(
-            summary = "앨범 이미지 업로드 Presigned URL 생성",
+            summary = "앨범 이미지 업로드 Presigned URL들 생성",
             description = "앨범 이미지 업로드를 위한 Presigned URL들을 생성합니다.")
     public PresignedUrlsResponse albumImageUploadUrlsCreate(
-            @Valid @RequestBody AlbumImageUploadRequest request) {
-        return imageService.createAlbumImageUploadUrls(request);
+            @PathVariable Long albumId, @Valid @RequestBody AlbumImageUploadRequest request) {
+        return imageService.createAlbumImageUploadUrls(request, albumId);
     }
 
     @GetMapping("/albums/{albumId}/images")

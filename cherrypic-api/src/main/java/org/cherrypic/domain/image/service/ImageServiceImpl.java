@@ -70,9 +70,10 @@ public class ImageServiceImpl implements ImageService {
     }
 
     @Override
-    public PresignedUrlsResponse createAlbumImageUploadUrls(AlbumImageUploadRequest request) {
+    public PresignedUrlsResponse createAlbumImageUploadUrls(
+            AlbumImageUploadRequest request, Long albumId) {
         final Member currentMember = memberUtil.getCurrentMember();
-        final Album album = getAlbumById(request.albumId());
+        final Album album = getAlbumById(albumId);
 
         validateParticipantAuthority(currentMember.getId(), album.getId());
         validateAlbumCapacity(album, request.capacity());
