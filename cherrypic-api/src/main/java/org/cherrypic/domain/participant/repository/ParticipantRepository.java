@@ -22,4 +22,6 @@ public interface ParticipantRepository extends JpaRepository<Participant, Long> 
             "select p.member.id from Participant p where p.album.id = :albumId and p.member.id <> :memberId")
     List<Long> findOtherParticipantMemberIds(
             @Param("albumId") Long albumId, @Param("memberId") Long memberId);
+
+    int countByAlbumId(Long albumId);
 }
