@@ -10,7 +10,7 @@ import org.cherrypic.global.validator.EnumValidator;
 
 /** RequestBody 의 Enum 검증을 위한 어노테이션 입니다 */
 @Constraint(validatedBy = {EnumValidator.class})
-@Target({ElementType.FIELD})
+@Target({ElementType.FIELD, ElementType.TYPE_USE})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Enum {
     String message() default "적절하지 않은 Enum값 입니다.";
