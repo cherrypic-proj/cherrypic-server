@@ -73,7 +73,7 @@ public class ImageServiceImpl implements ImageService {
     public PresignedUrlsResponse createAlbumImageUploadUrls(
             AlbumImageUploadRequest request, Long albumId) {
         final Member currentMember = memberUtil.getCurrentMember();
-        final Album album = getAlbumById(albumId);
+        final Album album = getAlbumByIdWithLock(albumId);
 
         validateParticipantAuthority(currentMember.getId(), album.getId());
         validateAlbumCapacity(album, request.capacity());
@@ -173,6 +173,12 @@ public class ImageServiceImpl implements ImageService {
     private Album getAlbumById(Long albumId) {
         return albumRepository
                 .findById(albumId)
+                .orElseThrow(() -> new CustomException(AlbumErrorCode.ALBUM_NOT_FOUND));
+    }
+
+    private Album getAlbumByIdWithLock(Long albumId) {
+        return albumRepository
+                .findByIdWithPessimisticLock(albumId)
                 .orElseThrow(() -> new CustomException(AlbumErrorCode.ALBUM_NOT_FOUND));
     }
 
