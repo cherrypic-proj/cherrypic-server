@@ -6,12 +6,10 @@ import com.amazonaws.services.s3.Headers;
 import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import org.cherrypic.album.entity.Album;
-import org.cherrypic.album.enums.AlbumPlan;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.album.repository.AlbumRepository;
 import org.cherrypic.domain.event.exception.EventErrorCode;
@@ -24,7 +22,6 @@ import org.cherrypic.domain.image.dto.response.PresignedUrlResponse;
 import org.cherrypic.domain.image.dto.response.PresignedUrlsResponse;
 import org.cherrypic.domain.image.enums.ImageFileExtension;
 import org.cherrypic.domain.image.enums.ImageType;
-import org.cherrypic.domain.image.exception.ImageErrorCode;
 import org.cherrypic.domain.image.repository.ImageRepository;
 import org.cherrypic.domain.participant.repository.ParticipantRepository;
 import org.cherrypic.event.entity.Event;
@@ -178,31 +175,6 @@ public class ImageServiceImpl implements ImageService {
 
         if (participant.getRole().equals(ParticipantRole.LIMITED)) {
             throw new CustomException(AlbumErrorCode.LIMITED_AUTHORITY);
-        }
-    }
-
-    // Extension 만지자 + Enum
-    private void validateProAlbumUploadRequest(Album album, AlbumImageUploadRequest request) {
-        if (!new HashSet<>(ImageFileExtension.getProAlbumImageFileExtension())
-                .containsAll(request.imageFileExtensions())) {
-            throw new CustomException(ImageErrorCode.IMAGE_EXTENSION_AUTHORITY);
-        }
-
-        if (album.getCapacityGb().add(request.capacity()).compareTo(AlbumPlan.PRO.getCapacityGb())
-                > 0) {
-            throw new CustomException(ImageErrorCode.IMAGE_CAPACITY_EXCEEDED);
-        }
-    }
-
-    private void validateProAlbumUploadRequest(Album album, AlbumImageUploadRequest request) {
-        if (!new HashSet<>(ImageFileExtension.getProAlbumImageFileExtension())
-                .containsAll(request.imageFileExtensions())) {
-            throw new CustomException(ImageErrorCode.IMAGE_EXTENSION_AUTHORITY);
-        }
-
-        if (album.getCapacityGb().add(request.capacity()).compareTo(AlbumPlan.PRO.getCapacityGb())
-                > 0) {
-            throw new CustomException(ImageErrorCode.IMAGE_CAPACITY_EXCEEDED);
         }
     }
 }

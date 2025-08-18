@@ -1,7 +1,6 @@
 package org.cherrypic.domain.image.enums;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import java.util.List;
 import java.util.stream.Stream;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -12,7 +11,9 @@ public enum ImageFileExtension {
     PNG("png"),
     JPG("jpg"),
     JPEG("jpeg"),
-    ;
+    WEBP("webp"),
+    HEIC("heic"),
+    HEIF("heif");
 
     private final String extension;
 
@@ -22,17 +23,5 @@ public enum ImageFileExtension {
                 .filter(e -> e.name().equalsIgnoreCase(extension))
                 .findFirst()
                 .orElse(null);
-    }
-
-    public static List<ImageFileExtension> getPremiumAlbumImageFileExtension() {
-        return null;
-    }
-
-    public static List<ImageFileExtension> getProAlbumImageFileExtension() {
-        return null;
-    }
-
-    public static List<ImageFileExtension> getBasicAlbumImageFileExtension() {
-        return null;
     }
 }

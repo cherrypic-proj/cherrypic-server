@@ -92,7 +92,8 @@ class ImageControllerTest {
                     .andExpect(jsonPath("$.data.code").value("MethodArgumentNotValidException"))
                     .andExpect(
                             jsonPath("$.data.message")
-                                    .value("이미지 파일의 확장자는 비워둘 수 없으며, PNG, JPG, JPEG만 지원됩니다."));
+                                    .value(
+                                            "이미지 파일의 확장자는 비워둘 수 없으며, PNG, JPG, JPEG, WEBP, HEIC, HEIF만 지원됩니다."));
         }
     }
 
