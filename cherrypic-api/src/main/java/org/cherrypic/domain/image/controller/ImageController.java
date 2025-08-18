@@ -37,8 +37,8 @@ public class ImageController {
 
     @PostMapping("/albums/{albumId}/images-upload-url")
     @Operation(
-            summary = "앨범 이미지들의 업로드 Presigned URL 생성",
-            description = "앨범 이미지들의 업로드를 위한 Presigned URL을 생성합니다.")
+            summary = "앨범 이미지 업로드 Presigned URL 생성",
+            description = "앨범 이미지 업로드를 위한 Presigned URL들을 생성합니다.")
     public PresignedUrlsResponse albumImageUploadUrlsCreate(
             @Valid @RequestBody AlbumImageUploadRequest request) {
         return imageService.createAlbumImageUploadUrls(request);

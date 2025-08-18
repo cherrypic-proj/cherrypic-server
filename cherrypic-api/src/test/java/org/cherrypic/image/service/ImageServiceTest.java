@@ -3,6 +3,7 @@ package org.cherrypic.image.service;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.BDDMockito.given;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import org.cherrypic.IntegrationTest;
@@ -12,10 +13,12 @@ import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.album.repository.AlbumRepository;
 import org.cherrypic.domain.event.exception.EventErrorCode;
 import org.cherrypic.domain.event.repository.EventRepository;
+import org.cherrypic.domain.image.dto.request.AlbumImageUploadRequest;
 import org.cherrypic.domain.image.dto.request.MemberProfileImageUploadRequest;
 import org.cherrypic.domain.image.dto.response.AlbumImageListResponse;
 import org.cherrypic.domain.image.dto.response.EventImageListResponse;
 import org.cherrypic.domain.image.dto.response.PresignedUrlResponse;
+import org.cherrypic.domain.image.dto.response.PresignedUrlsResponse;
 import org.cherrypic.domain.image.enums.ImageFileExtension;
 import org.cherrypic.domain.image.repository.EventImageRepository;
 import org.cherrypic.domain.image.repository.ImageRepository;
@@ -80,6 +83,122 @@ class ImageServiceTest extends IntegrationTest {
                     .containsPattern(
                             String.format(
                                     "/%s/%s/%d/[\\w\\-]+\\.jpeg", "local", "member-profile", 1));
+        }
+    }
+
+    @Nested
+    class 앨범_이미지_업로드_Presigned_URL을_생성할_때 {
+
+        @BeforeEach
+        void setUp() {
+            Member member =
+                    Member.createMember(
+                            OauthInfo.createOauthInfo("testOauthId", "testOauthProvider"),
+                            "testNickname",
+                            "testProfileImageUrl");
+            memberRepository.save(member);
+            given(memberUtil.getCurrentMember()).willReturn(member);
+
+            Album album1 = Album.createAlbum("testTitle1", "testCoverUrl1", AlbumPlan.BASIC, false);
+            album1.increaseCapacity(new BigDecimal("1"));
+            Album album2 = Album.createAlbum("testTitle2", "testCoverUrl2", AlbumPlan.BASIC, false);
+            Album album3 = Album.createAlbum("testTitle3", "testCoverUrl3", AlbumPlan.BASIC, false);
+            albumRepository.saveAll(List.of(album1, album2, album3));
+
+            Participant participant1 =
+                    Participant.createParticipant(member, album1, ParticipantRole.HOST);
+            Participant participant2 =
+                    Participant.createParticipant(member, album2, ParticipantRole.LIMITED);
+            participantRepository.saveAll(List.of(participant1, participant2));
+        }
+
+        @Test
+        void 유효한_요청이면_앨범_업로드_이미지_URL들을_반환한다() {
+            // given
+            AlbumImageUploadRequest request =
+                    new AlbumImageUploadRequest(
+                            List.of(ImageFileExtension.JPG, ImageFileExtension.JPEG),
+                            new BigDecimal("1"),
+                            1L);
+
+            // when & then
+            PresignedUrlsResponse response = imageService.createAlbumImageUploadUrls(request);
+
+            assertThat(response.presignedUrls())
+                    .hasSize(2)
+                    .satisfiesExactly(
+                            url1 ->
+                                    assertThat(url1)
+                                            .containsPattern(
+                                                    String.format(
+                                                            "/%s/%s/%d/[\\w\\-]+\\.jpg",
+                                                            "local", "album-image", 1)),
+                            url2 ->
+                                    assertThat(url2)
+                                            .containsPattern(
+                                                    String.format(
+                                                            "/%s/%s/%d/[\\w\\-]+\\.jpeg",
+                                                            "local", "album-image", 1)));
+        }
+
+        @Test
+        void 앨범이_존재하지_않는_경우_예외가_발생한다() {
+            // given
+            AlbumImageUploadRequest request =
+                    new AlbumImageUploadRequest(
+                            List.of(ImageFileExtension.JPG, ImageFileExtension.JPEG),
+                            new BigDecimal("1"),
+                            999L);
+
+            // when & then
+            assertThatThrownBy(() -> imageService.createAlbumImageUploadUrls(request))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(AlbumErrorCode.ALBUM_NOT_FOUND.getMessage());
+        }
+
+        @Test
+        void 앨범에_속하지_않은_사용자가_앨범_이미지_업로드_URL을_요청하면_예외가_발생한다() {
+            // given
+            AlbumImageUploadRequest request =
+                    new AlbumImageUploadRequest(
+                            List.of(ImageFileExtension.JPG, ImageFileExtension.JPEG),
+                            new BigDecimal("1"),
+                            3L);
+
+            // when & then
+            assertThatThrownBy(() -> imageService.createAlbumImageUploadUrls(request))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(AlbumErrorCode.NOT_ALBUM_PARTICIPANT.getMessage());
+        }
+
+        @Test
+        void LIMITED_권한의_사용자가_앨범_이미지_업로드_URL을_요청하면_예외가_발생한다() {
+            // given
+            AlbumImageUploadRequest request =
+                    new AlbumImageUploadRequest(
+                            List.of(ImageFileExtension.JPG, ImageFileExtension.JPEG),
+                            new BigDecimal("1"),
+                            2L);
+
+            // when & then
+            assertThatThrownBy(() -> imageService.createAlbumImageUploadUrls(request))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(AlbumErrorCode.LIMITED_AUTHORITY.getMessage());
+        }
+
+        @Test
+        void 앨범의_남은_용량을_초과해서_요청하면_예외가_발생한다() {
+            // given
+            AlbumImageUploadRequest request =
+                    new AlbumImageUploadRequest(
+                            List.of(ImageFileExtension.JPG, ImageFileExtension.JPEG),
+                            new BigDecimal("3"),
+                            1L);
+
+            // when & then
+            assertThatThrownBy(() -> imageService.createAlbumImageUploadUrls(request))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(AlbumErrorCode.ALBUM_CAPACITY_EXCEEDED.getMessage());
         }
     }
 
