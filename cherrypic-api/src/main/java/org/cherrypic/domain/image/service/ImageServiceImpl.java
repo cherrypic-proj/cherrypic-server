@@ -78,6 +78,8 @@ public class ImageServiceImpl implements ImageService {
         validateParticipantAuthority(currentMember.getId(), album.getId());
         validateAlbumCapacity(album, request.capacity());
 
+        album.increaseCapacity(request.capacity());
+
         List<String> presignedUrls =
                 request.imageFileExtensions().stream()
                         .map(
