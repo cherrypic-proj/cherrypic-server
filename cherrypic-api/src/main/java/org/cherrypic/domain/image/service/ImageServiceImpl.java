@@ -6,10 +6,12 @@ import com.amazonaws.services.s3.Headers;
 import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import org.cherrypic.album.entity.Album;
+import org.cherrypic.album.enums.AlbumPlan;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.album.repository.AlbumRepository;
 import org.cherrypic.domain.event.exception.EventErrorCode;
@@ -22,6 +24,7 @@ import org.cherrypic.domain.image.dto.response.PresignedUrlResponse;
 import org.cherrypic.domain.image.dto.response.PresignedUrlsResponse;
 import org.cherrypic.domain.image.enums.ImageFileExtension;
 import org.cherrypic.domain.image.enums.ImageType;
+import org.cherrypic.domain.image.exception.ImageErrorCode;
 import org.cherrypic.domain.image.repository.ImageRepository;
 import org.cherrypic.domain.participant.repository.ParticipantRepository;
 import org.cherrypic.event.entity.Event;
@@ -68,24 +71,6 @@ public class ImageServiceImpl implements ImageService {
         final Album album = getAlbumById(request.albumId());
 
         validateParticipantAuthority(currentMember.getId(), album.getId());
-
-        // plan에 따라서 확장자 + 확장자 자체도 업데이트 해야함
-        // 이미지들의 용량합을 검사 -> 이것도 플랜에 따라서 이거 ALBUM PLAN Enum에서 관리하자.
-        // 이미지 업로드 횟수
-        // 앨범 존재 여부와 권한 검사 했음.
-        //        public record AlbumImageUploadRequest(
-        //                @Enum(message = "이미지 파일의 확장자는 비워둘 수 없으며, PNG, JPG, JPEG만 지원됩니다.")
-        //                @Schema(description = "이미지 파일의 확장자", defaultValue = "JPEG")
-        //                List<ImageFileExtension> imageFileExtensions,
-        //                @Schema(description = "업로드 하는 이미지들의 용량합(GB)", example = "1.23")
-        //                BigDecimal capacity,
-        //                @NotNull(message = "적어도 하나의 이미지를 업로드 해야합니다.")
-        //                @Schema(description = "업로드 하는 이미지의 개수", defaultValue = "1")
-        //                Integer numOfImages,
-        //                @NotNull(message = "앨범 ID는 비워둘 수 없습니다.")
-        //                @Schema(description = "이미지를 업로드 하고자 하는 앨범 ID", example = "1")
-        //                Long albumId) {
-        //        }
 
         return null;
     }
@@ -193,6 +178,31 @@ public class ImageServiceImpl implements ImageService {
 
         if (participant.getRole().equals(ParticipantRole.LIMITED)) {
             throw new CustomException(AlbumErrorCode.LIMITED_AUTHORITY);
+        }
+    }
+
+    // Extension 만지자 + Enum
+    private void validateProAlbumUploadRequest(Album album, AlbumImageUploadRequest request) {
+        if (!new HashSet<>(ImageFileExtension.getProAlbumImageFileExtension())
+                .containsAll(request.imageFileExtensions())) {
+            throw new CustomException(ImageErrorCode.IMAGE_EXTENSION_AUTHORITY);
+        }
+
+        if (album.getCapacityGb().add(request.capacity()).compareTo(AlbumPlan.PRO.getCapacityGb())
+                > 0) {
+            throw new CustomException(ImageErrorCode.IMAGE_CAPACITY_EXCEEDED);
+        }
+    }
+
+    private void validateProAlbumUploadRequest(Album album, AlbumImageUploadRequest request) {
+        if (!new HashSet<>(ImageFileExtension.getProAlbumImageFileExtension())
+                .containsAll(request.imageFileExtensions())) {
+            throw new CustomException(ImageErrorCode.IMAGE_EXTENSION_AUTHORITY);
+        }
+
+        if (album.getCapacityGb().add(request.capacity()).compareTo(AlbumPlan.PRO.getCapacityGb())
+                > 0) {
+            throw new CustomException(ImageErrorCode.IMAGE_CAPACITY_EXCEEDED);
         }
     }
 }

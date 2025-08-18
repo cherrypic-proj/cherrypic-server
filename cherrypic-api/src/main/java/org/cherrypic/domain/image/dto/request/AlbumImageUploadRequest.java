@@ -12,9 +12,6 @@ public record AlbumImageUploadRequest(
                 @Schema(description = "이미지 파일의 확장자", defaultValue = "JPEG")
                 List<ImageFileExtension> imageFileExtensions,
         @Schema(description = "업로드 하는 이미지들의 용량합(GB)", example = "1.23") BigDecimal capacity,
-        @NotNull(message = "적어도 하나의 이미지를 업로드 해야합니다.")
-                @Schema(description = "업로드 하는 이미지의 개수", defaultValue = "1")
-                Integer numOfImages,
         @NotNull(message = "앨범 ID는 비워둘 수 없습니다.")
                 @Schema(description = "이미지를 업로드 하고자 하는 앨범 ID", example = "1")
                 Long albumId) {}
