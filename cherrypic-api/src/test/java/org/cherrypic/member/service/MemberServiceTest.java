@@ -98,19 +98,6 @@ class MemberServiceTest extends IntegrationTest {
                             assertThat(member.getProfileImageUrl())
                                     .isEqualTo("updateProfileImageUrl"));
         }
-
-        @Test
-        void 특수문자가_포함된_요청이면_특수문자를_제거하고_닉네임을_변경한다() {
-            // given
-            MemberProfileUpdateRequest request = new MemberProfileUpdateRequest("닉!네@임#수^정", null);
-
-            // when
-            memberService.updateProfile(request);
-
-            // then
-            Member member = memberRepository.findById(1L).orElseThrow();
-            assertThat(member.getNickname()).isEqualTo("닉네임수정");
-        }
     }
 
     @Nested

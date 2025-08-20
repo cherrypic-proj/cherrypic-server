@@ -120,6 +120,25 @@ class MemberControllerTest {
         }
 
         @Test
+        void 닉네임에_특수문자를_포함하면_예외가_발생한다() throws Exception {
+            // given
+            MemberProfileUpdateRequest request = new MemberProfileUpdateRequest("닉!네@임#수^정", null);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            patch("/members/me")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("MethodArgumentNotValidException"))
+                    .andExpect(jsonPath("$.data.message").value("닉네임에는 특수문자를 포함할 수 없습니다."));
+        }
+
+        @Test
         void 닉네임이_15자를_초과하면_예외가_발생한다() throws Exception {
             // given
             MemberProfileUpdateRequest request =

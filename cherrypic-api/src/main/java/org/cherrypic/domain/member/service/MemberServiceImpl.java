@@ -30,8 +30,7 @@ public class MemberServiceImpl implements MemberService {
     public MemberProfileUpdateResponse updateProfile(MemberProfileUpdateRequest request) {
         final Member currentMember = memberUtil.getCurrentMember();
 
-        currentMember.updateMember(
-                removeSpecialCharacters(request.nickname()), request.profileImageUrl());
+        currentMember.updateMember(request.nickname(), request.profileImageUrl());
 
         return MemberProfileUpdateResponse.from(currentMember);
     }
@@ -41,9 +40,5 @@ public class MemberServiceImpl implements MemberService {
     public void saveFcmToken(FcmTokenSaveRequest request) {
         final Member currentMember = memberUtil.getCurrentMember();
         fcmTokenService.saveFcmToken(currentMember.getId(), request.fcmToken());
-    }
-
-    private String removeSpecialCharacters(String nickname) {
-        return nickname.replaceAll("[^0-9a-zA-Z가-힣 ]", "");
     }
 }
