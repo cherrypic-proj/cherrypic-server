@@ -175,6 +175,7 @@ public class AlbumServiceImpl implements AlbumService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public AlbumGetResponse getAlbum(Long albumId) {
         final Member currentMember = memberUtil.getCurrentMember();
         final Album album = getAlbumById(albumId);
