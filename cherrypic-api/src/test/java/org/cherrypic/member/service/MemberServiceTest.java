@@ -1,36 +1,35 @@
 package org.cherrypic.member.service;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.mockito.BDDMockito.given;
 
 import org.cherrypic.IntegrationTest;
 import org.cherrypic.RedisCleaner;
 import org.cherrypic.domain.member.dto.request.FcmTokenSaveRequest;
+import org.cherrypic.domain.member.dto.request.MemberProfileUpdateRequest;
 import org.cherrypic.domain.member.dto.response.MemberInfoResponse;
 import org.cherrypic.domain.member.repository.MemberRepository;
 import org.cherrypic.domain.member.service.MemberService;
-import org.cherrypic.global.util.MemberUtil;
+import org.cherrypic.global.util.TransactionUtil;
 import org.cherrypic.member.entity.Member;
 import org.cherrypic.member.entity.OauthInfo;
 import org.cherrypic.member.enums.MemberRole;
 import org.cherrypic.member.enums.MemberStatus;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
 
 class MemberServiceTest extends IntegrationTest {
 
+    @Autowired private TransactionUtil transactionUtil;
     @Autowired private RedisCleaner redisCleaner;
     @Autowired private StringRedisTemplate redisTemplate;
 
     @Autowired private MemberService memberService;
     @Autowired private MemberRepository memberRepository;
-
-    @MockitoBean private MemberUtil memberUtil;
 
     @BeforeEach
     void setUp() {
@@ -41,7 +40,15 @@ class MemberServiceTest extends IntegrationTest {
                         "testProfileImageUrl");
         memberRepository.save(member);
 
-        given(memberUtil.getCurrentMember()).willReturn(member);
+        UserDetails userDetails =
+                User.withUsername(member.getId().toString())
+                        .password("")
+                        .authorities(member.getRole().name())
+                        .build();
+        UsernamePasswordAuthenticationToken token =
+                new UsernamePasswordAuthenticationToken(
+                        userDetails, null, userDetails.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(token);
     }
 
     @Nested
@@ -68,6 +75,28 @@ class MemberServiceTest extends IntegrationTest {
                             "testProfileImageUrl",
                             MemberRole.USER,
                             MemberStatus.NORMAL);
+        }
+    }
+
+    @Nested
+    class 회원_프로필을_수정할_때 {
+
+        @Test
+        void 유효한_요청이면_회원_닉네임을_변경한다() {
+            // given
+            MemberProfileUpdateRequest request =
+                    new MemberProfileUpdateRequest("updateNickname", "updateProfileImageUrl");
+
+            // when
+            memberService.updateProfile(request);
+
+            // then
+            Member member = memberRepository.findById(1L).orElseThrow();
+            Assertions.assertAll(
+                    () -> assertThat(member.getNickname()).isEqualTo("updateNickname"),
+                    () ->
+                            assertThat(member.getProfileImageUrl())
+                                    .isEqualTo("updateProfileImageUrl"));
         }
     }
 
