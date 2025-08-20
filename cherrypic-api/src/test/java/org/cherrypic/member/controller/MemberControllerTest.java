@@ -8,9 +8,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.cherrypic.domain.member.controller.MemberController;
 import org.cherrypic.domain.member.dto.request.FcmTokenSaveRequest;
-import org.cherrypic.domain.member.dto.request.NicknameUpdateRequest;
+import org.cherrypic.domain.member.dto.request.MemberProfileUpdateRequest;
 import org.cherrypic.domain.member.dto.response.MemberInfoResponse;
-import org.cherrypic.domain.member.dto.response.NicknameUpdateResponse;
+import org.cherrypic.domain.member.dto.response.MemberProfileUpdateResponse;
 import org.cherrypic.domain.member.service.MemberService;
 import org.cherrypic.member.enums.MemberRole;
 import org.cherrypic.member.enums.MemberStatus;
@@ -71,15 +71,17 @@ class MemberControllerTest {
     }
 
     @Nested
-    class 회원_닉네임_변경_요청_시 {
+    class 회원_프로필_수정_요청_시 {
 
         @Test
-        void 유효한_요청이면_변경된_회원_닉네임을_반환한다() throws Exception {
+        void 유효한_요청이면_변경된_회원_닉네임과_프로필_이미지를_반환한다() throws Exception {
             // given
-            NicknameUpdateRequest request = new NicknameUpdateRequest("updateNickname");
-            NicknameUpdateResponse response = new NicknameUpdateResponse("updateNickname");
+            MemberProfileUpdateRequest request =
+                    new MemberProfileUpdateRequest("updateNickname", "updateProfileImageUrl");
+            MemberProfileUpdateResponse response =
+                    new MemberProfileUpdateResponse("updateNickname", "updateProfileImageUrl");
 
-            given(memberService.updateNickname(request)).willReturn(response);
+            given(memberService.updateProfile(request)).willReturn(response);
 
             // when & then
             ResultActions perform =
@@ -91,7 +93,8 @@ class MemberControllerTest {
             perform.andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.status").value(200))
-                    .andExpect(jsonPath("$.data.nickname").value("updateNickname"));
+                    .andExpect(jsonPath("$.data.nickname").value("updateNickname"))
+                    .andExpect(jsonPath("$.data.profileImageUrl").value("updateProfileImageUrl"));
         }
 
         @ParameterizedTest
@@ -100,7 +103,7 @@ class MemberControllerTest {
         @ValueSource(strings = {" "})
         void 닉네임이_null_또는_공백이면_예외가_발생한다(String nickname) throws Exception {
             // given
-            NicknameUpdateRequest request = new NicknameUpdateRequest(nickname);
+            MemberProfileUpdateRequest request = new MemberProfileUpdateRequest(nickname, null);
 
             // when & then
             ResultActions perform =
@@ -119,7 +122,8 @@ class MemberControllerTest {
         @Test
         void 닉네임이_15자를_초과하면_예외가_발생한다() throws Exception {
             // given
-            NicknameUpdateRequest request = new NicknameUpdateRequest("t".repeat(16));
+            MemberProfileUpdateRequest request =
+                    new MemberProfileUpdateRequest("t".repeat(16), null);
 
             // when & then
             ResultActions perform =

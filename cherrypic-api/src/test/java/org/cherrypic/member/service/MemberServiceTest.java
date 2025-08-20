@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.*;
 import org.cherrypic.IntegrationTest;
 import org.cherrypic.RedisCleaner;
 import org.cherrypic.domain.member.dto.request.FcmTokenSaveRequest;
-import org.cherrypic.domain.member.dto.request.NicknameUpdateRequest;
+import org.cherrypic.domain.member.dto.request.MemberProfileUpdateRequest;
 import org.cherrypic.domain.member.dto.response.MemberInfoResponse;
 import org.cherrypic.domain.member.repository.MemberRepository;
 import org.cherrypic.domain.member.service.MemberService;
@@ -14,10 +14,7 @@ import org.cherrypic.member.entity.Member;
 import org.cherrypic.member.entity.OauthInfo;
 import org.cherrypic.member.enums.MemberRole;
 import org.cherrypic.member.enums.MemberStatus;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -82,28 +79,33 @@ class MemberServiceTest extends IntegrationTest {
     }
 
     @Nested
-    class 회원_닉네임을_변경할_때 {
+    class 회원_프로필을_수정할_때 {
 
         @Test
         void 유효한_요청이면_회원_닉네임을_변경한다() {
             // given
-            NicknameUpdateRequest request = new NicknameUpdateRequest("updateNickname");
+            MemberProfileUpdateRequest request =
+                    new MemberProfileUpdateRequest("updateNickname", "updateProfileImageUrl");
 
             // when
-            memberService.updateNickname(request);
+            memberService.updateProfile(request);
 
             // then
             Member member = memberRepository.findById(1L).orElseThrow();
-            assertThat(member.getNickname()).isEqualTo("updateNickname");
+            Assertions.assertAll(
+                    () -> assertThat(member.getNickname()).isEqualTo("updateNickname"),
+                    () ->
+                            assertThat(member.getProfileImageUrl())
+                                    .isEqualTo("updateProfileImageUrl"));
         }
 
         @Test
         void 특수문자가_포함된_요청이면_특수문자를_제거하고_닉네임을_변경한다() {
             // given
-            NicknameUpdateRequest request = new NicknameUpdateRequest("닉!네@임#수^정");
+            MemberProfileUpdateRequest request = new MemberProfileUpdateRequest("닉!네@임#수^정", null);
 
             // when
-            memberService.updateNickname(request);
+            memberService.updateProfile(request);
 
             // then
             Member member = memberRepository.findById(1L).orElseThrow();
