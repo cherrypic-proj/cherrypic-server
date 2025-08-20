@@ -17,7 +17,7 @@ import org.cherrypic.album.entity.InvitationCode;
 import org.cherrypic.album.enums.AlbumPlan;
 import org.cherrypic.domain.album.dto.request.AlbumCreateRequest;
 import org.cherrypic.domain.album.dto.request.AlbumUpdateRequest;
-import org.cherrypic.domain.album.dto.response.AlbumGetResponse;
+import org.cherrypic.domain.album.dto.response.AlbumInfoResponse;
 import org.cherrypic.domain.album.dto.response.AlbumListResponse;
 import org.cherrypic.domain.album.dto.response.InvitationLinkCreateResponse;
 import org.cherrypic.domain.album.event.AlbumDeleteEvent;
@@ -1004,7 +1004,7 @@ class AlbumServiceTest extends IntegrationTest {
         @Test
         void 유효한_요청인_경우_앨범_정보를_반환한다() {
             // when
-            AlbumGetResponse response = albumService.getAlbum(1L);
+            AlbumInfoResponse response = albumService.getAlbum(1L);
 
             // then
             assertThat(response)

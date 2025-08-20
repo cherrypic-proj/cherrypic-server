@@ -176,7 +176,7 @@ public class AlbumServiceImpl implements AlbumService {
 
     @Override
     @Transactional(readOnly = true)
-    public AlbumGetResponse getAlbum(Long albumId) {
+    public AlbumInfoResponse getAlbum(Long albumId) {
         final Member currentMember = memberUtil.getCurrentMember();
         final Album album = getAlbumById(albumId);
 
@@ -184,7 +184,7 @@ public class AlbumServiceImpl implements AlbumService {
         String hostName = getAlbumHostByAlbumId(album.getId()).getMember().getNickname();
         int numOfParticipants = participantRepository.countByAlbumId(album.getId());
 
-        return AlbumGetResponse.of(
+        return AlbumInfoResponse.of(
                 album.getTitle(),
                 album.getCoverUrl(),
                 album.getPlan(),

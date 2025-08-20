@@ -1063,8 +1063,8 @@ class AlbumControllerTest {
         @Test
         void 유효한_요청인_경우_앨범_정보를_반환한다() throws Exception {
             // given
-            AlbumGetResponse response =
-                    new AlbumGetResponse(
+            AlbumInfoResponse response =
+                    new AlbumInfoResponse(
                             "testAlbum",
                             "testUrl",
                             AlbumPlan.BASIC,
