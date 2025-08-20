@@ -2,9 +2,9 @@ package org.cherrypic.domain.member.service;
 
 import lombok.RequiredArgsConstructor;
 import org.cherrypic.domain.member.dto.request.FcmTokenSaveRequest;
-import org.cherrypic.domain.member.dto.request.NicknameUpdateRequest;
+import org.cherrypic.domain.member.dto.request.MemberProfileUpdateRequest;
 import org.cherrypic.domain.member.dto.response.MemberInfoResponse;
-import org.cherrypic.domain.member.dto.response.NicknameUpdateResponse;
+import org.cherrypic.domain.member.dto.response.MemberProfileUpdateResponse;
 import org.cherrypic.domain.notification.service.FcmTokenService;
 import org.cherrypic.global.util.MemberUtil;
 import org.cherrypic.member.entity.Member;
@@ -27,12 +27,13 @@ public class MemberServiceImpl implements MemberService {
     }
 
     @Override
-    public NicknameUpdateResponse updateNickname(NicknameUpdateRequest request) {
+    public MemberProfileUpdateResponse updateProfile(MemberProfileUpdateRequest request) {
         final Member currentMember = memberUtil.getCurrentMember();
 
-        currentMember.updateNickname(removeSpecialCharacters(request.nickname()));
+        currentMember.updateMember(
+                removeSpecialCharacters(request.nickname()), request.profileImageUrl());
 
-        return NicknameUpdateResponse.from(currentMember);
+        return MemberProfileUpdateResponse.from(currentMember);
     }
 
     @Override

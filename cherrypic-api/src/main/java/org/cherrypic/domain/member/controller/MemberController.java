@@ -5,9 +5,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.cherrypic.domain.member.dto.request.FcmTokenSaveRequest;
-import org.cherrypic.domain.member.dto.request.NicknameUpdateRequest;
+import org.cherrypic.domain.member.dto.request.MemberProfileUpdateRequest;
 import org.cherrypic.domain.member.dto.response.MemberInfoResponse;
-import org.cherrypic.domain.member.dto.response.NicknameUpdateResponse;
+import org.cherrypic.domain.member.dto.response.MemberProfileUpdateResponse;
 import org.cherrypic.domain.member.service.MemberService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -27,10 +27,10 @@ public class MemberController {
     }
 
     @PatchMapping("/me")
-    @Operation(summary = "회원 닉네임 변경", description = "회원의 닉네임을 변경합니다.")
-    public NicknameUpdateResponse memberNicknameUpdate(
-            @Valid @RequestBody NicknameUpdateRequest request) {
-        return memberService.updateNickname(request);
+    @Operation(summary = "회원 프로필 수정", description = "회원의 닉네임 및 프로필 이미지를 수정합니다.")
+    public MemberProfileUpdateResponse memberProfileUpdate(
+            @Valid @RequestBody MemberProfileUpdateRequest request) {
+        return memberService.updateProfile(request);
     }
 
     @PostMapping("/fcm-tokens")
