@@ -3,7 +3,6 @@ package org.cherrypic.domain.album.dto.response;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.math.BigDecimal;
-import org.cherrypic.album.entity.Album;
 import org.cherrypic.album.enums.AlbumPlan;
 
 public record AlbumGetResponse(
@@ -16,13 +15,20 @@ public record AlbumGetResponse(
         @Schema(description = "총 용량 (GB)", example = "3") BigDecimal totalCapacity,
         @Schema(description = "앨범 Host의 이름", example = "김OO") String hostName,
         @Schema(description = "앨범의 참여자 수", example = "6") Integer numOfParticipants) {
-    public static AlbumGetResponse of(Album album, String hostName, Integer numOfParticipants) {
+    public static AlbumGetResponse of(
+            String title,
+            String coverUrl,
+            AlbumPlan albumPlan,
+            BigDecimal capacityUsed,
+            BigDecimal totalCapacity,
+            String hostName,
+            Integer numOfParticipants) {
         return new AlbumGetResponse(
-                album.getTitle(),
-                album.getCoverUrl(),
-                album.getPlan(),
-                album.getCapacityGb(),
-                album.getPlan().getCapacityGb(),
+                title,
+                coverUrl,
+                albumPlan,
+                capacityUsed,
+                totalCapacity,
                 hostName,
                 numOfParticipants);
     }

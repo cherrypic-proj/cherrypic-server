@@ -184,7 +184,14 @@ public class AlbumServiceImpl implements AlbumService {
         String hostName = getAlbumHostByAlbumId(album.getId()).getMember().getNickname();
         int numOfParticipants = participantRepository.countByAlbumId(album.getId());
 
-        return AlbumGetResponse.of(album, hostName, numOfParticipants);
+        return AlbumGetResponse.of(
+                album.getTitle(),
+                album.getCoverUrl(),
+                album.getPlan(),
+                album.getCapacityGb(),
+                album.getPlan().getCapacityGb(),
+                hostName,
+                numOfParticipants);
     }
 
     @Override
