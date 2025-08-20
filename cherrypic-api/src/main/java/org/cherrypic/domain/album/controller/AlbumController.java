@@ -86,8 +86,7 @@ public class AlbumController {
 
     @GetMapping("/{albumId}")
     @Operation(summary = "개별 앨범 조회", description = "개별 앨범을 조회합니다.")
-    public ResponseEntity<AlbumGetResponse> albumGet(@PathVariable Long albumId) {
-        AlbumGetResponse response = albumService.getAlbum(albumId);
-        return ResponseEntity.noContent().build();
+    public AlbumGetResponse albumGet(@PathVariable Long albumId) {
+        return albumService.getAlbum(albumId);
     }
 }
