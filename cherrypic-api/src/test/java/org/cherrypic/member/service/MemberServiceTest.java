@@ -1,7 +1,6 @@
 package org.cherrypic.member.service;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.mockito.BDDMockito.given;
 
 import org.cherrypic.IntegrationTest;
 import org.cherrypic.RedisCleaner;
@@ -10,7 +9,6 @@ import org.cherrypic.domain.member.dto.request.NicknameUpdateRequest;
 import org.cherrypic.domain.member.dto.response.MemberInfoResponse;
 import org.cherrypic.domain.member.repository.MemberRepository;
 import org.cherrypic.domain.member.service.MemberService;
-import org.cherrypic.global.util.MemberUtil;
 import org.cherrypic.global.util.TransactionUtil;
 import org.cherrypic.member.entity.Member;
 import org.cherrypic.member.entity.OauthInfo;
@@ -22,8 +20,10 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
 
 class MemberServiceTest extends IntegrationTest {
 
@@ -34,8 +34,6 @@ class MemberServiceTest extends IntegrationTest {
     @Autowired private MemberService memberService;
     @Autowired private MemberRepository memberRepository;
 
-    @MockitoBean private MemberUtil memberUtil;
-
     @BeforeEach
     void setUp() {
         Member member =
@@ -45,7 +43,15 @@ class MemberServiceTest extends IntegrationTest {
                         "testProfileImageUrl");
         memberRepository.save(member);
 
-        given(memberUtil.getCurrentMember()).willReturn(member);
+        UserDetails userDetails =
+                User.withUsername(member.getId().toString())
+                        .password("")
+                        .authorities(member.getRole().name())
+                        .build();
+        UsernamePasswordAuthenticationToken token =
+                new UsernamePasswordAuthenticationToken(
+                        userDetails, null, userDetails.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(token);
     }
 
     @Nested
@@ -78,7 +84,6 @@ class MemberServiceTest extends IntegrationTest {
     @Nested
     class 회원_닉네임을_변경할_때 {
 
-        @Transactional
         @Test
         void 유효한_요청이면_회원_닉네임을_변경한다() {
             // given
@@ -92,7 +97,6 @@ class MemberServiceTest extends IntegrationTest {
             assertThat(member.getNickname()).isEqualTo("updateNickname");
         }
 
-        @Transactional
         @Test
         void 특수문자가_포함된_요청이면_특수문자를_제거하고_닉네임을_변경한다() {
             // given
