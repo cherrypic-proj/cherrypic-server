@@ -8,7 +8,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.cherrypic.domain.member.controller.MemberController;
 import org.cherrypic.domain.member.dto.request.FcmTokenSaveRequest;
+import org.cherrypic.domain.member.dto.request.NicknameUpdateRequest;
 import org.cherrypic.domain.member.dto.response.MemberInfoResponse;
+import org.cherrypic.domain.member.dto.response.NicknameUpdateResponse;
 import org.cherrypic.domain.member.service.MemberService;
 import org.cherrypic.member.enums.MemberRole;
 import org.cherrypic.member.enums.MemberStatus;
@@ -65,6 +67,72 @@ class MemberControllerTest {
                     .andExpect(jsonPath("$.data.profileImageUrl").value("testProfileImageUrl"))
                     .andExpect(jsonPath("$.data.status").value("NORMAL"))
                     .andExpect(jsonPath("$.data.role").value("USER"));
+        }
+    }
+
+    @Nested
+    class 회원_닉네임_변경_요청_시 {
+
+        @Test
+        void 유효한_요청이면_변경된_회원_닉네임을_반환한다() throws Exception {
+            // given
+            NicknameUpdateRequest request = new NicknameUpdateRequest("updateNickname");
+            NicknameUpdateResponse response = new NicknameUpdateResponse("updateNickname");
+
+            given(memberService.updateNickname(request)).willReturn(response);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            patch("/members/me")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.status").value(200))
+                    .andExpect(jsonPath("$.data.nickname").value("updateNickname"));
+        }
+
+        @ParameterizedTest
+        @NullSource
+        @EmptySource
+        @ValueSource(strings = {" "})
+        void 닉네임이_null_또는_공백이면_예외가_발생한다(String nickname) throws Exception {
+            // given
+            NicknameUpdateRequest request = new NicknameUpdateRequest(nickname);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            patch("/members/me")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("MethodArgumentNotValidException"))
+                    .andExpect(jsonPath("$.data.message").value("닉네임은 비워둘 수 없습니다."));
+        }
+
+        @Test
+        void 닉네임이_15자를_초과하면_예외가_발생한다() throws Exception {
+            // given
+            NicknameUpdateRequest request = new NicknameUpdateRequest("t".repeat(16));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            patch("/members/me")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("MethodArgumentNotValidException"))
+                    .andExpect(jsonPath("$.data.message").value("닉네임은 최대 15자까지 입력 가능합니다."));
         }
     }
 

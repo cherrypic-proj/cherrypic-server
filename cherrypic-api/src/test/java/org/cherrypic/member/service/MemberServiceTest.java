@@ -6,10 +6,12 @@ import static org.mockito.BDDMockito.given;
 import org.cherrypic.IntegrationTest;
 import org.cherrypic.RedisCleaner;
 import org.cherrypic.domain.member.dto.request.FcmTokenSaveRequest;
+import org.cherrypic.domain.member.dto.request.NicknameUpdateRequest;
 import org.cherrypic.domain.member.dto.response.MemberInfoResponse;
 import org.cherrypic.domain.member.repository.MemberRepository;
 import org.cherrypic.domain.member.service.MemberService;
 import org.cherrypic.global.util.MemberUtil;
+import org.cherrypic.global.util.TransactionUtil;
 import org.cherrypic.member.entity.Member;
 import org.cherrypic.member.entity.OauthInfo;
 import org.cherrypic.member.enums.MemberRole;
@@ -21,9 +23,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.transaction.annotation.Transactional;
 
 class MemberServiceTest extends IntegrationTest {
 
+    @Autowired private TransactionUtil transactionUtil;
     @Autowired private RedisCleaner redisCleaner;
     @Autowired private StringRedisTemplate redisTemplate;
 
@@ -68,6 +72,38 @@ class MemberServiceTest extends IntegrationTest {
                             "testProfileImageUrl",
                             MemberRole.USER,
                             MemberStatus.NORMAL);
+        }
+    }
+
+    @Nested
+    class 회원_닉네임을_변경할_때 {
+
+        @Transactional
+        @Test
+        void 유효한_요청이면_회원_닉네임을_변경한다() {
+            // given
+            NicknameUpdateRequest request = new NicknameUpdateRequest("updateNickname");
+
+            // when
+            memberService.updateNickname(request);
+
+            // then
+            Member member = memberRepository.findById(1L).orElseThrow();
+            assertThat(member.getNickname()).isEqualTo("updateNickname");
+        }
+
+        @Transactional
+        @Test
+        void 특수문자가_포함된_요청이면_특수문자를_제거하고_닉네임을_변경한다() {
+            // given
+            NicknameUpdateRequest request = new NicknameUpdateRequest("닉!네@임#수^정");
+
+            // when
+            memberService.updateNickname(request);
+
+            // then
+            Member member = memberRepository.findById(1L).orElseThrow();
+            assertThat(member.getNickname()).isEqualTo("닉네임수정");
         }
     }
 
