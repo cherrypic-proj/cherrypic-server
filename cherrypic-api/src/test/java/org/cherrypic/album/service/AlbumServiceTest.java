@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.*;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 
+import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -16,6 +17,7 @@ import org.cherrypic.album.entity.InvitationCode;
 import org.cherrypic.album.enums.AlbumPlan;
 import org.cherrypic.domain.album.dto.request.AlbumCreateRequest;
 import org.cherrypic.domain.album.dto.request.AlbumUpdateRequest;
+import org.cherrypic.domain.album.dto.response.AlbumInfoResponse;
 import org.cherrypic.domain.album.dto.response.AlbumListResponse;
 import org.cherrypic.domain.album.dto.response.InvitationLinkCreateResponse;
 import org.cherrypic.domain.album.event.AlbumDeleteEvent;
@@ -971,6 +973,81 @@ class AlbumServiceTest extends IntegrationTest {
             assertThatThrownBy(() -> albumService.deleteAlbum(5L))
                     .isInstanceOf(CustomException.class)
                     .hasMessage(AlbumErrorCode.SUBSCRIPTION_ACTIVE.getMessage());
+        }
+    }
+
+    @Nested
+    class 개별_앨범을_조회할_때 {
+
+        @BeforeEach
+        void setUp() {
+            Member member =
+                    Member.createMember(
+                            OauthInfo.createOauthInfo("testOauthId", "testOauthProvider"),
+                            "testNickname",
+                            "testProfileImageUrl");
+            memberRepository.save(member);
+            given(memberUtil.getCurrentMember()).willReturn(member);
+
+            Album album1 = Album.createAlbum("testAlbum1", "testURL1", AlbumPlan.BASIC, false);
+            Album album2 = Album.createAlbum("testAlbum2", "testURL2", AlbumPlan.BASIC, false);
+            Album album3 = Album.createAlbum("testAlbum3", "testURL3", AlbumPlan.BASIC, false);
+            albumRepository.saveAll(List.of(album1, album2, album3));
+
+            Participant participant1 =
+                    Participant.createParticipant(member, album1, ParticipantRole.HOST);
+            Participant participant2 =
+                    Participant.createParticipant(member, album2, ParticipantRole.STANDARD);
+            participantRepository.saveAll(List.of(participant1, participant2));
+        }
+
+        @Test
+        void 유효한_요청인_경우_앨범_정보를_반환한다() {
+            // when
+            AlbumInfoResponse response = albumService.getAlbum(1L);
+
+            // then
+            assertThat(response)
+                    .extracting(
+                            "title",
+                            "coverUrl",
+                            "albumPlan",
+                            "capacityUsed",
+                            "totalCapacity",
+                            "hostName",
+                            "numOfParticipants")
+                    .containsExactly(
+                            "testAlbum1",
+                            "testURL1",
+                            AlbumPlan.BASIC,
+                            new BigDecimal("0.00"),
+                            new BigDecimal("3"),
+                            "testNickname",
+                            1);
+        }
+
+        @Test
+        void 앨범이_존재하지_않는_경우_예외가_발생한다() {
+            // when & then
+            assertThatThrownBy(() -> albumService.getAlbum(999L))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(AlbumErrorCode.ALBUM_NOT_FOUND.getMessage());
+        }
+
+        @Test
+        void 앨범_참여자가_아닌_경우_에외가_발생한다() {
+            // when & then
+            assertThatThrownBy(() -> albumService.getAlbum(3L))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(AlbumErrorCode.NOT_ALBUM_PARTICIPANT.getMessage());
+        }
+
+        @Test
+        void 앨범에_방장이_없는_경우_에외가_발생한다() {
+            // when & then
+            assertThatThrownBy(() -> albumService.getAlbum(2L))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(AlbumErrorCode.ALBUM_HOST_NOT_FOUND.getMessage());
         }
     }
 }

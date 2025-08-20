@@ -175,6 +175,26 @@ public class AlbumServiceImpl implements AlbumService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public AlbumInfoResponse getAlbum(Long albumId) {
+        final Member currentMember = memberUtil.getCurrentMember();
+        final Album album = getAlbumById(albumId);
+
+        getParticipantByMemberIdAndAlbumId(currentMember.getId(), album.getId());
+        String hostName = getAlbumHostByAlbumId(album.getId()).getMember().getNickname();
+        int numOfParticipants = participantRepository.countByAlbumId(album.getId());
+
+        return AlbumInfoResponse.of(
+                album.getTitle(),
+                album.getCoverUrl(),
+                album.getPlan(),
+                album.getCapacityGb(),
+                album.getPlan().getCapacityGb(),
+                hostName,
+                numOfParticipants);
+    }
+
+    @Override
     public void deleteAlbum(Long albumId) {
         final Member currentMember = memberUtil.getCurrentMember();
         final Album album = getAlbumById(albumId);
@@ -202,6 +222,12 @@ public class AlbumServiceImpl implements AlbumService {
         return participantRepository
                 .findByMemberIdAndAlbumId(memberId, albumId)
                 .orElseThrow(() -> new CustomException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT));
+    }
+
+    private Participant getAlbumHostByAlbumId(Long albumId) {
+        return participantRepository
+                .findHostByAlbumId(albumId)
+                .orElseThrow(() -> new CustomException(AlbumErrorCode.ALBUM_HOST_NOT_FOUND));
     }
 
     private void validateAlbumHost(Long memberId, Long albumId) {

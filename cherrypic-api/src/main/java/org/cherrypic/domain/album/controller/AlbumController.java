@@ -83,4 +83,10 @@ public class AlbumController {
         albumService.deleteAlbum(albumId);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/{albumId}")
+    @Operation(summary = "개별 앨범 조회", description = "개별 앨범을 조회합니다.")
+    public AlbumInfoResponse albumGet(@PathVariable Long albumId) {
+        return albumService.getAlbum(albumId);
+    }
 }

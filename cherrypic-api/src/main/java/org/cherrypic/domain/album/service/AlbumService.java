@@ -20,5 +20,7 @@ public interface AlbumService {
 
     AlbumJoinResponse joinAlbum(Long albumId, String code);
 
+    AlbumInfoResponse getAlbum(Long albumId);
+
     void deleteAlbum(Long albumId);
 }
