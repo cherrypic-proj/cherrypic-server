@@ -1,5 +1,6 @@
 package org.cherrypic.domain.album.service;
 
+import org.cherrypic.album.enums.AlbumPlan;
 import org.cherrypic.domain.album.dto.request.AlbumCreateRequest;
 import org.cherrypic.domain.album.dto.request.AlbumUpdateRequest;
 import org.cherrypic.domain.album.dto.response.*;
@@ -17,6 +18,9 @@ public interface AlbumService {
 
     SliceResponse<AlbumListResponse> getParticipatingAlbums(
             Long lastAlbumId, int size, SortDirection direction);
+
+    SliceResponse<SubscribedAlbumListResponse> getSubscribedAlbumsByPlan(
+            AlbumPlan plan, Long lastAlbumId, Integer size, SortDirection direction);
 
     AlbumJoinResponse joinAlbum(Long albumId, String code);
 
