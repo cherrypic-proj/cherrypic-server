@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import org.cherrypic.album.enums.AlbumPlan;
 import org.cherrypic.domain.album.controller.AlbumController;
@@ -712,8 +713,8 @@ class AlbumControllerTest {
             // given
             List<AlbumListResponse> albums =
                     List.of(
-                            new AlbumListResponse(1L, "first", "coverUrl1", AlbumPlan.BASIC),
-                            new AlbumListResponse(2L, "second", "coverUrl2", AlbumPlan.PRO));
+                            new AlbumListResponse(1L, "testTitle1", "coverUrl1", AlbumPlan.BASIC),
+                            new AlbumListResponse(2L, "testTitle2", "coverUrl2", AlbumPlan.PRO));
 
             given(albumService.getParticipatingAlbums(null, 2, SortDirection.ASC))
                     .willReturn(new SliceResponse<>(albums, true));
@@ -835,6 +836,149 @@ class AlbumControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(get("/albums").param("size", "2").param("direction", sort));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("METHOD_ARGUMENT_TYPE_MISMATCH"))
+                    .andExpect(jsonPath("$.data.message").value("요청한 값의 타입이 잘못되어 처리할 수 없습니다."));
+        }
+    }
+
+    @Nested
+    class 구독_플랜별_앨범_목록_조회_요청_시 {
+
+        @Test
+        void BASIC_플랜이면_구독_정보는_null로_응답한다() throws Exception {
+            // given
+            List<SubscribedAlbumListResponse> albums =
+                    List.of(
+                            new SubscribedAlbumListResponse(
+                                    1L,
+                                    "testTitle1",
+                                    AlbumPlan.BASIC,
+                                    0,
+                                    LocalDateTime.of(2025, 8, 21, 0, 0),
+                                    null,
+                                    null,
+                                    null));
+
+            given(
+                            albumService.getSubscribedAlbumsByPlan(
+                                    AlbumPlan.BASIC, null, 1, SortDirection.DESC))
+                    .willReturn(new SliceResponse<>(albums, true));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            get("/albums/subscribed").param("plan", "BASIC").param("size", "1"));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
+                    .andExpect(jsonPath("$.data.content[0].albumId").value(1))
+                    .andExpect(jsonPath("$.data.content[0].title").value("testTitle1"))
+                    .andExpect(jsonPath("$.data.content[0].plan").value("BASIC"))
+                    .andExpect(jsonPath("$.data.content[0].price").value(0))
+                    .andExpect(jsonPath("$.data.content[0].albumCreatedAt").value("2025-08-21"))
+                    .andExpect(jsonPath("$.data.content[0].subscriptionStartAt").doesNotExist())
+                    .andExpect(jsonPath("$.data.content[0].subscriptionEndAt").doesNotExist())
+                    .andExpect(
+                            jsonPath("$.data.content[0].subscriptionNextBillingAt").doesNotExist())
+                    .andExpect(jsonPath("$.data.isLast").value(true));
+        }
+
+        @Test
+        void PRO_플랜이면_구독_정보를_포함하여_응답한다() throws Exception {
+            // given
+            List<SubscribedAlbumListResponse> albums =
+                    List.of(
+                            new SubscribedAlbumListResponse(
+                                    1L,
+                                    "testTitle1",
+                                    AlbumPlan.PRO,
+                                    AlbumPlan.PRO.getPrice(),
+                                    LocalDateTime.of(2025, 8, 21, 0, 0, 0),
+                                    LocalDateTime.of(2025, 8, 21, 0, 0),
+                                    LocalDateTime.of(2025, 9, 21, 0, 0),
+                                    LocalDateTime.of(2025, 9, 22, 0, 0)));
+
+            given(
+                            albumService.getSubscribedAlbumsByPlan(
+                                    AlbumPlan.PRO, null, 1, SortDirection.DESC))
+                    .willReturn(new SliceResponse<>(albums, true));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            get("/albums/subscribed").param("plan", "PRO").param("size", "1"));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
+                    .andExpect(jsonPath("$.data.content[0].albumId").value(1))
+                    .andExpect(jsonPath("$.data.content[0].title").value("testTitle1"))
+                    .andExpect(jsonPath("$.data.content[0].plan").value("PRO"))
+                    .andExpect(jsonPath("$.data.content[0].price").value(5900))
+                    .andExpect(jsonPath("$.data.content[0].albumCreatedAt").value("2025-08-21"))
+                    .andExpect(
+                            jsonPath("$.data.content[0].subscriptionStartAt").value("2025-08-21"))
+                    .andExpect(jsonPath("$.data.content[0].subscriptionEndAt").value("2025-09-21"))
+                    .andExpect(
+                            jsonPath("$.data.content[0].subscriptionNextBillingAt")
+                                    .value("2025-09-22"))
+                    .andExpect(jsonPath("$.data.isLast").value(true));
+        }
+
+        @Test
+        void PRO_앨범이_없는_경우_빈_리스트를_응답한다() throws Exception {
+            // given
+            List<SubscribedAlbumListResponse> albums = List.of();
+
+            given(
+                            albumService.getSubscribedAlbumsByPlan(
+                                    AlbumPlan.PRO, null, 10, SortDirection.DESC))
+                    .willReturn(new SliceResponse<>(albums, true));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            get("/albums/subscribed").param("plan", "PRO").param("size", "10"));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
+                    .andExpect(jsonPath("$.data.content").isEmpty())
+                    .andExpect(jsonPath("$.data.isLast").value(true));
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"-1", "-999", "0"})
+        void 페이지_크기가_0_이하이면_예외가_발생한다(String pageSize) throws Exception {
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            get("/albums/subscribed")
+                                    .param("plan", "BASIC")
+                                    .param("size", pageSize));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("ConstraintViolationException"))
+                    .andExpect(jsonPath("$.data.message").value("페이지 크기는 0보다 큰 값만 가능합니다."));
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"ASCC", "DESCC", "OLDEST", "NEWEST"})
+        void 존재하지_않는_정렬_기준을_입력하면_예외가_발생한다(String sort) throws Exception {
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            get("/albums/subscribed")
+                                    .param("plan", "BASIC")
+                                    .param("size", "2")
+                                    .param("direction", sort));
 
             perform.andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.success").value(false))
