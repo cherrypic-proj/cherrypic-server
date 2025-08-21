@@ -20,6 +20,7 @@ import org.cherrypic.domain.album.dto.request.AlbumUpdateRequest;
 import org.cherrypic.domain.album.dto.response.AlbumInfoResponse;
 import org.cherrypic.domain.album.dto.response.AlbumListResponse;
 import org.cherrypic.domain.album.dto.response.InvitationLinkCreateResponse;
+import org.cherrypic.domain.album.dto.response.SubscribedAlbumListResponse;
 import org.cherrypic.domain.album.event.AlbumDeleteEvent;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.album.repository.AlbumRepository;
@@ -758,6 +759,117 @@ class AlbumServiceTest extends IntegrationTest {
             Participant participant2 =
                     Participant.createParticipant(member, album2, ParticipantRole.HOST);
             participantRepository.saveAll(List.of(participant1, participant2));
+        }
+    }
+
+    @Nested
+    class 구독_플랜별_앨범_목록을_조회할_때 {
+
+        @BeforeEach
+        void setUp() {
+            Member member =
+                    Member.createMember(
+                            OauthInfo.createOauthInfo("testOauthId", "testOauthProvider"),
+                            "testNickname",
+                            "testProfileImageUrl");
+            memberRepository.save(member);
+
+            given(memberUtil.getCurrentMember()).willReturn(member);
+
+            Album album1 = Album.createAlbum("testTitle1", "testCoverUrl1", AlbumPlan.BASIC, false);
+            Album album2 = Album.createAlbum("testTitle2", "testCoverUrl2", AlbumPlan.PRO, false);
+            albumRepository.saveAll(List.of(album1, album2));
+
+            Participant participant1 =
+                    Participant.createParticipant(member, album1, ParticipantRole.HOST);
+            Participant participant2 =
+                    Participant.createParticipant(member, album2, ParticipantRole.HOST);
+            participantRepository.saveAll(List.of(participant1, participant2));
+
+            subscriptionRepository.save(
+                    Subscription.createSubscription(
+                            member, album2, LocalDateTime.of(2025, 8, 21, 0, 0)));
+        }
+
+        @Test
+        void BASIC_플랜이면_구독_정보는_null로_반환한다() {
+            // when
+            SliceResponse<SubscribedAlbumListResponse> response =
+                    albumService.getSubscribedAlbumsByPlan(
+                            AlbumPlan.BASIC, null, 1, SortDirection.DESC);
+
+            // then
+            Assertions.assertAll(
+                    () ->
+                            assertThat(response.content().get(0))
+                                    .extracting(
+                                            "albumId",
+                                            "title",
+                                            "plan",
+                                            "price",
+                                            "subscriptionStartAt",
+                                            "subscriptionEndAt",
+                                            "subscriptionNextBillingAt")
+                                    .containsExactly(
+                                            1L, "testTitle1", AlbumPlan.BASIC, 0, null, null, null),
+                    () ->
+                            assertThat(
+                                            response.content()
+                                                    .get(0)
+                                                    .albumCreatedAt()
+                                                    .truncatedTo(ChronoUnit.MINUTES))
+                                    .isEqualTo(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES)),
+                    () -> assertThat(response.isLast()).isTrue());
+        }
+
+        @Test
+        void PRO_플랜이면_구독_정보를_포함하여_반환한다() {
+            // when
+            SliceResponse<SubscribedAlbumListResponse> response =
+                    albumService.getSubscribedAlbumsByPlan(
+                            AlbumPlan.PRO, null, 1, SortDirection.DESC);
+
+            // then
+            Assertions.assertAll(
+                    () ->
+                            assertThat(response.content().get(0))
+                                    .extracting(
+                                            "albumId",
+                                            "title",
+                                            "plan",
+                                            "price",
+                                            "subscriptionStartAt",
+                                            "subscriptionEndAt",
+                                            "subscriptionNextBillingAt")
+                                    .containsExactly(
+                                            2L,
+                                            "testTitle2",
+                                            AlbumPlan.PRO,
+                                            5900,
+                                            LocalDateTime.of(2025, 8, 21, 0, 0),
+                                            LocalDateTime.of(2025, 9, 21, 0, 0),
+                                            LocalDateTime.of(2025, 9, 22, 0, 0)),
+                    () ->
+                            assertThat(
+                                            response.content()
+                                                    .get(0)
+                                                    .albumCreatedAt()
+                                                    .truncatedTo(ChronoUnit.MINUTES))
+                                    .isEqualTo(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES)),
+                    () -> assertThat(response.isLast()).isTrue());
+        }
+
+        @Test
+        void PREMIUM_앨범이_없는_경우_빈_리스트를_응답한다() {
+            // when
+            SliceResponse<SubscribedAlbumListResponse> response =
+                    albumService.getSubscribedAlbumsByPlan(
+                            AlbumPlan.PREMIUM, null, 10, SortDirection.DESC);
+
+            // when & then
+            Assertions.assertAll(
+                    () -> assertThat(response.content().size()).isZero(),
+                    () -> assertThat(response.isLast()).isTrue());
         }
     }
 

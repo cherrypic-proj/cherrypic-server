@@ -898,7 +898,7 @@ class AlbumControllerTest {
                                     "testTitle1",
                                     AlbumPlan.PRO,
                                     AlbumPlan.PRO.getPrice(),
-                                    LocalDateTime.of(2025, 8, 21, 0, 0, 0),
+                                    LocalDateTime.of(2025, 8, 21, 0, 0),
                                     LocalDateTime.of(2025, 8, 21, 0, 0),
                                     LocalDateTime.of(2025, 9, 21, 0, 0),
                                     LocalDateTime.of(2025, 9, 22, 0, 0)));
