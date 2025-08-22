@@ -10,6 +10,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.IntStream;
 import lombok.RequiredArgsConstructor;
 import org.cherrypic.album.entity.Album;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
@@ -67,7 +68,8 @@ public class ImageServiceImpl implements ImageService {
                 createPresignedUrl(
                         ImageType.MEMBER_PROFILE,
                         currentMember.getId(),
-                        request.imageFileExtension());
+                        request.imageFileExtension(),
+                        request.md5Hash());
 
         return PresignedUrlResponse.of(presignedUrl);
     }
@@ -80,17 +82,19 @@ public class ImageServiceImpl implements ImageService {
 
         validateParticipantAuthority(currentMember.getId(), album.getId());
         validateAlbumCapacity(album, request.capacity());
+        validateImageExtensionsAndHashesSize(request.imageFileExtensions(), request.md5Hashes());
 
         album.increaseCapacity(request.capacity());
 
         List<String> presignedUrls =
-                request.imageFileExtensions().stream()
-                        .map(
-                                extension ->
+                IntStream.range(0, request.imageFileExtensions().size())
+                        .mapToObj(
+                                i ->
                                         createPresignedUrl(
                                                 ImageType.ALBUM_IMAGE,
                                                 currentMember.getId(),
-                                                extension))
+                                                request.imageFileExtensions().get(i),
+                                                request.md5Hashes().get(i)))
                         .toList();
 
         return PresignedUrlsResponse.of(presignedUrls);
@@ -134,13 +138,21 @@ public class ImageServiceImpl implements ImageService {
     }
 
     private String createPresignedUrl(
-            ImageType imageType, Long targetId, ImageFileExtension imageFileExtension) {
+            ImageType imageType,
+            Long targetId,
+            ImageFileExtension imageFileExtension,
+            String md5Hash) {
         String imageKey = UUID.randomUUID().toString();
         String fileName = createFileName(imageType, targetId, imageKey, imageFileExtension);
 
         GeneratePresignedUrlRequest generatePresignedUrlRequest =
                 generatePresignedUrlRequest(
                         s3Properties.bucket(), fileName, imageFileExtension.getExtension());
+
+        generatePresignedUrlRequest.addRequestParameter(
+                Headers.S3_CANNED_ACL, CannedAccessControlList.PublicRead.toString());
+
+        generatePresignedUrlRequest.addRequestParameter(Headers.CONTENT_MD5, md5Hash);
 
         return amazonS3.generatePresignedUrl(generatePresignedUrlRequest).toString();
     }
@@ -234,6 +246,13 @@ public class ImageServiceImpl implements ImageService {
 
         if (afterUpload.compareTo(maxCapacity) > 0) {
             throw new CustomException(AlbumErrorCode.ALBUM_CAPACITY_EXCEEDED);
+        }
+    }
+
+    private void validateImageExtensionsAndHashesSize(
+            List<ImageFileExtension> extensions, List<String> hashes) {
+        if (extensions.size() != hashes.size()) {
+            throw new CustomException(ImageErrorCode.IMAGES_HASHES_SIZE_MISMATCH);
         }
     }
 }

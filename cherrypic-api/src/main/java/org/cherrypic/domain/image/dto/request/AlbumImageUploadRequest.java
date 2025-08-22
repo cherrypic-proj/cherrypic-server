@@ -13,4 +13,7 @@ public record AlbumImageUploadRequest(
                 List<ImageFileExtension> imageFileExtensions,
         @NotNull(message = "이미지 파일들의 용량은 비워둘 수 없습니다.")
                 @Schema(description = "업로드 하는 이미지들의 용량합(GB)", example = "1.23")
-                BigDecimal capacity) {}
+                BigDecimal capacity,
+        @NotEmpty(message = "MD5 해시값은 비워둘 수 없습니다,")
+                @Schema(description = "S3 업로드시 사진의 변형을 확인하기 위한 md5 해시 List")
+                List<String> md5Hashes) {}
