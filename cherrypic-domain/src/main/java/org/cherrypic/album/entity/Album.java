@@ -14,7 +14,6 @@ import org.cherrypic.common.exception.DomainErrorCode;
 import org.cherrypic.common.model.BaseTimeEntity;
 import org.cherrypic.event.entity.Event;
 import org.cherrypic.exception.CustomException;
-import org.cherrypic.favorites.entity.Favorites;
 import org.cherrypic.image.entity.Image;
 import org.cherrypic.notification.entity.Notification;
 import org.cherrypic.participant.entity.Participant;
