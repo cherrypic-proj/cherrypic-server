@@ -15,6 +15,7 @@ import org.cherrypic.domain.event.exception.EventErrorCode;
 import org.cherrypic.domain.event.repository.EventRepository;
 import org.cherrypic.domain.image.dto.request.AlbumImageUploadRequest;
 import org.cherrypic.domain.image.dto.request.MemberProfileImageUploadRequest;
+import org.cherrypic.domain.image.dto.request.UploadFailedImageDeleteRequest;
 import org.cherrypic.domain.image.dto.response.AlbumImageListResponse;
 import org.cherrypic.domain.image.dto.response.EventImageListResponse;
 import org.cherrypic.domain.image.dto.response.PresignedUrlResponse;
@@ -407,6 +408,40 @@ class ImageServiceTest extends IntegrationTest {
             assertThatThrownBy(() -> imageService.getEventImages(999L, null, 2, SortDirection.ASC))
                     .isInstanceOf(CustomException.class)
                     .hasMessage(EventErrorCode.EVENT_NOT_FOUND.getMessage());
+        }
+    }
+
+    @Nested
+    class 업로드_실패한_이미지_삭제할_때 {
+
+        @BeforeEach
+        void setUp() {
+            Member member =
+                    Member.createMember(
+                            OauthInfo.createOauthInfo("testOauthId", "testOauthProvider"),
+                            "testNickname",
+                            "testProfileImageUrl");
+            memberRepository.save(member);
+
+            Album album = Album.createAlbum("testTitle", "testCoverUrl", AlbumPlan.BASIC, false);
+            albumRepository.save(album);
+
+            Image image1 = Image.createImage(album, 1L, "testUrl1", LocalDateTime.now());
+            Image image2 = Image.createImage(album, 1L, "testUrl2", LocalDateTime.now());
+            imageRepository.saveAll(List.of(image1, image2));
+        }
+
+        @Test
+        void 유효한_요청이면_업로드_실패한_이미지를_삭제한다() {
+            // given
+            UploadFailedImageDeleteRequest request =
+                    new UploadFailedImageDeleteRequest(List.of("testUrl1", "testUrl2"));
+
+            // when
+            imageService.deleteUploadFailedImages(request);
+
+            // then
+            assertThat(imageRepository.findAllById(List.of(1L, 2L))).isEmpty();
         }
     }
 }
