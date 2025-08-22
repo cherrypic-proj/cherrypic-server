@@ -1,8 +1,8 @@
 package org.cherrypic.image.controller;
 
 import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.mockito.BDDMockito.willDoNothing;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -14,6 +14,7 @@ import org.cherrypic.domain.event.exception.EventErrorCode;
 import org.cherrypic.domain.image.controller.ImageController;
 import org.cherrypic.domain.image.dto.request.AlbumImageUploadRequest;
 import org.cherrypic.domain.image.dto.request.MemberProfileImageUploadRequest;
+import org.cherrypic.domain.image.dto.request.UploadFailedImageDeleteRequest;
 import org.cherrypic.domain.image.dto.response.AlbumImageListResponse;
 import org.cherrypic.domain.image.dto.response.EventImageListResponse;
 import org.cherrypic.domain.image.dto.response.PresignedUrlResponse;
@@ -628,6 +629,49 @@ class ImageControllerTest {
                     .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
                     .andExpect(jsonPath("$.data.code").value("METHOD_ARGUMENT_TYPE_MISMATCH"))
                     .andExpect(jsonPath("$.data.message").value("요청한 값의 타입이 잘못되어 처리할 수 없습니다."));
+        }
+    }
+
+    @Nested
+    class 업로드_실패한_이미지_삭제_요청_시 {
+
+        @Test
+        void 유효한_요청이면_이미지를_삭제하고_NO_CONTENT를_반환한다() throws Exception {
+            // given
+            UploadFailedImageDeleteRequest request =
+                    new UploadFailedImageDeleteRequest(List.of("testPresignedUrl"));
+
+            willDoNothing().given(imageService).deleteUploadFailedImages(request);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            delete("/images")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isNoContent())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.NO_CONTENT.value()));
+        }
+
+        @Test
+        void Presigned_URL이_없는_경우_예외가_발생한다() throws Exception {
+            // given
+            UploadFailedImageDeleteRequest request = new UploadFailedImageDeleteRequest(List.of());
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            delete("/images")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("MethodArgumentNotValidException"))
+                    .andExpect(jsonPath("$.data.message").value("Presigned URL은 비워둘 수 없습니다."));
         }
     }
 }

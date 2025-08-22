@@ -49,7 +49,7 @@ public class ImageController {
     @DeleteMapping("/images")
     @Operation(
             summary = "업로드 실패한 동영상 & 이미지 삭제",
-            description = "업로드를 실패한 Presigned URL을 바탕으로 동영상 & 이미지를 삭제합니다.")
+            description = "업로드를 실패한 Presigned URL을 기반으로 동영상 & 이미지를 삭제합니다.")
     public ResponseEntity<Void> uploadFailedImagedDelete(
             @Valid @RequestBody UploadFailedImageDeleteRequest request) {
         imageService.deleteUploadFailedImages(request);
