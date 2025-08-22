@@ -18,6 +18,7 @@ import org.cherrypic.domain.event.exception.EventErrorCode;
 import org.cherrypic.domain.event.repository.EventRepository;
 import org.cherrypic.domain.image.dto.request.AlbumImageUploadRequest;
 import org.cherrypic.domain.image.dto.request.MemberProfileImageUploadRequest;
+import org.cherrypic.domain.image.dto.request.UploadFailedImageDeleteRequest;
 import org.cherrypic.domain.image.dto.response.AlbumImageListResponse;
 import org.cherrypic.domain.image.dto.response.EventImageListResponse;
 import org.cherrypic.domain.image.dto.response.PresignedUrlResponse;
@@ -118,6 +119,11 @@ public class ImageServiceImpl implements ImageService {
         Slice<EventImageListResponse> result =
                 imageRepository.findAllByEventId(eventId, lastImageId, size, direction);
         return SliceResponse.from(result);
+    }
+
+    @Override
+    public void deleteUploadFailedImages(UploadFailedImageDeleteRequest request) {
+        imageRepository.deleteAllByUrlIn(request.presignedUrls());
     }
 
     private String createPresignedUrl(

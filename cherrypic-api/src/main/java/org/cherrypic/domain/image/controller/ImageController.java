@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.cherrypic.domain.image.dto.request.AlbumImageUploadRequest;
 import org.cherrypic.domain.image.dto.request.MemberProfileImageUploadRequest;
+import org.cherrypic.domain.image.dto.request.UploadFailedImageDeleteRequest;
 import org.cherrypic.domain.image.dto.response.AlbumImageListResponse;
 import org.cherrypic.domain.image.dto.response.EventImageListResponse;
 import org.cherrypic.domain.image.dto.response.PresignedUrlResponse;
@@ -15,6 +16,7 @@ import org.cherrypic.domain.image.service.ImageService;
 import org.cherrypic.global.annotation.PageSize;
 import org.cherrypic.global.pagination.SliceResponse;
 import org.cherrypic.global.pagination.SortDirection;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -42,6 +44,16 @@ public class ImageController {
     public PresignedUrlsResponse albumImageUploadUrlsCreate(
             @PathVariable Long albumId, @Valid @RequestBody AlbumImageUploadRequest request) {
         return imageService.createAlbumImageUploadUrls(albumId, request);
+    }
+
+    @DeleteMapping("/images")
+    @Operation(
+            summary = "업로드 실패한 동영상 & 이미지 삭제",
+            description = "업로드를 실패한 Presigned URL을 바탕으로 동영상 & 이미지를 삭제합니다.")
+    public ResponseEntity<Void> uploadFailedImagedDelete(
+            @Valid @RequestBody UploadFailedImageDeleteRequest request) {
+        imageService.deleteUploadFailedImages(request);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/albums/{albumId}/images")

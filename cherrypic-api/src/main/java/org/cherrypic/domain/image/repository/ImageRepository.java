@@ -10,4 +10,6 @@ public interface ImageRepository extends JpaRepository<Image, Long>, ImageReposi
     long countByIdIn(List<Long> ids);
 
     long countByIdInAndAlbumId(List<Long> imageIds, Long albumId);
+
+    void deleteAllByUrlIn(List<String> urls);
 }
