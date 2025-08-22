@@ -288,6 +288,32 @@ class ImageControllerTest {
         }
 
         @Test
+        void MD5_해시에_중복된_값이_존재하면_예외가_발생한다() throws Exception {
+            // given
+            AlbumImageUploadRequest request =
+                    new AlbumImageUploadRequest(
+                            List.of(ImageFileExtension.JPEG, ImageFileExtension.HEIC),
+                            BigDecimal.ONE,
+                            List.of("testMd5Hash", "testMd5Hash"));
+
+            given(imageService.createAlbumImageUploadUrls(1L, request))
+                    .willThrow(new CustomException(ImageErrorCode.DUPLICATE_HASHES));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/albums/1/image-upload-urls")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("DUPLICATE_HASHES"))
+                    .andExpect(jsonPath("$.data.message").value("중복되는 md5 해시값이 존재합니다."));
+        }
+
+        @Test
         void 이미지들의_확장자를_비워두면_예외가_발생한다() throws Exception {
             // given
             AlbumImageUploadRequest request =

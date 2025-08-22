@@ -75,7 +75,7 @@ class ImageServiceTest extends IntegrationTest {
         void 유효한_요청이면_회원_프로필_이미지용_Presigned_URL을_생성한다() {
             // given
             MemberProfileImageUploadRequest request =
-                    new MemberProfileImageUploadRequest(ImageFileExtension.JPEG);
+                    new MemberProfileImageUploadRequest(ImageFileExtension.JPEG, "testMd5Hash");
 
             // when
             PresignedUrlResponse response = imageService.createMemberProfileImageUploadUrl(request);
@@ -120,7 +120,8 @@ class ImageServiceTest extends IntegrationTest {
             AlbumImageUploadRequest request =
                     new AlbumImageUploadRequest(
                             List.of(ImageFileExtension.JPG, ImageFileExtension.JPEG),
-                            BigDecimal.ONE);
+                            BigDecimal.ONE,
+                            List.of("testMd5Hash1", "testMd5Hash2"));
 
             // when & then
             PresignedUrlsResponse response = imageService.createAlbumImageUploadUrls(1L, request);
@@ -148,7 +149,8 @@ class ImageServiceTest extends IntegrationTest {
             AlbumImageUploadRequest request =
                     new AlbumImageUploadRequest(
                             List.of(ImageFileExtension.JPG, ImageFileExtension.JPEG),
-                            BigDecimal.ONE);
+                            BigDecimal.ONE,
+                            List.of("testMd5Hash1", "testMd5Hash2"));
 
             // when & then
             assertThatThrownBy(() -> imageService.createAlbumImageUploadUrls(999L, request))
@@ -162,7 +164,8 @@ class ImageServiceTest extends IntegrationTest {
             AlbumImageUploadRequest request =
                     new AlbumImageUploadRequest(
                             List.of(ImageFileExtension.JPG, ImageFileExtension.JPEG),
-                            BigDecimal.ONE);
+                            BigDecimal.ONE,
+                            List.of("testMd5Hash1", "testMd5Hash2"));
 
             // when & then
             assertThatThrownBy(() -> imageService.createAlbumImageUploadUrls(3L, request))
@@ -176,7 +179,8 @@ class ImageServiceTest extends IntegrationTest {
             AlbumImageUploadRequest request =
                     new AlbumImageUploadRequest(
                             List.of(ImageFileExtension.JPG, ImageFileExtension.JPEG),
-                            BigDecimal.ONE);
+                            BigDecimal.ONE,
+                            List.of("testMd5Hash1", "testMd5Hash2"));
 
             // when & then
             assertThatThrownBy(() -> imageService.createAlbumImageUploadUrls(2L, request))
@@ -190,12 +194,43 @@ class ImageServiceTest extends IntegrationTest {
             AlbumImageUploadRequest request =
                     new AlbumImageUploadRequest(
                             List.of(ImageFileExtension.JPG, ImageFileExtension.JPEG),
-                            BigDecimal.TEN);
+                            BigDecimal.TEN,
+                            List.of("testMd5Hash1", "testMd5Hash2"));
 
             // when & then
             assertThatThrownBy(() -> imageService.createAlbumImageUploadUrls(1L, request))
                     .isInstanceOf(CustomException.class)
                     .hasMessage(AlbumErrorCode.ALBUM_CAPACITY_EXCEEDED.getMessage());
+        }
+
+        @Test
+        void 이미지_Extension과_Hashes_길이가_다르면_예외가_발생한다() {
+            // given
+            AlbumImageUploadRequest request =
+                    new AlbumImageUploadRequest(
+                            List.of(ImageFileExtension.JPG, ImageFileExtension.JPEG),
+                            BigDecimal.ONE,
+                            List.of("testMd5Hash1"));
+
+            // when & then
+            assertThatThrownBy(() -> imageService.createAlbumImageUploadUrls(1L, request))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(ImageErrorCode.IMAGES_HASHES_SIZE_MISMATCH.getMessage());
+        }
+
+        @Test
+        void 해시값에_중복이_존재하면_예외가_발생한다() {
+            // given
+            AlbumImageUploadRequest request =
+                    new AlbumImageUploadRequest(
+                            List.of(ImageFileExtension.JPG, ImageFileExtension.JPEG),
+                            BigDecimal.ONE,
+                            List.of("testMd5Hash1", "testMd5Hash1"));
+
+            // when & then
+            assertThatThrownBy(() -> imageService.createAlbumImageUploadUrls(1L, request))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(ImageErrorCode.DUPLICATE_HASHES.getMessage());
         }
     }
 

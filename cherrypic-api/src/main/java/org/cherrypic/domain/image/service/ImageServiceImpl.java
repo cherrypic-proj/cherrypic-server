@@ -6,9 +6,7 @@ import com.amazonaws.services.s3.Headers;
 import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
 import java.math.BigDecimal;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 import lombok.RequiredArgsConstructor;
@@ -82,6 +80,7 @@ public class ImageServiceImpl implements ImageService {
 
         validateParticipantAuthority(currentMember.getId(), album.getId());
         validateAlbumCapacity(album, request.capacity());
+        validateDistinctHashes(request.md5Hashes());
         validateImageExtensionsAndHashesSize(request.imageFileExtensions(), request.md5Hashes());
 
         album.increaseCapacity(request.capacity());
@@ -253,6 +252,12 @@ public class ImageServiceImpl implements ImageService {
             List<ImageFileExtension> extensions, List<String> hashes) {
         if (extensions.size() != hashes.size()) {
             throw new CustomException(ImageErrorCode.IMAGES_HASHES_SIZE_MISMATCH);
+        }
+    }
+
+    private void validateDistinctHashes(List<String> hashes) {
+        if (hashes.stream().distinct().count() != hashes.size()) {
+            throw new CustomException(ImageErrorCode.DUPLICATE_HASHES);
         }
     }
 }
