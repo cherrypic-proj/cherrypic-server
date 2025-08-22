@@ -282,7 +282,7 @@ class ImageControllerTest {
                     .andExpect(jsonPath("$.success").value(false))
                     .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
                     .andExpect(jsonPath("$.data.code").value("IMAGES_HASHES_SIZE_MISMATCH"))
-                    .andExpect(jsonPath("$.data.message").value("이미지 파일 확장자와 md5 개수 불일치."));
+                    .andExpect(jsonPath("$.data.message").value("이미지 파일 확장자와 md5 개수가 일치하지 않습니다."));
         }
 
         @Test
