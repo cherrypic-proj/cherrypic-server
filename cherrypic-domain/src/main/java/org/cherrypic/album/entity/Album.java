@@ -14,7 +14,6 @@ import org.cherrypic.common.exception.DomainErrorCode;
 import org.cherrypic.common.model.BaseTimeEntity;
 import org.cherrypic.event.entity.Event;
 import org.cherrypic.exception.CustomException;
-import org.cherrypic.favorites.entity.Favorites;
 import org.cherrypic.image.entity.Image;
 import org.cherrypic.notification.entity.Notification;
 import org.cherrypic.participant.entity.Participant;
@@ -55,9 +54,6 @@ public class Album extends BaseTimeEntity {
 
     @OneToMany(mappedBy = "album", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Participant> participants = new ArrayList<>();
-
-    @OneToMany(mappedBy = "album", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Favorites> favorites = new ArrayList<>();
 
     @OneToMany(mappedBy = "album", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Image> images = new ArrayList<>();

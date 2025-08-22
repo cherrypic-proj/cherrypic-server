@@ -55,6 +55,26 @@ CREATE TABLE subscription (
                               CONSTRAINT fk_subscription_album FOREIGN KEY (album_id) REFERENCES album (id)
 );
 
+CREATE TABLE participant (
+                             id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                             member_id BIGINT NOT NULL,
+                             album_id BIGINT NOT NULL,
+                             role VARCHAR(255) NOT NULL CHECK (role IN ('HOST','STANDARD','LIMITED')),
+                             password VARCHAR(255),
+                             created_at DATETIME(6) NOT NULL,
+                             updated_at DATETIME(6) NOT NULL,
+                             CONSTRAINT fk_participant_member FOREIGN KEY (member_id) REFERENCES member (id),
+                             CONSTRAINT fk_participant_album FOREIGN KEY (album_id) REFERENCES album (id)
+);
+
+
+CREATE TABLE favorites (
+                           id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                           participant_id BIGINT NOT NULL,
+                           marked BOOLEAN NOT NULL,
+                           CONSTRAINT fk_favorites_participant FOREIGN KEY (participant_id) REFERENCES participant (id)
+);
+
 
 CREATE TABLE event (
                        id BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -78,6 +98,7 @@ CREATE TABLE image (
                        CONSTRAINT fk_image_album FOREIGN KEY (album_id) REFERENCES album (id)
 );
 
+
 CREATE TABLE event_image (
                              id BIGINT AUTO_INCREMENT PRIMARY KEY,
                              event_id BIGINT,
@@ -87,27 +108,6 @@ CREATE TABLE event_image (
                              CONSTRAINT fk_event_image_event FOREIGN KEY (event_id) REFERENCES event(id),
                              CONSTRAINT fk_event_image_image FOREIGN KEY (image_id) REFERENCES image(id),
                              CONSTRAINT uk_event_image_event_id_image_id UNIQUE (event_id, image_id)
-);
-
-CREATE TABLE favorites (
-                           id BIGINT AUTO_INCREMENT PRIMARY KEY,
-                           member_id BIGINT NOT NULL,
-                           album_id BIGINT NOT NULL,
-                           status VARCHAR(255) NOT NULL CHECK (status IN ('INCLUDED','EXCLUDED')),
-                           CONSTRAINT fk_favorites_member FOREIGN KEY (member_id) REFERENCES member (id),
-                           CONSTRAINT fk_favorites_album FOREIGN KEY (album_id) REFERENCES album (id)
-);
-
-
-CREATE TABLE participant (
-                             id BIGINT AUTO_INCREMENT PRIMARY KEY,
-                             member_id BIGINT NOT NULL,
-                             album_id BIGINT NOT NULL,
-                             role VARCHAR(255) NOT NULL CHECK (role IN ('HOST','STANDARD','LIMITED')),
-                             created_at DATETIME(6) NOT NULL,
-                             updated_at DATETIME(6) NOT NULL,
-                             CONSTRAINT fk_participant_member FOREIGN KEY (member_id) REFERENCES member (id),
-                             CONSTRAINT fk_participant_album FOREIGN KEY (album_id) REFERENCES album (id)
 );
 
 

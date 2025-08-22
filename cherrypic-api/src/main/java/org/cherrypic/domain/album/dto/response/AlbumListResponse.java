@@ -7,4 +7,5 @@ public record AlbumListResponse(
         @Schema(description = "앨범 ID", example = "1") Long albumId,
         @Schema(description = "앨범 이름", example = "연인 앨범") String title,
         @Schema(description = "앨범 커버 URL", example = "https://example.jpg") String coverUrl,
-        @Schema(description = "앨범 플랜", example = "BASIC") AlbumPlan plan) {}
+        @Schema(description = "앨범 플랜", example = "BASIC") AlbumPlan plan,
+        @Schema(description = "즐겨찾기 상태", example = "true") Boolean marked) {}

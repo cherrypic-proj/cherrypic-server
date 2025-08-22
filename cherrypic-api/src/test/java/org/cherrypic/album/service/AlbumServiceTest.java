@@ -26,6 +26,7 @@ import org.cherrypic.domain.album.repository.AlbumRepository;
 import org.cherrypic.domain.album.repository.InvitationCodeRepository;
 import org.cherrypic.domain.album.service.AlbumService;
 import org.cherrypic.domain.event.repository.EventRepository;
+import org.cherrypic.domain.favorites.repository.FavoritesRepository;
 import org.cherrypic.domain.member.repository.MemberRepository;
 import org.cherrypic.domain.participant.repository.ParticipantRepository;
 import org.cherrypic.domain.payment.exception.PaymentErrorCode;
@@ -33,6 +34,7 @@ import org.cherrypic.domain.payment.repository.PaymentRepository;
 import org.cherrypic.domain.subscription.repository.SubscriptionRepository;
 import org.cherrypic.event.entity.Event;
 import org.cherrypic.exception.CustomException;
+import org.cherrypic.favorites.entity.Favorites;
 import org.cherrypic.global.pagination.SliceResponse;
 import org.cherrypic.global.pagination.SortDirection;
 import org.cherrypic.global.util.MemberUtil;
@@ -64,6 +66,7 @@ class AlbumServiceTest extends IntegrationTest {
     @Autowired private PaymentRepository paymentRepository;
     @Autowired private SubscriptionRepository subscriptionRepository;
     @Autowired private ParticipantRepository participantRepository;
+    @Autowired private FavoritesRepository favoritesRepository;
     @Autowired private InvitationCodeRepository invitationCodeRepository;
     @Autowired private EventRepository eventRepository;
 
@@ -664,15 +667,25 @@ class AlbumServiceTest extends IntegrationTest {
                             "testNickname",
                             "testProfileImageUrl");
             memberRepository.save(member);
-
             given(memberUtil.getCurrentMember()).willReturn(member);
+
+            Album album1 = Album.createAlbum("testTitle1", "testCoverUrl1", AlbumPlan.BASIC, false);
+            Album album2 = Album.createAlbum("testTitle2", "testCoverUrl2", AlbumPlan.BASIC, false);
+            albumRepository.saveAll(List.of(album1, album2));
+
+            Participant participant1 =
+                    Participant.createParticipant(member, album1, ParticipantRole.HOST);
+            Participant participant2 =
+                    Participant.createParticipant(member, album2, ParticipantRole.HOST);
+            participantRepository.saveAll(List.of(participant1, participant2));
+
+            Favorites favorites1 = Favorites.createFavorites(participant1);
+            Favorites favorites2 = Favorites.createFavorites(participant2);
+            favoritesRepository.saveAll(List.of(favorites1, favorites2));
         }
 
         @Test
         void 정렬_조건이_ASC이면_albumId를_오름차순으로_조회한다() {
-            // given
-            createTestAlbums();
-
             // when
             SliceResponse<AlbumListResponse> response =
                     albumService.getParticipatingAlbums(null, 2, SortDirection.ASC);
@@ -688,9 +701,6 @@ class AlbumServiceTest extends IntegrationTest {
 
         @Test
         void 정렬_조건이_DESC이면_albumId를_내림차순으로_조회한다() {
-            // given
-            createTestAlbums();
-
             // when
             SliceResponse<AlbumListResponse> response =
                     albumService.getParticipatingAlbums(null, 2, SortDirection.DESC);
@@ -706,9 +716,6 @@ class AlbumServiceTest extends IntegrationTest {
 
         @Test
         void 마지막_페이지인_경우_isLast를_true로_반환한다() {
-            // given
-            createTestAlbums();
-
             // when
             SliceResponse<AlbumListResponse> response =
                     albumService.getParticipatingAlbums(null, 2, SortDirection.DESC);
@@ -721,9 +728,6 @@ class AlbumServiceTest extends IntegrationTest {
 
         @Test
         void 마지막_페이지가_아닌_경우_isLast를_false로_반환한다() {
-            // given
-            createTestAlbums();
-
             // when
             SliceResponse<AlbumListResponse> response =
                     albumService.getParticipatingAlbums(null, 1, SortDirection.DESC);
@@ -736,6 +740,9 @@ class AlbumServiceTest extends IntegrationTest {
 
         @Test
         void 앨범이_없는_경우_빈_리스트를_조회한다() {
+            // given
+            albumRepository.deleteAll();
+
             // when
             SliceResponse<AlbumListResponse> response =
                     albumService.getParticipatingAlbums(null, 10, SortDirection.DESC);
@@ -744,20 +751,6 @@ class AlbumServiceTest extends IntegrationTest {
             Assertions.assertAll(
                     () -> assertThat(response.content().size()).isZero(),
                     () -> assertThat(response.isLast()).isTrue());
-        }
-
-        private void createTestAlbums() {
-            Member member = memberRepository.findById(1L).get();
-
-            Album album1 = Album.createAlbum("testTitle1", "testCoverUrl1", AlbumPlan.BASIC, false);
-            Album album2 = Album.createAlbum("testTitle2", "testCoverUrl2", AlbumPlan.PRO, false);
-            albumRepository.saveAll(List.of(album1, album2));
-
-            Participant participant1 =
-                    Participant.createParticipant(member, album1, ParticipantRole.HOST);
-            Participant participant2 =
-                    Participant.createParticipant(member, album2, ParticipantRole.HOST);
-            participantRepository.saveAll(List.of(participant1, participant2));
         }
     }
 

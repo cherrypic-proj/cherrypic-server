@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.List;
 import lombok.*;
 import org.cherrypic.common.model.BaseTimeEntity;
-import org.cherrypic.favorites.entity.Favorites;
 import org.cherrypic.member.enums.MemberRole;
 import org.cherrypic.member.enums.MemberStatus;
 import org.cherrypic.participant.entity.Participant;
@@ -46,9 +45,6 @@ public class Member extends BaseTimeEntity {
 
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Participant> participants = new ArrayList<>();
-
-    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Favorites> favorites = new ArrayList<>();
 
     @Builder(access = AccessLevel.PRIVATE)
     private Member(
