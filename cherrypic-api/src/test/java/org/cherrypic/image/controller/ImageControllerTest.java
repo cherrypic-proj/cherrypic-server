@@ -1,7 +1,6 @@
 package org.cherrypic.image.controller;
 
-import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.willDoNothing;
+import static org.mockito.BDDMockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -20,6 +19,7 @@ import org.cherrypic.domain.image.dto.response.EventImageListResponse;
 import org.cherrypic.domain.image.dto.response.PresignedUrlResponse;
 import org.cherrypic.domain.image.dto.response.PresignedUrlsResponse;
 import org.cherrypic.domain.image.enums.ImageFileExtension;
+import org.cherrypic.domain.image.exception.ImageErrorCode;
 import org.cherrypic.domain.image.service.ImageService;
 import org.cherrypic.exception.CustomException;
 import org.cherrypic.global.pagination.SliceResponse;
@@ -653,6 +653,31 @@ class ImageControllerTest {
             perform.andExpect(status().isNoContent())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.status").value(HttpStatus.NO_CONTENT.value()));
+        }
+
+        @Test
+        void 내가_업로드하지_않은_이미지를_삭제할_경우_예외가_발생한다() throws Exception {
+            // given
+            UploadFailedImageDeleteRequest request =
+                    new UploadFailedImageDeleteRequest(List.of("testPresignedUrl"));
+            willThrow(new CustomException(ImageErrorCode.PRESIGNED_IMAGES_NOT_MINE))
+                    .given(imageService)
+                    .deleteUploadFailedImages(request);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            delete("/images")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.FORBIDDEN.value()))
+                    .andExpect(jsonPath("$.data.code").value("PRESIGNED_IMAGES_NOT_MINE"))
+                    .andExpect(
+                            jsonPath("$.data.message")
+                                    .value("본인이 업로드하지 않은 Presigned Image는 삭제할 수 없습니다."));
         }
 
         @Test
