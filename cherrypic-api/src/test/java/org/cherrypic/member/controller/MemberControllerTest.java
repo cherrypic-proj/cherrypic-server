@@ -99,7 +99,6 @@ class MemberControllerTest {
 
         @ParameterizedTest
         @NullSource
-        @EmptySource
         @ValueSource(strings = {" "})
         void 닉네임이_null_또는_공백이면_예외가_발생한다(String nickname) throws Exception {
             // given

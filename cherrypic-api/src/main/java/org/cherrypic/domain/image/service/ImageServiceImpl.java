@@ -18,12 +18,14 @@ import org.cherrypic.domain.event.exception.EventErrorCode;
 import org.cherrypic.domain.event.repository.EventRepository;
 import org.cherrypic.domain.image.dto.request.AlbumImageUploadRequest;
 import org.cherrypic.domain.image.dto.request.MemberProfileImageUploadRequest;
+import org.cherrypic.domain.image.dto.request.UploadFailedImageDeleteRequest;
 import org.cherrypic.domain.image.dto.response.AlbumImageListResponse;
 import org.cherrypic.domain.image.dto.response.EventImageListResponse;
 import org.cherrypic.domain.image.dto.response.PresignedUrlResponse;
 import org.cherrypic.domain.image.dto.response.PresignedUrlsResponse;
 import org.cherrypic.domain.image.enums.ImageFileExtension;
 import org.cherrypic.domain.image.enums.ImageType;
+import org.cherrypic.domain.image.exception.ImageErrorCode;
 import org.cherrypic.domain.image.repository.ImageRepository;
 import org.cherrypic.domain.participant.repository.ParticipantRepository;
 import org.cherrypic.event.entity.Event;
@@ -32,6 +34,7 @@ import org.cherrypic.global.pagination.SliceResponse;
 import org.cherrypic.global.pagination.SortDirection;
 import org.cherrypic.global.util.MemberUtil;
 import org.cherrypic.helper.SpringEnvironmentHelper;
+import org.cherrypic.image.entity.Image;
 import org.cherrypic.member.entity.Member;
 import org.cherrypic.participant.entity.Participant;
 import org.cherrypic.participant.enums.ParticipantRole;
@@ -120,6 +123,16 @@ public class ImageServiceImpl implements ImageService {
         return SliceResponse.from(result);
     }
 
+    @Override
+    public void deleteUploadFailedImages(UploadFailedImageDeleteRequest request) {
+        final Member currentMember = memberUtil.getCurrentMember();
+        final List<Image> images = imageRepository.findByUrlIn(request.presignedUrls());
+
+        validatePresignedImageOwnership(currentMember, images);
+
+        imageRepository.deleteAllInBatch(images);
+    }
+
     private String createPresignedUrl(
             ImageType imageType, Long targetId, ImageFileExtension imageFileExtension) {
         String imageKey = UUID.randomUUID().toString();
@@ -200,6 +213,17 @@ public class ImageServiceImpl implements ImageService {
 
         if (participant.getRole().equals(ParticipantRole.LIMITED)) {
             throw new CustomException(AlbumErrorCode.LIMITED_AUTHORITY);
+        }
+    }
+
+    private void validatePresignedImageOwnership(Member member, List<Image> images) {
+        Long memberId = member.getId();
+
+        boolean hasInvalidImage =
+                images.stream().anyMatch(image -> !image.getMemberId().equals(memberId));
+
+        if (hasInvalidImage) {
+            throw new CustomException(ImageErrorCode.PRESIGNED_IMAGES_NOT_MINE);
         }
     }
 

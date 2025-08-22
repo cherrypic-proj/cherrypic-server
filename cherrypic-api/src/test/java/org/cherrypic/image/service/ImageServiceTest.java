@@ -15,11 +15,13 @@ import org.cherrypic.domain.event.exception.EventErrorCode;
 import org.cherrypic.domain.event.repository.EventRepository;
 import org.cherrypic.domain.image.dto.request.AlbumImageUploadRequest;
 import org.cherrypic.domain.image.dto.request.MemberProfileImageUploadRequest;
+import org.cherrypic.domain.image.dto.request.UploadFailedImageDeleteRequest;
 import org.cherrypic.domain.image.dto.response.AlbumImageListResponse;
 import org.cherrypic.domain.image.dto.response.EventImageListResponse;
 import org.cherrypic.domain.image.dto.response.PresignedUrlResponse;
 import org.cherrypic.domain.image.dto.response.PresignedUrlsResponse;
 import org.cherrypic.domain.image.enums.ImageFileExtension;
+import org.cherrypic.domain.image.exception.ImageErrorCode;
 import org.cherrypic.domain.image.repository.EventImageRepository;
 import org.cherrypic.domain.image.repository.ImageRepository;
 import org.cherrypic.domain.image.service.ImageService;
@@ -407,6 +409,59 @@ class ImageServiceTest extends IntegrationTest {
             assertThatThrownBy(() -> imageService.getEventImages(999L, null, 2, SortDirection.ASC))
                     .isInstanceOf(CustomException.class)
                     .hasMessage(EventErrorCode.EVENT_NOT_FOUND.getMessage());
+        }
+    }
+
+    @Nested
+    class 업로드_실패한_이미지_삭제할_때 {
+
+        @BeforeEach
+        void setUp() {
+            Member member1 =
+                    Member.createMember(
+                            OauthInfo.createOauthInfo("testOauthId", "testOauthProvider"),
+                            "testNickname1",
+                            "testProfileImageUrl1");
+            Member member2 =
+                    Member.createMember(
+                            OauthInfo.createOauthInfo("testOauthId", "testOauthProvider"),
+                            "testNickname2",
+                            "testProfileImageUrl2");
+            memberRepository.saveAll(List.of(member1, member2));
+            given(memberUtil.getCurrentMember()).willReturn(member1);
+
+            Album album = Album.createAlbum("testTitle", "testCoverUrl", AlbumPlan.BASIC, false);
+            albumRepository.save(album);
+
+            Image image1 = Image.createImage(album, 1L, "testUrl1", LocalDateTime.now());
+            Image image2 = Image.createImage(album, 1L, "testUrl2", LocalDateTime.now());
+            Image image3 = Image.createImage(album, 2L, "testUrl3", LocalDateTime.now());
+            imageRepository.saveAll(List.of(image1, image2, image3));
+        }
+
+        @Test
+        void 유효한_요청이면_업로드_실패한_이미지를_삭제한다() {
+            // given
+            UploadFailedImageDeleteRequest request =
+                    new UploadFailedImageDeleteRequest(List.of("testUrl1", "testUrl2"));
+
+            // when
+            imageService.deleteUploadFailedImages(request);
+
+            // then
+            assertThat(imageRepository.findAllById(List.of(1L, 2L))).isEmpty();
+        }
+
+        @Test
+        void 내가_업로드하지_않은_이미지를_삭제할_경우_예외가_발생한다() {
+            // given
+            UploadFailedImageDeleteRequest request =
+                    new UploadFailedImageDeleteRequest(List.of("testUrl3"));
+
+            // when & then
+            assertThatThrownBy(() -> imageService.deleteUploadFailedImages(request))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(ImageErrorCode.PRESIGNED_IMAGES_NOT_MINE.getMessage());
         }
     }
 }
