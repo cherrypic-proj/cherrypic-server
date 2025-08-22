@@ -358,7 +358,8 @@ class ImageControllerTest {
         void MD5_해시를_비워두면_예외가_발생한다() throws Exception {
             // given
             AlbumImageUploadRequest request =
-                    new AlbumImageUploadRequest(List.of(), BigDecimal.ONE, List.of());
+                    new AlbumImageUploadRequest(
+                            List.of(ImageFileExtension.JPG), BigDecimal.ONE, List.of());
 
             // when & then
             ResultActions perform =
