@@ -28,7 +28,7 @@ public class ImageController {
 
     private final ImageService imageService;
 
-    @PostMapping("/members/me/upload-url")
+    @PostMapping("/members/profile-upload-url")
     @Operation(
             summary = "회원 프로필 이미지 Presigned URL 생성",
             description = "회원 프로필 이미지 업로드를 위한 Presigned URL을 생성합니다.")
@@ -37,7 +37,7 @@ public class ImageController {
         return imageService.createMemberProfileImageUploadUrl(request);
     }
 
-    @PostMapping("/albums/{albumId}/upload-url")
+    @PostMapping("/albums/{albumId}/cover-upload-url")
     @Operation(
             summary = "앨범 커버 이미지 Presigned URL 생성",
             description = "앨범 커버 이미지 업로드를 위한 Presigned URL을 생성합니다.")
@@ -46,7 +46,7 @@ public class ImageController {
         return imageService.createAlbumCoverImageUploadUrl(albumId, request);
     }
 
-    @PostMapping("/events/{eventId}/upload-url")
+    @PostMapping("/events/{eventId}/cover-upload-url")
     @Operation(
             summary = "이벤트 커버 이미지 Presigned URL 생성",
             description = "이벤트 커버 이미지 업로드를 위한 Presigned URL을 생성합니다.")
@@ -55,7 +55,7 @@ public class ImageController {
         return imageService.createEventCoverImageUploadUrl(eventId, request);
     }
 
-    @PostMapping("/albums/{albumId}/file-upload-urls")
+    @PostMapping("/albums/{albumId}/images")
     @Operation(
             summary = "앨범 이미지 업로드 Presigned URL들 생성",
             description = "앨범 이미지 업로드를 위한 Presigned URL들을 생성합니다.")

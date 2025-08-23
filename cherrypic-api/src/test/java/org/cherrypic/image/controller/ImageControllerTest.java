@@ -64,7 +64,7 @@ class ImageControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            post("/members/me/upload-url")
+                            post("/members/profile-upload-url")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -85,7 +85,7 @@ class ImageControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            post("/members/me/upload-url")
+                            post("/members/profile-upload-url")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -108,7 +108,7 @@ class ImageControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            post("/members/me/upload-url")
+                            post("/members/profile-upload-url")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -133,7 +133,7 @@ class ImageControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            post("/members/me/upload-url")
+                            post("/members/profile-upload-url")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -160,7 +160,7 @@ class ImageControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            post("/albums/1/upload-url")
+                            post("/albums/1/cover-upload-url")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -181,7 +181,7 @@ class ImageControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            post("/albums/999/upload-url")
+                            post("/albums/999/cover-upload-url")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -203,7 +203,7 @@ class ImageControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            post("/albums/1/upload-url")
+                            post("/albums/1/cover-upload-url")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -225,7 +225,7 @@ class ImageControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            post("/albums/1/upload-url")
+                            post("/albums/1/cover-upload-url")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -247,7 +247,7 @@ class ImageControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            post("/albums/1/upload-url")
+                            post("/albums/1/cover-upload-url")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -270,7 +270,7 @@ class ImageControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            post("/albums/1/upload-url")
+                            post("/albums/1/cover-upload-url")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -295,7 +295,7 @@ class ImageControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            post("/albums/1/upload-url")
+                            post("/albums/1/cover-upload-url")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -322,7 +322,7 @@ class ImageControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            post("/events/1/upload-url")
+                            post("/events/1/cover-upload-url")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -343,7 +343,7 @@ class ImageControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            post("/events/999/upload-url")
+                            post("/events/999/cover-upload-url")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -365,7 +365,7 @@ class ImageControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            post("/events/1/upload-url")
+                            post("/events/1/cover-upload-url")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -387,7 +387,7 @@ class ImageControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            post("/events/1/upload-url")
+                            post("/events/1/cover-upload-url")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -409,7 +409,7 @@ class ImageControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            post("/events/1/upload-url")
+                            post("/events/1/cover-upload-url")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -432,7 +432,7 @@ class ImageControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            post("/events/1/upload-url")
+                            post("/events/1/cover-upload-url")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -457,7 +457,7 @@ class ImageControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            post("/events/1/upload-url")
+                            post("/events/1/cover-upload-url")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -496,7 +496,7 @@ class ImageControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            post("/albums/1/file-upload-urls")
+                            post("/albums/1/images")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -528,7 +528,7 @@ class ImageControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            post("/albums/1/file-upload-urls")
+                            post("/albums/1/images")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -561,7 +561,7 @@ class ImageControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            post("/albums/1/file-upload-urls")
+                            post("/albums/1/images")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -594,7 +594,7 @@ class ImageControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            post("/albums/1/file-upload-urls")
+                            post("/albums/1/images")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -627,7 +627,7 @@ class ImageControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            post("/albums/1/file-upload-urls")
+                            post("/albums/1/images")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -658,7 +658,7 @@ class ImageControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            post("/albums/1/file-upload-urls")
+                            post("/albums/1/images")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -687,7 +687,7 @@ class ImageControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            post("/albums/1/file-upload-urls")
+                            post("/albums/1/images")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -716,7 +716,7 @@ class ImageControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            post("/albums/1/file-upload-urls")
+                            post("/albums/1/images")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -743,7 +743,7 @@ class ImageControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            post("/albums/1/file-upload-urls")
+                            post("/albums/1/images")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -762,7 +762,7 @@ class ImageControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            post("/albums/1/file-upload-urls")
+                            post("/albums/1/images")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
