@@ -1,6 +1,8 @@
 package org.cherrypic.member.service;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 import org.cherrypic.IntegrationTest;
 import org.cherrypic.RedisCleaner;
@@ -9,6 +11,7 @@ import org.cherrypic.domain.member.dto.request.MemberProfileUpdateRequest;
 import org.cherrypic.domain.member.dto.response.MemberInfoResponse;
 import org.cherrypic.domain.member.repository.MemberRepository;
 import org.cherrypic.domain.member.service.MemberService;
+import org.cherrypic.global.util.S3Util;
 import org.cherrypic.global.util.TransactionUtil;
 import org.cherrypic.member.entity.Member;
 import org.cherrypic.member.entity.OauthInfo;
@@ -21,6 +24,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 class MemberServiceTest extends IntegrationTest {
 
@@ -30,6 +34,8 @@ class MemberServiceTest extends IntegrationTest {
 
     @Autowired private MemberService memberService;
     @Autowired private MemberRepository memberRepository;
+
+    @MockitoBean private S3Util s3Util;
 
     @BeforeEach
     void setUp() {
@@ -97,6 +103,19 @@ class MemberServiceTest extends IntegrationTest {
                     () ->
                             assertThat(member.getProfileImageUrl())
                                     .isEqualTo("updateProfileImageUrl"));
+        }
+
+        @Test
+        void 프로필_이미지_URL이_교체되는_경우_S3에서_삭제되는_로직이_호출된다() {
+            // given
+            MemberProfileUpdateRequest request =
+                    new MemberProfileUpdateRequest("updateNickname", "updateProfileImageUrl");
+
+            // when
+            memberService.updateProfile(request);
+
+            // then
+            verify(s3Util, times(1)).deleteFileFromS3("testProfileImageUrl");
         }
     }
 

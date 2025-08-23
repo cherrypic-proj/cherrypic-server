@@ -3,6 +3,8 @@ package org.cherrypic.album.service;
 import static org.assertj.core.api.Assertions.*;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 import java.math.BigDecimal;
 import java.time.Duration;
@@ -38,6 +40,7 @@ import org.cherrypic.favorites.entity.Favorites;
 import org.cherrypic.global.pagination.SliceResponse;
 import org.cherrypic.global.pagination.SortDirection;
 import org.cherrypic.global.util.MemberUtil;
+import org.cherrypic.global.util.S3Util;
 import org.cherrypic.global.util.TransactionUtil;
 import org.cherrypic.member.entity.Member;
 import org.cherrypic.member.entity.OauthInfo;
@@ -71,6 +74,7 @@ class AlbumServiceTest extends IntegrationTest {
     @Autowired private EventRepository eventRepository;
 
     @MockitoBean private MemberUtil memberUtil;
+    @MockitoBean private S3Util s3Util;
 
     @Nested
     class 앨범을_생성할_때 {
@@ -391,6 +395,19 @@ class AlbumServiceTest extends IntegrationTest {
                                             "testUpdatedTitle",
                                             "testUpdatedCoverUrl",
                                             AlbumPlan.BASIC));
+        }
+
+        @Test
+        void 앨범_커버_URL이_교체되는_경우_S3에서_삭제되는_로직이_호출된다() {
+            // given
+            AlbumUpdateRequest request =
+                    new AlbumUpdateRequest("testUpdatedTitle", "testUpdatedCoverUrl");
+
+            // when
+            albumService.updateAlbum(1L, request);
+
+            // then
+            verify(s3Util, times(1)).deleteFileFromS3("testURL1");
         }
 
         @Test
