@@ -671,31 +671,49 @@ class AlbumServiceTest extends IntegrationTest {
 
             Album album1 = Album.createAlbum("testTitle1", "testCoverUrl1", AlbumPlan.BASIC, false);
             Album album2 = Album.createAlbum("testTitle2", "testCoverUrl2", AlbumPlan.BASIC, false);
-            albumRepository.saveAll(List.of(album1, album2));
+            Album album3 = Album.createAlbum("testTitle3", "testCoverUrl3", AlbumPlan.PRO, false);
+            albumRepository.saveAll(List.of(album1, album2, album3));
 
             Participant participant1 =
                     Participant.createParticipant(member, album1, ParticipantRole.HOST);
             Participant participant2 =
                     Participant.createParticipant(member, album2, ParticipantRole.HOST);
-            participantRepository.saveAll(List.of(participant1, participant2));
+            Participant participant3 =
+                    Participant.createParticipant(member, album3, ParticipantRole.HOST);
+            participantRepository.saveAll(List.of(participant1, participant2, participant3));
 
             Favorites favorites1 = Favorites.createFavorites(participant1);
             Favorites favorites2 = Favorites.createFavorites(participant2);
-            favoritesRepository.saveAll(List.of(favorites1, favorites2));
+            Favorites favorites3 = Favorites.createFavorites(participant3);
+            favoritesRepository.saveAll(List.of(favorites1, favorites2, favorites3));
+        }
+
+        @Test
+        void PRO_플랜으로_필터링하면_PRO_앨범만_조회한다() {
+            // given
+            SliceResponse<AlbumListResponse> response =
+                    albumService.getParticipatingAlbumsByPlan(
+                            AlbumPlan.PRO, null, 1, SortDirection.DESC);
+
+            // when & then
+            Assertions.assertAll(
+                    () -> assertThat(response.content().get(0).albumId()).isEqualTo(3),
+                    () -> assertThat(response.content().get(0).plan()).isEqualTo(AlbumPlan.PRO),
+                    () -> assertThat(response.isLast()).isTrue());
         }
 
         @Test
         void 정렬_조건이_ASC이면_albumId를_오름차순으로_조회한다() {
             // when
             SliceResponse<AlbumListResponse> response =
-                    albumService.getParticipatingAlbums(null, 2, SortDirection.ASC);
+                    albumService.getParticipatingAlbumsByPlan(null, null, 3, SortDirection.ASC);
 
             // then
             Assertions.assertAll(
                     () ->
                             assertThat(response.content())
                                     .extracting("albumId")
-                                    .containsExactly(1L, 2L),
+                                    .containsExactly(1L, 2L, 3L),
                     () -> assertThat(response.isLast()).isTrue());
         }
 
@@ -703,14 +721,14 @@ class AlbumServiceTest extends IntegrationTest {
         void 정렬_조건이_DESC이면_albumId를_내림차순으로_조회한다() {
             // when
             SliceResponse<AlbumListResponse> response =
-                    albumService.getParticipatingAlbums(null, 2, SortDirection.DESC);
+                    albumService.getParticipatingAlbumsByPlan(null, null, 3, SortDirection.DESC);
 
             // then
             Assertions.assertAll(
                     () ->
                             assertThat(response.content())
                                     .extracting("albumId")
-                                    .containsExactly(2L, 1L),
+                                    .containsExactly(3L, 2L, 1L),
                     () -> assertThat(response.isLast()).isTrue());
         }
 
@@ -718,11 +736,11 @@ class AlbumServiceTest extends IntegrationTest {
         void 마지막_페이지인_경우_isLast를_true로_반환한다() {
             // when
             SliceResponse<AlbumListResponse> response =
-                    albumService.getParticipatingAlbums(null, 2, SortDirection.DESC);
+                    albumService.getParticipatingAlbumsByPlan(null, null, 3, SortDirection.DESC);
 
             // then
             Assertions.assertAll(
-                    () -> assertThat(response.content().size()).isEqualTo(2),
+                    () -> assertThat(response.content().size()).isEqualTo(3),
                     () -> assertThat(response.isLast()).isTrue());
         }
 
@@ -730,7 +748,7 @@ class AlbumServiceTest extends IntegrationTest {
         void 마지막_페이지가_아닌_경우_isLast를_false로_반환한다() {
             // when
             SliceResponse<AlbumListResponse> response =
-                    albumService.getParticipatingAlbums(null, 1, SortDirection.DESC);
+                    albumService.getParticipatingAlbumsByPlan(null, null, 1, SortDirection.DESC);
 
             // then
             Assertions.assertAll(
@@ -745,7 +763,7 @@ class AlbumServiceTest extends IntegrationTest {
 
             // when
             SliceResponse<AlbumListResponse> response =
-                    albumService.getParticipatingAlbums(null, 10, SortDirection.DESC);
+                    albumService.getParticipatingAlbumsByPlan(null, null, 10, SortDirection.DESC);
 
             // when & then
             Assertions.assertAll(
