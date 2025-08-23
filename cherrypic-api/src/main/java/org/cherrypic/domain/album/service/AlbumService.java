@@ -20,8 +20,8 @@ public interface AlbumService {
 
     AlbumInfoResponse getAlbum(Long albumId);
 
-    SliceResponse<AlbumListResponse> getParticipatingAlbumsByPlan(
-            AlbumPlan plan, Long lastAlbumId, int size, SortDirection direction);
+    SliceResponse<AlbumListResponse> getParticipatingAlbumsByCondition(
+            AlbumPlan plan, String keyword, Long lastAlbumId, int size, SortDirection direction);
 
     void deleteAlbum(Long albumId);
 }

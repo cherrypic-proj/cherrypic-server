@@ -186,13 +186,13 @@ public class AlbumServiceImpl implements AlbumService {
 
     @Override
     @Transactional(readOnly = true)
-    public SliceResponse<AlbumListResponse> getParticipatingAlbumsByPlan(
-            AlbumPlan plan, Long lastAlbumId, int size, SortDirection direction) {
+    public SliceResponse<AlbumListResponse> getParticipatingAlbumsByCondition(
+            AlbumPlan plan, String keyword, Long lastAlbumId, int size, SortDirection direction) {
         final Member currentMember = memberUtil.getCurrentMember();
 
         Slice<AlbumListResponse> results =
-                albumRepository.findAllByMemberIdAndPlan(
-                        currentMember.getId(), plan, lastAlbumId, size, direction);
+                albumRepository.findAllByMemberIdAndPlanAndKeyword(
+                        currentMember.getId(), plan, keyword, lastAlbumId, size, direction);
 
         return SliceResponse.from(results);
     }

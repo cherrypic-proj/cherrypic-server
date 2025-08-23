@@ -23,8 +23,13 @@ public class AlbumRepositoryImpl implements AlbumRepositoryCustom {
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public Slice<AlbumListResponse> findAllByMemberIdAndPlan(
-            Long memberId, AlbumPlan plan, Long lastAlbumId, int size, SortDirection direction) {
+    public Slice<AlbumListResponse> findAllByMemberIdAndPlanAndKeyword(
+            Long memberId,
+            AlbumPlan plan,
+            String keyword,
+            Long lastAlbumId,
+            int size,
+            SortDirection direction) {
         List<AlbumListResponse> results =
                 queryFactory
                         .select(
@@ -40,6 +45,7 @@ public class AlbumRepositoryImpl implements AlbumRepositoryCustom {
                         .where(
                                 participant.member.id.eq(memberId),
                                 plan != null ? album.plan.eq(plan) : null,
+                                keyword != null ? album.title.containsIgnoreCase(keyword) : null,
                                 lastAlbumIdCondition(lastAlbumId, direction))
                         .orderBy(direction == SortDirection.DESC ? album.id.desc() : album.id.asc())
                         .limit(size + 1)
