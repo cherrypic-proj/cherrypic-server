@@ -142,13 +142,13 @@ public class AlbumServiceImpl implements AlbumService {
 
     @Override
     @Transactional(readOnly = true)
-    public SliceResponse<AlbumListResponse> getParticipatingAlbums(
-            Long lastAlbumId, int size, SortDirection direction) {
+    public SliceResponse<AlbumListResponse> getParticipatingAlbumsByPlan(
+            AlbumPlan plan, Long lastAlbumId, int size, SortDirection direction) {
         final Member currentMember = memberUtil.getCurrentMember();
 
         Slice<AlbumListResponse> results =
-                albumRepository.findAllByMemberId(
-                        currentMember.getId(), lastAlbumId, size, direction);
+                albumRepository.findAllByMemberIdAndPlan(
+                        currentMember.getId(), plan, lastAlbumId, size, direction);
 
         return SliceResponse.from(results);
     }

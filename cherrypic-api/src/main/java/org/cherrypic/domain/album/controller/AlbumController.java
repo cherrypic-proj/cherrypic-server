@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.cherrypic.album.enums.AlbumPlan;
 import org.cherrypic.domain.album.dto.request.AlbumCreateRequest;
 import org.cherrypic.domain.album.dto.request.AlbumUpdateRequest;
 import org.cherrypic.domain.album.dto.response.*;
@@ -65,8 +66,14 @@ public class AlbumController {
     }
 
     @GetMapping
-    @Operation(summary = "앨범 목록 조회", description = "회원이 참여 중인 앨범 목록을 커서 기반 페이징 방식으로 조회합니다.")
+    @Operation(
+            summary = "앨범 목록 조회",
+            description =
+                    "회원이 참여 중인 앨범 목록을 커서 기반 페이징 방식으로 조회합니다. 앨범 플랜을 지정하면 해당 플랜에 해당하는 앨범만 필터링하여 조회합니다.")
     public SliceResponse<AlbumListResponse> albumsGet(
+            @Parameter(description = "앨범 플랜 (BASIC, PRO, PREMIUM). 생략 시 전체 조회")
+                    @RequestParam(required = false)
+                    AlbumPlan plan,
             @Parameter(description = "이전 페이지의 마지막 앨범 ID (첫 요청 시 생략)")
                     @RequestParam(required = false)
                     Long lastAlbumId,
@@ -74,7 +81,7 @@ public class AlbumController {
             @Parameter(description = "정렬 방향 (ASC: 오래된순, DESC: 최신순)")
                     @RequestParam(defaultValue = "DESC")
                     SortDirection direction) {
-        return albumService.getParticipatingAlbums(lastAlbumId, size, direction);
+        return albumService.getParticipatingAlbumsByPlan(plan, lastAlbumId, size, direction);
     }
 
     @DeleteMapping("/{albumId}")
