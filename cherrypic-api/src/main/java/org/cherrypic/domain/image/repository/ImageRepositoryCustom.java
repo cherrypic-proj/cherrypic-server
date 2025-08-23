@@ -15,4 +15,6 @@ public interface ImageRepositoryCustom {
             Long albumId, Long lastImageId, int size, SortDirection direction);
 
     List<Image> findAllUnmappedToEvent(Long eventId, List<Long> imageIds);
+
+    void bulkInsertImages(List<Image> images);
 }

@@ -15,6 +15,7 @@ import org.cherrypic.image.entity.Image;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.SliceImpl;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -22,6 +23,7 @@ import org.springframework.stereotype.Repository;
 public class ImageRepositoryImpl implements ImageRepositoryCustom {
 
     private final JPAQueryFactory queryFactory;
+    private final JdbcTemplate jdbcTemplate;
 
     @Override
     public Slice<EventImageListResponse> findAllByEventId(
@@ -73,6 +75,24 @@ public class ImageRepositoryImpl implements ImageRepositoryCustom {
                 .on(eventImage.image.id.eq(image.id).and(eventImage.event.id.eq(eventId)))
                 .where(image.id.in(imageIds), eventImage.id.isNull())
                 .fetch();
+    }
+
+    @Override
+    public void bulkInsertImages(List<Image> images) {
+        String sql =
+                "INSERT INTO image (album_id, member_id, url, generated_at, created_at, updated_at) "
+                        + "VALUES (?, ?, ?, ?, NOW(), NOW())";
+
+        jdbcTemplate.batchUpdate(
+                sql,
+                images,
+                100,
+                (ps, image) -> {
+                    ps.setLong(1, image.getAlbum().getId());
+                    ps.setLong(2, image.getMemberId());
+                    ps.setString(3, image.getUrl());
+                    ps.setObject(4, image.getGeneratedAt());
+                });
     }
 
     private BooleanExpression lastImageIdCondition(Long imageId, SortDirection direction) {

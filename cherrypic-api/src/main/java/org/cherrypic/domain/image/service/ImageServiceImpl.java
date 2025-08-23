@@ -117,7 +117,7 @@ public class ImageServiceImpl implements ImageService {
                                 })
                         .toList();
 
-        imageRepository.saveAll(images);
+        imageRepository.bulkInsertImages(images);
 
         return PresignedUrlsResponse.of(presignedUrls);
     }
