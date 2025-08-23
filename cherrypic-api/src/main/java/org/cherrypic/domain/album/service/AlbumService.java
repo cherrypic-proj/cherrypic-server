@@ -16,12 +16,12 @@ public interface AlbumService {
 
     InvitationLinkCreateResponse createInvitationLink(Long albumId);
 
-    SliceResponse<AlbumListResponse> getParticipatingAlbumsByPlan(
-            AlbumPlan plan, Long lastAlbumId, int size, SortDirection direction);
-
     AlbumJoinResponse joinAlbum(Long albumId, String code);
 
     AlbumInfoResponse getAlbum(Long albumId);
+
+    SliceResponse<AlbumListResponse> getParticipatingAlbumsByPlan(
+            AlbumPlan plan, Long lastAlbumId, int size, SortDirection direction);
 
     void deleteAlbum(Long albumId);
 }

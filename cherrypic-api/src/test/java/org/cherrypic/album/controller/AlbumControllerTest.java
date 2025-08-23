@@ -705,6 +705,201 @@ class AlbumControllerTest {
     }
 
     @Nested
+    class 앨범_입장_요청_시 {
+
+        @Test
+        void 유효한_요청이면_참가자_정보를_반환한다() throws Exception {
+            // given
+            AlbumJoinResponse response =
+                    new AlbumJoinResponse(1L, 1L, 1L, ParticipantRole.STANDARD);
+
+            given(albumService.joinAlbum(1L, "testInvitationCode")).willReturn(response);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(post("/albums/1/join").param("code", "testInvitationCode"));
+
+            perform.andExpect(status().isCreated())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.CREATED.value()))
+                    .andExpect(jsonPath("$.data.participantId").value(1))
+                    .andExpect(jsonPath("$.data.albumId").value(1))
+                    .andExpect(jsonPath("$.data.memberId").value(1))
+                    .andExpect(jsonPath("$.data.role").value("STANDARD"));
+        }
+
+        @Test
+        void 앨범이_존재하지_않는_경우_예외가_발생한다() throws Exception {
+            // given
+            given(albumService.joinAlbum(999L, "testInvitationCode"))
+                    .willThrow(new CustomException(AlbumErrorCode.ALBUM_NOT_FOUND));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(post("/albums/999/join").param("code", "testInvitationCode"));
+
+            perform.andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.NOT_FOUND.value()))
+                    .andExpect(jsonPath("$.data.code").value("ALBUM_NOT_FOUND"))
+                    .andExpect(jsonPath("$.data.message").value("앨범이 존재하지 않습니다."));
+        }
+
+        @Test
+        void 앨범_초대_코드가_redis에_존재하지_않는_경우_예외가_발생한다() throws Exception {
+            // given
+            given(albumService.joinAlbum(1L, "noneExistingCode"))
+                    .willThrow(new CustomException(AlbumErrorCode.INVITATION_CODE_NOT_FOUND));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(post("/albums/1/join").param("code", "noneExistingCode"));
+
+            perform.andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.NOT_FOUND.value()))
+                    .andExpect(jsonPath("$.data.code").value("INVITATION_CODE_NOT_FOUND"))
+                    .andExpect(jsonPath("$.data.message").value("앨범의 초대 코드가 만료되었습니다."));
+        }
+
+        @Test
+        void 앨범_초대_코드가_redis에_저장된_코드와_일치하지_않는_경우_예외가_발생한다() throws Exception {
+            // given
+            given(albumService.joinAlbum(1L, "testInvitationCode"))
+                    .willThrow(new CustomException(AlbumErrorCode.ALREADY_PARTICIPATED));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(post("/albums/1/join").param("code", "testInvitationCode"));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("ALREADY_PARTICIPATED"))
+                    .andExpect(jsonPath("$.data.message").value("이미 참가한 앨범입니다."));
+        }
+
+        @Test
+        void 이미_입장한_앨범에_재입장_하려는_경우_예외가_발생한다() throws Exception {
+            // given
+            given(albumService.joinAlbum(1L, "expiredInvitationCode"))
+                    .willThrow(new CustomException(AlbumErrorCode.INVITATION_CODE_MISMATCH));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(post("/albums/1/join").param("code", "expiredInvitationCode"));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("INVITATION_CODE_MISMATCH"))
+                    .andExpect(jsonPath("$.data.message").value("초대 코드가 올바르지 않습니다."));
+        }
+
+        @Test
+        void 최대_참가자_수를_초과하면_예외가_발생한다() throws Exception {
+            // given
+            given(albumService.joinAlbum(1L, "testInvitationCode"))
+                    .willThrow(
+                            new CustomException(AlbumErrorCode.ALBUM_PARTICIPANT_LIMIT_EXCEEDED));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(post("/albums/1/join").param("code", "testInvitationCode"));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("ALBUM_PARTICIPANT_LIMIT_EXCEEDED"))
+                    .andExpect(jsonPath("$.data.message").value("앨범 인원 제한으로 더 이상 참가할 수 없습니다."));
+        }
+    }
+
+    @Nested
+    class 개별_앨범을_조회_요청_시 {
+
+        @Test
+        void 유효한_요청인_경우_앨범_정보를_반환한다() throws Exception {
+            // given
+            AlbumInfoResponse response =
+                    new AlbumInfoResponse(
+                            "testAlbum",
+                            "testUrl",
+                            AlbumPlan.BASIC,
+                            new BigDecimal("0.00"),
+                            new BigDecimal("3"),
+                            "testNickname",
+                            1);
+            given(albumService.getAlbum(1L)).willReturn(response);
+
+            // when & then
+            ResultActions perform = mockMvc.perform(get("/albums/1"));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
+                    .andExpect(jsonPath("$.data.title").value("testAlbum"))
+                    .andExpect(jsonPath("$.data.coverUrl").value("testUrl"))
+                    .andExpect(jsonPath("$.data.albumPlan").value("BASIC"))
+                    .andExpect(jsonPath("$.data.capacityUsed").value("0.00"))
+                    .andExpect(jsonPath("$.data.totalCapacity").value("3"))
+                    .andExpect(jsonPath("$.data.hostName").value("testNickname"))
+                    .andExpect(jsonPath("$.data.numOfParticipants").value(1));
+        }
+
+        @Test
+        void 앨범이_존재하지_않는_경우_예외가_발생한다() throws Exception {
+            // given
+            willThrow(new CustomException(AlbumErrorCode.ALBUM_NOT_FOUND))
+                    .given(albumService)
+                    .getAlbum(1L);
+
+            // when & then
+            ResultActions perform = mockMvc.perform(get("/albums/1"));
+
+            perform.andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.NOT_FOUND.value()))
+                    .andExpect(jsonPath("$.data.code").value("ALBUM_NOT_FOUND"))
+                    .andExpect(jsonPath("$.data.message").value("앨범이 존재하지 않습니다."));
+        }
+
+        @Test
+        void 앨범_참여자가_아닌_경우_에외가_발생한다() throws Exception {
+            // given
+            willThrow(new CustomException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT))
+                    .given(albumService)
+                    .getAlbum(1L);
+
+            // when & then
+            ResultActions perform = mockMvc.perform(get("/albums/1"));
+
+            perform.andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.FORBIDDEN.value()))
+                    .andExpect(jsonPath("$.data.code").value("NOT_ALBUM_PARTICIPANT"))
+                    .andExpect(jsonPath("$.data.message").value("앨범에 속하지 않은 사용자입니다."));
+        }
+
+        @Test
+        void 앨범에_방장이_없는_경우_에외가_발생한다() throws Exception {
+            // given
+            willThrow(new CustomException(AlbumErrorCode.ALBUM_HOST_NOT_FOUND))
+                    .given(albumService)
+                    .getAlbum(1L);
+
+            // when & then
+            ResultActions perform = mockMvc.perform(get("/albums/1"));
+
+            perform.andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.NOT_FOUND.value()))
+                    .andExpect(jsonPath("$.data.code").value("ALBUM_HOST_NOT_FOUND"))
+                    .andExpect(jsonPath("$.data.message").value("방장이 존재하지 않는 앨범입니다"));
+        }
+    }
+
+    @Nested
     class 앨범_목록_조회_요청_시 {
 
         @Test
@@ -880,117 +1075,6 @@ class AlbumControllerTest {
     }
 
     @Nested
-    class 앨범_입장_요청_시 {
-
-        @Test
-        void 유효한_요청이면_참가자_정보를_반환한다() throws Exception {
-            // given
-            AlbumJoinResponse response =
-                    new AlbumJoinResponse(1L, 1L, 1L, ParticipantRole.STANDARD);
-
-            given(albumService.joinAlbum(1L, "testInvitationCode")).willReturn(response);
-
-            // when & then
-            ResultActions perform =
-                    mockMvc.perform(post("/albums/1/join").param("code", "testInvitationCode"));
-
-            perform.andExpect(status().isCreated())
-                    .andExpect(jsonPath("$.success").value(true))
-                    .andExpect(jsonPath("$.status").value(HttpStatus.CREATED.value()))
-                    .andExpect(jsonPath("$.data.participantId").value(1))
-                    .andExpect(jsonPath("$.data.albumId").value(1))
-                    .andExpect(jsonPath("$.data.memberId").value(1))
-                    .andExpect(jsonPath("$.data.role").value("STANDARD"));
-        }
-
-        @Test
-        void 앨범이_존재하지_않는_경우_예외가_발생한다() throws Exception {
-            // given
-            given(albumService.joinAlbum(999L, "testInvitationCode"))
-                    .willThrow(new CustomException(AlbumErrorCode.ALBUM_NOT_FOUND));
-
-            // when & then
-            ResultActions perform =
-                    mockMvc.perform(post("/albums/999/join").param("code", "testInvitationCode"));
-
-            perform.andExpect(status().isNotFound())
-                    .andExpect(jsonPath("$.success").value(false))
-                    .andExpect(jsonPath("$.status").value(HttpStatus.NOT_FOUND.value()))
-                    .andExpect(jsonPath("$.data.code").value("ALBUM_NOT_FOUND"))
-                    .andExpect(jsonPath("$.data.message").value("앨범이 존재하지 않습니다."));
-        }
-
-        @Test
-        void 앨범_초대_코드가_redis에_존재하지_않는_경우_예외가_발생한다() throws Exception {
-            // given
-            given(albumService.joinAlbum(1L, "noneExistingCode"))
-                    .willThrow(new CustomException(AlbumErrorCode.INVITATION_CODE_NOT_FOUND));
-
-            // when & then
-            ResultActions perform =
-                    mockMvc.perform(post("/albums/1/join").param("code", "noneExistingCode"));
-
-            perform.andExpect(status().isNotFound())
-                    .andExpect(jsonPath("$.success").value(false))
-                    .andExpect(jsonPath("$.status").value(HttpStatus.NOT_FOUND.value()))
-                    .andExpect(jsonPath("$.data.code").value("INVITATION_CODE_NOT_FOUND"))
-                    .andExpect(jsonPath("$.data.message").value("앨범의 초대 코드가 만료되었습니다."));
-        }
-
-        @Test
-        void 앨범_초대_코드가_redis에_저장된_코드와_일치하지_않는_경우_예외가_발생한다() throws Exception {
-            // given
-            given(albumService.joinAlbum(1L, "testInvitationCode"))
-                    .willThrow(new CustomException(AlbumErrorCode.ALREADY_PARTICIPATED));
-
-            // when & then
-            ResultActions perform =
-                    mockMvc.perform(post("/albums/1/join").param("code", "testInvitationCode"));
-
-            perform.andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.success").value(false))
-                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
-                    .andExpect(jsonPath("$.data.code").value("ALREADY_PARTICIPATED"))
-                    .andExpect(jsonPath("$.data.message").value("이미 참가한 앨범입니다."));
-        }
-
-        @Test
-        void 이미_입장한_앨범에_재입장_하려는_경우_예외가_발생한다() throws Exception {
-            // given
-            given(albumService.joinAlbum(1L, "expiredInvitationCode"))
-                    .willThrow(new CustomException(AlbumErrorCode.INVITATION_CODE_MISMATCH));
-
-            // when & then
-            ResultActions perform =
-                    mockMvc.perform(post("/albums/1/join").param("code", "expiredInvitationCode"));
-
-            perform.andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.success").value(false))
-                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
-                    .andExpect(jsonPath("$.data.code").value("INVITATION_CODE_MISMATCH"))
-                    .andExpect(jsonPath("$.data.message").value("초대 코드가 올바르지 않습니다."));
-        }
-
-        @Test
-        void 최대_참가자_수를_초과하면_예외가_발생한다() throws Exception {
-            // given
-            given(albumService.joinAlbum(1L, "testInvitationCode"))
-                    .willThrow(
-                            new CustomException(AlbumErrorCode.ALBUM_PARTICIPANT_LIMIT_EXCEEDED));
-
-            // when & then
-            ResultActions perform =
-                    mockMvc.perform(post("/albums/1/join").param("code", "testInvitationCode"));
-
-            perform.andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.success").value(false))
-                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
-                    .andExpect(jsonPath("$.data.code").value("ALBUM_PARTICIPANT_LIMIT_EXCEEDED"))
-                    .andExpect(jsonPath("$.data.message").value("앨범 인원 제한으로 더 이상 참가할 수 없습니다."));
-        }
-    }
-
-    @Nested
     class 앨범_삭제_요청_시 {
 
         @Test
@@ -1089,90 +1173,6 @@ class AlbumControllerTest {
                     .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
                     .andExpect(jsonPath("$.data.code").value("SUBSCRIPTION_ACTIVE"))
                     .andExpect(jsonPath("$.data.message").value("구독 중인 앨범은 삭제할 수 없습니다."));
-        }
-    }
-
-    @Nested
-    class 개별_앨범을_조회할_때 {
-
-        @Test
-        void 유효한_요청인_경우_앨범_정보를_반환한다() throws Exception {
-            // given
-            AlbumInfoResponse response =
-                    new AlbumInfoResponse(
-                            "testAlbum",
-                            "testUrl",
-                            AlbumPlan.BASIC,
-                            new BigDecimal("0.00"),
-                            new BigDecimal("3"),
-                            "testNickname",
-                            1);
-            given(albumService.getAlbum(1L)).willReturn(response);
-
-            // when & then
-            ResultActions perform = mockMvc.perform(get("/albums/1"));
-
-            perform.andExpect(status().isOk())
-                    .andExpect(jsonPath("$.success").value(true))
-                    .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
-                    .andExpect(jsonPath("$.data.title").value("testAlbum"))
-                    .andExpect(jsonPath("$.data.coverUrl").value("testUrl"))
-                    .andExpect(jsonPath("$.data.albumPlan").value("BASIC"))
-                    .andExpect(jsonPath("$.data.capacityUsed").value("0.00"))
-                    .andExpect(jsonPath("$.data.totalCapacity").value("3"))
-                    .andExpect(jsonPath("$.data.hostName").value("testNickname"))
-                    .andExpect(jsonPath("$.data.numOfParticipants").value(1));
-        }
-
-        @Test
-        void 앨범이_존재하지_않는_경우_예외가_발생한다() throws Exception {
-            // given
-            willThrow(new CustomException(AlbumErrorCode.ALBUM_NOT_FOUND))
-                    .given(albumService)
-                    .getAlbum(1L);
-
-            // when & then
-            ResultActions perform = mockMvc.perform(get("/albums/1"));
-
-            perform.andExpect(status().isNotFound())
-                    .andExpect(jsonPath("$.success").value(false))
-                    .andExpect(jsonPath("$.status").value(HttpStatus.NOT_FOUND.value()))
-                    .andExpect(jsonPath("$.data.code").value("ALBUM_NOT_FOUND"))
-                    .andExpect(jsonPath("$.data.message").value("앨범이 존재하지 않습니다."));
-        }
-
-        @Test
-        void 앨범_참여자가_아닌_경우_에외가_발생한다() throws Exception {
-            // given
-            willThrow(new CustomException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT))
-                    .given(albumService)
-                    .getAlbum(1L);
-
-            // when & then
-            ResultActions perform = mockMvc.perform(get("/albums/1"));
-
-            perform.andExpect(status().isForbidden())
-                    .andExpect(jsonPath("$.success").value(false))
-                    .andExpect(jsonPath("$.status").value(HttpStatus.FORBIDDEN.value()))
-                    .andExpect(jsonPath("$.data.code").value("NOT_ALBUM_PARTICIPANT"))
-                    .andExpect(jsonPath("$.data.message").value("앨범에 속하지 않은 사용자입니다."));
-        }
-
-        @Test
-        void 앨범에_방장이_없는_경우_에외가_발생한다() throws Exception {
-            // given
-            willThrow(new CustomException(AlbumErrorCode.ALBUM_HOST_NOT_FOUND))
-                    .given(albumService)
-                    .getAlbum(1L);
-
-            // when & then
-            ResultActions perform = mockMvc.perform(get("/albums/1"));
-
-            perform.andExpect(status().isNotFound())
-                    .andExpect(jsonPath("$.success").value(false))
-                    .andExpect(jsonPath("$.status").value(HttpStatus.NOT_FOUND.value()))
-                    .andExpect(jsonPath("$.data.code").value("ALBUM_HOST_NOT_FOUND"))
-                    .andExpect(jsonPath("$.data.message").value("방장이 존재하지 않는 앨범입니다"));
         }
     }
 }

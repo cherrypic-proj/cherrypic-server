@@ -65,6 +65,12 @@ public class AlbumController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    @GetMapping("/{albumId}")
+    @Operation(summary = "개별 앨범 조회", description = "개별 앨범을 조회합니다.")
+    public AlbumInfoResponse albumGet(@PathVariable Long albumId) {
+        return albumService.getAlbum(albumId);
+    }
+
     @GetMapping
     @Operation(
             summary = "앨범 목록 조회",
@@ -89,11 +95,5 @@ public class AlbumController {
     public ResponseEntity<Void> albumDelete(@PathVariable Long albumId) {
         albumService.deleteAlbum(albumId);
         return ResponseEntity.noContent().build();
-    }
-
-    @GetMapping("/{albumId}")
-    @Operation(summary = "개별 앨범 조회", description = "개별 앨범을 조회합니다.")
-    public AlbumInfoResponse albumGet(@PathVariable Long albumId) {
-        return albumService.getAlbum(albumId);
     }
 }

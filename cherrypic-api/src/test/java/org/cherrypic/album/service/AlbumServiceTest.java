@@ -657,6 +657,195 @@ class AlbumServiceTest extends IntegrationTest {
     }
 
     @Nested
+    class 앨범에_입장할_때 {
+
+        @BeforeEach
+        void setUp() {
+            Member member =
+                    Member.createMember(
+                            OauthInfo.createOauthInfo("testOauthId", "testOauthProvider"),
+                            "testNickname",
+                            "testProfileImageUrl");
+            memberRepository.save(member);
+            given(memberUtil.getCurrentMember()).willReturn(member);
+
+            Album album1 = Album.createAlbum("testAlbum1", "testURL1", AlbumPlan.BASIC, false);
+            Album album2 = Album.createAlbum("testAlbum2", "testURL2", AlbumPlan.BASIC, false);
+            Album album3 = Album.createAlbum("testAlbum3", "testURL3", AlbumPlan.BASIC, false);
+            albumRepository.saveAll(List.of(album1, album2, album3));
+
+            Participant participant =
+                    Participant.createParticipant(member, album3, ParticipantRole.HOST);
+            participantRepository.save(participant);
+
+            InvitationCode invitationCode1 =
+                    InvitationCode.builder()
+                            .albumId(1L)
+                            .code("testInvitationCode1")
+                            .ttl(Duration.ofMinutes(30).getSeconds())
+                            .build();
+            InvitationCode invitationCode2 =
+                    InvitationCode.builder()
+                            .albumId(3L)
+                            .code("testInvitationCode2")
+                            .ttl(Duration.ofMinutes(30).getSeconds())
+                            .build();
+            invitationCodeRepository.saveAll(List.of(invitationCode1, invitationCode2));
+        }
+
+        @AfterEach
+        void cleanUp() {
+            redisCleaner.flushAll();
+        }
+
+        @Test
+        void 유효한_초대_코드면_앨범_참가자가_생성된다() {
+            // when
+            albumService.joinAlbum(1L, "testInvitationCode1");
+
+            // then
+            Participant participant =
+                    participantRepository.findByMemberIdAndAlbumId(1L, 1L).orElseThrow();
+
+            Assertions.assertAll(
+                    () -> assertThat(participant).isNotNull(),
+                    () -> assertThat(participant.getRole()).isEqualTo(ParticipantRole.STANDARD));
+        }
+
+        @Test
+        void 앨범이_존재하지_않는_경우_예외가_발생한다() {
+            // when & then
+            assertThatThrownBy(() -> albumService.joinAlbum(999L, "testInvitationCode1"))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(AlbumErrorCode.ALBUM_NOT_FOUND.getMessage());
+        }
+
+        @Test
+        void 앨범_초대_코드가_redis에_존재하지_않는_경우_예외가_발생한다() {
+            // when & then
+            assertThatThrownBy(() -> albumService.joinAlbum(2L, "NoneExistingCode"))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(AlbumErrorCode.INVITATION_CODE_NOT_FOUND.getMessage());
+        }
+
+        @Test
+        void 앨범_초대_코드가_redis에_저장된_코드와_일치하지_않는_경우_예외가_발생한다() {
+            // when & then
+            assertThatThrownBy(() -> albumService.joinAlbum(1L, "expiredInvitationCode"))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(AlbumErrorCode.INVITATION_CODE_MISMATCH.getMessage());
+        }
+
+        @Test
+        void 이미_입장한_앨범에_재입장_하려는_경우_예외가_발생한다() {
+            // when & then
+            assertThatThrownBy(() -> albumService.joinAlbum(3L, "testInvitationCode2"))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(AlbumErrorCode.ALREADY_PARTICIPATED.getMessage());
+        }
+
+        @Test
+        void 최대_참가자_수를_초과하면_예외가_발생한다() {
+            // given
+            Album album = albumRepository.findById(1L).orElseThrow();
+            int maxParticipants = album.getPlan().getMaxParticipants();
+
+            for (int i = 0; i < maxParticipants; i++) {
+                Member member =
+                        Member.createMember(
+                                OauthInfo.createOauthInfo("testOauthId", "testOauthProvider"),
+                                "testNickname",
+                                "testProfileImageUrl");
+                memberRepository.save(member);
+
+                Participant participant =
+                        Participant.createParticipant(member, album, ParticipantRole.STANDARD);
+                participantRepository.save(participant);
+            }
+
+            // when & then
+            assertThatThrownBy(() -> albumService.joinAlbum(album.getId(), "testInvitationCode1"))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(AlbumErrorCode.ALBUM_PARTICIPANT_LIMIT_EXCEEDED.getMessage());
+        }
+    }
+
+    @Nested
+    class 개별_앨범을_조회할_때 {
+
+        @BeforeEach
+        void setUp() {
+            Member member =
+                    Member.createMember(
+                            OauthInfo.createOauthInfo("testOauthId", "testOauthProvider"),
+                            "testNickname",
+                            "testProfileImageUrl");
+            memberRepository.save(member);
+            given(memberUtil.getCurrentMember()).willReturn(member);
+
+            Album album1 = Album.createAlbum("testAlbum1", "testURL1", AlbumPlan.BASIC, false);
+            Album album2 = Album.createAlbum("testAlbum2", "testURL2", AlbumPlan.BASIC, false);
+            Album album3 = Album.createAlbum("testAlbum3", "testURL3", AlbumPlan.BASIC, false);
+            albumRepository.saveAll(List.of(album1, album2, album3));
+
+            Participant participant1 =
+                    Participant.createParticipant(member, album1, ParticipantRole.HOST);
+            Participant participant2 =
+                    Participant.createParticipant(member, album2, ParticipantRole.STANDARD);
+            participantRepository.saveAll(List.of(participant1, participant2));
+        }
+
+        @Test
+        void 유효한_요청인_경우_앨범_정보를_반환한다() {
+            // when
+            AlbumInfoResponse response = albumService.getAlbum(1L);
+
+            // then
+            assertThat(response)
+                    .extracting(
+                            "title",
+                            "coverUrl",
+                            "albumPlan",
+                            "capacityUsed",
+                            "totalCapacity",
+                            "hostName",
+                            "numOfParticipants")
+                    .containsExactly(
+                            "testAlbum1",
+                            "testURL1",
+                            AlbumPlan.BASIC,
+                            new BigDecimal("0.00"),
+                            new BigDecimal("3"),
+                            "testNickname",
+                            1);
+        }
+
+        @Test
+        void 앨범이_존재하지_않는_경우_예외가_발생한다() {
+            // when & then
+            assertThatThrownBy(() -> albumService.getAlbum(999L))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(AlbumErrorCode.ALBUM_NOT_FOUND.getMessage());
+        }
+
+        @Test
+        void 앨범_참여자가_아닌_경우_에외가_발생한다() {
+            // when & then
+            assertThatThrownBy(() -> albumService.getAlbum(3L))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(AlbumErrorCode.NOT_ALBUM_PARTICIPANT.getMessage());
+        }
+
+        @Test
+        void 앨범에_방장이_없는_경우_에외가_발생한다() {
+            // when & then
+            assertThatThrownBy(() -> albumService.getAlbum(2L))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(AlbumErrorCode.ALBUM_HOST_NOT_FOUND.getMessage());
+        }
+    }
+
+    @Nested
     class 앨범_목록을_조회할_때 {
 
         @BeforeEach
@@ -773,120 +962,6 @@ class AlbumServiceTest extends IntegrationTest {
     }
 
     @Nested
-    class 앨범에_입장할_때 {
-
-        @BeforeEach
-        void setUp() {
-            Member member =
-                    Member.createMember(
-                            OauthInfo.createOauthInfo("testOauthId", "testOauthProvider"),
-                            "testNickname",
-                            "testProfileImageUrl");
-            memberRepository.save(member);
-            given(memberUtil.getCurrentMember()).willReturn(member);
-
-            Album album1 = Album.createAlbum("testAlbum1", "testURL1", AlbumPlan.BASIC, false);
-            Album album2 = Album.createAlbum("testAlbum2", "testURL2", AlbumPlan.BASIC, false);
-            Album album3 = Album.createAlbum("testAlbum3", "testURL3", AlbumPlan.BASIC, false);
-            albumRepository.saveAll(List.of(album1, album2, album3));
-
-            Participant participant =
-                    Participant.createParticipant(member, album3, ParticipantRole.HOST);
-            participantRepository.save(participant);
-
-            InvitationCode invitationCode1 =
-                    InvitationCode.builder()
-                            .albumId(1L)
-                            .code("testInvitationCode1")
-                            .ttl(Duration.ofMinutes(30).getSeconds())
-                            .build();
-            InvitationCode invitationCode2 =
-                    InvitationCode.builder()
-                            .albumId(3L)
-                            .code("testInvitationCode2")
-                            .ttl(Duration.ofMinutes(30).getSeconds())
-                            .build();
-            invitationCodeRepository.saveAll(List.of(invitationCode1, invitationCode2));
-        }
-
-        @AfterEach
-        void cleanUp() {
-            redisCleaner.flushAll();
-        }
-
-        @Test
-        void 유효한_초대_코드면_앨범_참가자가_생성된다() {
-            // when
-            albumService.joinAlbum(1L, "testInvitationCode1");
-
-            // then
-            Participant participant =
-                    participantRepository.findByMemberIdAndAlbumId(1L, 1L).orElseThrow();
-
-            Assertions.assertAll(
-                    () -> assertThat(participant).isNotNull(),
-                    () -> assertThat(participant.getRole()).isEqualTo(ParticipantRole.STANDARD));
-        }
-
-        @Test
-        void 앨범이_존재하지_않는_경우_예외가_발생한다() {
-            // when & then
-            assertThatThrownBy(() -> albumService.joinAlbum(999L, "testInvitationCode1"))
-                    .isInstanceOf(CustomException.class)
-                    .hasMessage(AlbumErrorCode.ALBUM_NOT_FOUND.getMessage());
-        }
-
-        @Test
-        void 앨범_초대_코드가_redis에_존재하지_않는_경우_예외가_발생한다() {
-            // when & then
-            assertThatThrownBy(() -> albumService.joinAlbum(2L, "NoneExistingCode"))
-                    .isInstanceOf(CustomException.class)
-                    .hasMessage(AlbumErrorCode.INVITATION_CODE_NOT_FOUND.getMessage());
-        }
-
-        @Test
-        void 앨범_초대_코드가_redis에_저장된_코드와_일치하지_않는_경우_예외가_발생한다() {
-            // when & then
-            assertThatThrownBy(() -> albumService.joinAlbum(1L, "expiredInvitationCode"))
-                    .isInstanceOf(CustomException.class)
-                    .hasMessage(AlbumErrorCode.INVITATION_CODE_MISMATCH.getMessage());
-        }
-
-        @Test
-        void 이미_입장한_앨범에_재입장_하려는_경우_예외가_발생한다() {
-            // when & then
-            assertThatThrownBy(() -> albumService.joinAlbum(3L, "testInvitationCode2"))
-                    .isInstanceOf(CustomException.class)
-                    .hasMessage(AlbumErrorCode.ALREADY_PARTICIPATED.getMessage());
-        }
-
-        @Test
-        void 최대_참가자_수를_초과하면_예외가_발생한다() {
-            // given
-            Album album = albumRepository.findById(1L).orElseThrow();
-            int maxParticipants = album.getPlan().getMaxParticipants();
-
-            for (int i = 0; i < maxParticipants; i++) {
-                Member member =
-                        Member.createMember(
-                                OauthInfo.createOauthInfo("testOauthId", "testOauthProvider"),
-                                "testNickname",
-                                "testProfileImageUrl");
-                memberRepository.save(member);
-
-                Participant participant =
-                        Participant.createParticipant(member, album, ParticipantRole.STANDARD);
-                participantRepository.save(participant);
-            }
-
-            // when & then
-            assertThatThrownBy(() -> albumService.joinAlbum(album.getId(), "testInvitationCode1"))
-                    .isInstanceOf(CustomException.class)
-                    .hasMessage(AlbumErrorCode.ALBUM_PARTICIPANT_LIMIT_EXCEEDED.getMessage());
-        }
-    }
-
-    @Nested
     class 앨범을_삭제할_때 {
 
         @BeforeEach
@@ -984,81 +1059,6 @@ class AlbumServiceTest extends IntegrationTest {
             assertThatThrownBy(() -> albumService.deleteAlbum(5L))
                     .isInstanceOf(CustomException.class)
                     .hasMessage(AlbumErrorCode.SUBSCRIPTION_ACTIVE.getMessage());
-        }
-    }
-
-    @Nested
-    class 개별_앨범을_조회할_때 {
-
-        @BeforeEach
-        void setUp() {
-            Member member =
-                    Member.createMember(
-                            OauthInfo.createOauthInfo("testOauthId", "testOauthProvider"),
-                            "testNickname",
-                            "testProfileImageUrl");
-            memberRepository.save(member);
-            given(memberUtil.getCurrentMember()).willReturn(member);
-
-            Album album1 = Album.createAlbum("testAlbum1", "testURL1", AlbumPlan.BASIC, false);
-            Album album2 = Album.createAlbum("testAlbum2", "testURL2", AlbumPlan.BASIC, false);
-            Album album3 = Album.createAlbum("testAlbum3", "testURL3", AlbumPlan.BASIC, false);
-            albumRepository.saveAll(List.of(album1, album2, album3));
-
-            Participant participant1 =
-                    Participant.createParticipant(member, album1, ParticipantRole.HOST);
-            Participant participant2 =
-                    Participant.createParticipant(member, album2, ParticipantRole.STANDARD);
-            participantRepository.saveAll(List.of(participant1, participant2));
-        }
-
-        @Test
-        void 유효한_요청인_경우_앨범_정보를_반환한다() {
-            // when
-            AlbumInfoResponse response = albumService.getAlbum(1L);
-
-            // then
-            assertThat(response)
-                    .extracting(
-                            "title",
-                            "coverUrl",
-                            "albumPlan",
-                            "capacityUsed",
-                            "totalCapacity",
-                            "hostName",
-                            "numOfParticipants")
-                    .containsExactly(
-                            "testAlbum1",
-                            "testURL1",
-                            AlbumPlan.BASIC,
-                            new BigDecimal("0.00"),
-                            new BigDecimal("3"),
-                            "testNickname",
-                            1);
-        }
-
-        @Test
-        void 앨범이_존재하지_않는_경우_예외가_발생한다() {
-            // when & then
-            assertThatThrownBy(() -> albumService.getAlbum(999L))
-                    .isInstanceOf(CustomException.class)
-                    .hasMessage(AlbumErrorCode.ALBUM_NOT_FOUND.getMessage());
-        }
-
-        @Test
-        void 앨범_참여자가_아닌_경우_에외가_발생한다() {
-            // when & then
-            assertThatThrownBy(() -> albumService.getAlbum(3L))
-                    .isInstanceOf(CustomException.class)
-                    .hasMessage(AlbumErrorCode.NOT_ALBUM_PARTICIPANT.getMessage());
-        }
-
-        @Test
-        void 앨범에_방장이_없는_경우_에외가_발생한다() {
-            // when & then
-            assertThatThrownBy(() -> albumService.getAlbum(2L))
-                    .isInstanceOf(CustomException.class)
-                    .hasMessage(AlbumErrorCode.ALBUM_HOST_NOT_FOUND.getMessage());
         }
     }
 }
