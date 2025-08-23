@@ -14,7 +14,7 @@ import org.cherrypic.domain.album.repository.AlbumRepository;
 import org.cherrypic.domain.event.exception.EventErrorCode;
 import org.cherrypic.domain.event.repository.EventRepository;
 import org.cherrypic.domain.image.dto.request.AlbumFileUploadRequest;
-import org.cherrypic.domain.image.dto.request.MemberProfileImageUploadRequest;
+import org.cherrypic.domain.image.dto.request.ImageUploadRequest;
 import org.cherrypic.domain.image.dto.request.UploadFailedFileDeleteRequest;
 import org.cherrypic.domain.image.dto.response.AlbumImageListResponse;
 import org.cherrypic.domain.image.dto.response.EventImageListResponse;
@@ -74,8 +74,7 @@ class ImageServiceTest extends IntegrationTest {
         @Test
         void 유효한_요청이면_회원_프로필_이미지용_Presigned_URL을_생성한다() {
             // given
-            MemberProfileImageUploadRequest request =
-                    new MemberProfileImageUploadRequest(FileExtension.JPEG, "testMd5Hash");
+            ImageUploadRequest request = new ImageUploadRequest(FileExtension.JPEG, "testMd5Hash");
 
             // when
             PresignedUrlResponse response = imageService.createMemberProfileImageUploadUrl(request);
@@ -90,8 +89,7 @@ class ImageServiceTest extends IntegrationTest {
         @Test
         void 동영상_확장자를_입력할_경우_예외가_발생한다() {
             // given
-            MemberProfileImageUploadRequest request =
-                    new MemberProfileImageUploadRequest(FileExtension.MKV, "testMd5Hash");
+            ImageUploadRequest request = new ImageUploadRequest(FileExtension.MKV, "testMd5Hash");
 
             // when & then
             assertThatThrownBy(() -> imageService.createMemberProfileImageUploadUrl(request))

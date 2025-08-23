@@ -1,7 +1,7 @@
 package org.cherrypic.domain.image.service;
 
 import org.cherrypic.domain.image.dto.request.AlbumFileUploadRequest;
-import org.cherrypic.domain.image.dto.request.MemberProfileImageUploadRequest;
+import org.cherrypic.domain.image.dto.request.ImageUploadRequest;
 import org.cherrypic.domain.image.dto.request.UploadFailedFileDeleteRequest;
 import org.cherrypic.domain.image.dto.response.AlbumImageListResponse;
 import org.cherrypic.domain.image.dto.response.EventImageListResponse;
@@ -11,7 +11,11 @@ import org.cherrypic.global.pagination.SliceResponse;
 import org.cherrypic.global.pagination.SortDirection;
 
 public interface ImageService {
-    PresignedUrlResponse createMemberProfileImageUploadUrl(MemberProfileImageUploadRequest request);
+    PresignedUrlResponse createMemberProfileImageUploadUrl(ImageUploadRequest request);
+
+    PresignedUrlResponse createAlbumCoverImageUploadUrl(Long albumId, ImageUploadRequest request);
+
+    PresignedUrlResponse createEventCoverImageUploadUrl(Long eventId, ImageUploadRequest request);
 
     PresignedUrlsResponse createAlbumFileUploadUrls(Long albumId, AlbumFileUploadRequest request);
 

@@ -13,7 +13,7 @@ import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.event.exception.EventErrorCode;
 import org.cherrypic.domain.image.controller.ImageController;
 import org.cherrypic.domain.image.dto.request.AlbumFileUploadRequest;
-import org.cherrypic.domain.image.dto.request.MemberProfileImageUploadRequest;
+import org.cherrypic.domain.image.dto.request.ImageUploadRequest;
 import org.cherrypic.domain.image.dto.request.UploadFailedFileDeleteRequest;
 import org.cherrypic.domain.image.dto.response.AlbumImageListResponse;
 import org.cherrypic.domain.image.dto.response.EventImageListResponse;
@@ -55,8 +55,7 @@ class ImageControllerTest {
         @Test
         void 유효한_요청이면_회원_프로필_이미지용_Presigned_URL을_반환한다() throws Exception {
             // given
-            MemberProfileImageUploadRequest request =
-                    new MemberProfileImageUploadRequest(FileExtension.JPEG, "testMd5Hash");
+            ImageUploadRequest request = new ImageUploadRequest(FileExtension.JPEG, "testMd5Hash");
 
             PresignedUrlResponse response = new PresignedUrlResponse("testPresignedUrl");
 
@@ -78,8 +77,7 @@ class ImageControllerTest {
         @Test
         void 동영상_확장자를_입력할_경우_예외가_발생한다() throws Exception {
             // given
-            MemberProfileImageUploadRequest request =
-                    new MemberProfileImageUploadRequest(FileExtension.MKV, "testMd5Hash");
+            ImageUploadRequest request = new ImageUploadRequest(FileExtension.MKV, "testMd5Hash");
 
             given(imageService.createMemberProfileImageUploadUrl(request))
                     .willThrow(new CustomException(ImageErrorCode.NOT_IMAGE_EXTENSION));
@@ -104,9 +102,8 @@ class ImageControllerTest {
         @ValueSource(strings = {"JPEG1", "PDF", "TXT"})
         void 이미지_파일_확장자가_null_또는_지원하지_않는_형식이면_예외가_발생한다(String extension) throws Exception {
             // given
-            MemberProfileImageUploadRequest request =
-                    new MemberProfileImageUploadRequest(
-                            FileExtension.from(extension), "testMd5Hash");
+            ImageUploadRequest request =
+                    new ImageUploadRequest(FileExtension.from(extension), "testMd5Hash");
 
             // when & then
             ResultActions perform =
@@ -131,8 +128,7 @@ class ImageControllerTest {
         @ValueSource(strings = {" "})
         void MD5_해시를_비워두면_예외가_발생한다(String md5Hash) throws Exception {
             // given
-            MemberProfileImageUploadRequest request =
-                    new MemberProfileImageUploadRequest(FileExtension.from("JPG"), md5Hash);
+            ImageUploadRequest request = new ImageUploadRequest(FileExtension.from("JPG"), md5Hash);
 
             // when & then
             ResultActions perform =
