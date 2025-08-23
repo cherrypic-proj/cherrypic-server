@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.cherrypic.domain.image.dto.request.AlbumFileUploadRequest;
+import org.cherrypic.domain.image.dto.request.AlbumImageDeleteRequest;
 import org.cherrypic.domain.image.dto.request.ImageUploadRequest;
 import org.cherrypic.domain.image.dto.request.UploadFailedFileDeleteRequest;
 import org.cherrypic.domain.image.dto.response.AlbumImageListResponse;
@@ -100,5 +101,13 @@ public class ImageController {
                     @RequestParam(defaultValue = "DESC")
                     SortDirection direction) {
         return imageService.getEventImages(eventId, lastEventImageId, size, direction);
+    }
+
+    @DeleteMapping("albums/{albumId}/images")
+    @Operation(summary = "앨범 이미지 삭제", description = "앨범의 이미지를 삭제합니다.")
+    public ResponseEntity<Void> albumImageDelete(
+            @PathVariable Long albumId, @Valid @RequestBody AlbumImageDeleteRequest request) {
+        imageService.deleteAlbumImage(albumId, request);
+        return ResponseEntity.noContent().build();
     }
 }

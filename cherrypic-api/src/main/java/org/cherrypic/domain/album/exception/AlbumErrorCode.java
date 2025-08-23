@@ -31,7 +31,9 @@ public enum AlbumErrorCode implements BaseErrorCode {
 
     PARTICIPANT_NOT_IN_ALBUM(400, "해당 참가자는 이 앨범에 속해 있지 않습니다."),
 
-    ALBUM_CAPACITY_EXCEEDED(400, "앨범의 용량을 초과했습니다.");
+    ALBUM_CAPACITY_EXCEEDED(400, "앨범의 용량을 초과했습니다."),
+    IMAGES_NOT_IN_ALBUM(400, "앨범에 속해 있지 않은 이미지가 포함되어 있습니다.");
+    ;
 
     private final int status;
     private final String message;
