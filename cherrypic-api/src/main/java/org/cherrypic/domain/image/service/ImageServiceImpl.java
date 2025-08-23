@@ -202,7 +202,7 @@ public class ImageServiceImpl implements ImageService {
 
         validateImagesInAlbum(images, album);
 
-        s3Util.deleteFilesFromS3(images.stream().map(Image::getUrl).toList());
+        s3Util.deleteFilesInBatchFromS3(images.stream().map(Image::getUrl).toList());
         imageRepository.deleteAllInBatch(images);
     }
 

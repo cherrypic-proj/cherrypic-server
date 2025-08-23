@@ -69,7 +69,7 @@ public class S3Util {
         return generatePresignedUrlRequest;
     }
 
-    public void deleteFilesFromS3(List<String> urls) {
+    public void deleteFilesInBatchFromS3(List<String> urls) {
         String bucket = s3Properties.bucket();
         List<DeleteObjectsRequest.KeyVersion> keys =
                 urls.stream()
@@ -81,15 +81,16 @@ public class S3Util {
         amazonS3.deleteObjects(request);
     }
 
-    /**
-     * ex)
-     * https://s3.ap-northeast-2.amazonaws.com/cherrypic-bucket-test/local/album-image/1/df09a055.jpeg?X-Amz-...
-     * 인코딩 직전까지 파씽
-     */
+    public void deleteFileFromS3(String url) {
+        String bucket = s3Properties.bucket();
+        String objectKey = extractObjectKey(url);
+        amazonS3.deleteObject(bucket, objectKey);
+    }
+
     private String extractObjectKey(String url) {
         String bucket = s3Properties.bucket();
         int idx = url.indexOf(bucket) + bucket.length() + 1;
-        return url.substring(idx, url.contains("?") ? url.indexOf("?") : url.length());
+        return url.substring(idx);
     }
 
     private Date getPresignedUrlExpiration() {

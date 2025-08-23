@@ -25,6 +25,7 @@ import org.cherrypic.exception.CustomException;
 import org.cherrypic.global.pagination.SliceResponse;
 import org.cherrypic.global.pagination.SortDirection;
 import org.cherrypic.global.util.MemberUtil;
+import org.cherrypic.global.util.S3Util;
 import org.cherrypic.image.entity.Image;
 import org.cherrypic.member.entity.Member;
 import org.cherrypic.participant.entity.Participant;
@@ -42,6 +43,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class EventServiceImpl implements EventService {
 
     private final MemberUtil memberUtil;
+    private final S3Util s3Util;
 
     private final AlbumRepository albumRepository;
     private final ParticipantRepository participantRepository;
@@ -68,6 +70,10 @@ public class EventServiceImpl implements EventService {
         final Event event = getEventById(eventId);
 
         validateParticipantAuthority(currentMember, event.getAlbum());
+
+        if (request.coverUrl() != null && event.getCoverUrl() != null) {
+            s3Util.deleteFileFromS3(event.getCoverUrl());
+        }
 
         event.updateEvent(request.title(), request.coverUrl());
 

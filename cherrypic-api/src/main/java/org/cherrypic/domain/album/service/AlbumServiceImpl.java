@@ -20,6 +20,7 @@ import org.cherrypic.exception.CustomException;
 import org.cherrypic.global.pagination.SliceResponse;
 import org.cherrypic.global.pagination.SortDirection;
 import org.cherrypic.global.util.MemberUtil;
+import org.cherrypic.global.util.S3Util;
 import org.cherrypic.member.entity.Member;
 import org.cherrypic.participant.entity.Participant;
 import org.cherrypic.participant.enums.ParticipantRole;
@@ -38,6 +39,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class AlbumServiceImpl implements AlbumService {
 
     private final MemberUtil memberUtil;
+    private final S3Util s3Util;
     private final InvitationLinkService invitationLinkService;
 
     private final AlbumRepository albumRepository;
@@ -94,6 +96,10 @@ public class AlbumServiceImpl implements AlbumService {
         final Album album = getAlbumById(albumId);
 
         validateAlbumHost(currentMember.getId(), album.getId());
+
+        if (request.coverUrl() != null && album.getCoverUrl() != null) {
+            s3Util.deleteFileFromS3(album.getCoverUrl());
+        }
 
         album.updateAlbum(request.title(), request.coverUrl());
 
