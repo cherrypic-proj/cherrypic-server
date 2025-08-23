@@ -79,20 +79,35 @@ public class ImageRepositoryImpl implements ImageRepositoryCustom {
 
     @Override
     public void bulkInsertImages(List<Image> images) {
-        String sql =
-                "INSERT INTO image (album_id, member_id, url, generated_at, created_at, updated_at) "
-                        + "VALUES (?, ?, ?, ?, NOW(), NOW())";
+        StringBuilder sb = new StringBuilder();
+        sb.append(
+                "INSERT INTO image (album_id, member_id, url, generated_at, created_at, updated_at) VALUES ");
 
-        jdbcTemplate.batchUpdate(
-                sql,
-                images,
-                100,
-                (ps, image) -> {
-                    ps.setLong(1, image.getAlbum().getId());
-                    ps.setLong(2, image.getMemberId());
-                    ps.setString(3, image.getUrl());
-                    ps.setObject(4, image.getGeneratedAt());
-                });
+        for (int i = 0; i < images.size(); i++) {
+            Image image = images.get(i);
+            sb.append("(")
+                    .append(image.getAlbum().getId())
+                    .append(", ")
+                    .append(image.getMemberId())
+                    .append(", '")
+                    .append(image.getUrl())
+                    .append("', ");
+
+            if (image.getGeneratedAt() != null) {
+                sb.append("'").append(image.getGeneratedAt()).append("'");
+            } else {
+                sb.append("NULL");
+            }
+
+            sb.append(", NOW(), NOW())");
+
+            if (i < images.size() - 1) {
+                sb.append(", ");
+            }
+        }
+
+        String sql = sb.toString();
+        jdbcTemplate.update(sql);
     }
 
     private BooleanExpression lastImageIdCondition(Long imageId, SortDirection direction) {
