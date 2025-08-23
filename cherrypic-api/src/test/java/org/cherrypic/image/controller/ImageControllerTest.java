@@ -155,7 +155,7 @@ class ImageControllerTest {
         @Test
         void 유효한_요청이면_이미지_업로드_Presigned_URL들을_반환한다() throws Exception {
             // given
-            AlbumImageUploadRequest requests =
+            AlbumImageUploadRequest request =
                     new AlbumImageUploadRequest(
                             BigDecimal.ONE,
                             List.of(
@@ -171,14 +171,14 @@ class ImageControllerTest {
             PresignedUrlsResponse response =
                     new PresignedUrlsResponse(List.of("testPresignedUrl1", "testPresignedUrl2"));
 
-            given(imageService.createAlbumImageUploadUrls(1L, requests)).willReturn(response);
+            given(imageService.createAlbumImageUploadUrls(1L, request)).willReturn(response);
 
             // when & then
             ResultActions perform =
                     mockMvc.perform(
                             post("/albums/1/image-upload-urls")
                                     .contentType(MediaType.APPLICATION_JSON)
-                                    .content(objectMapper.writeValueAsString(requests)));
+                                    .content(objectMapper.writeValueAsString(request)));
 
             perform.andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
@@ -189,7 +189,7 @@ class ImageControllerTest {
         @Test
         void 앨범이_존재하지_않는_경우_예외가_발생한다() throws Exception {
             // given
-            AlbumImageUploadRequest requests =
+            AlbumImageUploadRequest request =
                     new AlbumImageUploadRequest(
                             BigDecimal.ONE,
                             List.of(
@@ -202,7 +202,7 @@ class ImageControllerTest {
                                             "testMd5Hash2",
                                             LocalDateTime.now())));
 
-            given(imageService.createAlbumImageUploadUrls(1L, requests))
+            given(imageService.createAlbumImageUploadUrls(1L, request))
                     .willThrow(new CustomException(AlbumErrorCode.ALBUM_NOT_FOUND));
 
             // when & then
@@ -210,7 +210,7 @@ class ImageControllerTest {
                     mockMvc.perform(
                             post("/albums/1/image-upload-urls")
                                     .contentType(MediaType.APPLICATION_JSON)
-                                    .content(objectMapper.writeValueAsString(requests)));
+                                    .content(objectMapper.writeValueAsString(request)));
 
             perform.andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.success").value(false))
@@ -222,7 +222,7 @@ class ImageControllerTest {
         @Test
         void 앨범에_속하지_않은_사용자가_앨범_이미지_업로드_URL을_요청하면_예외가_발생한다() throws Exception {
             // given
-            AlbumImageUploadRequest requests =
+            AlbumImageUploadRequest request =
                     new AlbumImageUploadRequest(
                             BigDecimal.ONE,
                             List.of(
@@ -235,7 +235,7 @@ class ImageControllerTest {
                                             "testMd5Hash2",
                                             LocalDateTime.now())));
 
-            given(imageService.createAlbumImageUploadUrls(1L, requests))
+            given(imageService.createAlbumImageUploadUrls(1L, request))
                     .willThrow(new CustomException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT));
 
             // when & then
@@ -243,7 +243,7 @@ class ImageControllerTest {
                     mockMvc.perform(
                             post("/albums/1/image-upload-urls")
                                     .contentType(MediaType.APPLICATION_JSON)
-                                    .content(objectMapper.writeValueAsString(requests)));
+                                    .content(objectMapper.writeValueAsString(request)));
 
             perform.andExpect(status().isForbidden())
                     .andExpect(jsonPath("$.success").value(false))
@@ -255,7 +255,7 @@ class ImageControllerTest {
         @Test
         void LIMITED_권한의_사용자가_앨범_이미지_업로드_URL을_요청하면_예외가_발생한다() throws Exception {
             // given
-            AlbumImageUploadRequest requests =
+            AlbumImageUploadRequest request =
                     new AlbumImageUploadRequest(
                             BigDecimal.ONE,
                             List.of(
@@ -268,7 +268,7 @@ class ImageControllerTest {
                                             "testMd5Hash2",
                                             LocalDateTime.now())));
 
-            given(imageService.createAlbumImageUploadUrls(1L, requests))
+            given(imageService.createAlbumImageUploadUrls(1L, request))
                     .willThrow(new CustomException(AlbumErrorCode.LIMITED_AUTHORITY));
 
             // when & then
@@ -276,7 +276,7 @@ class ImageControllerTest {
                     mockMvc.perform(
                             post("/albums/1/image-upload-urls")
                                     .contentType(MediaType.APPLICATION_JSON)
-                                    .content(objectMapper.writeValueAsString(requests)));
+                                    .content(objectMapper.writeValueAsString(request)));
 
             perform.andExpect(status().isForbidden())
                     .andExpect(jsonPath("$.success").value(false))
@@ -288,7 +288,7 @@ class ImageControllerTest {
         @Test
         void 앨범의_남은_용량을_초과해서_요청하면_예외가_발생한다() throws Exception {
             // given
-            AlbumImageUploadRequest requests =
+            AlbumImageUploadRequest request =
                     new AlbumImageUploadRequest(
                             BigDecimal.ONE,
                             List.of(
@@ -301,7 +301,7 @@ class ImageControllerTest {
                                             "testMd5Hash2",
                                             LocalDateTime.now())));
 
-            given(imageService.createAlbumImageUploadUrls(1L, requests))
+            given(imageService.createAlbumImageUploadUrls(1L, request))
                     .willThrow(new CustomException(AlbumErrorCode.ALBUM_CAPACITY_EXCEEDED));
 
             // when & then
@@ -309,7 +309,7 @@ class ImageControllerTest {
                     mockMvc.perform(
                             post("/albums/1/image-upload-urls")
                                     .contentType(MediaType.APPLICATION_JSON)
-                                    .content(objectMapper.writeValueAsString(requests)));
+                                    .content(objectMapper.writeValueAsString(request)));
 
             perform.andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.success").value(false))
@@ -321,7 +321,7 @@ class ImageControllerTest {
         @Test
         void MD5_해시에_중복된_값이_존재하면_예외가_발생한다() throws Exception {
             // given
-            AlbumImageUploadRequest requests =
+            AlbumImageUploadRequest request =
                     new AlbumImageUploadRequest(
                             BigDecimal.ONE,
                             List.of(
@@ -332,7 +332,7 @@ class ImageControllerTest {
                                             "testMd5Hash",
                                             LocalDateTime.now())));
 
-            given(imageService.createAlbumImageUploadUrls(1L, requests))
+            given(imageService.createAlbumImageUploadUrls(1L, request))
                     .willThrow(new CustomException(ImageErrorCode.DUPLICATE_HASHES));
 
             // when & then
@@ -340,7 +340,7 @@ class ImageControllerTest {
                     mockMvc.perform(
                             post("/albums/1/image-upload-urls")
                                     .contentType(MediaType.APPLICATION_JSON)
-                                    .content(objectMapper.writeValueAsString(requests)));
+                                    .content(objectMapper.writeValueAsString(request)));
 
             perform.andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.success").value(false))
@@ -355,7 +355,7 @@ class ImageControllerTest {
         @ValueSource(strings = {"JPEG1", "PDF", "TXT"})
         void 파일_확장자가_null_또는_지원하지_않는_형식이면_예외가_발생한다(String extension) throws Exception {
             // given
-            AlbumImageUploadRequest requests =
+            AlbumImageUploadRequest request =
                     new AlbumImageUploadRequest(
                             BigDecimal.ONE,
                             List.of(
@@ -369,7 +369,7 @@ class ImageControllerTest {
                     mockMvc.perform(
                             post("/albums/1/image-upload-urls")
                                     .contentType(MediaType.APPLICATION_JSON)
-                                    .content(objectMapper.writeValueAsString(requests)));
+                                    .content(objectMapper.writeValueAsString(request)));
 
             perform.andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.success").value(false))
@@ -384,7 +384,7 @@ class ImageControllerTest {
         @Test
         void 이미지_용량_총합을_비워두면_예외가_발생한다() throws Exception {
             // given
-            AlbumImageUploadRequest requests =
+            AlbumImageUploadRequest request =
                     new AlbumImageUploadRequest(
                             null,
                             List.of(
@@ -398,7 +398,7 @@ class ImageControllerTest {
                     mockMvc.perform(
                             post("/albums/1/image-upload-urls")
                                     .contentType(MediaType.APPLICATION_JSON)
-                                    .content(objectMapper.writeValueAsString(requests)));
+                                    .content(objectMapper.writeValueAsString(request)));
 
             perform.andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.success").value(false))
@@ -413,7 +413,7 @@ class ImageControllerTest {
         @ValueSource(strings = {" "})
         void MD5_해시가_null_또는_공백이면_예외가_발생한다(String md5Hash) throws Exception {
             // given
-            AlbumImageUploadRequest requests =
+            AlbumImageUploadRequest request =
                     new AlbumImageUploadRequest(
                             BigDecimal.ONE,
                             List.of(
@@ -425,7 +425,7 @@ class ImageControllerTest {
                     mockMvc.perform(
                             post("/albums/1/image-upload-urls")
                                     .contentType(MediaType.APPLICATION_JSON)
-                                    .content(objectMapper.writeValueAsString(requests)));
+                                    .content(objectMapper.writeValueAsString(request)));
 
             perform.andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.success").value(false))
@@ -437,7 +437,7 @@ class ImageControllerTest {
         @Test
         void 업로드_요청_정보를_비워두면_예외가_발생한다() throws Exception {
             // given
-            AlbumImageUploadRequest requests =
+            AlbumImageUploadRequest request =
                     new AlbumImageUploadRequest(BigDecimal.ONE, List.of());
 
             // when & then
@@ -445,7 +445,7 @@ class ImageControllerTest {
                     mockMvc.perform(
                             post("/albums/1/image-upload-urls")
                                     .contentType(MediaType.APPLICATION_JSON)
-                                    .content(objectMapper.writeValueAsString(requests)));
+                                    .content(objectMapper.writeValueAsString(request)));
 
             perform.andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.success").value(false))

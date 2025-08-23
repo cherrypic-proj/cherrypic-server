@@ -129,7 +129,7 @@ class ImageServiceTest extends IntegrationTest {
         @Test
         void 유효한_요청이면_이미지를_저장하고_Presigned_URL들을_반환한다() {
             // given
-            AlbumImageUploadRequest requests =
+            AlbumImageUploadRequest request =
                     new AlbumImageUploadRequest(
                             BigDecimal.ONE,
                             List.of(
@@ -143,7 +143,7 @@ class ImageServiceTest extends IntegrationTest {
                                             LocalDateTime.now())));
 
             // when & then
-            PresignedUrlsResponse response = imageService.createAlbumImageUploadUrls(1L, requests);
+            PresignedUrlsResponse response = imageService.createAlbumImageUploadUrls(1L, request);
 
             assertThat(response.presignedUrls())
                     .hasSize(2)
@@ -175,7 +175,7 @@ class ImageServiceTest extends IntegrationTest {
         @Test
         void 앨범이_존재하지_않는_경우_예외가_발생한다() {
             // given
-            AlbumImageUploadRequest requests =
+            AlbumImageUploadRequest request =
                     new AlbumImageUploadRequest(
                             BigDecimal.ONE,
                             List.of(
@@ -189,7 +189,7 @@ class ImageServiceTest extends IntegrationTest {
                                             LocalDateTime.now())));
 
             // when & then
-            assertThatThrownBy(() -> imageService.createAlbumImageUploadUrls(999L, requests))
+            assertThatThrownBy(() -> imageService.createAlbumImageUploadUrls(999L, request))
                     .isInstanceOf(CustomException.class)
                     .hasMessage(AlbumErrorCode.ALBUM_NOT_FOUND.getMessage());
         }
@@ -197,7 +197,7 @@ class ImageServiceTest extends IntegrationTest {
         @Test
         void 앨범에_속하지_않은_사용자가_앨범_이미지_업로드_URL을_요청하면_예외가_발생한다() {
             // given
-            AlbumImageUploadRequest requests =
+            AlbumImageUploadRequest request =
                     new AlbumImageUploadRequest(
                             BigDecimal.ONE,
                             List.of(
@@ -211,7 +211,7 @@ class ImageServiceTest extends IntegrationTest {
                                             LocalDateTime.now())));
 
             // when & then
-            assertThatThrownBy(() -> imageService.createAlbumImageUploadUrls(3L, requests))
+            assertThatThrownBy(() -> imageService.createAlbumImageUploadUrls(3L, request))
                     .isInstanceOf(CustomException.class)
                     .hasMessage(AlbumErrorCode.NOT_ALBUM_PARTICIPANT.getMessage());
         }
@@ -219,7 +219,7 @@ class ImageServiceTest extends IntegrationTest {
         @Test
         void LIMITED_권한의_사용자가_앨범_이미지_업로드_URL을_요청하면_예외가_발생한다() {
             // given
-            AlbumImageUploadRequest requests =
+            AlbumImageUploadRequest request =
                     new AlbumImageUploadRequest(
                             BigDecimal.ONE,
                             List.of(
@@ -233,7 +233,7 @@ class ImageServiceTest extends IntegrationTest {
                                             LocalDateTime.now())));
 
             // when & then
-            assertThatThrownBy(() -> imageService.createAlbumImageUploadUrls(2L, requests))
+            assertThatThrownBy(() -> imageService.createAlbumImageUploadUrls(2L, request))
                     .isInstanceOf(CustomException.class)
                     .hasMessage(AlbumErrorCode.LIMITED_AUTHORITY.getMessage());
         }
@@ -241,7 +241,7 @@ class ImageServiceTest extends IntegrationTest {
         @Test
         void 앨범의_남은_용량을_초과해서_요청하면_예외가_발생한다() {
             /// given
-            AlbumImageUploadRequest requests =
+            AlbumImageUploadRequest request =
                     new AlbumImageUploadRequest(
                             BigDecimal.TEN,
                             List.of(
@@ -255,7 +255,7 @@ class ImageServiceTest extends IntegrationTest {
                                             LocalDateTime.now())));
 
             // when & then
-            assertThatThrownBy(() -> imageService.createAlbumImageUploadUrls(1L, requests))
+            assertThatThrownBy(() -> imageService.createAlbumImageUploadUrls(1L, request))
                     .isInstanceOf(CustomException.class)
                     .hasMessage(AlbumErrorCode.ALBUM_CAPACITY_EXCEEDED.getMessage());
         }
@@ -263,8 +263,7 @@ class ImageServiceTest extends IntegrationTest {
         @Test
         void 해시값에_중복이_존재하면_예외가_발생한다() {
             // given
-            // given
-            AlbumImageUploadRequest requests =
+            AlbumImageUploadRequest request =
                     new AlbumImageUploadRequest(
                             BigDecimal.ONE,
                             List.of(
@@ -277,7 +276,7 @@ class ImageServiceTest extends IntegrationTest {
                                             "testMd5Hash1",
                                             LocalDateTime.now())));
             // when & then
-            assertThatThrownBy(() -> imageService.createAlbumImageUploadUrls(1L, requests))
+            assertThatThrownBy(() -> imageService.createAlbumImageUploadUrls(1L, request))
                     .isInstanceOf(CustomException.class)
                     .hasMessage(ImageErrorCode.DUPLICATE_HASHES.getMessage());
         }
