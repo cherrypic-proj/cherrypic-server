@@ -16,7 +16,7 @@ public class SubscriptionController {
 
     private final SubscriptionService subscriptionService;
 
-    @PostMapping
+    @DeleteMapping
     @Operation(summary = "구독 해지", description = "유료 앨범의 구독을 해지합니다.")
     public ResponseEntity<Void> subscriptionCancel(@PathVariable Long albumId) {
         subscriptionService.cancelSubscription(albumId);
