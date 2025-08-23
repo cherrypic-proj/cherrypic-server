@@ -22,7 +22,7 @@ public record AlbumImageUploadRequest(
                             message =
                                     "파일의 확장자는 비워둘 수 없으며, "
                                             + "이미지(PNG, JPG, JPEG, WEBP, HEIC, HEIF)와 동영상(MP4, WEBM, MOV, MKV, HEVC)만 지원됩니다.")
-                    @Schema(description = "파일들의 확장자", defaultValue = "JPEG")
+                    @Schema(description = "파일의 확장자", defaultValue = "JPEG")
                     FileExtension fileExtension,
             @NotBlank(message = "MD5 해시값은 비워둘 수 없습니다.")
                     @Schema(description = "S3 업로드시 사진의 변형을 확인하기 위한 md5 해시")
