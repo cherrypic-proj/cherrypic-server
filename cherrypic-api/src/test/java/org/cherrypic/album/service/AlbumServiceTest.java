@@ -881,8 +881,8 @@ class AlbumServiceTest extends IntegrationTest {
         void PRO_플랜으로_필터링하면_PRO_앨범만_조회한다() {
             // given
             SliceResponse<AlbumListResponse> response =
-                    albumService.getParticipatingAlbumsByPlan(
-                            AlbumPlan.PRO, null, 1, SortDirection.DESC);
+                    albumService.getParticipatingAlbumsByCondition(
+                            AlbumPlan.PRO, null, null, 1, SortDirection.DESC);
 
             // when & then
             Assertions.assertAll(
@@ -892,10 +892,40 @@ class AlbumServiceTest extends IntegrationTest {
         }
 
         @Test
+        void 앨범_이름으로_필터링하면_일치하는_앨범만_조회한다() {
+            // given
+            SliceResponse<AlbumListResponse> response =
+                    albumService.getParticipatingAlbumsByCondition(
+                            null, "title2", null, 1, SortDirection.DESC);
+
+            // when & then
+            Assertions.assertAll(
+                    () -> assertThat(response.content().get(0).albumId()).isEqualTo(2),
+                    () -> assertThat(response.content().get(0).title()).isEqualTo("testTitle2"),
+                    () -> assertThat(response.isLast()).isTrue());
+        }
+
+        @Test
+        void PRO_플랜과_앨범_이름으로_필터링하면_조건을_모두_만족하는_앨범만_조회한다() {
+            // given
+            SliceResponse<AlbumListResponse> response =
+                    albumService.getParticipatingAlbumsByCondition(
+                            AlbumPlan.PRO, "title3", null, 1, SortDirection.DESC);
+
+            // when & then
+            Assertions.assertAll(
+                    () -> assertThat(response.content().get(0).albumId()).isEqualTo(3),
+                    () -> assertThat(response.content().get(0).title()).isEqualTo("testTitle3"),
+                    () -> assertThat(response.content().get(0).plan()).isEqualTo(AlbumPlan.PRO),
+                    () -> assertThat(response.isLast()).isTrue());
+        }
+
+        @Test
         void 정렬_조건이_ASC이면_albumId를_오름차순으로_조회한다() {
             // when
             SliceResponse<AlbumListResponse> response =
-                    albumService.getParticipatingAlbumsByPlan(null, null, 3, SortDirection.ASC);
+                    albumService.getParticipatingAlbumsByCondition(
+                            null, null, null, 3, SortDirection.ASC);
 
             // then
             Assertions.assertAll(
@@ -910,7 +940,8 @@ class AlbumServiceTest extends IntegrationTest {
         void 정렬_조건이_DESC이면_albumId를_내림차순으로_조회한다() {
             // when
             SliceResponse<AlbumListResponse> response =
-                    albumService.getParticipatingAlbumsByPlan(null, null, 3, SortDirection.DESC);
+                    albumService.getParticipatingAlbumsByCondition(
+                            null, null, null, 3, SortDirection.DESC);
 
             // then
             Assertions.assertAll(
@@ -925,7 +956,8 @@ class AlbumServiceTest extends IntegrationTest {
         void 마지막_페이지인_경우_isLast를_true로_반환한다() {
             // when
             SliceResponse<AlbumListResponse> response =
-                    albumService.getParticipatingAlbumsByPlan(null, null, 3, SortDirection.DESC);
+                    albumService.getParticipatingAlbumsByCondition(
+                            null, null, null, 3, SortDirection.DESC);
 
             // then
             Assertions.assertAll(
@@ -937,7 +969,8 @@ class AlbumServiceTest extends IntegrationTest {
         void 마지막_페이지가_아닌_경우_isLast를_false로_반환한다() {
             // when
             SliceResponse<AlbumListResponse> response =
-                    albumService.getParticipatingAlbumsByPlan(null, null, 1, SortDirection.DESC);
+                    albumService.getParticipatingAlbumsByCondition(
+                            null, null, null, 1, SortDirection.DESC);
 
             // then
             Assertions.assertAll(
@@ -952,7 +985,8 @@ class AlbumServiceTest extends IntegrationTest {
 
             // when
             SliceResponse<AlbumListResponse> response =
-                    albumService.getParticipatingAlbumsByPlan(null, null, 10, SortDirection.DESC);
+                    albumService.getParticipatingAlbumsByCondition(
+                            null, null, null, 10, SortDirection.DESC);
 
             // when & then
             Assertions.assertAll(
