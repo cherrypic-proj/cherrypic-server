@@ -8,6 +8,7 @@ import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.cherrypic.album.enums.AlbumPlan;
 import org.cherrypic.domain.album.dto.response.AlbumListResponse;
 import org.cherrypic.global.pagination.SortDirection;
 import org.springframework.data.domain.PageRequest;
@@ -22,8 +23,8 @@ public class AlbumRepositoryImpl implements AlbumRepositoryCustom {
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public Slice<AlbumListResponse> findAllByMemberId(
-            Long memberId, Long lastAlbumId, int size, SortDirection direction) {
+    public Slice<AlbumListResponse> findAllByMemberIdAndPlan(
+            Long memberId, AlbumPlan plan, Long lastAlbumId, int size, SortDirection direction) {
         List<AlbumListResponse> results =
                 queryFactory
                         .select(
@@ -38,6 +39,7 @@ public class AlbumRepositoryImpl implements AlbumRepositoryCustom {
                         .join(participant.album, album)
                         .where(
                                 participant.member.id.eq(memberId),
+                                plan != null ? album.plan.eq(plan) : null,
                                 lastAlbumIdCondition(lastAlbumId, direction))
                         .orderBy(direction == SortDirection.DESC ? album.id.desc() : album.id.asc())
                         .limit(size + 1)
