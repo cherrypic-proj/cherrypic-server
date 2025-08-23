@@ -13,7 +13,7 @@ import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.album.repository.AlbumRepository;
 import org.cherrypic.domain.event.exception.EventErrorCode;
 import org.cherrypic.domain.event.repository.EventRepository;
-import org.cherrypic.domain.image.dto.request.AlbumImageUploadRequests;
+import org.cherrypic.domain.image.dto.request.AlbumImageUploadRequest;
 import org.cherrypic.domain.image.dto.request.MemberProfileImageUploadRequest;
 import org.cherrypic.domain.image.dto.request.UploadFailedImageDeleteRequest;
 import org.cherrypic.domain.image.dto.response.AlbumImageListResponse;
@@ -117,15 +117,15 @@ class ImageServiceTest extends IntegrationTest {
         @Test
         void 유효한_요청이면_이미지를_저장하고_Presigned_URL들을_반환한다() {
             // given
-            AlbumImageUploadRequests requests =
-                    new AlbumImageUploadRequests(
+            AlbumImageUploadRequest requests =
+                    new AlbumImageUploadRequest(
                             BigDecimal.ONE,
                             List.of(
-                                    new AlbumImageUploadRequests.AlbumImageUploadRequest(
+                                    new AlbumImageUploadRequest.payload(
                                             ImageFileExtension.JPEG,
                                             "testMd5Hash1",
                                             LocalDateTime.now()),
-                                    new AlbumImageUploadRequests.AlbumImageUploadRequest(
+                                    new AlbumImageUploadRequest.payload(
                                             ImageFileExtension.JPEG,
                                             "testMd5Hash2",
                                             LocalDateTime.now())));
@@ -163,15 +163,15 @@ class ImageServiceTest extends IntegrationTest {
         @Test
         void 앨범이_존재하지_않는_경우_예외가_발생한다() {
             // given
-            AlbumImageUploadRequests requests =
-                    new AlbumImageUploadRequests(
+            AlbumImageUploadRequest requests =
+                    new AlbumImageUploadRequest(
                             BigDecimal.ONE,
                             List.of(
-                                    new AlbumImageUploadRequests.AlbumImageUploadRequest(
+                                    new AlbumImageUploadRequest.payload(
                                             ImageFileExtension.JPEG,
                                             "testMd5Hash1",
                                             LocalDateTime.now()),
-                                    new AlbumImageUploadRequests.AlbumImageUploadRequest(
+                                    new AlbumImageUploadRequest.payload(
                                             ImageFileExtension.JPEG,
                                             "testMd5Hash2",
                                             LocalDateTime.now())));
@@ -185,15 +185,15 @@ class ImageServiceTest extends IntegrationTest {
         @Test
         void 앨범에_속하지_않은_사용자가_앨범_이미지_업로드_URL을_요청하면_예외가_발생한다() {
             // given
-            AlbumImageUploadRequests requests =
-                    new AlbumImageUploadRequests(
+            AlbumImageUploadRequest requests =
+                    new AlbumImageUploadRequest(
                             BigDecimal.ONE,
                             List.of(
-                                    new AlbumImageUploadRequests.AlbumImageUploadRequest(
+                                    new AlbumImageUploadRequest.payload(
                                             ImageFileExtension.JPEG,
                                             "testMd5Hash1",
                                             LocalDateTime.now()),
-                                    new AlbumImageUploadRequests.AlbumImageUploadRequest(
+                                    new AlbumImageUploadRequest.payload(
                                             ImageFileExtension.JPEG,
                                             "testMd5Hash2",
                                             LocalDateTime.now())));
@@ -207,15 +207,15 @@ class ImageServiceTest extends IntegrationTest {
         @Test
         void LIMITED_권한의_사용자가_앨범_이미지_업로드_URL을_요청하면_예외가_발생한다() {
             // given
-            AlbumImageUploadRequests requests =
-                    new AlbumImageUploadRequests(
+            AlbumImageUploadRequest requests =
+                    new AlbumImageUploadRequest(
                             BigDecimal.ONE,
                             List.of(
-                                    new AlbumImageUploadRequests.AlbumImageUploadRequest(
+                                    new AlbumImageUploadRequest.payload(
                                             ImageFileExtension.JPEG,
                                             "testMd5Hash1",
                                             LocalDateTime.now()),
-                                    new AlbumImageUploadRequests.AlbumImageUploadRequest(
+                                    new AlbumImageUploadRequest.payload(
                                             ImageFileExtension.JPEG,
                                             "testMd5Hash2",
                                             LocalDateTime.now())));
@@ -229,15 +229,15 @@ class ImageServiceTest extends IntegrationTest {
         @Test
         void 앨범의_남은_용량을_초과해서_요청하면_예외가_발생한다() {
             /// given
-            AlbumImageUploadRequests requests =
-                    new AlbumImageUploadRequests(
+            AlbumImageUploadRequest requests =
+                    new AlbumImageUploadRequest(
                             BigDecimal.TEN,
                             List.of(
-                                    new AlbumImageUploadRequests.AlbumImageUploadRequest(
+                                    new AlbumImageUploadRequest.payload(
                                             ImageFileExtension.JPEG,
                                             "testMd5Hash1",
                                             LocalDateTime.now()),
-                                    new AlbumImageUploadRequests.AlbumImageUploadRequest(
+                                    new AlbumImageUploadRequest.payload(
                                             ImageFileExtension.JPEG,
                                             "testMd5Hash2",
                                             LocalDateTime.now())));
@@ -252,15 +252,15 @@ class ImageServiceTest extends IntegrationTest {
         void 해시값에_중복이_존재하면_예외가_발생한다() {
             // given
             // given
-            AlbumImageUploadRequests requests =
-                    new AlbumImageUploadRequests(
+            AlbumImageUploadRequest requests =
+                    new AlbumImageUploadRequest(
                             BigDecimal.ONE,
                             List.of(
-                                    new AlbumImageUploadRequests.AlbumImageUploadRequest(
+                                    new AlbumImageUploadRequest.payload(
                                             ImageFileExtension.JPEG,
                                             "testMd5Hash1",
                                             LocalDateTime.now()),
-                                    new AlbumImageUploadRequests.AlbumImageUploadRequest(
+                                    new AlbumImageUploadRequest.payload(
                                             ImageFileExtension.JPEG,
                                             "testMd5Hash1",
                                             LocalDateTime.now())));

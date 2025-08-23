@@ -16,7 +16,7 @@ import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.album.repository.AlbumRepository;
 import org.cherrypic.domain.event.exception.EventErrorCode;
 import org.cherrypic.domain.event.repository.EventRepository;
-import org.cherrypic.domain.image.dto.request.AlbumImageUploadRequests;
+import org.cherrypic.domain.image.dto.request.AlbumImageUploadRequest;
 import org.cherrypic.domain.image.dto.request.MemberProfileImageUploadRequest;
 import org.cherrypic.domain.image.dto.request.UploadFailedImageDeleteRequest;
 import org.cherrypic.domain.image.dto.response.AlbumImageListResponse;
@@ -75,18 +75,18 @@ public class ImageServiceImpl implements ImageService {
 
     @Override
     public PresignedUrlsResponse createAlbumImageUploadUrls(
-            Long albumId, AlbumImageUploadRequests requests) {
+            Long albumId, AlbumImageUploadRequest request) {
         final Member currentMember = memberUtil.getCurrentMember();
         final Album album = getAlbumByIdWithLock(albumId);
 
         validateParticipantAuthority(currentMember.getId(), album.getId());
-        validateAlbumCapacity(album, requests.capacity());
-        validateDistinctHashes(requests);
+        validateAlbumCapacity(album, request.capacity());
+        validateDistinctHashes(request);
 
-        album.increaseCapacity(requests.capacity());
+        album.increaseCapacity(request.capacity());
 
         List<String> presignedUrls =
-                requests.requests().stream()
+                request.payloads().stream()
                         .map(
                                 req ->
                                         createPresignedUrl(
@@ -97,11 +97,10 @@ public class ImageServiceImpl implements ImageService {
                         .toList();
 
         List<Image> images =
-                IntStream.range(0, requests.requests().size())
+                IntStream.range(0, request.payloads().size())
                         .mapToObj(
                                 i -> {
-                                    AlbumImageUploadRequests.AlbumImageUploadRequest req =
-                                            requests.requests().get(i);
+                                    AlbumImageUploadRequest.payload req = request.payloads().get(i);
                                     String presignedUrl = presignedUrls.get(i);
 
                                     String objectUrl =
@@ -271,10 +270,10 @@ public class ImageServiceImpl implements ImageService {
         }
     }
 
-    private void validateDistinctHashes(AlbumImageUploadRequests requests) {
+    private void validateDistinctHashes(AlbumImageUploadRequest request) {
         List<String> hashes =
-                requests.requests().stream()
-                        .map(AlbumImageUploadRequests.AlbumImageUploadRequest::md5Hashes)
+                request.payloads().stream()
+                        .map(AlbumImageUploadRequest.payload::md5Hashes)
                         .toList();
 
         if (hashes.stream().distinct().count() != hashes.size()) {

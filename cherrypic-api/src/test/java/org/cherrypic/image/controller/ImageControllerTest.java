@@ -12,7 +12,7 @@ import java.util.List;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.event.exception.EventErrorCode;
 import org.cherrypic.domain.image.controller.ImageController;
-import org.cherrypic.domain.image.dto.request.AlbumImageUploadRequests;
+import org.cherrypic.domain.image.dto.request.AlbumImageUploadRequest;
 import org.cherrypic.domain.image.dto.request.MemberProfileImageUploadRequest;
 import org.cherrypic.domain.image.dto.request.UploadFailedImageDeleteRequest;
 import org.cherrypic.domain.image.dto.response.AlbumImageListResponse;
@@ -132,15 +132,15 @@ class ImageControllerTest {
         @Test
         void 유효한_요청이면_이미지_업로드_Presigned_URL들을_반환한다() throws Exception {
             // given
-            AlbumImageUploadRequests requests =
-                    new AlbumImageUploadRequests(
+            AlbumImageUploadRequest requests =
+                    new AlbumImageUploadRequest(
                             BigDecimal.ONE,
                             List.of(
-                                    new AlbumImageUploadRequests.AlbumImageUploadRequest(
+                                    new AlbumImageUploadRequest.payload(
                                             ImageFileExtension.JPEG,
                                             "testMd5Hash1",
                                             LocalDateTime.now()),
-                                    new AlbumImageUploadRequests.AlbumImageUploadRequest(
+                                    new AlbumImageUploadRequest.payload(
                                             ImageFileExtension.JPEG,
                                             "testMd5Hash2",
                                             LocalDateTime.now())));
@@ -166,15 +166,15 @@ class ImageControllerTest {
         @Test
         void 앨범이_존재하지_않는_경우_예외가_발생한다() throws Exception {
             // given
-            AlbumImageUploadRequests requests =
-                    new AlbumImageUploadRequests(
+            AlbumImageUploadRequest requests =
+                    new AlbumImageUploadRequest(
                             BigDecimal.ONE,
                             List.of(
-                                    new AlbumImageUploadRequests.AlbumImageUploadRequest(
+                                    new AlbumImageUploadRequest.payload(
                                             ImageFileExtension.JPEG,
                                             "testMd5Hash1",
                                             LocalDateTime.now()),
-                                    new AlbumImageUploadRequests.AlbumImageUploadRequest(
+                                    new AlbumImageUploadRequest.payload(
                                             ImageFileExtension.JPEG,
                                             "testMd5Hash2",
                                             LocalDateTime.now())));
@@ -199,15 +199,15 @@ class ImageControllerTest {
         @Test
         void 앨범에_속하지_않은_사용자가_앨범_이미지_업로드_URL을_요청하면_예외가_발생한다() throws Exception {
             // given
-            AlbumImageUploadRequests requests =
-                    new AlbumImageUploadRequests(
+            AlbumImageUploadRequest requests =
+                    new AlbumImageUploadRequest(
                             BigDecimal.ONE,
                             List.of(
-                                    new AlbumImageUploadRequests.AlbumImageUploadRequest(
+                                    new AlbumImageUploadRequest.payload(
                                             ImageFileExtension.JPEG,
                                             "testMd5Hash1",
                                             LocalDateTime.now()),
-                                    new AlbumImageUploadRequests.AlbumImageUploadRequest(
+                                    new AlbumImageUploadRequest.payload(
                                             ImageFileExtension.JPEG,
                                             "testMd5Hash2",
                                             LocalDateTime.now())));
@@ -232,15 +232,15 @@ class ImageControllerTest {
         @Test
         void LIMITED_권한의_사용자가_앨범_이미지_업로드_URL을_요청하면_예외가_발생한다() throws Exception {
             // given
-            AlbumImageUploadRequests requests =
-                    new AlbumImageUploadRequests(
+            AlbumImageUploadRequest requests =
+                    new AlbumImageUploadRequest(
                             BigDecimal.ONE,
                             List.of(
-                                    new AlbumImageUploadRequests.AlbumImageUploadRequest(
+                                    new AlbumImageUploadRequest.payload(
                                             ImageFileExtension.JPEG,
                                             "testMd5Hash1",
                                             LocalDateTime.now()),
-                                    new AlbumImageUploadRequests.AlbumImageUploadRequest(
+                                    new AlbumImageUploadRequest.payload(
                                             ImageFileExtension.JPEG,
                                             "testMd5Hash2",
                                             LocalDateTime.now())));
@@ -265,15 +265,15 @@ class ImageControllerTest {
         @Test
         void 앨범의_남은_용량을_초과해서_요청하면_예외가_발생한다() throws Exception {
             // given
-            AlbumImageUploadRequests requests =
-                    new AlbumImageUploadRequests(
+            AlbumImageUploadRequest requests =
+                    new AlbumImageUploadRequest(
                             BigDecimal.ONE,
                             List.of(
-                                    new AlbumImageUploadRequests.AlbumImageUploadRequest(
+                                    new AlbumImageUploadRequest.payload(
                                             ImageFileExtension.JPEG,
                                             "testMd5Hash1",
                                             LocalDateTime.now()),
-                                    new AlbumImageUploadRequests.AlbumImageUploadRequest(
+                                    new AlbumImageUploadRequest.payload(
                                             ImageFileExtension.JPEG,
                                             "testMd5Hash2",
                                             LocalDateTime.now())));
@@ -298,15 +298,15 @@ class ImageControllerTest {
         @Test
         void MD5_해시에_중복된_값이_존재하면_예외가_발생한다() throws Exception {
             // given
-            AlbumImageUploadRequests requests =
-                    new AlbumImageUploadRequests(
+            AlbumImageUploadRequest requests =
+                    new AlbumImageUploadRequest(
                             BigDecimal.ONE,
                             List.of(
-                                    new AlbumImageUploadRequests.AlbumImageUploadRequest(
+                                    new AlbumImageUploadRequest.payload(
                                             ImageFileExtension.JPEG,
                                             "testMd5Hash",
                                             LocalDateTime.now()),
-                                    new AlbumImageUploadRequests.AlbumImageUploadRequest(
+                                    new AlbumImageUploadRequest.payload(
                                             ImageFileExtension.JPEG,
                                             "testMd5Hash",
                                             LocalDateTime.now())));
@@ -331,11 +331,11 @@ class ImageControllerTest {
         @Test
         void 이미지의_확장자를_비워두면_예외가_발생한다() throws Exception {
             // given
-            AlbumImageUploadRequests requests =
-                    new AlbumImageUploadRequests(
+            AlbumImageUploadRequest requests =
+                    new AlbumImageUploadRequest(
                             BigDecimal.ONE,
                             List.of(
-                                    new AlbumImageUploadRequests.AlbumImageUploadRequest(
+                                    new AlbumImageUploadRequest.payload(
                                             null, "testMd5Hash1", LocalDateTime.now())));
 
             // when & then
@@ -355,11 +355,11 @@ class ImageControllerTest {
         @Test
         void 이미지_용량_총합을_비워두면_예외가_발생한다() throws Exception {
             // given
-            AlbumImageUploadRequests requests =
-                    new AlbumImageUploadRequests(
+            AlbumImageUploadRequest requests =
+                    new AlbumImageUploadRequest(
                             null,
                             List.of(
-                                    new AlbumImageUploadRequests.AlbumImageUploadRequest(
+                                    new AlbumImageUploadRequest.payload(
                                             ImageFileExtension.JPEG,
                                             "testMd5Hash",
                                             LocalDateTime.now())));
@@ -384,11 +384,11 @@ class ImageControllerTest {
         @ValueSource(strings = {" "})
         void MD5_해시가_null_또는_공백이면_예외가_발생한다(String md5Hash) throws Exception {
             // given
-            AlbumImageUploadRequests requests =
-                    new AlbumImageUploadRequests(
+            AlbumImageUploadRequest requests =
+                    new AlbumImageUploadRequest(
                             BigDecimal.ONE,
                             List.of(
-                                    new AlbumImageUploadRequests.AlbumImageUploadRequest(
+                                    new AlbumImageUploadRequest.payload(
                                             ImageFileExtension.JPEG,
                                             md5Hash,
                                             LocalDateTime.now())));
@@ -410,8 +410,8 @@ class ImageControllerTest {
         @Test
         void 업로드_요청_정보를_비워두면_예외가_발생한다() throws Exception {
             // given
-            AlbumImageUploadRequests requests =
-                    new AlbumImageUploadRequests(BigDecimal.ONE, List.of());
+            AlbumImageUploadRequest requests =
+                    new AlbumImageUploadRequest(BigDecimal.ONE, List.of());
 
             // when & then
             ResultActions perform =

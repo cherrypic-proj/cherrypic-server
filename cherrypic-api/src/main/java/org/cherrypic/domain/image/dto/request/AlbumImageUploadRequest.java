@@ -10,13 +10,13 @@ import java.time.LocalDateTime;
 import java.util.List;
 import org.cherrypic.domain.image.enums.ImageFileExtension;
 
-public record AlbumImageUploadRequests(
+public record AlbumImageUploadRequest(
         @NotNull(message = "이미지 파일들의 용량은 비워둘 수 없습니다.")
                 @Schema(description = "업로드 하는 이미지들의 용량 총합(GB)", example = "1.23")
                 BigDecimal capacity,
         @NotEmpty(message = "앨범 이미지 업로드 요청은 비워둘 수 없습니다.") @Valid @Schema(description = "업로드 요청 리스트")
-                List<AlbumImageUploadRequests.AlbumImageUploadRequest> requests) {
-    public record AlbumImageUploadRequest(
+                List<AlbumImageUploadRequest.payload> payloads) {
+    public record payload(
             @NotNull(message = "이미지 파일 확장자는 비워둘 수 없습니다.")
                     @Schema(description = "이미지 파일들의 확장자", defaultValue = "[JPEG,JPG]")
                     ImageFileExtension imageFileExtension,
