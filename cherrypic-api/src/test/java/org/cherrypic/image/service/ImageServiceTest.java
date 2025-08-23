@@ -1,6 +1,7 @@
 package org.cherrypic.image.service;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -24,6 +25,7 @@ import org.cherrypic.domain.image.dto.response.EventImageListResponse;
 import org.cherrypic.domain.image.dto.response.PresignedUrlResponse;
 import org.cherrypic.domain.image.dto.response.PresignedUrlsResponse;
 import org.cherrypic.domain.image.enums.FileExtension;
+import org.cherrypic.domain.image.enums.ImageType;
 import org.cherrypic.domain.image.exception.ImageErrorCode;
 import org.cherrypic.domain.image.repository.EventImageRepository;
 import org.cherrypic.domain.image.repository.ImageRepository;
@@ -80,6 +82,13 @@ class ImageServiceTest extends IntegrationTest {
         void 유효한_요청이면_회원_프로필_이미지용_Presigned_URL을_생성한다() {
             // given
             ImageUploadRequest request = new ImageUploadRequest(FileExtension.JPEG, "testMd5Hash");
+            given(
+                            s3Util.createPresignedUrl(
+                                    ImageType.MEMBER_PROFILE,
+                                    1L,
+                                    FileExtension.JPEG,
+                                    "testMd5Hash"))
+                    .willReturn("http://localhost/local/member-profile/1/some-uuid.jpeg");
 
             // when
             PresignedUrlResponse response = imageService.createMemberProfileImageUploadUrl(request);
@@ -132,6 +141,10 @@ class ImageServiceTest extends IntegrationTest {
         void 유효한_요청이면_앨범_커버_이미지용_Presigned_URL을_생성한다() {
             // given
             ImageUploadRequest request = new ImageUploadRequest(FileExtension.JPEG, "testMd5Hash");
+            given(
+                            s3Util.createPresignedUrl(
+                                    ImageType.ALBUM_COVER, 1L, FileExtension.JPEG, "testMd5Hash"))
+                    .willReturn("http://localhost/local/album-cover/1/some-uuid.jpeg");
 
             // when
             PresignedUrlResponse response =
@@ -222,6 +235,10 @@ class ImageServiceTest extends IntegrationTest {
         void 유효한_요청이면_이벤트_커버_이미지용_Presigned_URL을_생성한다() {
             // given
             ImageUploadRequest request = new ImageUploadRequest(FileExtension.JPEG, "testMd5Hash");
+            given(
+                            s3Util.createPresignedUrl(
+                                    ImageType.EVENT_COVER, 1L, FileExtension.JPEG, "testMd5Hash"))
+                    .willReturn("http://localhost/local/event-cover/1/some-uuid.jpeg");
 
             // when
             PresignedUrlResponse response =
@@ -319,6 +336,14 @@ class ImageServiceTest extends IntegrationTest {
                                             FileExtension.JPEG,
                                             "testMd5Hash2",
                                             LocalDateTime.now())));
+            given(
+                            s3Util.createPresignedUrl(
+                                    eq(ImageType.ALBUM_IMAGE),
+                                    eq(1L),
+                                    eq(FileExtension.JPEG),
+                                    anyString()))
+                    .willReturn(
+                            "http://localhost/local/album-image/1/some-uuid.jpeg?Content-MD5=testMd5Hash");
 
             // when
             PresignedUrlsResponse response = imageService.createAlbumFileUploadUrls(1L, request);
