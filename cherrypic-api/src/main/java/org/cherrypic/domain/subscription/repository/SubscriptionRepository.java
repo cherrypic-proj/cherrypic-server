@@ -1,6 +1,9 @@
 package org.cherrypic.domain.subscription.repository;
 
+import java.util.Optional;
 import org.cherrypic.subscription.entity.Subscription;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface SubscriptionRepository extends JpaRepository<Subscription, Long> {}
+public interface SubscriptionRepository extends JpaRepository<Subscription, Long> {
+    Optional<Subscription> findByAlbumId(Long albumId);
+}
