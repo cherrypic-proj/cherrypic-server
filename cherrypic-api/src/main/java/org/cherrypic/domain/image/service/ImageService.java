@@ -21,5 +21,5 @@ public interface ImageService {
     SliceResponse<EventImageListResponse> getEventImages(
             Long eventId, Long lastImageId, int size, SortDirection direction);
 
-    void deleteUploadFailedImages(UploadFailedImageDeleteRequest requests);
+    void deleteUploadFailedImages(UploadFailedImageDeleteRequest request);
 }

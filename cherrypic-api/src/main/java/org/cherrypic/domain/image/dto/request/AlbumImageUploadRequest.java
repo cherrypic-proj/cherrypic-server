@@ -18,7 +18,7 @@ public record AlbumImageUploadRequest(
                 List<AlbumImageUploadRequest.payload> payloads) {
     public record payload(
             @NotNull(message = "이미지 파일 확장자는 비워둘 수 없습니다.")
-                    @Schema(description = "이미지 파일들의 확장자", defaultValue = "[JPEG,JPG]")
+                    @Schema(description = "이미지 파일들의 확장자", defaultValue = "JPEG")
                     ImageFileExtension imageFileExtension,
             @NotBlank(message = "MD5 해시값은 비워둘 수 없습니다.")
                     @Schema(description = "S3 업로드시 사진의 변형을 확인하기 위한 md5 해시")
