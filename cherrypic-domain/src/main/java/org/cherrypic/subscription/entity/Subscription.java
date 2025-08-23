@@ -68,6 +68,6 @@ public class Subscription extends BaseTimeEntity {
     }
 
     public void cancelSubscription() {
-        this.status = SubscriptionStatus.CANCELLED;
+        this.status = SubscriptionStatus.CANCELED;
     }
 }

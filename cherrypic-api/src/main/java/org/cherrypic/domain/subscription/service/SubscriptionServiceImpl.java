@@ -81,7 +81,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
     private void validateSubscriptionNotCanceled(SubscriptionStatus status) {
-        if (status == SubscriptionStatus.CANCELLED) {
+        if (status == SubscriptionStatus.CANCELED) {
             throw new CustomException(SubscriptionErrorCode.SUBSCRIPTION_ALREADY_CANCELED);
         }
     }
