@@ -25,7 +25,7 @@ public record AlbumFileUploadRequest(
                     @Schema(description = "파일의 확장자", defaultValue = "JPEG")
                     FileExtension fileExtension,
             @NotBlank(message = "MD5 해시값은 비워둘 수 없습니다.")
-                    @Schema(description = "S3 업로드시 사진의 변형을 확인하기 위한 md5 해시")
+                    @Schema(description = "S3 업로드시 파일의 변형을 확인하기 위한 md5 해시")
                     String md5Hashes,
-            @Schema(description = "사진이 찍힌 시간, 정보가 없다면 null을 넣어주세요.") LocalDateTime generatedAt) {}
+            @Schema(description = "파일이 찍힌 시간, 정보가 없다면 null을 넣어주세요.") LocalDateTime generatedAt) {}
 }
