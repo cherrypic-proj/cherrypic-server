@@ -13,6 +13,7 @@ import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.event.exception.EventErrorCode;
 import org.cherrypic.domain.image.controller.ImageController;
 import org.cherrypic.domain.image.dto.request.AlbumFileUploadRequest;
+import org.cherrypic.domain.image.dto.request.AlbumImageDeleteRequest;
 import org.cherrypic.domain.image.dto.request.ImageUploadRequest;
 import org.cherrypic.domain.image.dto.request.UploadFailedFileDeleteRequest;
 import org.cherrypic.domain.image.dto.response.AlbumImageListResponse;
@@ -1210,6 +1211,140 @@ class ImageControllerTest {
                     .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
                     .andExpect(jsonPath("$.data.code").value("MethodArgumentNotValidException"))
                     .andExpect(jsonPath("$.data.message").value("Presigned URL은 비워둘 수 없습니다."));
+        }
+    }
+
+    @Nested
+    class 앨범_이미지_삭제_요청_시 {
+
+        @Test
+        void 유효한_요청이면_이미지를_삭제하고_NO_CONTENT를_반환한다() throws Exception {
+            // given
+            AlbumImageDeleteRequest request = new AlbumImageDeleteRequest(List.of(1L, 2L));
+
+            willDoNothing().given(imageService).deleteAlbumImage(1L, request);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            delete("/albums/1/images")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isNoContent())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.NO_CONTENT.value()));
+        }
+
+        @Test
+        void 앨범이_존재하지_않을_경우_예외가_발생한다() throws Exception {
+            // given
+            AlbumImageDeleteRequest request = new AlbumImageDeleteRequest(List.of(1L, 2L));
+
+            willThrow(new CustomException(AlbumErrorCode.ALBUM_NOT_FOUND))
+                    .given(imageService)
+                    .deleteAlbumImage(1L, request);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            delete("/albums/1/images")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.NOT_FOUND.value()))
+                    .andExpect(jsonPath("$.data.code").value("ALBUM_NOT_FOUND"))
+                    .andExpect(jsonPath("$.data.message").value("앨범이 존재하지 않습니다."));
+        }
+
+        @Test
+        void 앨범에_속하지_않은_사용자가_앨범_이미지를_삭제하면_예외가_발생한다() throws Exception {
+            // given
+            AlbumImageDeleteRequest request = new AlbumImageDeleteRequest(List.of(1L, 2L));
+
+            willThrow(new CustomException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT))
+                    .given(imageService)
+                    .deleteAlbumImage(1L, request);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            delete("/albums/1/images")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.FORBIDDEN.value()))
+                    .andExpect(jsonPath("$.data.code").value("NOT_ALBUM_PARTICIPANT"))
+                    .andExpect(jsonPath("$.data.message").value("앨범에 속하지 않은 사용자입니다."));
+        }
+
+        @Test
+        void LIMITED_권한의_사용자가_앨범_이미지를_삭제하면_예외가_발생한다() throws Exception {
+            // given
+            AlbumImageDeleteRequest request = new AlbumImageDeleteRequest(List.of(1L, 2L));
+
+            willThrow(new CustomException(AlbumErrorCode.LIMITED_AUTHORITY))
+                    .given(imageService)
+                    .deleteAlbumImage(1L, request);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            delete("/albums/1/images")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.FORBIDDEN.value()))
+                    .andExpect(jsonPath("$.data.code").value("LIMITED_AUTHORITY"))
+                    .andExpect(jsonPath("$.data.message").value("앨범에 대한 생성/수정 권한이 없습니다."));
+        }
+
+        @Test
+        void 앨범에_속하지_않은_이미지가_포함되어_있으면_예외가_발생한다() throws Exception {
+            // given
+            AlbumImageDeleteRequest request = new AlbumImageDeleteRequest(List.of(1L, 2L));
+
+            willThrow(new CustomException(AlbumErrorCode.IMAGES_NOT_IN_ALBUM))
+                    .given(imageService)
+                    .deleteAlbumImage(1L, request);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            delete("/albums/1/images")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("IMAGES_NOT_IN_ALBUM"))
+                    .andExpect(jsonPath("$.data.message").value("앨범에 속해 있지 않은 이미지가 포함되어 있습니다."));
+        }
+
+        @Test
+        void 삭제하고자_하는_앨범_ID를_비워두면_예외가_발생한다() throws Exception {
+            // given
+            AlbumImageDeleteRequest request = new AlbumImageDeleteRequest(List.of());
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            delete("/albums/1/images")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("MethodArgumentNotValidException"))
+                    .andExpect(jsonPath("$.data.message").value("삭제하고자 하는 이미지 ID는 비워둘 수 없습니다."));
         }
     }
 }
