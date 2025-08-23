@@ -142,9 +142,10 @@ class ImageServiceTest extends IntegrationTest {
                                             "testMd5Hash2",
                                             LocalDateTime.now())));
 
-            // when & then
+            // when
             PresignedUrlsResponse response = imageService.createAlbumImageUploadUrls(1L, request);
 
+            // then
             assertThat(response.presignedUrls())
                     .hasSize(2)
                     .satisfiesExactly(
