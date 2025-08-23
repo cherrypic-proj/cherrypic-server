@@ -11,13 +11,13 @@ import java.util.List;
 import org.cherrypic.domain.image.enums.FileExtension;
 import org.cherrypic.global.annotation.Enum;
 
-public record AlbumImageUploadRequest(
-        @NotNull(message = "이미지 파일들의 용량은 비워둘 수 없습니다.")
-                @Schema(description = "업로드 하는 이미지들의 용량 총합(GB)", example = "1.23")
+public record AlbumFileUploadRequest(
+        @NotNull(message = "파일들의 용량은 비워둘 수 없습니다.")
+                @Schema(description = "업로드 하는 파일들의 용량 총합(GB)", example = "1.23")
                 BigDecimal capacity,
-        @NotEmpty(message = "앨범 이미지 업로드 요청은 비워둘 수 없습니다.") @Valid @Schema(description = "업로드 요청 리스트")
-                List<AlbumImageUploadRequest.payload> payloads) {
-    public record payload(
+        @NotEmpty(message = "업로드할 피일들의 정보는 비워둘 수 없습니다.") @Valid @Schema(description = "업로드 요청 리스트")
+                List<Payload> payloads) {
+    public record Payload(
             @Enum(
                             message =
                                     "파일의 확장자는 비워둘 수 없으며, "

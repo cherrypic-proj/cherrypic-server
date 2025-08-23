@@ -5,9 +5,9 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.cherrypic.domain.image.dto.request.AlbumImageUploadRequest;
+import org.cherrypic.domain.image.dto.request.AlbumFileUploadRequest;
 import org.cherrypic.domain.image.dto.request.MemberProfileImageUploadRequest;
-import org.cherrypic.domain.image.dto.request.UploadFailedImageDeleteRequest;
+import org.cherrypic.domain.image.dto.request.UploadFailedFileDeleteRequest;
 import org.cherrypic.domain.image.dto.response.AlbumImageListResponse;
 import org.cherrypic.domain.image.dto.response.EventImageListResponse;
 import org.cherrypic.domain.image.dto.response.PresignedUrlResponse;
@@ -37,22 +37,22 @@ public class ImageController {
         return imageService.createMemberProfileImageUploadUrl(request);
     }
 
-    @PostMapping("/albums/{albumId}/image-upload-urls")
+    @PostMapping("/albums/{albumId}/file-upload-urls")
     @Operation(
             summary = "앨범 이미지 업로드 Presigned URL들 생성",
             description = "앨범 이미지 업로드를 위한 Presigned URL들을 생성합니다.")
-    public PresignedUrlsResponse albumImageUploadUrlsCreate(
-            @PathVariable Long albumId, @Valid @RequestBody AlbumImageUploadRequest request) {
-        return imageService.createAlbumImageUploadUrls(albumId, request);
+    public PresignedUrlsResponse albumFileUploadUrlsCreate(
+            @PathVariable Long albumId, @Valid @RequestBody AlbumFileUploadRequest request) {
+        return imageService.createAlbumFileUploadUrls(albumId, request);
     }
 
     @DeleteMapping("/images")
     @Operation(
-            summary = "업로드 실패한 동영상 & 이미지 삭제",
+            summary = "업로드 실패한 파일 삭제",
             description = "업로드를 실패한 Presigned URL을 기반으로 동영상 & 이미지를 삭제합니다.")
-    public ResponseEntity<Void> uploadFailedImagedDelete(
-            @Valid @RequestBody UploadFailedImageDeleteRequest request) {
-        imageService.deleteUploadFailedImages(request);
+    public ResponseEntity<Void> uploadFailedFileDelete(
+            @Valid @RequestBody UploadFailedFileDeleteRequest request) {
+        imageService.deleteUploadFailedFile(request);
         return ResponseEntity.noContent().build();
     }
 
