@@ -6,6 +6,7 @@ import com.amazonaws.services.s3.Headers;
 import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
@@ -103,11 +104,16 @@ public class ImageServiceImpl implements ImageService {
                                             requests.requests().get(i);
                                     String presignedUrl = presignedUrls.get(i);
 
+                                    String objectUrl =
+                                            presignedUrl.substring(0, presignedUrl.indexOf("?"));
+
                                     return Image.createImage(
                                             album,
                                             currentMember.getId(),
-                                            presignedUrl,
-                                            req.generatedAt());
+                                            objectUrl,
+                                            req.generatedAt() != null
+                                                    ? req.generatedAt()
+                                                    : LocalDateTime.now());
                                 })
                         .toList();
 

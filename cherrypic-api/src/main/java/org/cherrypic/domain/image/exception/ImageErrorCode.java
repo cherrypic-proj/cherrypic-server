@@ -13,7 +13,6 @@ public enum ImageErrorCode implements BaseErrorCode {
     IMAGE_CONFLICT(409, "예상치 못한 이미지 무결성 오류"),
 
     PRESIGNED_IMAGES_NOT_MINE(403, "본인이 업로드하지 않은 Presigned Image는 삭제할 수 없습니다."),
-    IMAGES_HASHES_SIZE_MISMATCH(400, "이미지 파일 확장자와 md5 개수가 일치하지 않습니다."),
     DUPLICATE_HASHES(400, "중복되는 md5 해시값이 존재합니다.");
 
     private final int status;
