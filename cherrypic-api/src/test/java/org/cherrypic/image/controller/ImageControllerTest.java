@@ -215,12 +215,12 @@ class ImageControllerTest {
         }
 
         @Test
-        void LIMITED_권한의_사용자가_Presigned_Url을_요청하면_예외가_발생한다() throws Exception {
+        void HOST가_아닌_사용자가_Presigned_Url을_요청하면_예외가_발생한다() throws Exception {
             // given
             ImageUploadRequest request = new ImageUploadRequest(FileExtension.JPEG, "testMd5Hash");
 
             given(imageService.createAlbumCoverImageUploadUrl(1L, request))
-                    .willThrow(new CustomException(AlbumErrorCode.LIMITED_AUTHORITY));
+                    .willThrow(new CustomException(AlbumErrorCode.NOT_ALBUM_HOST));
 
             // when & then
             ResultActions perform =
@@ -232,8 +232,8 @@ class ImageControllerTest {
             perform.andExpect(status().isForbidden())
                     .andExpect(jsonPath("$.success").value(false))
                     .andExpect(jsonPath("$.status").value(HttpStatus.FORBIDDEN.value()))
-                    .andExpect(jsonPath("$.data.code").value("LIMITED_AUTHORITY"))
-                    .andExpect(jsonPath("$.data.message").value("앨범에 대한 생성/수정 권한이 없습니다."));
+                    .andExpect(jsonPath("$.data.code").value("NOT_ALBUM_HOST"))
+                    .andExpect(jsonPath("$.data.message").value("방장이 아닌 경우 권한이 없습니다."));
         }
 
         @Test

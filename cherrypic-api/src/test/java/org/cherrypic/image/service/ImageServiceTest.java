@@ -161,14 +161,14 @@ class ImageServiceTest extends IntegrationTest {
         }
 
         @Test
-        void LIMITED_권한의_사용자가_Presigned_Url을_요청하면_예외가_발생한다() {
+        void HOST가_아닌_권한의_사용자가_Presigned_Url을_요청하면_예외가_발생한다() {
             // given
             ImageUploadRequest request = new ImageUploadRequest(FileExtension.MKV, "testMd5Hash");
 
             // when & then
             assertThatThrownBy(() -> imageService.createAlbumCoverImageUploadUrl(2L, request))
                     .isInstanceOf(CustomException.class)
-                    .hasMessage(AlbumErrorCode.LIMITED_AUTHORITY.getMessage());
+                    .hasMessage(AlbumErrorCode.NOT_ALBUM_HOST.getMessage());
         }
 
         @Test

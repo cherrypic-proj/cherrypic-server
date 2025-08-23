@@ -80,7 +80,7 @@ public class ImageServiceImpl implements ImageService {
         final Member currentMember = memberUtil.getCurrentMember();
         final Album album = getAlbumById(albumId);
 
-        validateParticipantAuthority(currentMember.getId(), album.getId());
+        validateAlbumHost(currentMember.getId(), album.getId());
         validateImageExtension(request.fileExtension());
 
         String presignedUrl =
@@ -315,6 +315,14 @@ public class ImageServiceImpl implements ImageService {
     private void validateImageExtension(FileExtension extension) {
         if (!FileExtension.getImageExtensions().contains(extension)) {
             throw new CustomException(ImageErrorCode.NOT_IMAGE_EXTENSION);
+        }
+    }
+
+    private void validateAlbumHost(Long memberId, Long albumId) {
+        Participant participant = getParticipantByMemberIdAndAlbumId(memberId, albumId);
+
+        if (!participant.getRole().equals(ParticipantRole.HOST)) {
+            throw new CustomException(AlbumErrorCode.NOT_ALBUM_HOST);
         }
     }
 }
