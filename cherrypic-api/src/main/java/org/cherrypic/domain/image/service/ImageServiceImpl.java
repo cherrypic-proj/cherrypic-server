@@ -15,7 +15,7 @@ import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.album.repository.AlbumRepository;
 import org.cherrypic.domain.event.exception.EventErrorCode;
 import org.cherrypic.domain.event.repository.EventRepository;
-import org.cherrypic.domain.image.dto.request.AlbumImageUploadRequest;
+import org.cherrypic.domain.image.dto.request.AlbumImageUploadRequests;
 import org.cherrypic.domain.image.dto.request.MemberProfileImageUploadRequest;
 import org.cherrypic.domain.image.dto.request.UploadFailedImageDeleteRequest;
 import org.cherrypic.domain.image.dto.response.AlbumImageListResponse;
@@ -74,27 +74,44 @@ public class ImageServiceImpl implements ImageService {
 
     @Override
     public PresignedUrlsResponse createAlbumImageUploadUrls(
-            Long albumId, AlbumImageUploadRequest request) {
+            Long albumId, AlbumImageUploadRequests requests) {
         final Member currentMember = memberUtil.getCurrentMember();
         final Album album = getAlbumByIdWithLock(albumId);
 
         validateParticipantAuthority(currentMember.getId(), album.getId());
-        validateAlbumCapacity(album, request.capacity());
-        validateDistinctHashes(request.md5Hashes());
-        validateImageExtensionsAndHashesSize(request.imageFileExtensions(), request.md5Hashes());
+        validateAlbumCapacity(album, requests.capacity());
+        validateDistinctHashes(requests);
 
-        album.increaseCapacity(request.capacity());
+        album.increaseCapacity(requests.capacity());
 
         List<String> presignedUrls =
-                IntStream.range(0, request.imageFileExtensions().size())
-                        .mapToObj(
-                                i ->
+                requests.requests().stream()
+                        .map(
+                                req ->
                                         createPresignedUrl(
                                                 ImageType.ALBUM_IMAGE,
                                                 currentMember.getId(),
-                                                request.imageFileExtensions().get(i),
-                                                request.md5Hashes().get(i)))
+                                                req.imageFileExtension(),
+                                                req.md5Hashes()))
                         .toList();
+
+        List<Image> images =
+                IntStream.range(0, requests.requests().size())
+                        .mapToObj(
+                                i -> {
+                                    AlbumImageUploadRequests.AlbumImageUploadRequest req =
+                                            requests.requests().get(i);
+                                    String presignedUrl = presignedUrls.get(i);
+
+                                    return Image.createImage(
+                                            album,
+                                            currentMember.getId(),
+                                            presignedUrl,
+                                            req.generatedAt());
+                                })
+                        .toList();
+
+        imageRepository.saveAll(images);
 
         return PresignedUrlsResponse.of(presignedUrls);
     }
@@ -248,14 +265,12 @@ public class ImageServiceImpl implements ImageService {
         }
     }
 
-    private void validateImageExtensionsAndHashesSize(
-            List<ImageFileExtension> extensions, List<String> hashes) {
-        if (extensions.size() != hashes.size()) {
-            throw new CustomException(ImageErrorCode.IMAGES_HASHES_SIZE_MISMATCH);
-        }
-    }
+    private void validateDistinctHashes(AlbumImageUploadRequests requests) {
+        List<String> hashes =
+                requests.requests().stream()
+                        .map(AlbumImageUploadRequests.AlbumImageUploadRequest::md5Hashes)
+                        .toList();
 
-    private void validateDistinctHashes(List<String> hashes) {
         if (hashes.stream().distinct().count() != hashes.size()) {
             throw new CustomException(ImageErrorCode.DUPLICATE_HASHES);
         }
