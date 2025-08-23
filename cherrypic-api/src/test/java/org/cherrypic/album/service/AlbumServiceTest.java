@@ -657,122 +657,6 @@ class AlbumServiceTest extends IntegrationTest {
     }
 
     @Nested
-    class 앨범_목록을_조회할_때 {
-
-        @BeforeEach
-        void setUp() {
-            Member member =
-                    Member.createMember(
-                            OauthInfo.createOauthInfo("testOauthId", "testOauthProvider"),
-                            "testNickname",
-                            "testProfileImageUrl");
-            memberRepository.save(member);
-            given(memberUtil.getCurrentMember()).willReturn(member);
-
-            Album album1 = Album.createAlbum("testTitle1", "testCoverUrl1", AlbumPlan.BASIC, false);
-            Album album2 = Album.createAlbum("testTitle2", "testCoverUrl2", AlbumPlan.BASIC, false);
-            Album album3 = Album.createAlbum("testTitle3", "testCoverUrl3", AlbumPlan.PRO, false);
-            albumRepository.saveAll(List.of(album1, album2, album3));
-
-            Participant participant1 =
-                    Participant.createParticipant(member, album1, ParticipantRole.HOST);
-            Participant participant2 =
-                    Participant.createParticipant(member, album2, ParticipantRole.HOST);
-            Participant participant3 =
-                    Participant.createParticipant(member, album3, ParticipantRole.HOST);
-            participantRepository.saveAll(List.of(participant1, participant2, participant3));
-
-            Favorites favorites1 = Favorites.createFavorites(participant1);
-            Favorites favorites2 = Favorites.createFavorites(participant2);
-            Favorites favorites3 = Favorites.createFavorites(participant3);
-            favoritesRepository.saveAll(List.of(favorites1, favorites2, favorites3));
-        }
-
-        @Test
-        void PRO_플랜으로_필터링하면_PRO_앨범만_조회한다() {
-            // given
-            SliceResponse<AlbumListResponse> response =
-                    albumService.getParticipatingAlbumsByPlan(
-                            AlbumPlan.PRO, null, 1, SortDirection.DESC);
-
-            // when & then
-            Assertions.assertAll(
-                    () -> assertThat(response.content().get(0).albumId()).isEqualTo(3),
-                    () -> assertThat(response.content().get(0).plan()).isEqualTo(AlbumPlan.PRO),
-                    () -> assertThat(response.isLast()).isTrue());
-        }
-
-        @Test
-        void 정렬_조건이_ASC이면_albumId를_오름차순으로_조회한다() {
-            // when
-            SliceResponse<AlbumListResponse> response =
-                    albumService.getParticipatingAlbumsByPlan(null, null, 3, SortDirection.ASC);
-
-            // then
-            Assertions.assertAll(
-                    () ->
-                            assertThat(response.content())
-                                    .extracting("albumId")
-                                    .containsExactly(1L, 2L, 3L),
-                    () -> assertThat(response.isLast()).isTrue());
-        }
-
-        @Test
-        void 정렬_조건이_DESC이면_albumId를_내림차순으로_조회한다() {
-            // when
-            SliceResponse<AlbumListResponse> response =
-                    albumService.getParticipatingAlbumsByPlan(null, null, 3, SortDirection.DESC);
-
-            // then
-            Assertions.assertAll(
-                    () ->
-                            assertThat(response.content())
-                                    .extracting("albumId")
-                                    .containsExactly(3L, 2L, 1L),
-                    () -> assertThat(response.isLast()).isTrue());
-        }
-
-        @Test
-        void 마지막_페이지인_경우_isLast를_true로_반환한다() {
-            // when
-            SliceResponse<AlbumListResponse> response =
-                    albumService.getParticipatingAlbumsByPlan(null, null, 3, SortDirection.DESC);
-
-            // then
-            Assertions.assertAll(
-                    () -> assertThat(response.content().size()).isEqualTo(3),
-                    () -> assertThat(response.isLast()).isTrue());
-        }
-
-        @Test
-        void 마지막_페이지가_아닌_경우_isLast를_false로_반환한다() {
-            // when
-            SliceResponse<AlbumListResponse> response =
-                    albumService.getParticipatingAlbumsByPlan(null, null, 1, SortDirection.DESC);
-
-            // then
-            Assertions.assertAll(
-                    () -> assertThat(response.content().size()).isEqualTo(1),
-                    () -> assertThat(response.isLast()).isFalse());
-        }
-
-        @Test
-        void 앨범이_없는_경우_빈_리스트를_조회한다() {
-            // given
-            albumRepository.deleteAll();
-
-            // when
-            SliceResponse<AlbumListResponse> response =
-                    albumService.getParticipatingAlbumsByPlan(null, null, 10, SortDirection.DESC);
-
-            // when & then
-            Assertions.assertAll(
-                    () -> assertThat(response.content().size()).isZero(),
-                    () -> assertThat(response.isLast()).isTrue());
-        }
-    }
-
-    @Nested
     class 앨범에_입장할_때 {
 
         @BeforeEach
@@ -887,6 +771,231 @@ class AlbumServiceTest extends IntegrationTest {
     }
 
     @Nested
+    class 개별_앨범을_조회할_때 {
+
+        @BeforeEach
+        void setUp() {
+            Member member =
+                    Member.createMember(
+                            OauthInfo.createOauthInfo("testOauthId", "testOauthProvider"),
+                            "testNickname",
+                            "testProfileImageUrl");
+            memberRepository.save(member);
+            given(memberUtil.getCurrentMember()).willReturn(member);
+
+            Album album1 = Album.createAlbum("testAlbum1", "testURL1", AlbumPlan.BASIC, false);
+            Album album2 = Album.createAlbum("testAlbum2", "testURL2", AlbumPlan.BASIC, false);
+            Album album3 = Album.createAlbum("testAlbum3", "testURL3", AlbumPlan.BASIC, false);
+            albumRepository.saveAll(List.of(album1, album2, album3));
+
+            Participant participant1 =
+                    Participant.createParticipant(member, album1, ParticipantRole.HOST);
+            Participant participant2 =
+                    Participant.createParticipant(member, album2, ParticipantRole.STANDARD);
+            participantRepository.saveAll(List.of(participant1, participant2));
+        }
+
+        @Test
+        void 유효한_요청인_경우_앨범_정보를_반환한다() {
+            // when
+            AlbumInfoResponse response = albumService.getAlbum(1L);
+
+            // then
+            assertThat(response)
+                    .extracting(
+                            "title",
+                            "coverUrl",
+                            "albumPlan",
+                            "capacityUsed",
+                            "totalCapacity",
+                            "hostName",
+                            "numOfParticipants")
+                    .containsExactly(
+                            "testAlbum1",
+                            "testURL1",
+                            AlbumPlan.BASIC,
+                            new BigDecimal("0.00"),
+                            new BigDecimal("3"),
+                            "testNickname",
+                            1);
+        }
+
+        @Test
+        void 앨범이_존재하지_않는_경우_예외가_발생한다() {
+            // when & then
+            assertThatThrownBy(() -> albumService.getAlbum(999L))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(AlbumErrorCode.ALBUM_NOT_FOUND.getMessage());
+        }
+
+        @Test
+        void 앨범_참여자가_아닌_경우_에외가_발생한다() {
+            // when & then
+            assertThatThrownBy(() -> albumService.getAlbum(3L))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(AlbumErrorCode.NOT_ALBUM_PARTICIPANT.getMessage());
+        }
+
+        @Test
+        void 앨범에_방장이_없는_경우_에외가_발생한다() {
+            // when & then
+            assertThatThrownBy(() -> albumService.getAlbum(2L))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(AlbumErrorCode.ALBUM_HOST_NOT_FOUND.getMessage());
+        }
+    }
+
+    @Nested
+    class 앨범_목록을_조회할_때 {
+
+        @BeforeEach
+        void setUp() {
+            Member member =
+                    Member.createMember(
+                            OauthInfo.createOauthInfo("testOauthId", "testOauthProvider"),
+                            "testNickname",
+                            "testProfileImageUrl");
+            memberRepository.save(member);
+            given(memberUtil.getCurrentMember()).willReturn(member);
+
+            Album album1 = Album.createAlbum("testTitle1", "testCoverUrl1", AlbumPlan.BASIC, false);
+            Album album2 = Album.createAlbum("testTitle2", "testCoverUrl2", AlbumPlan.BASIC, false);
+            Album album3 = Album.createAlbum("testTitle3", "testCoverUrl3", AlbumPlan.PRO, false);
+            albumRepository.saveAll(List.of(album1, album2, album3));
+
+            Participant participant1 =
+                    Participant.createParticipant(member, album1, ParticipantRole.HOST);
+            Participant participant2 =
+                    Participant.createParticipant(member, album2, ParticipantRole.HOST);
+            Participant participant3 =
+                    Participant.createParticipant(member, album3, ParticipantRole.HOST);
+            participantRepository.saveAll(List.of(participant1, participant2, participant3));
+
+            Favorites favorites1 = Favorites.createFavorites(participant1);
+            Favorites favorites2 = Favorites.createFavorites(participant2);
+            Favorites favorites3 = Favorites.createFavorites(participant3);
+            favoritesRepository.saveAll(List.of(favorites1, favorites2, favorites3));
+        }
+
+        @Test
+        void PRO_플랜으로_필터링하면_PRO_앨범만_조회한다() {
+            // given
+            SliceResponse<AlbumListResponse> response =
+                    albumService.getParticipatingAlbumsByCondition(
+                            AlbumPlan.PRO, null, null, 1, SortDirection.DESC);
+
+            // when & then
+            Assertions.assertAll(
+                    () -> assertThat(response.content().get(0).albumId()).isEqualTo(3),
+                    () -> assertThat(response.content().get(0).plan()).isEqualTo(AlbumPlan.PRO),
+                    () -> assertThat(response.isLast()).isTrue());
+        }
+
+        @Test
+        void 앨범_이름으로_필터링하면_일치하는_앨범만_조회한다() {
+            // given
+            SliceResponse<AlbumListResponse> response =
+                    albumService.getParticipatingAlbumsByCondition(
+                            null, "title2", null, 1, SortDirection.DESC);
+
+            // when & then
+            Assertions.assertAll(
+                    () -> assertThat(response.content().get(0).albumId()).isEqualTo(2),
+                    () -> assertThat(response.content().get(0).title()).isEqualTo("testTitle2"),
+                    () -> assertThat(response.isLast()).isTrue());
+        }
+
+        @Test
+        void PRO_플랜과_앨범_이름으로_필터링하면_조건을_모두_만족하는_앨범만_조회한다() {
+            // given
+            SliceResponse<AlbumListResponse> response =
+                    albumService.getParticipatingAlbumsByCondition(
+                            AlbumPlan.PRO, "title3", null, 1, SortDirection.DESC);
+
+            // when & then
+            Assertions.assertAll(
+                    () -> assertThat(response.content().get(0).albumId()).isEqualTo(3),
+                    () -> assertThat(response.content().get(0).title()).isEqualTo("testTitle3"),
+                    () -> assertThat(response.content().get(0).plan()).isEqualTo(AlbumPlan.PRO),
+                    () -> assertThat(response.isLast()).isTrue());
+        }
+
+        @Test
+        void 정렬_조건이_ASC이면_albumId를_오름차순으로_조회한다() {
+            // when
+            SliceResponse<AlbumListResponse> response =
+                    albumService.getParticipatingAlbumsByCondition(
+                            null, null, null, 3, SortDirection.ASC);
+
+            // then
+            Assertions.assertAll(
+                    () ->
+                            assertThat(response.content())
+                                    .extracting("albumId")
+                                    .containsExactly(1L, 2L, 3L),
+                    () -> assertThat(response.isLast()).isTrue());
+        }
+
+        @Test
+        void 정렬_조건이_DESC이면_albumId를_내림차순으로_조회한다() {
+            // when
+            SliceResponse<AlbumListResponse> response =
+                    albumService.getParticipatingAlbumsByCondition(
+                            null, null, null, 3, SortDirection.DESC);
+
+            // then
+            Assertions.assertAll(
+                    () ->
+                            assertThat(response.content())
+                                    .extracting("albumId")
+                                    .containsExactly(3L, 2L, 1L),
+                    () -> assertThat(response.isLast()).isTrue());
+        }
+
+        @Test
+        void 마지막_페이지인_경우_isLast를_true로_반환한다() {
+            // when
+            SliceResponse<AlbumListResponse> response =
+                    albumService.getParticipatingAlbumsByCondition(
+                            null, null, null, 3, SortDirection.DESC);
+
+            // then
+            Assertions.assertAll(
+                    () -> assertThat(response.content().size()).isEqualTo(3),
+                    () -> assertThat(response.isLast()).isTrue());
+        }
+
+        @Test
+        void 마지막_페이지가_아닌_경우_isLast를_false로_반환한다() {
+            // when
+            SliceResponse<AlbumListResponse> response =
+                    albumService.getParticipatingAlbumsByCondition(
+                            null, null, null, 1, SortDirection.DESC);
+
+            // then
+            Assertions.assertAll(
+                    () -> assertThat(response.content().size()).isEqualTo(1),
+                    () -> assertThat(response.isLast()).isFalse());
+        }
+
+        @Test
+        void 앨범이_없는_경우_빈_리스트를_조회한다() {
+            // given
+            albumRepository.deleteAll();
+
+            // when
+            SliceResponse<AlbumListResponse> response =
+                    albumService.getParticipatingAlbumsByCondition(
+                            null, null, null, 10, SortDirection.DESC);
+
+            // when & then
+            Assertions.assertAll(
+                    () -> assertThat(response.content().size()).isZero(),
+                    () -> assertThat(response.isLast()).isTrue());
+        }
+    }
+
+    @Nested
     class 앨범을_삭제할_때 {
 
         @BeforeEach
@@ -984,81 +1093,6 @@ class AlbumServiceTest extends IntegrationTest {
             assertThatThrownBy(() -> albumService.deleteAlbum(5L))
                     .isInstanceOf(CustomException.class)
                     .hasMessage(AlbumErrorCode.SUBSCRIPTION_ACTIVE.getMessage());
-        }
-    }
-
-    @Nested
-    class 개별_앨범을_조회할_때 {
-
-        @BeforeEach
-        void setUp() {
-            Member member =
-                    Member.createMember(
-                            OauthInfo.createOauthInfo("testOauthId", "testOauthProvider"),
-                            "testNickname",
-                            "testProfileImageUrl");
-            memberRepository.save(member);
-            given(memberUtil.getCurrentMember()).willReturn(member);
-
-            Album album1 = Album.createAlbum("testAlbum1", "testURL1", AlbumPlan.BASIC, false);
-            Album album2 = Album.createAlbum("testAlbum2", "testURL2", AlbumPlan.BASIC, false);
-            Album album3 = Album.createAlbum("testAlbum3", "testURL3", AlbumPlan.BASIC, false);
-            albumRepository.saveAll(List.of(album1, album2, album3));
-
-            Participant participant1 =
-                    Participant.createParticipant(member, album1, ParticipantRole.HOST);
-            Participant participant2 =
-                    Participant.createParticipant(member, album2, ParticipantRole.STANDARD);
-            participantRepository.saveAll(List.of(participant1, participant2));
-        }
-
-        @Test
-        void 유효한_요청인_경우_앨범_정보를_반환한다() {
-            // when
-            AlbumInfoResponse response = albumService.getAlbum(1L);
-
-            // then
-            assertThat(response)
-                    .extracting(
-                            "title",
-                            "coverUrl",
-                            "albumPlan",
-                            "capacityUsed",
-                            "totalCapacity",
-                            "hostName",
-                            "numOfParticipants")
-                    .containsExactly(
-                            "testAlbum1",
-                            "testURL1",
-                            AlbumPlan.BASIC,
-                            new BigDecimal("0.00"),
-                            new BigDecimal("3"),
-                            "testNickname",
-                            1);
-        }
-
-        @Test
-        void 앨범이_존재하지_않는_경우_예외가_발생한다() {
-            // when & then
-            assertThatThrownBy(() -> albumService.getAlbum(999L))
-                    .isInstanceOf(CustomException.class)
-                    .hasMessage(AlbumErrorCode.ALBUM_NOT_FOUND.getMessage());
-        }
-
-        @Test
-        void 앨범_참여자가_아닌_경우_에외가_발생한다() {
-            // when & then
-            assertThatThrownBy(() -> albumService.getAlbum(3L))
-                    .isInstanceOf(CustomException.class)
-                    .hasMessage(AlbumErrorCode.NOT_ALBUM_PARTICIPANT.getMessage());
-        }
-
-        @Test
-        void 앨범에_방장이_없는_경우_에외가_발생한다() {
-            // when & then
-            assertThatThrownBy(() -> albumService.getAlbum(2L))
-                    .isInstanceOf(CustomException.class)
-                    .hasMessage(AlbumErrorCode.ALBUM_HOST_NOT_FOUND.getMessage());
         }
     }
 }

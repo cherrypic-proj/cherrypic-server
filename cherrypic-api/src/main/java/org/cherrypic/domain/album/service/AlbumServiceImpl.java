@@ -141,19 +141,6 @@ public class AlbumServiceImpl implements AlbumService {
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public SliceResponse<AlbumListResponse> getParticipatingAlbumsByPlan(
-            AlbumPlan plan, Long lastAlbumId, int size, SortDirection direction) {
-        final Member currentMember = memberUtil.getCurrentMember();
-
-        Slice<AlbumListResponse> results =
-                albumRepository.findAllByMemberIdAndPlan(
-                        currentMember.getId(), plan, lastAlbumId, size, direction);
-
-        return SliceResponse.from(results);
-    }
-
-    @Override
     public AlbumJoinResponse joinAlbum(Long albumId, String code) {
         final Member currentMember = memberUtil.getCurrentMember();
         final Album album = getAlbumByIdWithLock(albumId);
@@ -195,6 +182,19 @@ public class AlbumServiceImpl implements AlbumService {
                 album.getPlan().getCapacityGb(),
                 hostName,
                 numOfParticipants);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public SliceResponse<AlbumListResponse> getParticipatingAlbumsByCondition(
+            AlbumPlan plan, String keyword, Long lastAlbumId, int size, SortDirection direction) {
+        final Member currentMember = memberUtil.getCurrentMember();
+
+        Slice<AlbumListResponse> results =
+                albumRepository.findAllByMemberIdAndPlanAndKeyword(
+                        currentMember.getId(), plan, keyword, lastAlbumId, size, direction);
+
+        return SliceResponse.from(results);
     }
 
     @Override

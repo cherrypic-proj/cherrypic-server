@@ -705,181 +705,6 @@ class AlbumControllerTest {
     }
 
     @Nested
-    class 앨범_목록_조회_요청_시 {
-
-        @Test
-        void PRO_플랜으로_필터링하면_PRO_앨범만_응답한다() throws Exception {
-            // given
-            List<AlbumListResponse> albums =
-                    List.of(
-                            new AlbumListResponse(
-                                    2L, "testTitle2", "testCoverUrl2", AlbumPlan.PRO, true),
-                            new AlbumListResponse(
-                                    1L, "testTitle1", "testCoverUrl1", AlbumPlan.PRO, false));
-
-            given(
-                            albumService.getParticipatingAlbumsByPlan(
-                                    AlbumPlan.PRO, null, 2, SortDirection.DESC))
-                    .willReturn(new SliceResponse<>(albums, true));
-
-            // when & then
-            ResultActions perform =
-                    mockMvc.perform(get("/albums").param("plan", "PRO").param("size", "2"));
-
-            perform.andExpect(status().isOk())
-                    .andExpect(jsonPath("$.success").value(true))
-                    .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
-                    .andExpect(jsonPath("$.data.content[0].plan").value("PRO"))
-                    .andExpect(jsonPath("$.data.content[1].plan").value("PRO"))
-                    .andExpect(jsonPath("$.data.isLast").value(true));
-        }
-
-        @Test
-        void 정렬_조건이_ASC이면_albumId를_오름차순으로_응답한다() throws Exception {
-            // given
-            List<AlbumListResponse> albums =
-                    List.of(
-                            new AlbumListResponse(
-                                    1L, "testTitle1", "testCoverUrl1", AlbumPlan.BASIC, false),
-                            new AlbumListResponse(
-                                    2L, "testTitle2", "testCoverUrl2", AlbumPlan.PRO, true));
-
-            given(albumService.getParticipatingAlbumsByPlan(null, null, 2, SortDirection.ASC))
-                    .willReturn(new SliceResponse<>(albums, true));
-
-            // when & then
-            ResultActions perform =
-                    mockMvc.perform(get("/albums").param("size", "2").param("direction", "ASC"));
-
-            perform.andExpect(status().isOk())
-                    .andExpect(jsonPath("$.success").value(true))
-                    .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
-                    .andExpect(jsonPath("$.data.content[0].albumId").value(1))
-                    .andExpect(jsonPath("$.data.content[1].albumId").value(2))
-                    .andExpect(jsonPath("$.data.isLast").value(true));
-        }
-
-        @Test
-        void 정렬_조건이_DESC이면_albumId를_내림차순으로_응답한다() throws Exception {
-            // given
-            List<AlbumListResponse> albums =
-                    List.of(
-                            new AlbumListResponse(
-                                    2L, "testTitle2", "testCoverUrl2", AlbumPlan.PRO, true),
-                            new AlbumListResponse(
-                                    1L, "testTitle1", "testCoverUrl1", AlbumPlan.BASIC, false));
-
-            given(albumService.getParticipatingAlbumsByPlan(null, null, 2, SortDirection.DESC))
-                    .willReturn(new SliceResponse<>(albums, true));
-
-            // when & then
-            ResultActions perform =
-                    mockMvc.perform(get("/albums").param("size", "2").param("direction", "DESC"));
-
-            perform.andExpect(status().isOk())
-                    .andExpect(jsonPath("$.success").value(true))
-                    .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
-                    .andExpect(jsonPath("$.data.content[0].albumId").value(2))
-                    .andExpect(jsonPath("$.data.content[1].albumId").value(1))
-                    .andExpect(jsonPath("$.data.isLast").value(true));
-        }
-
-        @Test
-        void 마지막_페이지인_경우_isLast를_true로_응답한다() throws Exception {
-            // given
-            List<AlbumListResponse> albums =
-                    List.of(
-                            new AlbumListResponse(
-                                    1L, "testTitle1", "testCoverUrl1", AlbumPlan.BASIC, false));
-
-            given(albumService.getParticipatingAlbumsByPlan(null, null, 1, SortDirection.DESC))
-                    .willReturn(new SliceResponse<>(albums, true));
-
-            // when & then
-            ResultActions perform =
-                    mockMvc.perform(get("/albums").param("size", "1").param("direction", "DESC"));
-
-            perform.andExpect(status().isOk())
-                    .andExpect(jsonPath("$.success").value(true))
-                    .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
-                    .andExpect(jsonPath("$.data.content[0].albumId").value(1))
-                    .andExpect(jsonPath("$.data.isLast").value(true));
-        }
-
-        @Test
-        void 마지막_페이지가_아닌_경우_isLast를_false로_응답한다() throws Exception {
-            // given
-            List<AlbumListResponse> albums =
-                    List.of(
-                            new AlbumListResponse(
-                                    2L, "testTitle2", "testCoverUrl2", AlbumPlan.PRO, true),
-                            new AlbumListResponse(
-                                    1L, "testTitle1", "testCoverUrl1", AlbumPlan.BASIC, false));
-
-            given(albumService.getParticipatingAlbumsByPlan(null, null, 1, SortDirection.DESC))
-                    .willReturn(new SliceResponse<>(albums, false));
-
-            // when & then
-            ResultActions perform =
-                    mockMvc.perform(get("/albums").param("size", "1").param("direction", "DESC"));
-
-            perform.andExpect(status().isOk())
-                    .andExpect(jsonPath("$.success").value(true))
-                    .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
-                    .andExpect(jsonPath("$.data.content[0].albumId").value(2))
-                    .andExpect(jsonPath("$.data.isLast").value(false));
-        }
-
-        @Test
-        void 앨범이_없는_경우_빈_리스트를_응답한다() throws Exception {
-            // given
-            List<AlbumListResponse> albums = List.of();
-
-            given(albumService.getParticipatingAlbumsByPlan(null, null, 10, SortDirection.DESC))
-                    .willReturn(new SliceResponse<>(albums, true));
-
-            // when & then
-            ResultActions perform =
-                    mockMvc.perform(get("/albums").param("size", "10").param("direction", "DESC"));
-
-            perform.andExpect(status().isOk())
-                    .andExpect(jsonPath("$.success").value(true))
-                    .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
-                    .andExpect(jsonPath("$.data.content").isEmpty())
-                    .andExpect(jsonPath("$.data.isLast").value(true));
-        }
-
-        @ParameterizedTest
-        @ValueSource(strings = {"-1", "-999", "0"})
-        void 페이지_크기가_0_이하이면_예외가_발생한다(String pageSize) throws Exception {
-            // when & then
-            ResultActions perform =
-                    mockMvc.perform(
-                            get("/albums").param("size", pageSize).param("direction", "DESC"));
-
-            perform.andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.success").value(false))
-                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
-                    .andExpect(jsonPath("$.data.code").value("ConstraintViolationException"))
-                    .andExpect(jsonPath("$.data.message").value("페이지 크기는 0보다 큰 값만 가능합니다."));
-        }
-
-        @ParameterizedTest
-        @ValueSource(strings = {"ASCC", "DESCC", "OLDEST", "NEWEST"})
-        void 존재하지_않는_정렬_기준을_입력하면_예외가_발생한다(String sort) throws Exception {
-            // when & then
-            ResultActions perform =
-                    mockMvc.perform(get("/albums").param("size", "2").param("direction", sort));
-
-            perform.andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.success").value(false))
-                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
-                    .andExpect(jsonPath("$.data.code").value("METHOD_ARGUMENT_TYPE_MISMATCH"))
-                    .andExpect(jsonPath("$.data.message").value("요청한 값의 타입이 잘못되어 처리할 수 없습니다."));
-        }
-    }
-
-    @Nested
     class 앨범_입장_요청_시 {
 
         @Test
@@ -991,6 +816,334 @@ class AlbumControllerTest {
     }
 
     @Nested
+    class 개별_앨범을_조회_요청_시 {
+
+        @Test
+        void 유효한_요청인_경우_앨범_정보를_반환한다() throws Exception {
+            // given
+            AlbumInfoResponse response =
+                    new AlbumInfoResponse(
+                            "testAlbum",
+                            "testUrl",
+                            AlbumPlan.BASIC,
+                            new BigDecimal("0.00"),
+                            new BigDecimal("3"),
+                            "testNickname",
+                            1);
+            given(albumService.getAlbum(1L)).willReturn(response);
+
+            // when & then
+            ResultActions perform = mockMvc.perform(get("/albums/1"));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
+                    .andExpect(jsonPath("$.data.title").value("testAlbum"))
+                    .andExpect(jsonPath("$.data.coverUrl").value("testUrl"))
+                    .andExpect(jsonPath("$.data.albumPlan").value("BASIC"))
+                    .andExpect(jsonPath("$.data.capacityUsed").value("0.00"))
+                    .andExpect(jsonPath("$.data.totalCapacity").value("3"))
+                    .andExpect(jsonPath("$.data.hostName").value("testNickname"))
+                    .andExpect(jsonPath("$.data.numOfParticipants").value(1));
+        }
+
+        @Test
+        void 앨범이_존재하지_않는_경우_예외가_발생한다() throws Exception {
+            // given
+            willThrow(new CustomException(AlbumErrorCode.ALBUM_NOT_FOUND))
+                    .given(albumService)
+                    .getAlbum(1L);
+
+            // when & then
+            ResultActions perform = mockMvc.perform(get("/albums/1"));
+
+            perform.andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.NOT_FOUND.value()))
+                    .andExpect(jsonPath("$.data.code").value("ALBUM_NOT_FOUND"))
+                    .andExpect(jsonPath("$.data.message").value("앨범이 존재하지 않습니다."));
+        }
+
+        @Test
+        void 앨범_참여자가_아닌_경우_에외가_발생한다() throws Exception {
+            // given
+            willThrow(new CustomException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT))
+                    .given(albumService)
+                    .getAlbum(1L);
+
+            // when & then
+            ResultActions perform = mockMvc.perform(get("/albums/1"));
+
+            perform.andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.FORBIDDEN.value()))
+                    .andExpect(jsonPath("$.data.code").value("NOT_ALBUM_PARTICIPANT"))
+                    .andExpect(jsonPath("$.data.message").value("앨범에 속하지 않은 사용자입니다."));
+        }
+
+        @Test
+        void 앨범에_방장이_없는_경우_에외가_발생한다() throws Exception {
+            // given
+            willThrow(new CustomException(AlbumErrorCode.ALBUM_HOST_NOT_FOUND))
+                    .given(albumService)
+                    .getAlbum(1L);
+
+            // when & then
+            ResultActions perform = mockMvc.perform(get("/albums/1"));
+
+            perform.andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.NOT_FOUND.value()))
+                    .andExpect(jsonPath("$.data.code").value("ALBUM_HOST_NOT_FOUND"))
+                    .andExpect(jsonPath("$.data.message").value("방장이 존재하지 않는 앨범입니다"));
+        }
+    }
+
+    @Nested
+    class 앨범_목록_조회_요청_시 {
+
+        @Test
+        void PRO_플랜으로_필터링하면_PRO_앨범만_응답한다() throws Exception {
+            // given
+            List<AlbumListResponse> albums =
+                    List.of(
+                            new AlbumListResponse(
+                                    2L, "testTitle2", "testCoverUrl2", AlbumPlan.PRO, true),
+                            new AlbumListResponse(
+                                    1L, "testTitle1", "testCoverUrl1", AlbumPlan.PRO, false));
+
+            given(
+                            albumService.getParticipatingAlbumsByCondition(
+                                    AlbumPlan.PRO, null, null, 2, SortDirection.DESC))
+                    .willReturn(new SliceResponse<>(albums, true));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(get("/albums").param("plan", "PRO").param("size", "2"));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
+                    .andExpect(jsonPath("$.data.content[0].plan").value("PRO"))
+                    .andExpect(jsonPath("$.data.content[1].plan").value("PRO"))
+                    .andExpect(jsonPath("$.data.isLast").value(true));
+        }
+
+        @Test
+        void 앨범_이름으로_필터링하면_일치하는_앨범만_응답한다() throws Exception {
+            // given
+            List<AlbumListResponse> albums =
+                    List.of(
+                            new AlbumListResponse(
+                                    2L, "testTitle2", "testCoverUrl2", AlbumPlan.BASIC, true),
+                            new AlbumListResponse(
+                                    1L, "testTitle1", "testCoverUrl1", AlbumPlan.BASIC, false));
+
+            given(
+                            albumService.getParticipatingAlbumsByCondition(
+                                    null, "testTitle", null, 2, SortDirection.DESC))
+                    .willReturn(new SliceResponse<>(albums, true));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            get("/albums").param("keyword", "testTitle").param("size", "2"));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
+                    .andExpect(jsonPath("$.data.content[0].title").value("testTitle2"))
+                    .andExpect(jsonPath("$.data.content[1].title").value("testTitle1"))
+                    .andExpect(jsonPath("$.data.isLast").value(true));
+        }
+
+        @Test
+        void PRO_플랜과_앨범_이름으로_필터링하면_조건을_모두_만족하는_앨범만_응답한다() throws Exception {
+            // given
+            List<AlbumListResponse> albums =
+                    List.of(
+                            new AlbumListResponse(
+                                    2L, "testTitle2", "testCoverUrl2", AlbumPlan.PRO, true),
+                            new AlbumListResponse(
+                                    1L, "testTitle1", "testCoverUrl1", AlbumPlan.PRO, false));
+
+            given(
+                            albumService.getParticipatingAlbumsByCondition(
+                                    AlbumPlan.PRO, "testTitle", null, 2, SortDirection.DESC))
+                    .willReturn(new SliceResponse<>(albums, true));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            get("/albums")
+                                    .param("plan", "PRO")
+                                    .param("keyword", "testTitle")
+                                    .param("size", "2"));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
+                    .andExpect(jsonPath("$.data.content[0].title").value("testTitle2"))
+                    .andExpect(jsonPath("$.data.content[1].title").value("testTitle1"))
+                    .andExpect(jsonPath("$.data.isLast").value(true));
+        }
+
+        @Test
+        void 정렬_조건이_ASC이면_albumId를_오름차순으로_응답한다() throws Exception {
+            // given
+            List<AlbumListResponse> albums =
+                    List.of(
+                            new AlbumListResponse(
+                                    1L, "testTitle1", "testCoverUrl1", AlbumPlan.BASIC, false),
+                            new AlbumListResponse(
+                                    2L, "testTitle2", "testCoverUrl2", AlbumPlan.PRO, true));
+
+            given(
+                            albumService.getParticipatingAlbumsByCondition(
+                                    null, null, null, 2, SortDirection.ASC))
+                    .willReturn(new SliceResponse<>(albums, true));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(get("/albums").param("size", "2").param("direction", "ASC"));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
+                    .andExpect(jsonPath("$.data.content[0].albumId").value(1))
+                    .andExpect(jsonPath("$.data.content[1].albumId").value(2))
+                    .andExpect(jsonPath("$.data.isLast").value(true));
+        }
+
+        @Test
+        void 정렬_조건이_DESC이면_albumId를_내림차순으로_응답한다() throws Exception {
+            // given
+            List<AlbumListResponse> albums =
+                    List.of(
+                            new AlbumListResponse(
+                                    2L, "testTitle2", "testCoverUrl2", AlbumPlan.PRO, true),
+                            new AlbumListResponse(
+                                    1L, "testTitle1", "testCoverUrl1", AlbumPlan.BASIC, false));
+
+            given(
+                            albumService.getParticipatingAlbumsByCondition(
+                                    null, null, null, 2, SortDirection.DESC))
+                    .willReturn(new SliceResponse<>(albums, true));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(get("/albums").param("size", "2").param("direction", "DESC"));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
+                    .andExpect(jsonPath("$.data.content[0].albumId").value(2))
+                    .andExpect(jsonPath("$.data.content[1].albumId").value(1))
+                    .andExpect(jsonPath("$.data.isLast").value(true));
+        }
+
+        @Test
+        void 마지막_페이지인_경우_isLast를_true로_응답한다() throws Exception {
+            // given
+            List<AlbumListResponse> albums =
+                    List.of(
+                            new AlbumListResponse(
+                                    1L, "testTitle1", "testCoverUrl1", AlbumPlan.BASIC, false));
+
+            given(
+                            albumService.getParticipatingAlbumsByCondition(
+                                    null, null, null, 1, SortDirection.DESC))
+                    .willReturn(new SliceResponse<>(albums, true));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(get("/albums").param("size", "1").param("direction", "DESC"));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
+                    .andExpect(jsonPath("$.data.content[0].albumId").value(1))
+                    .andExpect(jsonPath("$.data.isLast").value(true));
+        }
+
+        @Test
+        void 마지막_페이지가_아닌_경우_isLast를_false로_응답한다() throws Exception {
+            // given
+            List<AlbumListResponse> albums =
+                    List.of(
+                            new AlbumListResponse(
+                                    2L, "testTitle2", "testCoverUrl2", AlbumPlan.PRO, true),
+                            new AlbumListResponse(
+                                    1L, "testTitle1", "testCoverUrl1", AlbumPlan.BASIC, false));
+
+            given(
+                            albumService.getParticipatingAlbumsByCondition(
+                                    null, null, null, 1, SortDirection.DESC))
+                    .willReturn(new SliceResponse<>(albums, false));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(get("/albums").param("size", "1").param("direction", "DESC"));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
+                    .andExpect(jsonPath("$.data.content[0].albumId").value(2))
+                    .andExpect(jsonPath("$.data.isLast").value(false));
+        }
+
+        @Test
+        void 앨범이_없는_경우_빈_리스트를_응답한다() throws Exception {
+            // given
+            List<AlbumListResponse> albums = List.of();
+
+            given(
+                            albumService.getParticipatingAlbumsByCondition(
+                                    null, null, null, 10, SortDirection.DESC))
+                    .willReturn(new SliceResponse<>(albums, true));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(get("/albums").param("size", "10").param("direction", "DESC"));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
+                    .andExpect(jsonPath("$.data.content").isEmpty())
+                    .andExpect(jsonPath("$.data.isLast").value(true));
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"-1", "-999", "0"})
+        void 페이지_크기가_0_이하이면_예외가_발생한다(String pageSize) throws Exception {
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            get("/albums").param("size", pageSize).param("direction", "DESC"));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("ConstraintViolationException"))
+                    .andExpect(jsonPath("$.data.message").value("페이지 크기는 0보다 큰 값만 가능합니다."));
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"ASCC", "DESCC", "OLDEST", "NEWEST"})
+        void 존재하지_않는_정렬_기준을_입력하면_예외가_발생한다(String sort) throws Exception {
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(get("/albums").param("size", "2").param("direction", sort));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("METHOD_ARGUMENT_TYPE_MISMATCH"))
+                    .andExpect(jsonPath("$.data.message").value("요청한 값의 타입이 잘못되어 처리할 수 없습니다."));
+        }
+    }
+
+    @Nested
     class 앨범_삭제_요청_시 {
 
         @Test
@@ -1089,90 +1242,6 @@ class AlbumControllerTest {
                     .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
                     .andExpect(jsonPath("$.data.code").value("SUBSCRIPTION_ACTIVE"))
                     .andExpect(jsonPath("$.data.message").value("구독 중인 앨범은 삭제할 수 없습니다."));
-        }
-    }
-
-    @Nested
-    class 개별_앨범을_조회할_때 {
-
-        @Test
-        void 유효한_요청인_경우_앨범_정보를_반환한다() throws Exception {
-            // given
-            AlbumInfoResponse response =
-                    new AlbumInfoResponse(
-                            "testAlbum",
-                            "testUrl",
-                            AlbumPlan.BASIC,
-                            new BigDecimal("0.00"),
-                            new BigDecimal("3"),
-                            "testNickname",
-                            1);
-            given(albumService.getAlbum(1L)).willReturn(response);
-
-            // when & then
-            ResultActions perform = mockMvc.perform(get("/albums/1"));
-
-            perform.andExpect(status().isOk())
-                    .andExpect(jsonPath("$.success").value(true))
-                    .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
-                    .andExpect(jsonPath("$.data.title").value("testAlbum"))
-                    .andExpect(jsonPath("$.data.coverUrl").value("testUrl"))
-                    .andExpect(jsonPath("$.data.albumPlan").value("BASIC"))
-                    .andExpect(jsonPath("$.data.capacityUsed").value("0.00"))
-                    .andExpect(jsonPath("$.data.totalCapacity").value("3"))
-                    .andExpect(jsonPath("$.data.hostName").value("testNickname"))
-                    .andExpect(jsonPath("$.data.numOfParticipants").value(1));
-        }
-
-        @Test
-        void 앨범이_존재하지_않는_경우_예외가_발생한다() throws Exception {
-            // given
-            willThrow(new CustomException(AlbumErrorCode.ALBUM_NOT_FOUND))
-                    .given(albumService)
-                    .getAlbum(1L);
-
-            // when & then
-            ResultActions perform = mockMvc.perform(get("/albums/1"));
-
-            perform.andExpect(status().isNotFound())
-                    .andExpect(jsonPath("$.success").value(false))
-                    .andExpect(jsonPath("$.status").value(HttpStatus.NOT_FOUND.value()))
-                    .andExpect(jsonPath("$.data.code").value("ALBUM_NOT_FOUND"))
-                    .andExpect(jsonPath("$.data.message").value("앨범이 존재하지 않습니다."));
-        }
-
-        @Test
-        void 앨범_참여자가_아닌_경우_에외가_발생한다() throws Exception {
-            // given
-            willThrow(new CustomException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT))
-                    .given(albumService)
-                    .getAlbum(1L);
-
-            // when & then
-            ResultActions perform = mockMvc.perform(get("/albums/1"));
-
-            perform.andExpect(status().isForbidden())
-                    .andExpect(jsonPath("$.success").value(false))
-                    .andExpect(jsonPath("$.status").value(HttpStatus.FORBIDDEN.value()))
-                    .andExpect(jsonPath("$.data.code").value("NOT_ALBUM_PARTICIPANT"))
-                    .andExpect(jsonPath("$.data.message").value("앨범에 속하지 않은 사용자입니다."));
-        }
-
-        @Test
-        void 앨범에_방장이_없는_경우_에외가_발생한다() throws Exception {
-            // given
-            willThrow(new CustomException(AlbumErrorCode.ALBUM_HOST_NOT_FOUND))
-                    .given(albumService)
-                    .getAlbum(1L);
-
-            // when & then
-            ResultActions perform = mockMvc.perform(get("/albums/1"));
-
-            perform.andExpect(status().isNotFound())
-                    .andExpect(jsonPath("$.success").value(false))
-                    .andExpect(jsonPath("$.status").value(HttpStatus.NOT_FOUND.value()))
-                    .andExpect(jsonPath("$.data.code").value("ALBUM_HOST_NOT_FOUND"))
-                    .andExpect(jsonPath("$.data.message").value("방장이 존재하지 않는 앨범입니다"));
         }
     }
 }

@@ -65,6 +65,12 @@ public class AlbumController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    @GetMapping("/{albumId}")
+    @Operation(summary = "개별 앨범 조회", description = "개별 앨범을 조회합니다.")
+    public AlbumInfoResponse albumGet(@PathVariable Long albumId) {
+        return albumService.getAlbum(albumId);
+    }
+
     @GetMapping
     @Operation(
             summary = "앨범 목록 조회",
@@ -74,6 +80,9 @@ public class AlbumController {
             @Parameter(description = "앨범 플랜 (BASIC, PRO, PREMIUM). 생략 시 전체 조회")
                     @RequestParam(required = false)
                     AlbumPlan plan,
+            @Parameter(description = "검색 키워드 (앨범 제목에 포함된 단어). 생략 시 전체 조회")
+                    @RequestParam(required = false)
+                    String keyword,
             @Parameter(description = "이전 페이지의 마지막 앨범 ID (첫 요청 시 생략)")
                     @RequestParam(required = false)
                     Long lastAlbumId,
@@ -81,7 +90,8 @@ public class AlbumController {
             @Parameter(description = "정렬 방향 (ASC: 오래된순, DESC: 최신순)")
                     @RequestParam(defaultValue = "DESC")
                     SortDirection direction) {
-        return albumService.getParticipatingAlbumsByPlan(plan, lastAlbumId, size, direction);
+        return albumService.getParticipatingAlbumsByCondition(
+                plan, keyword, lastAlbumId, size, direction);
     }
 
     @DeleteMapping("/{albumId}")
@@ -89,11 +99,5 @@ public class AlbumController {
     public ResponseEntity<Void> albumDelete(@PathVariable Long albumId) {
         albumService.deleteAlbum(albumId);
         return ResponseEntity.noContent().build();
-    }
-
-    @GetMapping("/{albumId}")
-    @Operation(summary = "개별 앨범 조회", description = "개별 앨범을 조회합니다.")
-    public AlbumInfoResponse albumGet(@PathVariable Long albumId) {
-        return albumService.getAlbum(albumId);
     }
 }
