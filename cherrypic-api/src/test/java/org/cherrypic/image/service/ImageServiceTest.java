@@ -58,7 +58,7 @@ class ImageServiceTest extends IntegrationTest {
     @Autowired private EventImageRepository eventImageRepository;
 
     @Nested
-    class Presigned_URL을_생성할_때 {
+    class 프로필용_Presigned_URL을_생성할_때 {
 
         @BeforeEach
         void setUp() {
@@ -93,6 +93,181 @@ class ImageServiceTest extends IntegrationTest {
 
             // when & then
             assertThatThrownBy(() -> imageService.createMemberProfileImageUploadUrl(request))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(ImageErrorCode.NOT_IMAGE_EXTENSION.getMessage());
+        }
+    }
+
+    @Nested
+    class 앨범_커버용_Presigned_URL을_생성할_때 {
+
+        @BeforeEach
+        void setUp() {
+            Member member =
+                    Member.createMember(
+                            OauthInfo.createOauthInfo("testOauthId", "testOauthProvider"),
+                            "testNickname",
+                            "testProfileImageUrl");
+            memberRepository.save(member);
+            given(memberUtil.getCurrentMember()).willReturn(member);
+
+            Album album1 = Album.createAlbum("testAlbum1", "testURL1", AlbumPlan.BASIC, false);
+            Album album2 = Album.createAlbum("testAlbum2", "testURL2", AlbumPlan.BASIC, false);
+            Album album3 = Album.createAlbum("testAlbum3", "testURL3", AlbumPlan.BASIC, false);
+            albumRepository.saveAll(List.of(album1, album2, album3));
+
+            Participant participant1 =
+                    Participant.createParticipant(member, album1, ParticipantRole.HOST);
+            Participant participant2 =
+                    Participant.createParticipant(member, album2, ParticipantRole.LIMITED);
+            participantRepository.saveAll(List.of(participant1, participant2));
+        }
+
+        @Test
+        void 유효한_요청이면_앨범_커버_이미지용_Presigned_URL을_생성한다() {
+            // given
+            ImageUploadRequest request = new ImageUploadRequest(FileExtension.JPEG, "testMd5Hash");
+
+            // when
+            PresignedUrlResponse response =
+                    imageService.createAlbumCoverImageUploadUrl(1L, request);
+
+            // then
+            assertThat(response.presignedUrl())
+                    .containsPattern(
+                            String.format("/%s/%s/%d/[\\w\\-]+\\.jpeg", "local", "album-cover", 1));
+        }
+
+        @Test
+        void 앨범이_존재하지_않을_경우_에외가_발생한다() {
+            // given
+            ImageUploadRequest request = new ImageUploadRequest(FileExtension.MKV, "testMd5Hash");
+
+            // when & then
+            assertThatThrownBy(() -> imageService.createAlbumCoverImageUploadUrl(999L, request))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(AlbumErrorCode.ALBUM_NOT_FOUND.getMessage());
+        }
+
+        @Test
+        void 앨범에_속하지_않은_사용자가_Presigned_Url을_요청하면_예외가_발생한다() {
+            // given
+            ImageUploadRequest request = new ImageUploadRequest(FileExtension.MKV, "testMd5Hash");
+
+            // when & then
+            assertThatThrownBy(() -> imageService.createAlbumCoverImageUploadUrl(3L, request))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(AlbumErrorCode.NOT_ALBUM_PARTICIPANT.getMessage());
+        }
+
+        @Test
+        void LIMITED_권한의_사용자가_Presigned_Url을_요청하면_예외가_발생한다() {
+            // given
+            ImageUploadRequest request = new ImageUploadRequest(FileExtension.MKV, "testMd5Hash");
+
+            // when & then
+            assertThatThrownBy(() -> imageService.createAlbumCoverImageUploadUrl(2L, request))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(AlbumErrorCode.LIMITED_AUTHORITY.getMessage());
+        }
+
+        @Test
+        void 동영상_확장자를_입력할_경우_예외가_발생한다() {
+            // given
+            ImageUploadRequest request = new ImageUploadRequest(FileExtension.MKV, "testMd5Hash");
+
+            // when & then
+            assertThatThrownBy(() -> imageService.createAlbumCoverImageUploadUrl(1L, request))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(ImageErrorCode.NOT_IMAGE_EXTENSION.getMessage());
+        }
+    }
+
+    @Nested
+    class 이벤트_커버용_Presigned_URL을_생성할_때 {
+
+        @BeforeEach
+        void setUp() {
+            Member member =
+                    Member.createMember(
+                            OauthInfo.createOauthInfo("testOauthId", "testOauthProvider"),
+                            "testNickname",
+                            "testProfileImageUrl");
+            memberRepository.save(member);
+            given(memberUtil.getCurrentMember()).willReturn(member);
+
+            Album album1 = Album.createAlbum("testAlbum1", "testURL1", AlbumPlan.BASIC, false);
+            Album album2 = Album.createAlbum("testAlbum2", "testURL2", AlbumPlan.BASIC, false);
+            Album album3 = Album.createAlbum("testAlbum3", "testURL3", AlbumPlan.BASIC, false);
+            albumRepository.saveAll(List.of(album1, album2, album3));
+
+            Participant participant1 =
+                    Participant.createParticipant(member, album1, ParticipantRole.HOST);
+            Participant participant2 =
+                    Participant.createParticipant(member, album2, ParticipantRole.LIMITED);
+            participantRepository.saveAll(List.of(participant1, participant2));
+
+            Event event1 = Event.createEvent(album1, "testTitle1", "testUrl1");
+            Event event2 = Event.createEvent(album2, "testTitle2", "testUrl2");
+            Event event3 = Event.createEvent(album3, "testTitle3", "testUrl3");
+            eventRepository.saveAll(List.of(event1, event2, event3));
+        }
+
+        @Test
+        void 유효한_요청이면_이벤트_커버_이미지용_Presigned_URL을_생성한다() {
+            // given
+            ImageUploadRequest request = new ImageUploadRequest(FileExtension.JPEG, "testMd5Hash");
+
+            // when
+            PresignedUrlResponse response =
+                    imageService.createEventCoverImageUploadUrl(1L, request);
+
+            // then
+            assertThat(response.presignedUrl())
+                    .containsPattern(
+                            String.format("/%s/%s/%d/[\\w\\-]+\\.jpeg", "local", "event-cover", 1));
+        }
+
+        @Test
+        void 이벤트가_존재하지_않을_경우_에외가_발생한다() {
+            // given
+            ImageUploadRequest request = new ImageUploadRequest(FileExtension.MKV, "testMd5Hash");
+
+            // when & then
+            assertThatThrownBy(() -> imageService.createEventCoverImageUploadUrl(999L, request))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(EventErrorCode.EVENT_NOT_FOUND.getMessage());
+        }
+
+        @Test
+        void 앨범에_속하지_않은_사용자가_Presigned_Url을_요청하면_예외가_발생한다() {
+            // given
+            ImageUploadRequest request = new ImageUploadRequest(FileExtension.MKV, "testMd5Hash");
+
+            // when & then
+            assertThatThrownBy(() -> imageService.createEventCoverImageUploadUrl(3L, request))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(AlbumErrorCode.NOT_ALBUM_PARTICIPANT.getMessage());
+        }
+
+        @Test
+        void LIMITED_권한의_사용자가_Presigned_Url을_요청하면_예외가_발생한다() {
+            // given
+            ImageUploadRequest request = new ImageUploadRequest(FileExtension.MKV, "testMd5Hash");
+
+            // when & then
+            assertThatThrownBy(() -> imageService.createEventCoverImageUploadUrl(2L, request))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(AlbumErrorCode.LIMITED_AUTHORITY.getMessage());
+        }
+
+        @Test
+        void 동영상_확장자를_입력할_경우_예외가_발생한다() {
+            // given
+            ImageUploadRequest request = new ImageUploadRequest(FileExtension.MKV, "testMd5Hash");
+
+            // when & then
+            assertThatThrownBy(() -> imageService.createEventCoverImageUploadUrl(1L, request))
                     .isInstanceOf(CustomException.class)
                     .hasMessage(ImageErrorCode.NOT_IMAGE_EXTENSION.getMessage());
         }
