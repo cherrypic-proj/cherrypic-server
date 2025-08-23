@@ -6,7 +6,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.cherrypic.domain.image.dto.request.AlbumFileUploadRequest;
-import org.cherrypic.domain.image.dto.request.MemberProfileImageUploadRequest;
+import org.cherrypic.domain.image.dto.request.ImageUploadRequest;
 import org.cherrypic.domain.image.dto.request.UploadFailedFileDeleteRequest;
 import org.cherrypic.domain.image.dto.response.AlbumImageListResponse;
 import org.cherrypic.domain.image.dto.response.EventImageListResponse;
@@ -28,16 +28,34 @@ public class ImageController {
 
     private final ImageService imageService;
 
-    @PostMapping("/members/me/upload-url")
+    @PostMapping("/members/profile-upload-url")
     @Operation(
             summary = "회원 프로필 이미지 Presigned URL 생성",
             description = "회원 프로필 이미지 업로드를 위한 Presigned URL을 생성합니다.")
     public PresignedUrlResponse memberProfileImageUploadUrlCreate(
-            @Valid @RequestBody MemberProfileImageUploadRequest request) {
+            @Valid @RequestBody ImageUploadRequest request) {
         return imageService.createMemberProfileImageUploadUrl(request);
     }
 
-    @PostMapping("/albums/{albumId}/file-upload-urls")
+    @PostMapping("/albums/{albumId}/cover-upload-url")
+    @Operation(
+            summary = "앨범 커버 이미지 Presigned URL 생성",
+            description = "앨범 커버 이미지 업로드를 위한 Presigned URL을 생성합니다.")
+    public PresignedUrlResponse albumCoverImageUploadUrlCreate(
+            @PathVariable Long albumId, @Valid @RequestBody ImageUploadRequest request) {
+        return imageService.createAlbumCoverImageUploadUrl(albumId, request);
+    }
+
+    @PostMapping("/events/{eventId}/cover-upload-url")
+    @Operation(
+            summary = "이벤트 커버 이미지 Presigned URL 생성",
+            description = "이벤트 커버 이미지 업로드를 위한 Presigned URL을 생성합니다.")
+    public PresignedUrlResponse eventCoverImageUploadUrlCreate(
+            @PathVariable Long eventId, @Valid @RequestBody ImageUploadRequest request) {
+        return imageService.createEventCoverImageUploadUrl(eventId, request);
+    }
+
+    @PostMapping("/albums/{albumId}/images")
     @Operation(
             summary = "앨범 이미지 업로드 Presigned URL들 생성",
             description = "앨범 이미지 업로드를 위한 Presigned URL들을 생성합니다.")

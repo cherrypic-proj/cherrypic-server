@@ -13,7 +13,7 @@ import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.event.exception.EventErrorCode;
 import org.cherrypic.domain.image.controller.ImageController;
 import org.cherrypic.domain.image.dto.request.AlbumFileUploadRequest;
-import org.cherrypic.domain.image.dto.request.MemberProfileImageUploadRequest;
+import org.cherrypic.domain.image.dto.request.ImageUploadRequest;
 import org.cherrypic.domain.image.dto.request.UploadFailedFileDeleteRequest;
 import org.cherrypic.domain.image.dto.response.AlbumImageListResponse;
 import org.cherrypic.domain.image.dto.response.EventImageListResponse;
@@ -50,13 +50,12 @@ class ImageControllerTest {
     @MockitoBean private ImageService imageService;
 
     @Nested
-    class Presigned_URL을_생성_요청_시 {
+    class 프로필용_Presigned_URL_생성_요청_시 {
 
         @Test
         void 유효한_요청이면_회원_프로필_이미지용_Presigned_URL을_반환한다() throws Exception {
             // given
-            MemberProfileImageUploadRequest request =
-                    new MemberProfileImageUploadRequest(FileExtension.JPEG, "testMd5Hash");
+            ImageUploadRequest request = new ImageUploadRequest(FileExtension.JPEG, "testMd5Hash");
 
             PresignedUrlResponse response = new PresignedUrlResponse("testPresignedUrl");
 
@@ -65,7 +64,7 @@ class ImageControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            post("/members/me/upload-url")
+                            post("/members/profile-upload-url")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -78,8 +77,7 @@ class ImageControllerTest {
         @Test
         void 동영상_확장자를_입력할_경우_예외가_발생한다() throws Exception {
             // given
-            MemberProfileImageUploadRequest request =
-                    new MemberProfileImageUploadRequest(FileExtension.MKV, "testMd5Hash");
+            ImageUploadRequest request = new ImageUploadRequest(FileExtension.MKV, "testMd5Hash");
 
             given(imageService.createMemberProfileImageUploadUrl(request))
                     .willThrow(new CustomException(ImageErrorCode.NOT_IMAGE_EXTENSION));
@@ -87,7 +85,7 @@ class ImageControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            post("/members/me/upload-url")
+                            post("/members/profile-upload-url")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -104,14 +102,13 @@ class ImageControllerTest {
         @ValueSource(strings = {"JPEG1", "PDF", "TXT"})
         void 이미지_파일_확장자가_null_또는_지원하지_않는_형식이면_예외가_발생한다(String extension) throws Exception {
             // given
-            MemberProfileImageUploadRequest request =
-                    new MemberProfileImageUploadRequest(
-                            FileExtension.from(extension), "testMd5Hash");
+            ImageUploadRequest request =
+                    new ImageUploadRequest(FileExtension.from(extension), "testMd5Hash");
 
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            post("/members/me/upload-url")
+                            post("/members/profile-upload-url")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -131,13 +128,336 @@ class ImageControllerTest {
         @ValueSource(strings = {" "})
         void MD5_해시를_비워두면_예외가_발생한다(String md5Hash) throws Exception {
             // given
-            MemberProfileImageUploadRequest request =
-                    new MemberProfileImageUploadRequest(FileExtension.from("JPG"), md5Hash);
+            ImageUploadRequest request = new ImageUploadRequest(FileExtension.JPG, md5Hash);
 
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            post("/members/me/upload-url")
+                            post("/members/profile-upload-url")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("MethodArgumentNotValidException"))
+                    .andExpect(jsonPath("$.data.message").value("MD5 해시값은 비워둘 수 없습니다,"));
+        }
+    }
+
+    @Nested
+    class 앨범_커버용_Presigned_URL_생성_요청_시 {
+
+        @Test
+        void 유효한_요청이면_앨범_커버_이미지용_Presigned_URL을_반환한다() throws Exception {
+            // given
+            ImageUploadRequest request = new ImageUploadRequest(FileExtension.JPEG, "testMd5Hash");
+
+            PresignedUrlResponse response = new PresignedUrlResponse("testPresignedUrl");
+
+            given(imageService.createAlbumCoverImageUploadUrl(1L, request)).willReturn(response);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/albums/1/cover-upload-url")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
+                    .andExpect(jsonPath("$.data.presignedUrl").isNotEmpty());
+        }
+
+        @Test
+        void 앨범이_존재하지_않을_경우_에외가_발생한다() throws Exception {
+            // given
+            ImageUploadRequest request = new ImageUploadRequest(FileExtension.JPEG, "testMd5Hash");
+
+            given(imageService.createAlbumCoverImageUploadUrl(999L, request))
+                    .willThrow(new CustomException(AlbumErrorCode.ALBUM_NOT_FOUND));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/albums/999/cover-upload-url")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.NOT_FOUND.value()))
+                    .andExpect(jsonPath("$.data.code").value("ALBUM_NOT_FOUND"))
+                    .andExpect(jsonPath("$.data.message").value("앨범이 존재하지 않습니다."));
+        }
+
+        @Test
+        void 앨범에_속하지_않은_사용자가_Presigned_Url을_요청하면_예외가_발생한다() throws Exception {
+            // given
+            ImageUploadRequest request = new ImageUploadRequest(FileExtension.JPEG, "testMd5Hash");
+
+            given(imageService.createAlbumCoverImageUploadUrl(1L, request))
+                    .willThrow(new CustomException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/albums/1/cover-upload-url")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.FORBIDDEN.value()))
+                    .andExpect(jsonPath("$.data.code").value("NOT_ALBUM_PARTICIPANT"))
+                    .andExpect(jsonPath("$.data.message").value("앨범에 속하지 않은 사용자입니다."));
+        }
+
+        @Test
+        void HOST가_아닌_사용자가_Presigned_Url을_요청하면_예외가_발생한다() throws Exception {
+            // given
+            ImageUploadRequest request = new ImageUploadRequest(FileExtension.JPEG, "testMd5Hash");
+
+            given(imageService.createAlbumCoverImageUploadUrl(1L, request))
+                    .willThrow(new CustomException(AlbumErrorCode.NOT_ALBUM_HOST));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/albums/1/cover-upload-url")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.FORBIDDEN.value()))
+                    .andExpect(jsonPath("$.data.code").value("NOT_ALBUM_HOST"))
+                    .andExpect(jsonPath("$.data.message").value("방장이 아닌 경우 권한이 없습니다."));
+        }
+
+        @Test
+        void 동영상_확장자를_입력할_경우_예외가_발생한다() throws Exception {
+            // given
+            ImageUploadRequest request = new ImageUploadRequest(FileExtension.MKV, "testMd5Hash");
+
+            given(imageService.createAlbumCoverImageUploadUrl(1L, request))
+                    .willThrow(new CustomException(ImageErrorCode.NOT_IMAGE_EXTENSION));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/albums/1/cover-upload-url")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("NOT_IMAGE_EXTENSION"))
+                    .andExpect(jsonPath("$.data.message").value("프로필과 커버에는 이미지 파일만 업로드 가능합니다."));
+        }
+
+        @ParameterizedTest
+        @NullSource
+        @EmptySource
+        @ValueSource(strings = {"JPEG1", "PDF", "TXT"})
+        void 이미지_파일_확장자가_null_또는_지원하지_않는_형식이면_예외가_발생한다(String extension) throws Exception {
+            // given
+            ImageUploadRequest request =
+                    new ImageUploadRequest(FileExtension.from(extension), "testMd5Hash");
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/albums/1/cover-upload-url")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("MethodArgumentNotValidException"))
+                    .andExpect(
+                            jsonPath("$.data.message")
+                                    .value(
+                                            "이미지 파일의 확장자는 비워둘 수 없으며, PNG, JPG, JPEG, WEBP, HEIC, HEIF만 지원됩니다."));
+        }
+
+        @ParameterizedTest
+        @NullSource
+        @EmptySource
+        @ValueSource(strings = {" "})
+        void MD5_해시를_비워두면_예외가_발생한다(String md5Hash) throws Exception {
+            // given
+            ImageUploadRequest request = new ImageUploadRequest(FileExtension.JPG, md5Hash);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/albums/1/cover-upload-url")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("MethodArgumentNotValidException"))
+                    .andExpect(jsonPath("$.data.message").value("MD5 해시값은 비워둘 수 없습니다,"));
+        }
+    }
+
+    @Nested
+    class 이벤트_커버용_Presigned_URL_생성_요청_시 {
+
+        @Test
+        void 유효한_요청이면_이벤트_커버_이미지용_Presigned_URL을_반환한다() throws Exception {
+            // given
+            ImageUploadRequest request = new ImageUploadRequest(FileExtension.JPEG, "testMd5Hash");
+
+            PresignedUrlResponse response = new PresignedUrlResponse("testPresignedUrl");
+
+            given(imageService.createEventCoverImageUploadUrl(1L, request)).willReturn(response);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/events/1/cover-upload-url")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
+                    .andExpect(jsonPath("$.data.presignedUrl").isNotEmpty());
+        }
+
+        @Test
+        void 이벤트가_존재하지_않을_경우_에외가_발생한다() throws Exception {
+            // given
+            ImageUploadRequest request = new ImageUploadRequest(FileExtension.JPEG, "testMd5Hash");
+
+            given(imageService.createEventCoverImageUploadUrl(999L, request))
+                    .willThrow(new CustomException(EventErrorCode.EVENT_NOT_FOUND));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/events/999/cover-upload-url")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.NOT_FOUND.value()))
+                    .andExpect(jsonPath("$.data.code").value("EVENT_NOT_FOUND"))
+                    .andExpect(jsonPath("$.data.message").value("존재하지 않는 이벤트입니다."));
+        }
+
+        @Test
+        void 앨범에_속하지_않은_사용자가_Presigned_Url을_요청하면_예외가_발생한다() throws Exception {
+            // given
+            ImageUploadRequest request = new ImageUploadRequest(FileExtension.JPEG, "testMd5Hash");
+
+            given(imageService.createEventCoverImageUploadUrl(1L, request))
+                    .willThrow(new CustomException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/events/1/cover-upload-url")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.FORBIDDEN.value()))
+                    .andExpect(jsonPath("$.data.code").value("NOT_ALBUM_PARTICIPANT"))
+                    .andExpect(jsonPath("$.data.message").value("앨범에 속하지 않은 사용자입니다."));
+        }
+
+        @Test
+        void LIMITED_권한의_사용자가_Presigned_Url을_요청하면_예외가_발생한다() throws Exception {
+            // given
+            ImageUploadRequest request = new ImageUploadRequest(FileExtension.JPEG, "testMd5Hash");
+
+            given(imageService.createEventCoverImageUploadUrl(1L, request))
+                    .willThrow(new CustomException(AlbumErrorCode.LIMITED_AUTHORITY));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/events/1/cover-upload-url")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.FORBIDDEN.value()))
+                    .andExpect(jsonPath("$.data.code").value("LIMITED_AUTHORITY"))
+                    .andExpect(jsonPath("$.data.message").value("앨범에 대한 생성/수정 권한이 없습니다."));
+        }
+
+        @Test
+        void 동영상_확장자를_입력할_경우_예외가_발생한다() throws Exception {
+            // given
+            ImageUploadRequest request = new ImageUploadRequest(FileExtension.MKV, "testMd5Hash");
+
+            given(imageService.createEventCoverImageUploadUrl(1L, request))
+                    .willThrow(new CustomException(ImageErrorCode.NOT_IMAGE_EXTENSION));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/events/1/cover-upload-url")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("NOT_IMAGE_EXTENSION"))
+                    .andExpect(jsonPath("$.data.message").value("프로필과 커버에는 이미지 파일만 업로드 가능합니다."));
+        }
+
+        @ParameterizedTest
+        @NullSource
+        @EmptySource
+        @ValueSource(strings = {"JPEG1", "PDF", "TXT"})
+        void 이미지_파일_확장자가_null_또는_지원하지_않는_형식이면_예외가_발생한다(String extension) throws Exception {
+            // given
+            ImageUploadRequest request =
+                    new ImageUploadRequest(FileExtension.from(extension), "testMd5Hash");
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/events/1/cover-upload-url")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("MethodArgumentNotValidException"))
+                    .andExpect(
+                            jsonPath("$.data.message")
+                                    .value(
+                                            "이미지 파일의 확장자는 비워둘 수 없으며, PNG, JPG, JPEG, WEBP, HEIC, HEIF만 지원됩니다."));
+        }
+
+        @ParameterizedTest
+        @NullSource
+        @EmptySource
+        @ValueSource(strings = {" "})
+        void MD5_해시를_비워두면_예외가_발생한다(String md5Hash) throws Exception {
+            // given
+            ImageUploadRequest request = new ImageUploadRequest(FileExtension.JPG, md5Hash);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/events/1/cover-upload-url")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -176,7 +496,7 @@ class ImageControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            post("/albums/1/file-upload-urls")
+                            post("/albums/1/images")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -208,7 +528,7 @@ class ImageControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            post("/albums/1/file-upload-urls")
+                            post("/albums/1/images")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -241,7 +561,7 @@ class ImageControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            post("/albums/1/file-upload-urls")
+                            post("/albums/1/images")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -274,7 +594,7 @@ class ImageControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            post("/albums/1/file-upload-urls")
+                            post("/albums/1/images")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -307,7 +627,7 @@ class ImageControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            post("/albums/1/file-upload-urls")
+                            post("/albums/1/images")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -338,7 +658,7 @@ class ImageControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            post("/albums/1/file-upload-urls")
+                            post("/albums/1/images")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -367,7 +687,7 @@ class ImageControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            post("/albums/1/file-upload-urls")
+                            post("/albums/1/images")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -396,7 +716,7 @@ class ImageControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            post("/albums/1/file-upload-urls")
+                            post("/albums/1/images")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -423,7 +743,7 @@ class ImageControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            post("/albums/1/file-upload-urls")
+                            post("/albums/1/images")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -442,7 +762,7 @@ class ImageControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            post("/albums/1/file-upload-urls")
+                            post("/albums/1/images")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 

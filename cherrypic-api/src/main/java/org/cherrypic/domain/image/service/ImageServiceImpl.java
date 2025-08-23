@@ -17,7 +17,7 @@ import org.cherrypic.domain.album.repository.AlbumRepository;
 import org.cherrypic.domain.event.exception.EventErrorCode;
 import org.cherrypic.domain.event.repository.EventRepository;
 import org.cherrypic.domain.image.dto.request.AlbumFileUploadRequest;
-import org.cherrypic.domain.image.dto.request.MemberProfileImageUploadRequest;
+import org.cherrypic.domain.image.dto.request.ImageUploadRequest;
 import org.cherrypic.domain.image.dto.request.UploadFailedFileDeleteRequest;
 import org.cherrypic.domain.image.dto.response.AlbumImageListResponse;
 import org.cherrypic.domain.image.dto.response.EventImageListResponse;
@@ -59,8 +59,7 @@ public class ImageServiceImpl implements ImageService {
     private final ParticipantRepository participantRepository;
 
     @Override
-    public PresignedUrlResponse createMemberProfileImageUploadUrl(
-            MemberProfileImageUploadRequest request) {
+    public PresignedUrlResponse createMemberProfileImageUploadUrl(ImageUploadRequest request) {
         final Member currentMember = memberUtil.getCurrentMember();
 
         validateImageExtension(request.fileExtension());
@@ -68,6 +67,44 @@ public class ImageServiceImpl implements ImageService {
         String presignedUrl =
                 createPresignedUrl(
                         ImageType.MEMBER_PROFILE,
+                        currentMember.getId(),
+                        request.fileExtension(),
+                        request.md5Hash());
+
+        return PresignedUrlResponse.of(presignedUrl);
+    }
+
+    @Override
+    public PresignedUrlResponse createAlbumCoverImageUploadUrl(
+            Long albumId, ImageUploadRequest request) {
+        final Member currentMember = memberUtil.getCurrentMember();
+        final Album album = getAlbumById(albumId);
+
+        validateAlbumHost(currentMember.getId(), album.getId());
+        validateImageExtension(request.fileExtension());
+
+        String presignedUrl =
+                createPresignedUrl(
+                        ImageType.ALBUM_COVER,
+                        currentMember.getId(),
+                        request.fileExtension(),
+                        request.md5Hash());
+
+        return PresignedUrlResponse.of(presignedUrl);
+    }
+
+    @Override
+    public PresignedUrlResponse createEventCoverImageUploadUrl(
+            Long eventId, ImageUploadRequest request) {
+        final Member currentMember = memberUtil.getCurrentMember();
+        final Event event = getEventById(eventId);
+
+        validateParticipantAuthority(currentMember.getId(), event.getAlbum().getId());
+        validateImageExtension(request.fileExtension());
+
+        String presignedUrl =
+                createPresignedUrl(
+                        ImageType.EVENT_COVER,
                         currentMember.getId(),
                         request.fileExtension(),
                         request.md5Hash());
@@ -278,6 +315,14 @@ public class ImageServiceImpl implements ImageService {
     private void validateImageExtension(FileExtension extension) {
         if (!FileExtension.getImageExtensions().contains(extension)) {
             throw new CustomException(ImageErrorCode.NOT_IMAGE_EXTENSION);
+        }
+    }
+
+    private void validateAlbumHost(Long memberId, Long albumId) {
+        Participant participant = getParticipantByMemberIdAndAlbumId(memberId, albumId);
+
+        if (!participant.getRole().equals(ParticipantRole.HOST)) {
+            throw new CustomException(AlbumErrorCode.NOT_ALBUM_HOST);
         }
     }
 }
