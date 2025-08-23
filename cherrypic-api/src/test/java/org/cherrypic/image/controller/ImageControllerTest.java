@@ -50,7 +50,7 @@ class ImageControllerTest {
     @MockitoBean private ImageService imageService;
 
     @Nested
-    class Presigned_URL을_생성_요청_시 {
+    class 프로필용_Presigned_URL_생성_요청_시 {
 
         @Test
         void 유효한_요청이면_회원_프로필_이미지용_Presigned_URL을_반환한다() throws Exception {
@@ -128,12 +128,204 @@ class ImageControllerTest {
         @ValueSource(strings = {" "})
         void MD5_해시를_비워두면_예외가_발생한다(String md5Hash) throws Exception {
             // given
-            ImageUploadRequest request = new ImageUploadRequest(FileExtension.from("JPG"), md5Hash);
+            ImageUploadRequest request = new ImageUploadRequest(FileExtension.JPG, md5Hash);
 
             // when & then
             ResultActions perform =
                     mockMvc.perform(
                             post("/members/me/upload-url")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("MethodArgumentNotValidException"))
+                    .andExpect(jsonPath("$.data.message").value("MD5 해시값은 비워둘 수 없습니다,"));
+        }
+    }
+
+    @Nested
+    class 앨범_커버용_Presigned_URL_생성_요청_시 {
+
+        @Test
+        void 유효한_요청이면_앨범_커버_이미지용_Presigned_URL을_반환한다() throws Exception {
+            // given
+            ImageUploadRequest request = new ImageUploadRequest(FileExtension.JPEG, "testMd5Hash");
+
+            PresignedUrlResponse response = new PresignedUrlResponse("testPresignedUrl");
+
+            given(imageService.createAlbumCoverImageUploadUrl(1L, request)).willReturn(response);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/albums/1/upload-url")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
+                    .andExpect(jsonPath("$.data.presignedUrl").isNotEmpty());
+        }
+
+        @Test
+        void 동영상_확장자를_입력할_경우_예외가_발생한다() throws Exception {
+            // given
+            ImageUploadRequest request = new ImageUploadRequest(FileExtension.MKV, "testMd5Hash");
+
+            given(imageService.createAlbumCoverImageUploadUrl(1L, request))
+                    .willThrow(new CustomException(ImageErrorCode.NOT_IMAGE_EXTENSION));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/albums/1/upload-url")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("NOT_IMAGE_EXTENSION"))
+                    .andExpect(jsonPath("$.data.message").value("프로필과 커버에는 이미지 파일만 업로드 가능합니다."));
+        }
+
+        @ParameterizedTest
+        @NullSource
+        @EmptySource
+        @ValueSource(strings = {"JPEG1", "PDF", "TXT"})
+        void 이미지_파일_확장자가_null_또는_지원하지_않는_형식이면_예외가_발생한다(String extension) throws Exception {
+            // given
+            ImageUploadRequest request =
+                    new ImageUploadRequest(FileExtension.from(extension), "testMd5Hash");
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/albums/1/upload-url")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("MethodArgumentNotValidException"))
+                    .andExpect(
+                            jsonPath("$.data.message")
+                                    .value(
+                                            "이미지 파일의 확장자는 비워둘 수 없으며, PNG, JPG, JPEG, WEBP, HEIC, HEIF만 지원됩니다."));
+        }
+
+        @ParameterizedTest
+        @NullSource
+        @EmptySource
+        @ValueSource(strings = {" "})
+        void MD5_해시를_비워두면_예외가_발생한다(String md5Hash) throws Exception {
+            // given
+            ImageUploadRequest request = new ImageUploadRequest(FileExtension.JPG, md5Hash);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/albums/1/upload-url")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("MethodArgumentNotValidException"))
+                    .andExpect(jsonPath("$.data.message").value("MD5 해시값은 비워둘 수 없습니다,"));
+        }
+    }
+
+    @Nested
+    class 이벤트_커버용_Presigned_URL_생성_요청_시 {
+
+        @Test
+        void 유효한_요청이면_이벤트_커버_이미지용_Presigned_URL을_반환한다() throws Exception {
+            // given
+            ImageUploadRequest request = new ImageUploadRequest(FileExtension.JPEG, "testMd5Hash");
+
+            PresignedUrlResponse response = new PresignedUrlResponse("testPresignedUrl");
+
+            given(imageService.createEventCoverImageUploadUrl(1L, request)).willReturn(response);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/events/1/upload-url")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
+                    .andExpect(jsonPath("$.data.presignedUrl").isNotEmpty());
+        }
+
+        @Test
+        void 동영상_확장자를_입력할_경우_예외가_발생한다() throws Exception {
+            // given
+            ImageUploadRequest request = new ImageUploadRequest(FileExtension.MKV, "testMd5Hash");
+
+            given(imageService.createEventCoverImageUploadUrl(1L, request))
+                    .willThrow(new CustomException(ImageErrorCode.NOT_IMAGE_EXTENSION));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/events/1/upload-url")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("NOT_IMAGE_EXTENSION"))
+                    .andExpect(jsonPath("$.data.message").value("프로필과 커버에는 이미지 파일만 업로드 가능합니다."));
+        }
+
+        @ParameterizedTest
+        @NullSource
+        @EmptySource
+        @ValueSource(strings = {"JPEG1", "PDF", "TXT"})
+        void 이미지_파일_확장자가_null_또는_지원하지_않는_형식이면_예외가_발생한다(String extension) throws Exception {
+            // given
+            ImageUploadRequest request =
+                    new ImageUploadRequest(FileExtension.from(extension), "testMd5Hash");
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/events/1/upload-url")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("MethodArgumentNotValidException"))
+                    .andExpect(
+                            jsonPath("$.data.message")
+                                    .value(
+                                            "이미지 파일의 확장자는 비워둘 수 없으며, PNG, JPG, JPEG, WEBP, HEIC, HEIF만 지원됩니다."));
+        }
+
+        @ParameterizedTest
+        @NullSource
+        @EmptySource
+        @ValueSource(strings = {" "})
+        void MD5_해시를_비워두면_예외가_발생한다(String md5Hash) throws Exception {
+            // given
+            ImageUploadRequest request = new ImageUploadRequest(FileExtension.JPG, md5Hash);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/events/1/upload-url")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
