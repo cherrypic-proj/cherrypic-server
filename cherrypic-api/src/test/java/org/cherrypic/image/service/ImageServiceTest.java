@@ -2,6 +2,8 @@ package org.cherrypic.image.service;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -14,6 +16,7 @@ import org.cherrypic.domain.album.repository.AlbumRepository;
 import org.cherrypic.domain.event.exception.EventErrorCode;
 import org.cherrypic.domain.event.repository.EventRepository;
 import org.cherrypic.domain.image.dto.request.AlbumFileUploadRequest;
+import org.cherrypic.domain.image.dto.request.AlbumImageDeleteRequest;
 import org.cherrypic.domain.image.dto.request.ImageUploadRequest;
 import org.cherrypic.domain.image.dto.request.UploadFailedFileDeleteRequest;
 import org.cherrypic.domain.image.dto.response.AlbumImageListResponse;
@@ -33,6 +36,7 @@ import org.cherrypic.exception.CustomException;
 import org.cherrypic.global.pagination.SliceResponse;
 import org.cherrypic.global.pagination.SortDirection;
 import org.cherrypic.global.util.MemberUtil;
+import org.cherrypic.global.util.S3Util;
 import org.cherrypic.image.entity.Image;
 import org.cherrypic.member.entity.Member;
 import org.cherrypic.member.entity.OauthInfo;
@@ -48,6 +52,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 class ImageServiceTest extends IntegrationTest {
 
     @MockitoBean MemberUtil memberUtil;
+    @MockitoBean S3Util s3Util;
 
     @Autowired private ImageService imageService;
     @Autowired private ParticipantRepository participantRepository;
@@ -719,6 +724,105 @@ class ImageServiceTest extends IntegrationTest {
             assertThatThrownBy(() -> imageService.deleteUploadFailedFile(request))
                     .isInstanceOf(CustomException.class)
                     .hasMessage(ImageErrorCode.PRESIGNED_IMAGES_NOT_MINE.getMessage());
+        }
+    }
+
+    @Nested
+    class 앨범_이미지를_삭제할_때 {
+
+        @BeforeEach
+        void setUp() {
+            Member member =
+                    Member.createMember(
+                            OauthInfo.createOauthInfo("testOauthId", "testOauthProvider"),
+                            "testNickname",
+                            "testProfileImageUrl");
+            memberRepository.save(member);
+            given(memberUtil.getCurrentMember()).willReturn(member);
+
+            Album album1 = Album.createAlbum("testTitle1", "testCoverUrl1", AlbumPlan.BASIC, false);
+            Album album2 = Album.createAlbum("testTitle2", "testCoverUrl2", AlbumPlan.BASIC, false);
+            Album album3 = Album.createAlbum("testTitle3", "testCoverUrl3", AlbumPlan.BASIC, false);
+            albumRepository.saveAll(List.of(album1, album2, album3));
+
+            Participant participant1 =
+                    Participant.createParticipant(member, album1, ParticipantRole.HOST);
+            Participant participant2 =
+                    Participant.createParticipant(member, album2, ParticipantRole.LIMITED);
+            participantRepository.saveAll(List.of(participant1, participant2));
+
+            Image image1 = Image.createImage(album1, 1L, "testUrl1", LocalDateTime.now());
+            Image image2 = Image.createImage(album1, 1L, "testUrl2", LocalDateTime.now());
+            Image image3 = Image.createImage(album2, 1L, "testUrl3", LocalDateTime.now());
+            imageRepository.saveAll(List.of(image1, image2, image3));
+        }
+
+        @Test
+        void 유효한_요청이면_앨범_이미지를_삭제한다() {
+            // given
+            AlbumImageDeleteRequest request = new AlbumImageDeleteRequest(List.of(1L, 2L));
+
+            // when
+            imageService.deleteAlbumImage(1L, request);
+
+            // then
+            assertThat(imageRepository.findAllById(List.of(1L, 2L))).isEmpty();
+        }
+
+        @Test
+        void 앨범_이미지가_삭제되는_경우_S3에서_삭제되는_로직이_호출된다() {
+            // given
+            AlbumImageDeleteRequest request = new AlbumImageDeleteRequest(List.of(1L, 2L));
+
+            // when
+            imageService.deleteAlbumImage(1L, request);
+
+            // then
+            verify(s3Util, times(1)).deleteFilesInBatchFromS3(List.of("testUrl1", "testUrl2"));
+        }
+
+        @Test
+        void 앨범이_존재하지_않을_경우_예외가_발생한다() {
+            // given
+            AlbumImageDeleteRequest request = new AlbumImageDeleteRequest(List.of(1L, 2L));
+
+            // when & then
+            assertThatThrownBy(() -> imageService.deleteAlbumImage(999L, request))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(AlbumErrorCode.ALBUM_NOT_FOUND.getMessage());
+        }
+
+        @Test
+        void 앨범에_속하지_않은_사용자가_앨범_이미지를_삭제하면_예외가_발생한다() {
+            // given
+            AlbumImageDeleteRequest request = new AlbumImageDeleteRequest(List.of(1L, 2L));
+
+            // when & then
+            assertThatThrownBy(() -> imageService.deleteAlbumImage(3L, request))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(AlbumErrorCode.NOT_ALBUM_PARTICIPANT.getMessage());
+        }
+
+        @Test
+        void LIMITED_권한의_사용자가_앨범_이미지를_삭제하면_예외가_발생한다() {
+            // given
+            AlbumImageDeleteRequest request = new AlbumImageDeleteRequest(List.of(1L, 2L));
+
+            // when & then
+            assertThatThrownBy(() -> imageService.deleteAlbumImage(2L, request))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(AlbumErrorCode.LIMITED_AUTHORITY.getMessage());
+        }
+
+        @Test
+        void 앨범에_속하지_않은_이미지가_포함되어_있으면_예외가_발생한다() {
+            // given
+            AlbumImageDeleteRequest request = new AlbumImageDeleteRequest(List.of(1L, 3L));
+
+            // when & then
+            assertThatThrownBy(() -> imageService.deleteAlbumImage(1L, request))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(AlbumErrorCode.IMAGES_NOT_IN_ALBUM.getMessage());
         }
     }
 }
