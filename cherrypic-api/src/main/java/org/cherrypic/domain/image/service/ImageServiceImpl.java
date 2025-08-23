@@ -23,7 +23,7 @@ import org.cherrypic.domain.image.dto.response.AlbumImageListResponse;
 import org.cherrypic.domain.image.dto.response.EventImageListResponse;
 import org.cherrypic.domain.image.dto.response.PresignedUrlResponse;
 import org.cherrypic.domain.image.dto.response.PresignedUrlsResponse;
-import org.cherrypic.domain.image.enums.ImageFileExtension;
+import org.cherrypic.domain.image.enums.FileExtension;
 import org.cherrypic.domain.image.enums.ImageType;
 import org.cherrypic.domain.image.exception.ImageErrorCode;
 import org.cherrypic.domain.image.repository.ImageRepository;
@@ -63,11 +63,13 @@ public class ImageServiceImpl implements ImageService {
             MemberProfileImageUploadRequest request) {
         final Member currentMember = memberUtil.getCurrentMember();
 
+        validateImageExtension(request.fileExtension());
+
         String presignedUrl =
                 createPresignedUrl(
                         ImageType.MEMBER_PROFILE,
                         currentMember.getId(),
-                        request.imageFileExtension(),
+                        request.fileExtension(),
                         request.md5Hash());
 
         return PresignedUrlResponse.of(presignedUrl);
@@ -92,7 +94,7 @@ public class ImageServiceImpl implements ImageService {
                                         createPresignedUrl(
                                                 ImageType.ALBUM_IMAGE,
                                                 currentMember.getId(),
-                                                req.imageFileExtension(),
+                                                req.fileExtension(),
                                                 req.md5Hashes()))
                         .toList();
 
@@ -159,16 +161,13 @@ public class ImageServiceImpl implements ImageService {
     }
 
     private String createPresignedUrl(
-            ImageType imageType,
-            Long targetId,
-            ImageFileExtension imageFileExtension,
-            String md5Hash) {
+            ImageType imageType, Long targetId, FileExtension fileExtension, String md5Hash) {
         String imageKey = UUID.randomUUID().toString();
-        String fileName = createFileName(imageType, targetId, imageKey, imageFileExtension);
+        String fileName = createFileName(imageType, targetId, imageKey, fileExtension);
 
         GeneratePresignedUrlRequest generatePresignedUrlRequest =
                 generatePresignedUrlRequest(
-                        s3Properties.bucket(), fileName, imageFileExtension.getExtension());
+                        s3Properties.bucket(), fileName, fileExtension.getExtension());
 
         generatePresignedUrlRequest.addRequestParameter(
                 Headers.S3_CANNED_ACL, CannedAccessControlList.PublicRead.toString());
@@ -179,10 +178,7 @@ public class ImageServiceImpl implements ImageService {
     }
 
     private String createFileName(
-            ImageType imageType,
-            Long targetId,
-            String imageKey,
-            ImageFileExtension imageFileExtension) {
+            ImageType imageType, Long targetId, String imageKey, FileExtension fileExtension) {
         return springEnvironmentHelper.getCurrentProfile()
                 + "/"
                 + imageType.getType()
@@ -191,7 +187,7 @@ public class ImageServiceImpl implements ImageService {
                 + "/"
                 + imageKey
                 + "."
-                + imageFileExtension.getExtension();
+                + fileExtension.getExtension();
     }
 
     private GeneratePresignedUrlRequest generatePresignedUrlRequest(
@@ -278,6 +274,12 @@ public class ImageServiceImpl implements ImageService {
 
         if (hashes.stream().distinct().count() != hashes.size()) {
             throw new CustomException(ImageErrorCode.DUPLICATE_HASHES);
+        }
+    }
+
+    private void validateImageExtension(FileExtension extension) {
+        if (!FileExtension.getImageExtensions().contains(extension)) {
+            throw new CustomException(ImageErrorCode.NOT_IMAGE_EXTENSION);
         }
     }
 }

@@ -19,7 +19,7 @@ import org.cherrypic.domain.image.dto.response.AlbumImageListResponse;
 import org.cherrypic.domain.image.dto.response.EventImageListResponse;
 import org.cherrypic.domain.image.dto.response.PresignedUrlResponse;
 import org.cherrypic.domain.image.dto.response.PresignedUrlsResponse;
-import org.cherrypic.domain.image.enums.ImageFileExtension;
+import org.cherrypic.domain.image.enums.FileExtension;
 import org.cherrypic.domain.image.exception.ImageErrorCode;
 import org.cherrypic.domain.image.service.ImageService;
 import org.cherrypic.exception.CustomException;
@@ -56,7 +56,7 @@ class ImageControllerTest {
         void 유효한_요청이면_회원_프로필_이미지용_Presigned_URL을_반환한다() throws Exception {
             // given
             MemberProfileImageUploadRequest request =
-                    new MemberProfileImageUploadRequest(ImageFileExtension.JPEG, "testMd5Hash");
+                    new MemberProfileImageUploadRequest(FileExtension.JPEG, "testMd5Hash");
 
             PresignedUrlResponse response = new PresignedUrlResponse("testPresignedUrl");
 
@@ -75,6 +75,29 @@ class ImageControllerTest {
                     .andExpect(jsonPath("$.data.presignedUrl").isNotEmpty());
         }
 
+        @Test
+        void 동영상_확장자를_입력할_경우_예외가_발생한다() throws Exception {
+            // given
+            MemberProfileImageUploadRequest request =
+                    new MemberProfileImageUploadRequest(FileExtension.MKV, "testMd5Hash");
+
+            given(imageService.createMemberProfileImageUploadUrl(request))
+                    .willThrow(new CustomException(ImageErrorCode.NOT_IMAGE_EXTENSION));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/members/me/upload-url")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("NOT_IMAGE_EXTENSION"))
+                    .andExpect(jsonPath("$.data.message").value("프로필과 커버에는 이미지 파일만 업로드 가능합니다."));
+        }
+
         @ParameterizedTest
         @NullSource
         @EmptySource
@@ -83,7 +106,7 @@ class ImageControllerTest {
             // given
             MemberProfileImageUploadRequest request =
                     new MemberProfileImageUploadRequest(
-                            ImageFileExtension.from(extension), "testMd5Hash");
+                            FileExtension.from(extension), "testMd5Hash");
 
             // when & then
             ResultActions perform =
@@ -109,7 +132,7 @@ class ImageControllerTest {
         void MD5_해시를_비워두면_예외가_발생한다(String md5Hash) throws Exception {
             // given
             MemberProfileImageUploadRequest request =
-                    new MemberProfileImageUploadRequest(ImageFileExtension.from("JPG"), md5Hash);
+                    new MemberProfileImageUploadRequest(FileExtension.from("JPG"), md5Hash);
 
             // when & then
             ResultActions perform =
@@ -137,11 +160,11 @@ class ImageControllerTest {
                             BigDecimal.ONE,
                             List.of(
                                     new AlbumImageUploadRequest.payload(
-                                            ImageFileExtension.JPEG,
+                                            FileExtension.JPEG,
                                             "testMd5Hash1",
                                             LocalDateTime.now()),
                                     new AlbumImageUploadRequest.payload(
-                                            ImageFileExtension.JPEG,
+                                            FileExtension.JPEG,
                                             "testMd5Hash2",
                                             LocalDateTime.now())));
 
@@ -171,11 +194,11 @@ class ImageControllerTest {
                             BigDecimal.ONE,
                             List.of(
                                     new AlbumImageUploadRequest.payload(
-                                            ImageFileExtension.JPEG,
+                                            FileExtension.JPEG,
                                             "testMd5Hash1",
                                             LocalDateTime.now()),
                                     new AlbumImageUploadRequest.payload(
-                                            ImageFileExtension.JPEG,
+                                            FileExtension.JPEG,
                                             "testMd5Hash2",
                                             LocalDateTime.now())));
 
@@ -204,11 +227,11 @@ class ImageControllerTest {
                             BigDecimal.ONE,
                             List.of(
                                     new AlbumImageUploadRequest.payload(
-                                            ImageFileExtension.JPEG,
+                                            FileExtension.JPEG,
                                             "testMd5Hash1",
                                             LocalDateTime.now()),
                                     new AlbumImageUploadRequest.payload(
-                                            ImageFileExtension.JPEG,
+                                            FileExtension.JPEG,
                                             "testMd5Hash2",
                                             LocalDateTime.now())));
 
@@ -237,11 +260,11 @@ class ImageControllerTest {
                             BigDecimal.ONE,
                             List.of(
                                     new AlbumImageUploadRequest.payload(
-                                            ImageFileExtension.JPEG,
+                                            FileExtension.JPEG,
                                             "testMd5Hash1",
                                             LocalDateTime.now()),
                                     new AlbumImageUploadRequest.payload(
-                                            ImageFileExtension.JPEG,
+                                            FileExtension.JPEG,
                                             "testMd5Hash2",
                                             LocalDateTime.now())));
 
@@ -270,11 +293,11 @@ class ImageControllerTest {
                             BigDecimal.ONE,
                             List.of(
                                     new AlbumImageUploadRequest.payload(
-                                            ImageFileExtension.JPEG,
+                                            FileExtension.JPEG,
                                             "testMd5Hash1",
                                             LocalDateTime.now()),
                                     new AlbumImageUploadRequest.payload(
-                                            ImageFileExtension.JPEG,
+                                            FileExtension.JPEG,
                                             "testMd5Hash2",
                                             LocalDateTime.now())));
 
@@ -303,11 +326,9 @@ class ImageControllerTest {
                             BigDecimal.ONE,
                             List.of(
                                     new AlbumImageUploadRequest.payload(
-                                            ImageFileExtension.JPEG,
-                                            "testMd5Hash",
-                                            LocalDateTime.now()),
+                                            FileExtension.JPEG, "testMd5Hash", LocalDateTime.now()),
                                     new AlbumImageUploadRequest.payload(
-                                            ImageFileExtension.JPEG,
+                                            FileExtension.JPEG,
                                             "testMd5Hash",
                                             LocalDateTime.now())));
 
@@ -328,15 +349,20 @@ class ImageControllerTest {
                     .andExpect(jsonPath("$.data.message").value("중복되는 md5 해시값이 존재합니다."));
         }
 
-        @Test
-        void 이미지의_확장자를_비워두면_예외가_발생한다() throws Exception {
+        @ParameterizedTest
+        @NullSource
+        @EmptySource
+        @ValueSource(strings = {"JPEG1", "PDF", "TXT"})
+        void 파일_확장자가_null_또는_지원하지_않는_형식이면_예외가_발생한다(String extension) throws Exception {
             // given
             AlbumImageUploadRequest requests =
                     new AlbumImageUploadRequest(
                             BigDecimal.ONE,
                             List.of(
                                     new AlbumImageUploadRequest.payload(
-                                            null, "testMd5Hash1", LocalDateTime.now())));
+                                            FileExtension.from(extension),
+                                            "testMd5Hash1",
+                                            LocalDateTime.now())));
 
             // when & then
             ResultActions perform =
@@ -349,7 +375,10 @@ class ImageControllerTest {
                     .andExpect(jsonPath("$.success").value(false))
                     .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
                     .andExpect(jsonPath("$.data.code").value("MethodArgumentNotValidException"))
-                    .andExpect(jsonPath("$.data.message").value("이미지 파일 확장자는 비워둘 수 없습니다."));
+                    .andExpect(
+                            jsonPath("$.data.message")
+                                    .value(
+                                            "파일의 확장자는 비워둘 수 없으며, 이미지(PNG, JPG, JPEG, WEBP, HEIC, HEIF)와 동영상(MP4, WEBM, MOV, MKV, HEVC)만 지원됩니다."));
         }
 
         @Test
@@ -360,7 +389,7 @@ class ImageControllerTest {
                             null,
                             List.of(
                                     new AlbumImageUploadRequest.payload(
-                                            ImageFileExtension.JPEG,
+                                            FileExtension.JPEG,
                                             "testMd5Hash",
                                             LocalDateTime.now())));
 
@@ -389,9 +418,7 @@ class ImageControllerTest {
                             BigDecimal.ONE,
                             List.of(
                                     new AlbumImageUploadRequest.payload(
-                                            ImageFileExtension.JPEG,
-                                            md5Hash,
-                                            LocalDateTime.now())));
+                                            FileExtension.JPEG, md5Hash, LocalDateTime.now())));
 
             // when & then
             ResultActions perform =

@@ -20,7 +20,7 @@ import org.cherrypic.domain.image.dto.response.AlbumImageListResponse;
 import org.cherrypic.domain.image.dto.response.EventImageListResponse;
 import org.cherrypic.domain.image.dto.response.PresignedUrlResponse;
 import org.cherrypic.domain.image.dto.response.PresignedUrlsResponse;
-import org.cherrypic.domain.image.enums.ImageFileExtension;
+import org.cherrypic.domain.image.enums.FileExtension;
 import org.cherrypic.domain.image.exception.ImageErrorCode;
 import org.cherrypic.domain.image.repository.EventImageRepository;
 import org.cherrypic.domain.image.repository.ImageRepository;
@@ -75,7 +75,7 @@ class ImageServiceTest extends IntegrationTest {
         void 유효한_요청이면_회원_프로필_이미지용_Presigned_URL을_생성한다() {
             // given
             MemberProfileImageUploadRequest request =
-                    new MemberProfileImageUploadRequest(ImageFileExtension.JPEG, "testMd5Hash");
+                    new MemberProfileImageUploadRequest(FileExtension.JPEG, "testMd5Hash");
 
             // when
             PresignedUrlResponse response = imageService.createMemberProfileImageUploadUrl(request);
@@ -85,6 +85,18 @@ class ImageServiceTest extends IntegrationTest {
                     .containsPattern(
                             String.format(
                                     "/%s/%s/%d/[\\w\\-]+\\.jpeg", "local", "member-profile", 1));
+        }
+
+        @Test
+        void 동영상_확장자를_입력할_경우_예외가_발생한다() {
+            // given
+            MemberProfileImageUploadRequest request =
+                    new MemberProfileImageUploadRequest(FileExtension.MKV, "testMd5Hash");
+
+            // when & then
+            assertThatThrownBy(() -> imageService.createMemberProfileImageUploadUrl(request))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(ImageErrorCode.NOT_IMAGE_EXTENSION.getMessage());
         }
     }
 
@@ -122,11 +134,11 @@ class ImageServiceTest extends IntegrationTest {
                             BigDecimal.ONE,
                             List.of(
                                     new AlbumImageUploadRequest.payload(
-                                            ImageFileExtension.JPEG,
+                                            FileExtension.JPEG,
                                             "testMd5Hash1",
                                             LocalDateTime.now()),
                                     new AlbumImageUploadRequest.payload(
-                                            ImageFileExtension.JPEG,
+                                            FileExtension.JPEG,
                                             "testMd5Hash2",
                                             LocalDateTime.now())));
 
@@ -168,11 +180,11 @@ class ImageServiceTest extends IntegrationTest {
                             BigDecimal.ONE,
                             List.of(
                                     new AlbumImageUploadRequest.payload(
-                                            ImageFileExtension.JPEG,
+                                            FileExtension.JPEG,
                                             "testMd5Hash1",
                                             LocalDateTime.now()),
                                     new AlbumImageUploadRequest.payload(
-                                            ImageFileExtension.JPEG,
+                                            FileExtension.JPEG,
                                             "testMd5Hash2",
                                             LocalDateTime.now())));
 
@@ -190,11 +202,11 @@ class ImageServiceTest extends IntegrationTest {
                             BigDecimal.ONE,
                             List.of(
                                     new AlbumImageUploadRequest.payload(
-                                            ImageFileExtension.JPEG,
+                                            FileExtension.JPEG,
                                             "testMd5Hash1",
                                             LocalDateTime.now()),
                                     new AlbumImageUploadRequest.payload(
-                                            ImageFileExtension.JPEG,
+                                            FileExtension.JPEG,
                                             "testMd5Hash2",
                                             LocalDateTime.now())));
 
@@ -212,11 +224,11 @@ class ImageServiceTest extends IntegrationTest {
                             BigDecimal.ONE,
                             List.of(
                                     new AlbumImageUploadRequest.payload(
-                                            ImageFileExtension.JPEG,
+                                            FileExtension.JPEG,
                                             "testMd5Hash1",
                                             LocalDateTime.now()),
                                     new AlbumImageUploadRequest.payload(
-                                            ImageFileExtension.JPEG,
+                                            FileExtension.JPEG,
                                             "testMd5Hash2",
                                             LocalDateTime.now())));
 
@@ -234,11 +246,11 @@ class ImageServiceTest extends IntegrationTest {
                             BigDecimal.TEN,
                             List.of(
                                     new AlbumImageUploadRequest.payload(
-                                            ImageFileExtension.JPEG,
+                                            FileExtension.JPEG,
                                             "testMd5Hash1",
                                             LocalDateTime.now()),
                                     new AlbumImageUploadRequest.payload(
-                                            ImageFileExtension.JPEG,
+                                            FileExtension.JPEG,
                                             "testMd5Hash2",
                                             LocalDateTime.now())));
 
@@ -257,11 +269,11 @@ class ImageServiceTest extends IntegrationTest {
                             BigDecimal.ONE,
                             List.of(
                                     new AlbumImageUploadRequest.payload(
-                                            ImageFileExtension.JPEG,
+                                            FileExtension.JPEG,
                                             "testMd5Hash1",
                                             LocalDateTime.now()),
                                     new AlbumImageUploadRequest.payload(
-                                            ImageFileExtension.JPEG,
+                                            FileExtension.JPEG,
                                             "testMd5Hash1",
                                             LocalDateTime.now())));
             // when & then
