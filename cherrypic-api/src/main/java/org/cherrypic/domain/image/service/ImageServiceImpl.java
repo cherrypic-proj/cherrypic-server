@@ -194,7 +194,7 @@ public class ImageServiceImpl implements ImageService {
         final Member currentMember = memberUtil.getCurrentMember();
         final Album album = getAlbumById(albumId);
 
-        validateParticipantAuthority(currentMember, album);
+        validateParticipantAuthority(currentMember.getId(), album.getId());
 
         List<Long> distinctImageIds =
                 request.imageIds().stream().filter(Objects::nonNull).distinct().toList();
@@ -279,16 +279,6 @@ public class ImageServiceImpl implements ImageService {
 
         if (!participant.getRole().equals(ParticipantRole.HOST)) {
             throw new CustomException(AlbumErrorCode.NOT_ALBUM_HOST);
-        }
-    }
-
-    private void validateParticipantAuthority(Member member, Album album) {
-
-        Participant participant = getParticipantByMemberIdAndAlbumId(member.getId(), album.getId());
-
-        boolean isLimited = participant.getRole().equals(ParticipantRole.LIMITED);
-        if (isLimited) {
-            throw new CustomException(AlbumErrorCode.LIMITED_AUTHORITY);
         }
     }
 
