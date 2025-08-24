@@ -2,19 +2,19 @@ package org.cherrypic.domain.album.event;
 
 import java.util.List;
 
-public record AlbumDeleteNotificationEvent(
+public record AlbumDeleteNotificationSendEvent(
         Long albumId,
         Long senderId,
         String hostNickname,
         String albumTitle,
         List<Long> receiverIds) {
-    public static AlbumDeleteNotificationEvent of(
+    public static AlbumDeleteNotificationSendEvent of(
             Long albumId,
             Long senderId,
             String hostNickname,
             String albumTitle,
             List<Long> receiverIds) {
-        return new AlbumDeleteNotificationEvent(
+        return new AlbumDeleteNotificationSendEvent(
                 albumId, senderId, hostNickname, albumTitle, receiverIds);
     }
 }
