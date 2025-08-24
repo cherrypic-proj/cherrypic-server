@@ -289,6 +289,15 @@ public class EventServiceTest extends IntegrationTest {
         }
 
         @Test
+        void 유효한_요청일_경우_이벤트_커버가_S3에서_삭제된다() {
+            // when
+            eventService.deleteEvent(1L);
+
+            // then
+            verify(s3Util, times(1)).deleteFileFromS3("testEventCoverUrl1");
+        }
+
+        @Test
         void 존재하지_않는_이벤트를_삭제하면_예외가_발생한다() {
             // when & then
             assertThatThrownBy(() -> eventService.deleteEvent(999L))
