@@ -23,6 +23,7 @@ import org.cherrypic.domain.event.dto.response.EventListResponse;
 import org.cherrypic.domain.event.exception.EventErrorCode;
 import org.cherrypic.domain.event.repository.EventRepository;
 import org.cherrypic.domain.event.service.EventService;
+import org.cherrypic.domain.image.event.ImageDeleteEvent;
 import org.cherrypic.domain.image.exception.ImageErrorCode;
 import org.cherrypic.domain.image.repository.EventImageRepository;
 import org.cherrypic.domain.image.repository.ImageRepository;
@@ -49,13 +50,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
+import org.springframework.test.context.event.ApplicationEvents;
+import org.springframework.test.context.event.RecordApplicationEvents;
 
+@RecordApplicationEvents
 public class EventServiceTest extends IntegrationTest {
 
     @Autowired private TransactionUtil transactionUtil;
 
     @Autowired private EventService eventService;
-
+    @Autowired private ApplicationEvents applicationEvents;
     @Autowired private EventRepository eventRepository;
     @Autowired private AlbumRepository albumRepository;
     @Autowired private MemberRepository memberRepository;
@@ -203,7 +207,9 @@ public class EventServiceTest extends IntegrationTest {
             eventService.updateEvent(1L, request);
 
             // then
-            verify(s3Util, times(1)).deleteFileFromS3("testEventCoverUrl1");
+            var events = applicationEvents.stream(ImageDeleteEvent.class).toList();
+            assertThat(events).hasSize(1);
+            assertThat(events.getFirst().imageUrl()).isEqualTo("testEventCoverUrl1");
         }
 
         @Test
@@ -289,12 +295,14 @@ public class EventServiceTest extends IntegrationTest {
         }
 
         @Test
-        void 유효한_요청일_경우_이벤트_커버가_S3에서_삭제된다() {
+        void 유효한_요청일_경우_이벤트_커버를_삭제하는_이벤트를_발행한다() {
             // when
             eventService.deleteEvent(1L);
 
             // then
-            verify(s3Util, times(1)).deleteFileFromS3("testEventCoverUrl1");
+            var events = applicationEvents.stream(ImageDeleteEvent.class).toList();
+            assertThat(events).hasSize(1);
+            assertThat(events.getFirst().imageUrl()).isEqualTo("testEventCoverUrl1");
         }
 
         @Test

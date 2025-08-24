@@ -1,11 +1,10 @@
 package org.cherrypic.member.service;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 
 import org.cherrypic.IntegrationTest;
 import org.cherrypic.RedisCleaner;
+import org.cherrypic.domain.image.event.ImageDeleteEvent;
 import org.cherrypic.domain.member.dto.request.FcmTokenSaveRequest;
 import org.cherrypic.domain.member.dto.request.MemberProfileUpdateRequest;
 import org.cherrypic.domain.member.dto.response.MemberInfoResponse;
@@ -25,7 +24,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.event.ApplicationEvents;
+import org.springframework.test.context.event.RecordApplicationEvents;
 
+@RecordApplicationEvents
 class MemberServiceTest extends IntegrationTest {
 
     @Autowired private TransactionUtil transactionUtil;
@@ -34,6 +36,8 @@ class MemberServiceTest extends IntegrationTest {
 
     @Autowired private MemberService memberService;
     @Autowired private MemberRepository memberRepository;
+
+    @Autowired private ApplicationEvents applicationEvents;
 
     @MockitoBean private S3Util s3Util;
 
@@ -115,7 +119,9 @@ class MemberServiceTest extends IntegrationTest {
             memberService.updateProfile(request);
 
             // then
-            verify(s3Util, times(1)).deleteFileFromS3("testProfileImageUrl");
+            var events = applicationEvents.stream(ImageDeleteEvent.class).toList();
+            assertThat(events).hasSize(1);
+            assertThat(events.getFirst().imageUrl()).isEqualTo("testProfileImageUrl");
         }
     }
 

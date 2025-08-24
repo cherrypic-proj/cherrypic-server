@@ -15,6 +15,7 @@ import org.cherrypic.domain.event.dto.response.EventListResponse;
 import org.cherrypic.domain.event.dto.response.EventUpdateResponse;
 import org.cherrypic.domain.event.exception.EventErrorCode;
 import org.cherrypic.domain.event.repository.EventRepository;
+import org.cherrypic.domain.image.event.ImageDeleteEvent;
 import org.cherrypic.domain.image.exception.ImageErrorCode;
 import org.cherrypic.domain.image.repository.EventImageRepository;
 import org.cherrypic.domain.image.repository.ImageRepository;
@@ -30,6 +31,7 @@ import org.cherrypic.image.entity.Image;
 import org.cherrypic.member.entity.Member;
 import org.cherrypic.participant.entity.Participant;
 import org.cherrypic.participant.enums.ParticipantRole;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Slice;
 import org.springframework.retry.annotation.Backoff;
@@ -50,6 +52,8 @@ public class EventServiceImpl implements EventService {
     private final EventRepository eventRepository;
     private final ImageRepository imageRepository;
     private final EventImageRepository eventImageRepository;
+
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     public EventCreateResponse createEvent(EventCreateRequest request) {
@@ -72,7 +76,7 @@ public class EventServiceImpl implements EventService {
         validateParticipantAuthority(currentMember, event.getAlbum());
 
         if (event.getCoverUrl() != null && !event.getCoverUrl().equals(request.coverUrl())) {
-            s3Util.deleteFileFromS3(event.getCoverUrl());
+            eventPublisher.publishEvent(ImageDeleteEvent.of(event.getCoverUrl()));
         }
 
         event.updateEvent(request.title(), request.coverUrl());
@@ -102,7 +106,7 @@ public class EventServiceImpl implements EventService {
         validateParticipantAuthority(currentMember, event.getAlbum());
 
         if (event.getCoverUrl() != null) {
-            s3Util.deleteFileFromS3(event.getCoverUrl());
+            eventPublisher.publishEvent(ImageDeleteEvent.of(event.getCoverUrl()));
         }
 
         eventRepository.delete(event);

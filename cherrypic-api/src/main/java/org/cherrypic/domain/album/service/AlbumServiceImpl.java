@@ -9,9 +9,11 @@ import org.cherrypic.domain.album.dto.request.AlbumCreateRequest;
 import org.cherrypic.domain.album.dto.request.AlbumUpdateRequest;
 import org.cherrypic.domain.album.dto.response.*;
 import org.cherrypic.domain.album.event.AlbumDeleteNotificationEvent;
+import org.cherrypic.domain.album.event.AlbumImageBatchDeleteEvent;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.album.repository.AlbumRepository;
 import org.cherrypic.domain.album.repository.InvitationCodeRepository;
+import org.cherrypic.domain.image.event.ImageDeleteEvent;
 import org.cherrypic.domain.participant.repository.ParticipantRepository;
 import org.cherrypic.domain.payment.exception.PaymentErrorCode;
 import org.cherrypic.domain.payment.repository.PaymentRepository;
@@ -98,7 +100,7 @@ public class AlbumServiceImpl implements AlbumService {
         validateAlbumHost(currentMember.getId(), album.getId());
 
         if (album.getCoverUrl() != null && !album.getCoverUrl().equals(request.coverUrl())) {
-            s3Util.deleteFileFromS3(album.getCoverUrl());
+            eventPublisher.publishEvent(ImageDeleteEvent.of(album.getCoverUrl()));
         }
 
         album.updateAlbum(request.title(), request.coverUrl());
@@ -212,9 +214,9 @@ public class AlbumServiceImpl implements AlbumService {
         validateSubscriptionInactive(album);
         validateRemainingParticipants(album, currentMember);
 
-        s3Util.deleteAllAlbumImagesInBatchFromS3(album.getId());
+        eventPublisher.publishEvent(AlbumImageBatchDeleteEvent.of(album.getId()));
         if (album.getCoverUrl() != null) {
-            s3Util.deleteFileFromS3(album.getCoverUrl());
+            eventPublisher.publishEvent(ImageDeleteEvent.of(album.getCoverUrl()));
         }
 
         albumRepository.delete(album);

@@ -3,8 +3,6 @@ package org.cherrypic.album.service;
 import static org.assertj.core.api.Assertions.*;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 
 import java.math.BigDecimal;
 import java.time.Duration;
@@ -23,12 +21,15 @@ import org.cherrypic.domain.album.dto.response.AlbumInfoResponse;
 import org.cherrypic.domain.album.dto.response.AlbumListResponse;
 import org.cherrypic.domain.album.dto.response.InvitationLinkCreateResponse;
 import org.cherrypic.domain.album.event.AlbumDeleteNotificationEvent;
+import org.cherrypic.domain.album.event.AlbumImageBatchDeleteEvent;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.album.repository.AlbumRepository;
 import org.cherrypic.domain.album.repository.InvitationCodeRepository;
 import org.cherrypic.domain.album.service.AlbumService;
 import org.cherrypic.domain.event.repository.EventRepository;
 import org.cherrypic.domain.favorites.repository.FavoritesRepository;
+import org.cherrypic.domain.image.event.ImageDeleteEvent;
+import org.cherrypic.domain.image.repository.ImageRepository;
 import org.cherrypic.domain.member.repository.MemberRepository;
 import org.cherrypic.domain.participant.repository.ParticipantRepository;
 import org.cherrypic.domain.payment.exception.PaymentErrorCode;
@@ -42,6 +43,7 @@ import org.cherrypic.global.pagination.SortDirection;
 import org.cherrypic.global.util.MemberUtil;
 import org.cherrypic.global.util.S3Util;
 import org.cherrypic.global.util.TransactionUtil;
+import org.cherrypic.image.entity.Image;
 import org.cherrypic.member.entity.Member;
 import org.cherrypic.member.entity.OauthInfo;
 import org.cherrypic.participant.entity.Participant;
@@ -72,6 +74,7 @@ class AlbumServiceTest extends IntegrationTest {
     @Autowired private FavoritesRepository favoritesRepository;
     @Autowired private InvitationCodeRepository invitationCodeRepository;
     @Autowired private EventRepository eventRepository;
+    @Autowired private ImageRepository imageRepository;
 
     @MockitoBean private MemberUtil memberUtil;
     @MockitoBean private S3Util s3Util;
@@ -398,7 +401,7 @@ class AlbumServiceTest extends IntegrationTest {
         }
 
         @Test
-        void 앨범_커버_URL이_교체되는_경우_S3에서_삭제되는_로직이_호출된다() {
+        void 앨범_커버_URL이_교체되는_경우_S3에서_이미지를_삭제하는_이벤트를_발행한다() {
             // given
             AlbumUpdateRequest request =
                     new AlbumUpdateRequest("testUpdatedTitle", "testUpdatedCoverUrl");
@@ -407,7 +410,9 @@ class AlbumServiceTest extends IntegrationTest {
             albumService.updateAlbum(1L, request);
 
             // then
-            verify(s3Util, times(1)).deleteFileFromS3("testURL1");
+            var events = applicationEvents.stream(ImageDeleteEvent.class).toList();
+            assertThat(events).hasSize(1);
+            assertThat(events.getFirst().imageUrl()).isEqualTo("testURL1");
         }
 
         @Test
@@ -1037,6 +1042,9 @@ class AlbumServiceTest extends IntegrationTest {
             Album album5 = Album.createAlbum("testAlbum5", "testURL5", AlbumPlan.PRO, false);
             albumRepository.saveAll(List.of(album1, album2, album3, album4, album5));
 
+            Image image = Image.createImage(album1, 1L, "testUrl", LocalDateTime.now());
+            imageRepository.save(image);
+
             subscriptionRepository.save(
                     Subscription.createSubscription(member1, album5, LocalDateTime.now()));
 
@@ -1068,13 +1076,14 @@ class AlbumServiceTest extends IntegrationTest {
         }
 
         @Test
-        void 유효한_요청일_경우_S3에_존재하는_앨범_관련_이미지들도_삭제된다() {
+        void 유효한_요청일_경우_S3에_존재하는_앨범_이미지들을_삭제하는_이벤트를_발행한다() {
             // when
             albumService.deleteAlbum(1L);
 
             // then
-            verify(s3Util, times(1)).deleteAllAlbumImagesInBatchFromS3(1L);
-            verify(s3Util, times(1)).deleteFileFromS3("testURL1");
+            var events = applicationEvents.stream(AlbumImageBatchDeleteEvent.class).toList();
+            assertThat(events).hasSize(1);
+            assertThat(events.getFirst().albumId()).isEqualTo(1L);
         }
 
         @Test

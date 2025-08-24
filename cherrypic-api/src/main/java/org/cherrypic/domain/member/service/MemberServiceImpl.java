@@ -1,6 +1,7 @@
 package org.cherrypic.domain.member.service;
 
 import lombok.RequiredArgsConstructor;
+import org.cherrypic.domain.image.event.ImageDeleteEvent;
 import org.cherrypic.domain.member.dto.request.FcmTokenSaveRequest;
 import org.cherrypic.domain.member.dto.request.MemberProfileUpdateRequest;
 import org.cherrypic.domain.member.dto.response.MemberInfoResponse;
@@ -9,6 +10,7 @@ import org.cherrypic.domain.notification.service.FcmTokenService;
 import org.cherrypic.global.util.MemberUtil;
 import org.cherrypic.global.util.S3Util;
 import org.cherrypic.member.entity.Member;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +22,8 @@ public class MemberServiceImpl implements MemberService {
     private final MemberUtil memberUtil;
     private final S3Util s3Util;
     private final FcmTokenService fcmTokenService;
+
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     @Transactional(readOnly = true)
@@ -34,7 +38,7 @@ public class MemberServiceImpl implements MemberService {
 
         if (currentMember.getProfileImageUrl() != null
                 && !currentMember.getProfileImageUrl().equals(request.profileImageUrl())) {
-            s3Util.deleteFileFromS3(currentMember.getProfileImageUrl());
+            eventPublisher.publishEvent(ImageDeleteEvent.of(currentMember.getProfileImageUrl()));
         }
 
         currentMember.updateMember(request.nickname(), request.profileImageUrl());

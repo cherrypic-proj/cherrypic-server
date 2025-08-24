@@ -67,8 +67,6 @@ public class S3Util {
         return generatePresignedUrlRequest;
     }
 
-    @Async
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void deleteFilesInBatchFromS3(List<String> urls) {
         String bucket = s3Properties.bucket();
         List<DeleteObjectsRequest.KeyVersion> keys =
@@ -81,8 +79,6 @@ public class S3Util {
         amazonS3.deleteObjects(request);
     }
 
-    @Async
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void deleteAllAlbumImagesInBatchFromS3(Long albumId) {
         String bucket = s3Properties.bucket();
         String prefix =
