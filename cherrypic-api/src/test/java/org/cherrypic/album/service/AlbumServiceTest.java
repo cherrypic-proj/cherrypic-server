@@ -29,6 +29,7 @@ import org.cherrypic.domain.album.service.AlbumService;
 import org.cherrypic.domain.event.repository.EventRepository;
 import org.cherrypic.domain.favorites.repository.FavoritesRepository;
 import org.cherrypic.domain.image.event.ImageDeleteEvent;
+import org.cherrypic.domain.image.event.ImagesDeleteEvent;
 import org.cherrypic.domain.image.repository.ImageRepository;
 import org.cherrypic.domain.member.repository.MemberRepository;
 import org.cherrypic.domain.participant.repository.ParticipantRepository;
@@ -1082,6 +1083,28 @@ class AlbumServiceTest extends IntegrationTest {
             var events = applicationEvents.stream(AlbumImagesDeleteEvent.class).toList();
             assertThat(events).hasSize(1);
             assertThat(events.getFirst().albumId()).isEqualTo(1L);
+        }
+
+        @Test
+        void 유효한_요청일_경우_S3에_존재하는_앨범_커버를_삭제하는_이벤트를_발행한다() {
+            // when
+            albumService.deleteAlbum(1L);
+
+            // then
+            var events = applicationEvents.stream(ImageDeleteEvent.class).toList();
+            assertThat(events).hasSize(1);
+            assertThat(events.getFirst().imageUrl()).isEqualTo("testURL1");
+        }
+
+        @Test
+        void 유효한_요청일_경우_S3에_존재하는_이벤트_커버들을_삭제하는_이벤트를_발행한다() {
+            // when
+            albumService.deleteAlbum(1L);
+
+            // then
+            var events = applicationEvents.stream(ImagesDeleteEvent.class).toList();
+            assertThat(events).hasSize(1);
+            assertThat(events.getFirst().imageUrls()).isEqualTo(List.of("testCoverUrl1"));
         }
 
         @Test

@@ -1,6 +1,10 @@
 package org.cherrypic.domain.event.repository;
 
+import java.util.List;
 import org.cherrypic.event.entity.Event;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface EventRepository extends JpaRepository<Event, Long>, EventRepositoryCustom {}
+public interface EventRepository extends JpaRepository<Event, Long>, EventRepositoryCustom {
+
+    List<Event> findAllByAlbumId(Long albumId);
+}

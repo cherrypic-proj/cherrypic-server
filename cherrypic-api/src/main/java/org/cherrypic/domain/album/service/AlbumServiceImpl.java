@@ -13,11 +13,14 @@ import org.cherrypic.domain.album.event.AlbumImagesDeleteEvent;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.album.repository.AlbumRepository;
 import org.cherrypic.domain.album.repository.InvitationCodeRepository;
+import org.cherrypic.domain.event.repository.EventRepository;
 import org.cherrypic.domain.image.event.ImageDeleteEvent;
+import org.cherrypic.domain.image.event.ImagesDeleteEvent;
 import org.cherrypic.domain.participant.repository.ParticipantRepository;
 import org.cherrypic.domain.payment.exception.PaymentErrorCode;
 import org.cherrypic.domain.payment.repository.PaymentRepository;
 import org.cherrypic.domain.subscription.repository.SubscriptionRepository;
+import org.cherrypic.event.entity.Event;
 import org.cherrypic.exception.CustomException;
 import org.cherrypic.global.pagination.SliceResponse;
 import org.cherrypic.global.pagination.SortDirection;
@@ -47,6 +50,7 @@ public class AlbumServiceImpl implements AlbumService {
     private final ParticipantRepository participantRepository;
     private final SubscriptionRepository subscriptionRepository;
     private final InvitationCodeRepository invitationCodeRepository;
+    private final EventRepository eventRepository;
 
     private final ApplicationEventPublisher eventPublisher;
 
@@ -211,6 +215,10 @@ public class AlbumServiceImpl implements AlbumService {
         validateAlbumHost(currentMember.getId(), album.getId());
         validateSubscriptionInactive(album);
         validateRemainingParticipants(album, currentMember);
+
+        final List<Event> events = eventRepository.findAllByAlbumId(album.getId());
+        eventPublisher.publishEvent(
+                ImagesDeleteEvent.of(events.stream().map(Event::getCoverUrl).toList()));
 
         eventPublisher.publishEvent(AlbumImagesDeleteEvent.of(album.getId()));
         if (album.getCoverUrl() != null) {

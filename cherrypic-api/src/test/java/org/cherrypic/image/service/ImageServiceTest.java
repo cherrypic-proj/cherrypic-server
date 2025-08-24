@@ -91,7 +91,16 @@ class ImageServiceTest extends IntegrationTest {
                                     1L,
                                     FileExtension.JPEG,
                                     "testMd5Hash"))
-                    .willReturn("http://localhost/local/member-profile/1/some-uuid.jpeg");
+                    .willReturn(
+                            "\"https://my-bucket.s3.ap-northeast-2.amazonaws.com/local/member-profile/1/660e8400-e29b-41d4-a716-446655440000.jpeg\"\n"
+                                    + "                                    + \"?X-Amz-Algorithm=AWS4-HMAC-SHA256\"\n"
+                                    + "                                    + \"&X-Amz-Date=20250824T130000Z\"\n"
+                                    + "                                    + \"&X-Amz-SignedHeaders=host\"\n"
+                                    + "                                    + \"&X-Amz-Expires=60\"\n"
+                                    + "                                    + \"&X-Amz-Credential=AKIAIOSFODNN7EXAMPLE/20250824/ap-northeast-2/s3/aws4_request\"\n"
+                                    + "                                    + \"&X-Amz-Signature=abcdef0123456789...\"\n"
+                                    + "                                    + \"&x-amz-acl=public-read\"\n"
+                                    + "                                    + \"&Content-MD5=testMd5Hash\"");
 
             // when
             PresignedUrlResponse response = imageService.createMemberProfileImageUploadUrl(request);
