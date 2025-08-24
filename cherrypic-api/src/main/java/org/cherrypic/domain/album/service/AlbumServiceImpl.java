@@ -97,7 +97,7 @@ public class AlbumServiceImpl implements AlbumService {
 
         validateAlbumHost(currentMember.getId(), album.getId());
 
-        if (request.coverUrl() != null && album.getCoverUrl() != null) {
+        if (album.getCoverUrl() != null && !album.getCoverUrl().equals(request.coverUrl())) {
             s3Util.deleteFileFromS3(album.getCoverUrl());
         }
 

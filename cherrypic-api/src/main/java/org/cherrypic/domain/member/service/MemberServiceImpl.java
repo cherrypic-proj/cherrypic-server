@@ -32,7 +32,8 @@ public class MemberServiceImpl implements MemberService {
     public MemberProfileUpdateResponse updateProfile(MemberProfileUpdateRequest request) {
         final Member currentMember = memberUtil.getCurrentMember();
 
-        if (request.profileImageUrl() != null && currentMember.getProfileImageUrl() != null) {
+        if (currentMember.getProfileImageUrl() != null
+                && !currentMember.getProfileImageUrl().equals(request.profileImageUrl())) {
             s3Util.deleteFileFromS3(currentMember.getProfileImageUrl());
         }
 

@@ -71,7 +71,7 @@ public class EventServiceImpl implements EventService {
 
         validateParticipantAuthority(currentMember, event.getAlbum());
 
-        if (request.coverUrl() != null && event.getCoverUrl() != null) {
+        if (event.getCoverUrl() != null && !event.getCoverUrl().equals(request.coverUrl())) {
             s3Util.deleteFileFromS3(event.getCoverUrl());
         }
 
