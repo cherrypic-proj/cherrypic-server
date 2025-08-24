@@ -78,7 +78,7 @@ public class ImageServiceImpl implements ImageService {
         String presignedUrl =
                 s3Util.createPresignedUrl(
                         ImageType.ALBUM_COVER,
-                        currentMember.getId(),
+                        album.getId(),
                         request.fileExtension(),
                         request.md5Hash());
 
@@ -97,7 +97,7 @@ public class ImageServiceImpl implements ImageService {
         String presignedUrl =
                 s3Util.createPresignedUrl(
                         ImageType.EVENT_COVER,
-                        currentMember.getId(),
+                        event.getId(),
                         request.fileExtension(),
                         request.md5Hash());
 
@@ -122,7 +122,7 @@ public class ImageServiceImpl implements ImageService {
                                 req ->
                                         s3Util.createPresignedUrl(
                                                 ImageType.ALBUM_IMAGE,
-                                                currentMember.getId(),
+                                                album.getId(),
                                                 req.fileExtension(),
                                                 req.md5Hashes()))
                         .toList();
