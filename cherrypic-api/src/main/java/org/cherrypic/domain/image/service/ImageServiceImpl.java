@@ -71,18 +71,15 @@ public class ImageServiceImpl implements ImageService {
     }
 
     @Override
-    public PresignedUrlResponse createAlbumCoverImageUploadUrl(
-            Long albumId, ImageUploadRequest request) {
+    public PresignedUrlResponse createAlbumCoverImageUploadUrl(ImageUploadRequest request) {
         final Member currentMember = memberUtil.getCurrentMember();
-        final Album album = getAlbumById(albumId);
 
-        validateAlbumHost(currentMember.getId(), album.getId());
         validateImageExtension(request.fileExtension());
 
         String presignedUrl =
                 s3Util.createPresignedUrl(
                         ImageType.ALBUM_COVER,
-                        album.getId(),
+                        currentMember.getId(),
                         request.fileExtension(),
                         request.md5Hash());
 
@@ -90,18 +87,15 @@ public class ImageServiceImpl implements ImageService {
     }
 
     @Override
-    public PresignedUrlResponse createEventCoverImageUploadUrl(
-            Long eventId, ImageUploadRequest request) {
+    public PresignedUrlResponse createEventCoverImageUploadUrl(ImageUploadRequest request) {
         final Member currentMember = memberUtil.getCurrentMember();
-        final Event event = getEventById(eventId);
 
-        validateParticipantAuthority(currentMember.getId(), event.getAlbum().getId());
         validateImageExtension(request.fileExtension());
 
         String presignedUrl =
                 s3Util.createPresignedUrl(
                         ImageType.EVENT_COVER,
-                        event.getId(),
+                        currentMember.getId(),
                         request.fileExtension(),
                         request.md5Hash());
 

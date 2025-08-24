@@ -159,8 +159,7 @@ class ImageServiceTest extends IntegrationTest {
                                     + "&Content-MD5=testMd5Hash");
 
             // when
-            PresignedUrlResponse response =
-                    imageService.createAlbumCoverImageUploadUrl(1L, request);
+            PresignedUrlResponse response = imageService.createAlbumCoverImageUploadUrl(request);
 
             // then
             assertThat(response.presignedUrl())
@@ -169,45 +168,12 @@ class ImageServiceTest extends IntegrationTest {
         }
 
         @Test
-        void 앨범이_존재하지_않을_경우_에외가_발생한다() {
-            // given
-            ImageUploadRequest request = new ImageUploadRequest(FileExtension.MKV, "testMd5Hash");
-
-            // when & then
-            assertThatThrownBy(() -> imageService.createAlbumCoverImageUploadUrl(999L, request))
-                    .isInstanceOf(CustomException.class)
-                    .hasMessage(AlbumErrorCode.ALBUM_NOT_FOUND.getMessage());
-        }
-
-        @Test
-        void 앨범에_속하지_않은_사용자가_Presigned_Url을_요청하면_예외가_발생한다() {
-            // given
-            ImageUploadRequest request = new ImageUploadRequest(FileExtension.MKV, "testMd5Hash");
-
-            // when & then
-            assertThatThrownBy(() -> imageService.createAlbumCoverImageUploadUrl(3L, request))
-                    .isInstanceOf(CustomException.class)
-                    .hasMessage(AlbumErrorCode.NOT_ALBUM_PARTICIPANT.getMessage());
-        }
-
-        @Test
-        void HOST가_아닌_권한의_사용자가_Presigned_Url을_요청하면_예외가_발생한다() {
-            // given
-            ImageUploadRequest request = new ImageUploadRequest(FileExtension.MKV, "testMd5Hash");
-
-            // when & then
-            assertThatThrownBy(() -> imageService.createAlbumCoverImageUploadUrl(2L, request))
-                    .isInstanceOf(CustomException.class)
-                    .hasMessage(AlbumErrorCode.NOT_ALBUM_HOST.getMessage());
-        }
-
-        @Test
         void 동영상_확장자를_입력할_경우_예외가_발생한다() {
             // given
             ImageUploadRequest request = new ImageUploadRequest(FileExtension.MKV, "testMd5Hash");
 
             // when & then
-            assertThatThrownBy(() -> imageService.createAlbumCoverImageUploadUrl(1L, request))
+            assertThatThrownBy(() -> imageService.createAlbumCoverImageUploadUrl(request))
                     .isInstanceOf(CustomException.class)
                     .hasMessage(ImageErrorCode.NOT_IMAGE_EXTENSION.getMessage());
         }
@@ -262,8 +228,7 @@ class ImageServiceTest extends IntegrationTest {
                                     + "&Content-MD5=testMd5Hash");
 
             // when
-            PresignedUrlResponse response =
-                    imageService.createEventCoverImageUploadUrl(1L, request);
+            PresignedUrlResponse response = imageService.createEventCoverImageUploadUrl(request);
 
             // then
             assertThat(response.presignedUrl())
@@ -272,45 +237,12 @@ class ImageServiceTest extends IntegrationTest {
         }
 
         @Test
-        void 이벤트가_존재하지_않을_경우_에외가_발생한다() {
-            // given
-            ImageUploadRequest request = new ImageUploadRequest(FileExtension.MKV, "testMd5Hash");
-
-            // when & then
-            assertThatThrownBy(() -> imageService.createEventCoverImageUploadUrl(999L, request))
-                    .isInstanceOf(CustomException.class)
-                    .hasMessage(EventErrorCode.EVENT_NOT_FOUND.getMessage());
-        }
-
-        @Test
-        void 앨범에_속하지_않은_사용자가_Presigned_Url을_요청하면_예외가_발생한다() {
-            // given
-            ImageUploadRequest request = new ImageUploadRequest(FileExtension.MKV, "testMd5Hash");
-
-            // when & then
-            assertThatThrownBy(() -> imageService.createEventCoverImageUploadUrl(3L, request))
-                    .isInstanceOf(CustomException.class)
-                    .hasMessage(AlbumErrorCode.NOT_ALBUM_PARTICIPANT.getMessage());
-        }
-
-        @Test
-        void LIMITED_권한의_사용자가_Presigned_Url을_요청하면_예외가_발생한다() {
-            // given
-            ImageUploadRequest request = new ImageUploadRequest(FileExtension.MKV, "testMd5Hash");
-
-            // when & then
-            assertThatThrownBy(() -> imageService.createEventCoverImageUploadUrl(2L, request))
-                    .isInstanceOf(CustomException.class)
-                    .hasMessage(AlbumErrorCode.LIMITED_AUTHORITY.getMessage());
-        }
-
-        @Test
         void 동영상_확장자를_입력할_경우_예외가_발생한다() {
             // given
             ImageUploadRequest request = new ImageUploadRequest(FileExtension.MKV, "testMd5Hash");
 
             // when & then
-            assertThatThrownBy(() -> imageService.createEventCoverImageUploadUrl(1L, request))
+            assertThatThrownBy(() -> imageService.createEventCoverImageUploadUrl(request))
                     .isInstanceOf(CustomException.class)
                     .hasMessage(ImageErrorCode.NOT_IMAGE_EXTENSION.getMessage());
         }
@@ -364,15 +296,24 @@ class ImageServiceTest extends IntegrationTest {
                                     eq(FileExtension.JPEG),
                                     anyString()))
                     .willReturn(
-                            "https://my-bucket.s3.ap-northeast-2.amazonaws.com/local/album-image/1/550e8400-e29b-41d4-a716-446655440000.jpeg\n"
-                                    + "?X-Amz-Algorithm=AWS4-HMAC-SHA256\n"
-                                    + "&X-Amz-Date=20250824T130000Z\n"
-                                    + "&X-Amz-SignedHeaders=host\n"
-                                    + "&X-Amz-Expires=60\n"
-                                    + "&X-Amz-Credential=AKIAIOSFODNN7EXAMPLE/20250824/ap-northeast-2/s3/aws4_request\n"
-                                    + "&X-Amz-Signature=0123456789abcdef...\n"
-                                    + "&x-amz-acl=public-read\n"
-                                    + "&Content-MD5=testMd5Hash");
+                            "https://my-bucket.s3.ap-northeast-2.amazonaws.com/local/album-image/1/550e8400-e29b-41d4-a716-446655440000.jpeg"
+                                    + "?X-Amz-Algorithm=AWS4-HMAC-SHA256"
+                                    + "&X-Amz-Date=20250824T130000Z"
+                                    + "&X-Amz-SignedHeaders=host"
+                                    + "&X-Amz-Expires=60"
+                                    + "&X-Amz-Credential=AKIAIOSFODNN7EXAMPLE/20250824/ap-northeast-2/s3/aws4_request"
+                                    + "&X-Amz-Signature=0123456789abcdef..."
+                                    + "&x-amz-acl=public-read"
+                                    + "&Content-MD5=testMd5Hash1",
+                            "https://my-bucket.s3.ap-northeast-2.amazonaws.com/local/album-image/1/660e8400-e29b-41d4-a716-446655440000.jpeg"
+                                    + "?X-Amz-Algorithm=AWS4-HMAC-SHA256"
+                                    + "&X-Amz-Date=20250824T130000Z"
+                                    + "&X-Amz-SignedHeaders=host"
+                                    + "&X-Amz-Expires=60"
+                                    + "&X-Amz-Credential=AKIAIOSFODNN7EXAMPLE/20250824/ap-northeast-2/s3/aws4_request"
+                                    + "&X-Amz-Signature=abcdef0123456789..."
+                                    + "&x-amz-acl=public-read"
+                                    + "&Content-MD5=testMd5Hash2");
 
             // when
             PresignedUrlsResponse response = imageService.createAlbumFileUploadUrls(1L, request);

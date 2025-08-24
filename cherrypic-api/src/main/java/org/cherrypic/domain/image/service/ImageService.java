@@ -14,9 +14,9 @@ import org.cherrypic.global.pagination.SortDirection;
 public interface ImageService {
     PresignedUrlResponse createMemberProfileImageUploadUrl(ImageUploadRequest request);
 
-    PresignedUrlResponse createAlbumCoverImageUploadUrl(Long albumId, ImageUploadRequest request);
+    PresignedUrlResponse createAlbumCoverImageUploadUrl(ImageUploadRequest request);
 
-    PresignedUrlResponse createEventCoverImageUploadUrl(Long eventId, ImageUploadRequest request);
+    PresignedUrlResponse createEventCoverImageUploadUrl(ImageUploadRequest request);
 
     PresignedUrlsResponse createAlbumFileUploadUrls(Long albumId, AlbumFileUploadRequest request);
 

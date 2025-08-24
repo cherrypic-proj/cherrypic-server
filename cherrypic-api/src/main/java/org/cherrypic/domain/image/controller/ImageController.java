@@ -38,22 +38,22 @@ public class ImageController {
         return imageService.createMemberProfileImageUploadUrl(request);
     }
 
-    @PostMapping("/albums/{albumId}/cover-upload-url")
+    @PostMapping("/albums/cover-upload-url")
     @Operation(
             summary = "앨범 커버 이미지 Presigned URL 생성",
             description = "앨범 커버 이미지 업로드를 위한 Presigned URL을 생성합니다.")
     public PresignedUrlResponse albumCoverImageUploadUrlCreate(
-            @PathVariable Long albumId, @Valid @RequestBody ImageUploadRequest request) {
-        return imageService.createAlbumCoverImageUploadUrl(albumId, request);
+            @Valid @RequestBody ImageUploadRequest request) {
+        return imageService.createAlbumCoverImageUploadUrl(request);
     }
 
-    @PostMapping("/events/{eventId}/cover-upload-url")
+    @PostMapping("/events/cover-upload-url")
     @Operation(
             summary = "이벤트 커버 이미지 Presigned URL 생성",
             description = "이벤트 커버 이미지 업로드를 위한 Presigned URL을 생성합니다.")
     public PresignedUrlResponse eventCoverImageUploadUrlCreate(
-            @PathVariable Long eventId, @Valid @RequestBody ImageUploadRequest request) {
-        return imageService.createEventCoverImageUploadUrl(eventId, request);
+            @Valid @RequestBody ImageUploadRequest request) {
+        return imageService.createEventCoverImageUploadUrl(request);
     }
 
     @PostMapping("/albums/{albumId}/images")
