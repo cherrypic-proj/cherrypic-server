@@ -3,8 +3,6 @@ package org.cherrypic.image.service;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -26,6 +24,7 @@ import org.cherrypic.domain.image.dto.response.PresignedUrlResponse;
 import org.cherrypic.domain.image.dto.response.PresignedUrlsResponse;
 import org.cherrypic.domain.image.enums.FileExtension;
 import org.cherrypic.domain.image.enums.ImageType;
+import org.cherrypic.domain.image.event.ImagesDeleteEvent;
 import org.cherrypic.domain.image.exception.ImageErrorCode;
 import org.cherrypic.domain.image.repository.EventImageRepository;
 import org.cherrypic.domain.image.repository.ImageRepository;
@@ -50,13 +49,17 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.event.ApplicationEvents;
+import org.springframework.test.context.event.RecordApplicationEvents;
 
+@RecordApplicationEvents
 class ImageServiceTest extends IntegrationTest {
 
     @MockitoBean MemberUtil memberUtil;
     @MockitoBean S3Util s3Util;
 
     @Autowired private ImageService imageService;
+    @Autowired private ApplicationEvents applicationEvents;
     @Autowired private ParticipantRepository participantRepository;
     @Autowired private EventRepository eventRepository;
     @Autowired private ImageRepository imageRepository;
@@ -795,7 +798,7 @@ class ImageServiceTest extends IntegrationTest {
         }
 
         @Test
-        void 앨범_이미지가_삭제되는_경우_S3에서_삭제되는_로직이_호출된다() {
+        void 앨범_이미지를_삭제하는_경우_S3에서_이미지를_삭제하는_이벤트를_발행한다() {
             // given
             AlbumImageDeleteRequest request = new AlbumImageDeleteRequest(List.of(1L, 2L));
 
@@ -803,7 +806,9 @@ class ImageServiceTest extends IntegrationTest {
             imageService.deleteAlbumImage(1L, request);
 
             // then
-            verify(s3Util, times(1)).deleteFilesInBatchFromS3(List.of("testUrl1", "testUrl2"));
+            var events = applicationEvents.stream(ImagesDeleteEvent.class).toList();
+            assertThat(events.getFirst().imageUrls())
+                    .containsExactlyInAnyOrder("testUrl1", "testUrl2");
         }
 
         @Test

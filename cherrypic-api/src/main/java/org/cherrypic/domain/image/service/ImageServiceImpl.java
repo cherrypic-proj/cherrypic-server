@@ -20,6 +20,7 @@ import org.cherrypic.domain.image.dto.response.PresignedUrlResponse;
 import org.cherrypic.domain.image.dto.response.PresignedUrlsResponse;
 import org.cherrypic.domain.image.enums.FileExtension;
 import org.cherrypic.domain.image.enums.ImageType;
+import org.cherrypic.domain.image.event.ImagesDeleteEvent;
 import org.cherrypic.domain.image.exception.ImageErrorCode;
 import org.cherrypic.domain.image.repository.ImageRepository;
 import org.cherrypic.domain.participant.repository.ParticipantRepository;
@@ -33,6 +34,7 @@ import org.cherrypic.image.entity.Image;
 import org.cherrypic.member.entity.Member;
 import org.cherrypic.participant.entity.Participant;
 import org.cherrypic.participant.enums.ParticipantRole;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -49,6 +51,8 @@ public class ImageServiceImpl implements ImageService {
     private final ImageRepository imageRepository;
     private final EventRepository eventRepository;
     private final ParticipantRepository participantRepository;
+
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     public PresignedUrlResponse createMemberProfileImageUploadUrl(ImageUploadRequest request) {
@@ -202,7 +206,8 @@ public class ImageServiceImpl implements ImageService {
 
         validateImagesInAlbum(images, album);
 
-        s3Util.deleteFilesInBatchFromS3(images.stream().map(Image::getUrl).toList());
+        eventPublisher.publishEvent(
+                ImagesDeleteEvent.of(images.stream().map(Image::getUrl).toList()));
         imageRepository.deleteAllInBatch(images);
     }
 
