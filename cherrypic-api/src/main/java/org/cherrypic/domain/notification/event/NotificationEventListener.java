@@ -19,7 +19,7 @@ public class NotificationEventListener {
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_ROLLBACK)
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void handleAlbumDeleteNotificationEvent(AlbumDeleteNotificationSendEvent event) {
+    public void handleAlbumDeleteNotificationSendEvent(AlbumDeleteNotificationSendEvent event) {
         notificationService.sendAlbumDeleteNotification(
                 event.albumId(),
                 event.senderId(),

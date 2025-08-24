@@ -16,7 +16,7 @@ public class ImageEventListener {
 
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    public void handleAlbumImageDeleteEvent(AlbumImagesDeleteEvent event) {
+    public void handleAlbumImagesDeleteEvent(AlbumImagesDeleteEvent event) {
         s3Util.deleteAllAlbumImagesInBatchFromS3(event.albumId());
     }
 
