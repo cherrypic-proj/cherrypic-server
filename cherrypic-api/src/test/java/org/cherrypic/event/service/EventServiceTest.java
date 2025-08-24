@@ -35,7 +35,6 @@ import org.cherrypic.exception.CustomException;
 import org.cherrypic.global.pagination.SliceResponse;
 import org.cherrypic.global.pagination.SortDirection;
 import org.cherrypic.global.util.MemberUtil;
-import org.cherrypic.global.util.S3Util;
 import org.cherrypic.global.util.TransactionUtil;
 import org.cherrypic.image.entity.Image;
 import org.cherrypic.member.entity.Member;
@@ -69,7 +68,6 @@ public class EventServiceTest extends IntegrationTest {
     @Autowired private EntityManager em;
 
     @MockitoBean MemberUtil memberUtil;
-    @MockitoBean S3Util s3Util;
 
     @Nested
     class 이벤트를_생성할_때 {
@@ -198,7 +196,7 @@ public class EventServiceTest extends IntegrationTest {
         }
 
         @Test
-        void 이벤트_커버_URL이_교체되는_경우_S3에서_삭제되는_로직이_호출된다() {
+        void 이벤트_커버_URL이_교체되는_경우_S3에서_이미지를_삭제하는_이벤트를_발행한다() {
             // given
             EventUpdateRequest request =
                     new EventUpdateRequest("testUpdatedTitle", "testUpdatedCoverUrl");
@@ -295,7 +293,7 @@ public class EventServiceTest extends IntegrationTest {
         }
 
         @Test
-        void 유효한_요청일_경우_이벤트_커버를_삭제하는_이벤트를_발행한다() {
+        void 유효한_요청일_경우_S3에서_이벤트_커버_이미지를_삭제하는_이벤트를_발행한다() {
             // when
             eventService.deleteEvent(1L);
 

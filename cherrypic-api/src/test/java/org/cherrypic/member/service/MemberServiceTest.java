@@ -10,7 +10,6 @@ import org.cherrypic.domain.member.dto.request.MemberProfileUpdateRequest;
 import org.cherrypic.domain.member.dto.response.MemberInfoResponse;
 import org.cherrypic.domain.member.repository.MemberRepository;
 import org.cherrypic.domain.member.service.MemberService;
-import org.cherrypic.global.util.S3Util;
 import org.cherrypic.global.util.TransactionUtil;
 import org.cherrypic.member.entity.Member;
 import org.cherrypic.member.entity.OauthInfo;
@@ -23,7 +22,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.event.ApplicationEvents;
 import org.springframework.test.context.event.RecordApplicationEvents;
 
@@ -38,8 +36,6 @@ class MemberServiceTest extends IntegrationTest {
     @Autowired private MemberRepository memberRepository;
 
     @Autowired private ApplicationEvents applicationEvents;
-
-    @MockitoBean private S3Util s3Util;
 
     @BeforeEach
     void setUp() {
@@ -110,7 +106,7 @@ class MemberServiceTest extends IntegrationTest {
         }
 
         @Test
-        void 프로필_이미지_URL이_교체되는_경우_S3에서_삭제되는_로직이_호출된다() {
+        void 프로필_이미지_URL이_교체되는_경우_S3에서_이미지를_삭제하는_이벤트를_발행한다() {
             // given
             MemberProfileUpdateRequest request =
                     new MemberProfileUpdateRequest("updateNickname", "updateProfileImageUrl");

@@ -41,7 +41,6 @@ import org.cherrypic.favorites.entity.Favorites;
 import org.cherrypic.global.pagination.SliceResponse;
 import org.cherrypic.global.pagination.SortDirection;
 import org.cherrypic.global.util.MemberUtil;
-import org.cherrypic.global.util.S3Util;
 import org.cherrypic.global.util.TransactionUtil;
 import org.cherrypic.image.entity.Image;
 import org.cherrypic.member.entity.Member;
@@ -77,7 +76,6 @@ class AlbumServiceTest extends IntegrationTest {
     @Autowired private ImageRepository imageRepository;
 
     @MockitoBean private MemberUtil memberUtil;
-    @MockitoBean private S3Util s3Util;
 
     @Nested
     class 앨범을_생성할_때 {
