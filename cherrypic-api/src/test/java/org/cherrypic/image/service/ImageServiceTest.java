@@ -147,7 +147,16 @@ class ImageServiceTest extends IntegrationTest {
             given(
                             s3Util.createPresignedUrl(
                                     ImageType.ALBUM_COVER, 1L, FileExtension.JPEG, "testMd5Hash"))
-                    .willReturn("http://localhost/local/album-cover/1/some-uuid.jpeg");
+                    .willReturn(
+                            "https://test-bucket.s3.ap-northeast-2.amazonaws.com/local/album-cover/1/550e8400-e29b-41d4-a716-446655440000.jpeg\n"
+                                    + "?X-Amz-Algorithm=AWS4-HMAC-SHA256\n"
+                                    + "&X-Amz-Date=20250824T130000Z\n"
+                                    + "&X-Amz-SignedHeaders=host\n"
+                                    + "&X-Amz-Expires=60\n"
+                                    + "&X-Amz-Credential=AKIAIOSFODNN7EXAMPLE/20250824/ap-northeast-2/s3/aws4_request\n"
+                                    + "&X-Amz-Signature=0123456789abcdef...\n"
+                                    + "&x-amz-acl=public-read\n"
+                                    + "&Content-MD5=testMd5Hash");
 
             // when
             PresignedUrlResponse response =
@@ -241,7 +250,16 @@ class ImageServiceTest extends IntegrationTest {
             given(
                             s3Util.createPresignedUrl(
                                     ImageType.EVENT_COVER, 1L, FileExtension.JPEG, "testMd5Hash"))
-                    .willReturn("http://localhost/local/event-cover/1/some-uuid.jpeg");
+                    .willReturn(
+                            "https://my-bucket.s3.ap-northeast-2.amazonaws.com/local/event-cover/1/550e8400-e29b-41d4-a716-446655440000.jpeg\n"
+                                    + "?X-Amz-Algorithm=AWS4-HMAC-SHA256\n"
+                                    + "&X-Amz-Date=20250824T130000Z\n"
+                                    + "&X-Amz-SignedHeaders=host\n"
+                                    + "&X-Amz-Expires=60\n"
+                                    + "&X-Amz-Credential=AKIAIOSFODNN7EXAMPLE/20250824/ap-northeast-2/s3/aws4_request\n"
+                                    + "&X-Amz-Signature=0123456789abcdef...\n"
+                                    + "&x-amz-acl=public-read\n"
+                                    + "&Content-MD5=testMd5Hash");
 
             // when
             PresignedUrlResponse response =
@@ -346,7 +364,15 @@ class ImageServiceTest extends IntegrationTest {
                                     eq(FileExtension.JPEG),
                                     anyString()))
                     .willReturn(
-                            "http://localhost/local/album-image/1/some-uuid.jpeg?Content-MD5=testMd5Hash");
+                            "https://my-bucket.s3.ap-northeast-2.amazonaws.com/local/album-image/1/550e8400-e29b-41d4-a716-446655440000.jpeg\n"
+                                    + "?X-Amz-Algorithm=AWS4-HMAC-SHA256\n"
+                                    + "&X-Amz-Date=20250824T130000Z\n"
+                                    + "&X-Amz-SignedHeaders=host\n"
+                                    + "&X-Amz-Expires=60\n"
+                                    + "&X-Amz-Credential=AKIAIOSFODNN7EXAMPLE/20250824/ap-northeast-2/s3/aws4_request\n"
+                                    + "&X-Amz-Signature=0123456789abcdef...\n"
+                                    + "&x-amz-acl=public-read\n"
+                                    + "&Content-MD5=testMd5Hash");
 
             // when
             PresignedUrlsResponse response = imageService.createAlbumFileUploadUrls(1L, request);
