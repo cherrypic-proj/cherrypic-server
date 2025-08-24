@@ -8,7 +8,6 @@ import org.cherrypic.domain.member.dto.response.MemberInfoResponse;
 import org.cherrypic.domain.member.dto.response.MemberProfileUpdateResponse;
 import org.cherrypic.domain.notification.service.FcmTokenService;
 import org.cherrypic.global.util.MemberUtil;
-import org.cherrypic.global.util.S3Util;
 import org.cherrypic.member.entity.Member;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -20,7 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class MemberServiceImpl implements MemberService {
 
     private final MemberUtil memberUtil;
-    private final S3Util s3Util;
     private final FcmTokenService fcmTokenService;
 
     private final ApplicationEventPublisher eventPublisher;

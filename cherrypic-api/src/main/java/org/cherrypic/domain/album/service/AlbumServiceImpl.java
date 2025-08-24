@@ -9,7 +9,7 @@ import org.cherrypic.domain.album.dto.request.AlbumCreateRequest;
 import org.cherrypic.domain.album.dto.request.AlbumUpdateRequest;
 import org.cherrypic.domain.album.dto.response.*;
 import org.cherrypic.domain.album.event.AlbumDeleteNotificationSendEvent;
-import org.cherrypic.domain.album.event.AlbumImageBatchDeleteEvent;
+import org.cherrypic.domain.album.event.AlbumImagesDeleteEvent;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.album.repository.AlbumRepository;
 import org.cherrypic.domain.album.repository.InvitationCodeRepository;
@@ -22,7 +22,6 @@ import org.cherrypic.exception.CustomException;
 import org.cherrypic.global.pagination.SliceResponse;
 import org.cherrypic.global.pagination.SortDirection;
 import org.cherrypic.global.util.MemberUtil;
-import org.cherrypic.global.util.S3Util;
 import org.cherrypic.member.entity.Member;
 import org.cherrypic.participant.entity.Participant;
 import org.cherrypic.participant.enums.ParticipantRole;
@@ -41,7 +40,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class AlbumServiceImpl implements AlbumService {
 
     private final MemberUtil memberUtil;
-    private final S3Util s3Util;
     private final InvitationLinkService invitationLinkService;
 
     private final AlbumRepository albumRepository;
@@ -214,7 +212,7 @@ public class AlbumServiceImpl implements AlbumService {
         validateSubscriptionInactive(album);
         validateRemainingParticipants(album, currentMember);
 
-        eventPublisher.publishEvent(AlbumImageBatchDeleteEvent.of(album.getId()));
+        eventPublisher.publishEvent(AlbumImagesDeleteEvent.of(album.getId()));
         if (album.getCoverUrl() != null) {
             eventPublisher.publishEvent(ImageDeleteEvent.of(album.getCoverUrl()));
         }

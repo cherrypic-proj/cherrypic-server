@@ -21,7 +21,7 @@ import org.cherrypic.domain.album.dto.response.AlbumInfoResponse;
 import org.cherrypic.domain.album.dto.response.AlbumListResponse;
 import org.cherrypic.domain.album.dto.response.InvitationLinkCreateResponse;
 import org.cherrypic.domain.album.event.AlbumDeleteNotificationSendEvent;
-import org.cherrypic.domain.album.event.AlbumImageBatchDeleteEvent;
+import org.cherrypic.domain.album.event.AlbumImagesDeleteEvent;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.album.repository.AlbumRepository;
 import org.cherrypic.domain.album.repository.InvitationCodeRepository;
@@ -1081,7 +1081,7 @@ class AlbumServiceTest extends IntegrationTest {
             albumService.deleteAlbum(1L);
 
             // then
-            var events = applicationEvents.stream(AlbumImageBatchDeleteEvent.class).toList();
+            var events = applicationEvents.stream(AlbumImagesDeleteEvent.class).toList();
             assertThat(events).hasSize(1);
             assertThat(events.getFirst().albumId()).isEqualTo(1L);
         }

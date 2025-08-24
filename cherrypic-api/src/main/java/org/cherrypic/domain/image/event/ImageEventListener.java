@@ -1,7 +1,7 @@
 package org.cherrypic.domain.image.event;
 
 import lombok.RequiredArgsConstructor;
-import org.cherrypic.domain.album.event.AlbumImageBatchDeleteEvent;
+import org.cherrypic.domain.album.event.AlbumImagesDeleteEvent;
 import org.cherrypic.global.util.S3Util;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
@@ -16,7 +16,7 @@ public class ImageEventListener {
 
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    public void handleAlbumImageDeleteEvent(AlbumImageBatchDeleteEvent event) {
+    public void handleAlbumImageDeleteEvent(AlbumImagesDeleteEvent event) {
         s3Util.deleteAllAlbumImagesInBatchFromS3(event.albumId());
     }
 
