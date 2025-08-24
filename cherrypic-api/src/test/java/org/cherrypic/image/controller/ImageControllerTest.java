@@ -1344,7 +1344,7 @@ class ImageControllerTest {
                     .andExpect(jsonPath("$.success").value(false))
                     .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
                     .andExpect(jsonPath("$.data.code").value("MethodArgumentNotValidException"))
-                    .andExpect(jsonPath("$.data.message").value("삭제하고자 하는 이미지 ID는 비워둘 수 없습니다."));
+                    .andExpect(jsonPath("$.data.message").value("삭제하고자 하는 이미지 ID들은 비워둘 수 없습니다."));
         }
     }
 }
