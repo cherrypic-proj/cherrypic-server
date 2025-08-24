@@ -1329,7 +1329,7 @@ class ImageControllerTest {
         }
 
         @Test
-        void 삭제하고자_하는_앨범_ID를_비워두면_예외가_발생한다() throws Exception {
+        void 삭제하고자_하는_이미지_ID들을_비워두면_예외가_발생한다() throws Exception {
             // given
             AlbumImageDeleteRequest request = new AlbumImageDeleteRequest(List.of());
 
