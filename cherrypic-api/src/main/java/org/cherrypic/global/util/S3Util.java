@@ -32,12 +32,7 @@ public class S3Util {
 
         GeneratePresignedUrlRequest generatePresignedUrlRequest =
                 generatePresignedUrlRequest(
-                        s3Properties.bucket(), fileName, fileExtension.getExtension());
-
-        generatePresignedUrlRequest.addRequestParameter(
-                Headers.S3_CANNED_ACL, CannedAccessControlList.PublicRead.toString());
-
-        generatePresignedUrlRequest.addRequestParameter(Headers.CONTENT_MD5, md5Hash);
+                        s3Properties.bucket(), fileName, fileExtension.getExtension(), md5Hash);
 
         return amazonS3.generatePresignedUrl(generatePresignedUrlRequest).toString();
     }
@@ -56,7 +51,7 @@ public class S3Util {
     }
 
     private GeneratePresignedUrlRequest generatePresignedUrlRequest(
-            String bucket, String fileName, String imageFileExtension) {
+            String bucket, String fileName, String imageFileExtension, String md5Hash) {
         GeneratePresignedUrlRequest generatePresignedUrlRequest =
                 new GeneratePresignedUrlRequest(bucket, fileName, HttpMethod.PUT)
                         .withKey(fileName)
@@ -65,6 +60,8 @@ public class S3Util {
 
         generatePresignedUrlRequest.addRequestParameter(
                 Headers.S3_CANNED_ACL, CannedAccessControlList.PublicRead.toString());
+
+        generatePresignedUrlRequest.addRequestParameter(Headers.CONTENT_MD5, md5Hash);
 
         return generatePresignedUrlRequest;
     }
