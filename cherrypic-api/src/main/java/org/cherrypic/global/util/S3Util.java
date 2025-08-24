@@ -13,10 +13,7 @@ import org.cherrypic.domain.image.enums.FileExtension;
 import org.cherrypic.domain.image.enums.ImageType;
 import org.cherrypic.helper.SpringEnvironmentHelper;
 import org.cherrypic.s3.S3Properties;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.event.TransactionPhase;
-import org.springframework.transaction.event.TransactionalEventListener;
 
 @Component
 @RequiredArgsConstructor
@@ -110,8 +107,6 @@ public class S3Util {
         } while (result.isTruncated());
     }
 
-    @Async
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void deleteFileFromS3(String url) {
         String bucket = s3Properties.bucket();
         String objectKey = extractObjectKey(url);
