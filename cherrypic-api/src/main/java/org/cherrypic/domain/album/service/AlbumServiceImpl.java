@@ -8,7 +8,7 @@ import org.cherrypic.album.enums.AlbumPlan;
 import org.cherrypic.domain.album.dto.request.AlbumCreateRequest;
 import org.cherrypic.domain.album.dto.request.AlbumUpdateRequest;
 import org.cherrypic.domain.album.dto.response.*;
-import org.cherrypic.domain.album.event.AlbumDeleteEvent;
+import org.cherrypic.domain.album.event.AlbumDeleteNotificationEvent;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.album.repository.AlbumRepository;
 import org.cherrypic.domain.album.repository.InvitationCodeRepository;
@@ -320,7 +320,7 @@ public class AlbumServiceImpl implements AlbumService {
 
         if (!otherMemberIds.isEmpty()) {
             eventPublisher.publishEvent(
-                    AlbumDeleteEvent.of(
+                    AlbumDeleteNotificationEvent.of(
                             album.getId(),
                             member.getId(),
                             member.getNickname(),

@@ -22,7 +22,7 @@ import org.cherrypic.domain.album.dto.request.AlbumUpdateRequest;
 import org.cherrypic.domain.album.dto.response.AlbumInfoResponse;
 import org.cherrypic.domain.album.dto.response.AlbumListResponse;
 import org.cherrypic.domain.album.dto.response.InvitationLinkCreateResponse;
-import org.cherrypic.domain.album.event.AlbumDeleteEvent;
+import org.cherrypic.domain.album.event.AlbumDeleteNotificationEvent;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.album.repository.AlbumRepository;
 import org.cherrypic.domain.album.repository.InvitationCodeRepository;
@@ -1108,7 +1108,7 @@ class AlbumServiceTest extends IntegrationTest {
                     .isInstanceOf(CustomException.class)
                     .hasMessage(AlbumErrorCode.OTHER_PARTICIPANTS_EXIST.getMessage());
 
-            var events = applicationEvents.stream(AlbumDeleteEvent.class).toList();
+            var events = applicationEvents.stream(AlbumDeleteNotificationEvent.class).toList();
             Assertions.assertAll(
                     () -> assertThat(events).hasSize(1),
                     () -> assertThat(events.getFirst().albumId()).isEqualTo(3L));
