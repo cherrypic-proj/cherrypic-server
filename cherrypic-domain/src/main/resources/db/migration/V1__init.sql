@@ -45,7 +45,7 @@ CREATE TABLE subscription (
                               id BIGINT AUTO_INCREMENT PRIMARY KEY,
                               member_id BIGINT NOT NULL,
                               album_id BIGINT UNIQUE,
-                              status VARCHAR(255) NOT NULL CHECK (status IN ('ACTIVE','CANCELLED','EXPIRED')),
+                              status VARCHAR(255) NOT NULL CHECK (status IN ('ACTIVE','CANCELED','EXPIRED')),
                               start_at DATETIME(6),
                               end_at DATETIME(6),
                               next_billing_at DATETIME(6),

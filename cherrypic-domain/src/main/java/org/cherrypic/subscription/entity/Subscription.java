@@ -66,4 +66,8 @@ public class Subscription extends BaseTimeEntity {
                 .nextBillingAt(paidAt.plusMonths(1).plusDays(1))
                 .build();
     }
+
+    public void cancelSubscription() {
+        this.status = SubscriptionStatus.CANCELED;
+    }
 }
