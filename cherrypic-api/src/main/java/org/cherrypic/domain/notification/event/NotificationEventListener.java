@@ -1,7 +1,7 @@
 package org.cherrypic.domain.notification.event;
 
 import lombok.RequiredArgsConstructor;
-import org.cherrypic.domain.album.event.AlbumDeleteEvent;
+import org.cherrypic.domain.album.event.AlbumDeleteNotificationSendEvent;
 import org.cherrypic.domain.notification.service.NotificationService;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
@@ -12,14 +12,14 @@ import org.springframework.transaction.event.TransactionalEventListener;
 
 @Component
 @RequiredArgsConstructor
-public class AlbumDeleteEventListener {
+public class NotificationEventListener {
 
     private final NotificationService notificationService;
 
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_ROLLBACK)
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void handleAlbumDeleteEvent(AlbumDeleteEvent event) {
+    public void handleAlbumDeleteNotificationSendEvent(AlbumDeleteNotificationSendEvent event) {
         notificationService.sendAlbumDeleteNotification(
                 event.albumId(),
                 event.senderId(),

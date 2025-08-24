@@ -3,7 +3,7 @@ package org.cherrypic.event.service;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.*;
 
 import jakarta.persistence.EntityManager;
 import java.sql.SQLIntegrityConstraintViolationException;
@@ -23,6 +23,7 @@ import org.cherrypic.domain.event.dto.response.EventListResponse;
 import org.cherrypic.domain.event.exception.EventErrorCode;
 import org.cherrypic.domain.event.repository.EventRepository;
 import org.cherrypic.domain.event.service.EventService;
+import org.cherrypic.domain.image.event.ImageDeleteEvent;
 import org.cherrypic.domain.image.exception.ImageErrorCode;
 import org.cherrypic.domain.image.repository.EventImageRepository;
 import org.cherrypic.domain.image.repository.ImageRepository;
@@ -48,13 +49,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
+import org.springframework.test.context.event.ApplicationEvents;
+import org.springframework.test.context.event.RecordApplicationEvents;
 
+@RecordApplicationEvents
 public class EventServiceTest extends IntegrationTest {
 
     @Autowired private TransactionUtil transactionUtil;
 
     @Autowired private EventService eventService;
-
+    @Autowired private ApplicationEvents applicationEvents;
     @Autowired private EventRepository eventRepository;
     @Autowired private AlbumRepository albumRepository;
     @Autowired private MemberRepository memberRepository;
@@ -192,6 +196,21 @@ public class EventServiceTest extends IntegrationTest {
         }
 
         @Test
+        void 이벤트_커버_URL이_교체되는_경우_S3에서_이미지를_삭제하는_이벤트를_발행한다() {
+            // given
+            EventUpdateRequest request =
+                    new EventUpdateRequest("testUpdatedTitle", "testUpdatedCoverUrl");
+
+            // when
+            eventService.updateEvent(1L, request);
+
+            // then
+            var events = applicationEvents.stream(ImageDeleteEvent.class).toList();
+            assertThat(events).hasSize(1);
+            assertThat(events.getFirst().imageUrl()).isEqualTo("testEventCoverUrl1");
+        }
+
+        @Test
         void 존재하지_않는_이벤트를_수정_하면_예외가_발생한다() {
             // given
             EventUpdateRequest request =
@@ -271,6 +290,17 @@ public class EventServiceTest extends IntegrationTest {
 
             // then
             assertThat(eventRepository.findById(1L).isPresent()).isFalse();
+        }
+
+        @Test
+        void 유효한_요청일_경우_S3에서_이벤트_커버_이미지를_삭제하는_이벤트를_발행한다() {
+            // when
+            eventService.deleteEvent(1L);
+
+            // then
+            var events = applicationEvents.stream(ImageDeleteEvent.class).toList();
+            assertThat(events).hasSize(1);
+            assertThat(events.getFirst().imageUrl()).isEqualTo("testEventCoverUrl1");
         }
 
         @Test

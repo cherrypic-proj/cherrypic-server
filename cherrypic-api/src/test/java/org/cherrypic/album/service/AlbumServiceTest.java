@@ -20,13 +20,17 @@ import org.cherrypic.domain.album.dto.request.AlbumUpdateRequest;
 import org.cherrypic.domain.album.dto.response.AlbumInfoResponse;
 import org.cherrypic.domain.album.dto.response.AlbumListResponse;
 import org.cherrypic.domain.album.dto.response.InvitationLinkCreateResponse;
-import org.cherrypic.domain.album.event.AlbumDeleteEvent;
+import org.cherrypic.domain.album.event.AlbumDeleteNotificationSendEvent;
+import org.cherrypic.domain.album.event.AlbumImagesDeleteEvent;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.album.repository.AlbumRepository;
 import org.cherrypic.domain.album.repository.InvitationCodeRepository;
 import org.cherrypic.domain.album.service.AlbumService;
 import org.cherrypic.domain.event.repository.EventRepository;
 import org.cherrypic.domain.favorites.repository.FavoritesRepository;
+import org.cherrypic.domain.image.event.ImageDeleteEvent;
+import org.cherrypic.domain.image.event.ImagesDeleteEvent;
+import org.cherrypic.domain.image.repository.ImageRepository;
 import org.cherrypic.domain.member.repository.MemberRepository;
 import org.cherrypic.domain.participant.repository.ParticipantRepository;
 import org.cherrypic.domain.payment.exception.PaymentErrorCode;
@@ -39,6 +43,7 @@ import org.cherrypic.global.pagination.SliceResponse;
 import org.cherrypic.global.pagination.SortDirection;
 import org.cherrypic.global.util.MemberUtil;
 import org.cherrypic.global.util.TransactionUtil;
+import org.cherrypic.image.entity.Image;
 import org.cherrypic.member.entity.Member;
 import org.cherrypic.member.entity.OauthInfo;
 import org.cherrypic.participant.entity.Participant;
@@ -69,6 +74,7 @@ class AlbumServiceTest extends IntegrationTest {
     @Autowired private FavoritesRepository favoritesRepository;
     @Autowired private InvitationCodeRepository invitationCodeRepository;
     @Autowired private EventRepository eventRepository;
+    @Autowired private ImageRepository imageRepository;
 
     @MockitoBean private MemberUtil memberUtil;
 
@@ -391,6 +397,21 @@ class AlbumServiceTest extends IntegrationTest {
                                             "testUpdatedTitle",
                                             "testUpdatedCoverUrl",
                                             AlbumPlan.BASIC));
+        }
+
+        @Test
+        void 앨범_커버_URL이_교체되는_경우_S3에서_이미지를_삭제하는_이벤트를_발행한다() {
+            // given
+            AlbumUpdateRequest request =
+                    new AlbumUpdateRequest("testUpdatedTitle", "testUpdatedCoverUrl");
+
+            // when
+            albumService.updateAlbum(1L, request);
+
+            // then
+            var events = applicationEvents.stream(ImageDeleteEvent.class).toList();
+            assertThat(events).hasSize(1);
+            assertThat(events.getFirst().imageUrl()).isEqualTo("testURL1");
         }
 
         @Test
@@ -1020,6 +1041,9 @@ class AlbumServiceTest extends IntegrationTest {
             Album album5 = Album.createAlbum("testAlbum5", "testURL5", AlbumPlan.PRO, false);
             albumRepository.saveAll(List.of(album1, album2, album3, album4, album5));
 
+            Image image = Image.createImage(album1, 1L, "testUrl", LocalDateTime.now());
+            imageRepository.save(image);
+
             subscriptionRepository.save(
                     Subscription.createSubscription(member1, album5, LocalDateTime.now()));
 
@@ -1048,6 +1072,39 @@ class AlbumServiceTest extends IntegrationTest {
             Assertions.assertAll(
                     () -> assertThat(albumRepository.findById(1L).isPresent()).isFalse(),
                     () -> assertThat(eventRepository.findById(1L).isPresent()).isFalse());
+        }
+
+        @Test
+        void 유효한_요청일_경우_S3에_존재하는_앨범_이미지들을_삭제하는_이벤트를_발행한다() {
+            // when
+            albumService.deleteAlbum(1L);
+
+            // then
+            var events = applicationEvents.stream(AlbumImagesDeleteEvent.class).toList();
+            assertThat(events).hasSize(1);
+            assertThat(events.getFirst().albumId()).isEqualTo(1L);
+        }
+
+        @Test
+        void 유효한_요청일_경우_S3에_존재하는_앨범_커버를_삭제하는_이벤트를_발행한다() {
+            // when
+            albumService.deleteAlbum(1L);
+
+            // then
+            var events = applicationEvents.stream(ImageDeleteEvent.class).toList();
+            assertThat(events).hasSize(1);
+            assertThat(events.getFirst().imageUrl()).isEqualTo("testURL1");
+        }
+
+        @Test
+        void 유효한_요청일_경우_S3에_존재하는_이벤트_커버들을_삭제하는_이벤트를_발행한다() {
+            // when
+            albumService.deleteAlbum(1L);
+
+            // then
+            var events = applicationEvents.stream(ImagesDeleteEvent.class).toList();
+            assertThat(events).hasSize(1);
+            assertThat(events.getFirst().imageUrls()).isEqualTo(List.of("testCoverUrl1"));
         }
 
         @Test
@@ -1081,7 +1138,7 @@ class AlbumServiceTest extends IntegrationTest {
                     .isInstanceOf(CustomException.class)
                     .hasMessage(AlbumErrorCode.OTHER_PARTICIPANTS_EXIST.getMessage());
 
-            var events = applicationEvents.stream(AlbumDeleteEvent.class).toList();
+            var events = applicationEvents.stream(AlbumDeleteNotificationSendEvent.class).toList();
             Assertions.assertAll(
                     () -> assertThat(events).hasSize(1),
                     () -> assertThat(events.getFirst().albumId()).isEqualTo(3L));

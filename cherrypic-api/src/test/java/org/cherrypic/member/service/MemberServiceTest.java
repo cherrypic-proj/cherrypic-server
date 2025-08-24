@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.*;
 
 import org.cherrypic.IntegrationTest;
 import org.cherrypic.RedisCleaner;
+import org.cherrypic.domain.image.event.ImageDeleteEvent;
 import org.cherrypic.domain.member.dto.request.FcmTokenSaveRequest;
 import org.cherrypic.domain.member.dto.request.MemberProfileUpdateRequest;
 import org.cherrypic.domain.member.dto.response.MemberInfoResponse;
@@ -21,7 +22,10 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.test.context.event.ApplicationEvents;
+import org.springframework.test.context.event.RecordApplicationEvents;
 
+@RecordApplicationEvents
 class MemberServiceTest extends IntegrationTest {
 
     @Autowired private TransactionUtil transactionUtil;
@@ -30,6 +34,8 @@ class MemberServiceTest extends IntegrationTest {
 
     @Autowired private MemberService memberService;
     @Autowired private MemberRepository memberRepository;
+
+    @Autowired private ApplicationEvents applicationEvents;
 
     @BeforeEach
     void setUp() {
@@ -97,6 +103,21 @@ class MemberServiceTest extends IntegrationTest {
                     () ->
                             assertThat(member.getProfileImageUrl())
                                     .isEqualTo("updateProfileImageUrl"));
+        }
+
+        @Test
+        void 프로필_이미지_URL이_교체되는_경우_S3에서_이미지를_삭제하는_이벤트를_발행한다() {
+            // given
+            MemberProfileUpdateRequest request =
+                    new MemberProfileUpdateRequest("updateNickname", "updateProfileImageUrl");
+
+            // when
+            memberService.updateProfile(request);
+
+            // then
+            var events = applicationEvents.stream(ImageDeleteEvent.class).toList();
+            assertThat(events).hasSize(1);
+            assertThat(events.getFirst().imageUrl()).isEqualTo("testProfileImageUrl");
         }
     }
 

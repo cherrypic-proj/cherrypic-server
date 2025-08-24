@@ -1,6 +1,7 @@
 package org.cherrypic.image.service;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
 
 import java.math.BigDecimal;
@@ -14,6 +15,7 @@ import org.cherrypic.domain.album.repository.AlbumRepository;
 import org.cherrypic.domain.event.exception.EventErrorCode;
 import org.cherrypic.domain.event.repository.EventRepository;
 import org.cherrypic.domain.image.dto.request.AlbumFileUploadRequest;
+import org.cherrypic.domain.image.dto.request.AlbumImageDeleteRequest;
 import org.cherrypic.domain.image.dto.request.ImageUploadRequest;
 import org.cherrypic.domain.image.dto.request.UploadFailedFileDeleteRequest;
 import org.cherrypic.domain.image.dto.response.AlbumImageListResponse;
@@ -21,6 +23,8 @@ import org.cherrypic.domain.image.dto.response.EventImageListResponse;
 import org.cherrypic.domain.image.dto.response.PresignedUrlResponse;
 import org.cherrypic.domain.image.dto.response.PresignedUrlsResponse;
 import org.cherrypic.domain.image.enums.FileExtension;
+import org.cherrypic.domain.image.enums.ImageType;
+import org.cherrypic.domain.image.event.ImagesDeleteEvent;
 import org.cherrypic.domain.image.exception.ImageErrorCode;
 import org.cherrypic.domain.image.repository.EventImageRepository;
 import org.cherrypic.domain.image.repository.ImageRepository;
@@ -33,6 +37,7 @@ import org.cherrypic.exception.CustomException;
 import org.cherrypic.global.pagination.SliceResponse;
 import org.cherrypic.global.pagination.SortDirection;
 import org.cherrypic.global.util.MemberUtil;
+import org.cherrypic.global.util.S3Util;
 import org.cherrypic.image.entity.Image;
 import org.cherrypic.member.entity.Member;
 import org.cherrypic.member.entity.OauthInfo;
@@ -44,12 +49,17 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.event.ApplicationEvents;
+import org.springframework.test.context.event.RecordApplicationEvents;
 
+@RecordApplicationEvents
 class ImageServiceTest extends IntegrationTest {
 
     @MockitoBean MemberUtil memberUtil;
+    @MockitoBean S3Util s3Util;
 
     @Autowired private ImageService imageService;
+    @Autowired private ApplicationEvents applicationEvents;
     @Autowired private ParticipantRepository participantRepository;
     @Autowired private EventRepository eventRepository;
     @Autowired private ImageRepository imageRepository;
@@ -75,6 +85,22 @@ class ImageServiceTest extends IntegrationTest {
         void 유효한_요청이면_회원_프로필_이미지용_Presigned_URL을_생성한다() {
             // given
             ImageUploadRequest request = new ImageUploadRequest(FileExtension.JPEG, "testMd5Hash");
+            given(
+                            s3Util.createPresignedUrl(
+                                    ImageType.MEMBER_PROFILE,
+                                    1L,
+                                    FileExtension.JPEG,
+                                    "testMd5Hash"))
+                    .willReturn(
+                            "\"https://my-bucket.s3.ap-northeast-2.amazonaws.com/local/member-profile/1/660e8400-e29b-41d4-a716-446655440000.jpeg\"\n"
+                                    + "                                    + \"?X-Amz-Algorithm=AWS4-HMAC-SHA256\"\n"
+                                    + "                                    + \"&X-Amz-Date=20250824T130000Z\"\n"
+                                    + "                                    + \"&X-Amz-SignedHeaders=host\"\n"
+                                    + "                                    + \"&X-Amz-Expires=60\"\n"
+                                    + "                                    + \"&X-Amz-Credential=AKIAIOSFODNN7EXAMPLE/20250824/ap-northeast-2/s3/aws4_request\"\n"
+                                    + "                                    + \"&X-Amz-Signature=abcdef0123456789...\"\n"
+                                    + "                                    + \"&x-amz-acl=public-read\"\n"
+                                    + "                                    + \"&Content-MD5=testMd5Hash\"");
 
             // when
             PresignedUrlResponse response = imageService.createMemberProfileImageUploadUrl(request);
@@ -127,10 +153,22 @@ class ImageServiceTest extends IntegrationTest {
         void 유효한_요청이면_앨범_커버_이미지용_Presigned_URL을_생성한다() {
             // given
             ImageUploadRequest request = new ImageUploadRequest(FileExtension.JPEG, "testMd5Hash");
+            given(
+                            s3Util.createPresignedUrl(
+                                    ImageType.ALBUM_COVER, 1L, FileExtension.JPEG, "testMd5Hash"))
+                    .willReturn(
+                            "https://test-bucket.s3.ap-northeast-2.amazonaws.com/local/album-cover/1/550e8400-e29b-41d4-a716-446655440000.jpeg\n"
+                                    + "?X-Amz-Algorithm=AWS4-HMAC-SHA256\n"
+                                    + "&X-Amz-Date=20250824T130000Z\n"
+                                    + "&X-Amz-SignedHeaders=host\n"
+                                    + "&X-Amz-Expires=60\n"
+                                    + "&X-Amz-Credential=AKIAIOSFODNN7EXAMPLE/20250824/ap-northeast-2/s3/aws4_request\n"
+                                    + "&X-Amz-Signature=0123456789abcdef...\n"
+                                    + "&x-amz-acl=public-read\n"
+                                    + "&Content-MD5=testMd5Hash");
 
             // when
-            PresignedUrlResponse response =
-                    imageService.createAlbumCoverImageUploadUrl(1L, request);
+            PresignedUrlResponse response = imageService.createAlbumCoverImageUploadUrl(request);
 
             // then
             assertThat(response.presignedUrl())
@@ -139,45 +177,12 @@ class ImageServiceTest extends IntegrationTest {
         }
 
         @Test
-        void 앨범이_존재하지_않을_경우_에외가_발생한다() {
-            // given
-            ImageUploadRequest request = new ImageUploadRequest(FileExtension.MKV, "testMd5Hash");
-
-            // when & then
-            assertThatThrownBy(() -> imageService.createAlbumCoverImageUploadUrl(999L, request))
-                    .isInstanceOf(CustomException.class)
-                    .hasMessage(AlbumErrorCode.ALBUM_NOT_FOUND.getMessage());
-        }
-
-        @Test
-        void 앨범에_속하지_않은_사용자가_Presigned_Url을_요청하면_예외가_발생한다() {
-            // given
-            ImageUploadRequest request = new ImageUploadRequest(FileExtension.MKV, "testMd5Hash");
-
-            // when & then
-            assertThatThrownBy(() -> imageService.createAlbumCoverImageUploadUrl(3L, request))
-                    .isInstanceOf(CustomException.class)
-                    .hasMessage(AlbumErrorCode.NOT_ALBUM_PARTICIPANT.getMessage());
-        }
-
-        @Test
-        void HOST가_아닌_권한의_사용자가_Presigned_Url을_요청하면_예외가_발생한다() {
-            // given
-            ImageUploadRequest request = new ImageUploadRequest(FileExtension.MKV, "testMd5Hash");
-
-            // when & then
-            assertThatThrownBy(() -> imageService.createAlbumCoverImageUploadUrl(2L, request))
-                    .isInstanceOf(CustomException.class)
-                    .hasMessage(AlbumErrorCode.NOT_ALBUM_HOST.getMessage());
-        }
-
-        @Test
         void 동영상_확장자를_입력할_경우_예외가_발생한다() {
             // given
             ImageUploadRequest request = new ImageUploadRequest(FileExtension.MKV, "testMd5Hash");
 
             // when & then
-            assertThatThrownBy(() -> imageService.createAlbumCoverImageUploadUrl(1L, request))
+            assertThatThrownBy(() -> imageService.createAlbumCoverImageUploadUrl(request))
                     .isInstanceOf(CustomException.class)
                     .hasMessage(ImageErrorCode.NOT_IMAGE_EXTENSION.getMessage());
         }
@@ -217,10 +222,22 @@ class ImageServiceTest extends IntegrationTest {
         void 유효한_요청이면_이벤트_커버_이미지용_Presigned_URL을_생성한다() {
             // given
             ImageUploadRequest request = new ImageUploadRequest(FileExtension.JPEG, "testMd5Hash");
+            given(
+                            s3Util.createPresignedUrl(
+                                    ImageType.EVENT_COVER, 1L, FileExtension.JPEG, "testMd5Hash"))
+                    .willReturn(
+                            "https://my-bucket.s3.ap-northeast-2.amazonaws.com/local/event-cover/1/550e8400-e29b-41d4-a716-446655440000.jpeg\n"
+                                    + "?X-Amz-Algorithm=AWS4-HMAC-SHA256\n"
+                                    + "&X-Amz-Date=20250824T130000Z\n"
+                                    + "&X-Amz-SignedHeaders=host\n"
+                                    + "&X-Amz-Expires=60\n"
+                                    + "&X-Amz-Credential=AKIAIOSFODNN7EXAMPLE/20250824/ap-northeast-2/s3/aws4_request\n"
+                                    + "&X-Amz-Signature=0123456789abcdef...\n"
+                                    + "&x-amz-acl=public-read\n"
+                                    + "&Content-MD5=testMd5Hash");
 
             // when
-            PresignedUrlResponse response =
-                    imageService.createEventCoverImageUploadUrl(1L, request);
+            PresignedUrlResponse response = imageService.createEventCoverImageUploadUrl(request);
 
             // then
             assertThat(response.presignedUrl())
@@ -229,45 +246,12 @@ class ImageServiceTest extends IntegrationTest {
         }
 
         @Test
-        void 이벤트가_존재하지_않을_경우_에외가_발생한다() {
-            // given
-            ImageUploadRequest request = new ImageUploadRequest(FileExtension.MKV, "testMd5Hash");
-
-            // when & then
-            assertThatThrownBy(() -> imageService.createEventCoverImageUploadUrl(999L, request))
-                    .isInstanceOf(CustomException.class)
-                    .hasMessage(EventErrorCode.EVENT_NOT_FOUND.getMessage());
-        }
-
-        @Test
-        void 앨범에_속하지_않은_사용자가_Presigned_Url을_요청하면_예외가_발생한다() {
-            // given
-            ImageUploadRequest request = new ImageUploadRequest(FileExtension.MKV, "testMd5Hash");
-
-            // when & then
-            assertThatThrownBy(() -> imageService.createEventCoverImageUploadUrl(3L, request))
-                    .isInstanceOf(CustomException.class)
-                    .hasMessage(AlbumErrorCode.NOT_ALBUM_PARTICIPANT.getMessage());
-        }
-
-        @Test
-        void LIMITED_권한의_사용자가_Presigned_Url을_요청하면_예외가_발생한다() {
-            // given
-            ImageUploadRequest request = new ImageUploadRequest(FileExtension.MKV, "testMd5Hash");
-
-            // when & then
-            assertThatThrownBy(() -> imageService.createEventCoverImageUploadUrl(2L, request))
-                    .isInstanceOf(CustomException.class)
-                    .hasMessage(AlbumErrorCode.LIMITED_AUTHORITY.getMessage());
-        }
-
-        @Test
         void 동영상_확장자를_입력할_경우_예외가_발생한다() {
             // given
             ImageUploadRequest request = new ImageUploadRequest(FileExtension.MKV, "testMd5Hash");
 
             // when & then
-            assertThatThrownBy(() -> imageService.createEventCoverImageUploadUrl(1L, request))
+            assertThatThrownBy(() -> imageService.createEventCoverImageUploadUrl(request))
                     .isInstanceOf(CustomException.class)
                     .hasMessage(ImageErrorCode.NOT_IMAGE_EXTENSION.getMessage());
         }
@@ -314,6 +298,31 @@ class ImageServiceTest extends IntegrationTest {
                                             FileExtension.JPEG,
                                             "testMd5Hash2",
                                             LocalDateTime.now())));
+            given(
+                            s3Util.createPresignedUrl(
+                                    eq(ImageType.ALBUM_IMAGE),
+                                    eq(1L),
+                                    eq(FileExtension.JPEG),
+                                    anyString()))
+                    .willReturn(
+                            "https://my-bucket.s3.ap-northeast-2.amazonaws.com/local/album-image/1/550e8400-e29b-41d4-a716-446655440000.jpeg"
+                                    + "?X-Amz-Algorithm=AWS4-HMAC-SHA256"
+                                    + "&X-Amz-Date=20250824T130000Z"
+                                    + "&X-Amz-SignedHeaders=host"
+                                    + "&X-Amz-Expires=60"
+                                    + "&X-Amz-Credential=AKIAIOSFODNN7EXAMPLE/20250824/ap-northeast-2/s3/aws4_request"
+                                    + "&X-Amz-Signature=0123456789abcdef..."
+                                    + "&x-amz-acl=public-read"
+                                    + "&Content-MD5=testMd5Hash1",
+                            "https://my-bucket.s3.ap-northeast-2.amazonaws.com/local/album-image/1/660e8400-e29b-41d4-a716-446655440000.jpeg"
+                                    + "?X-Amz-Algorithm=AWS4-HMAC-SHA256"
+                                    + "&X-Amz-Date=20250824T130000Z"
+                                    + "&X-Amz-SignedHeaders=host"
+                                    + "&X-Amz-Expires=60"
+                                    + "&X-Amz-Credential=AKIAIOSFODNN7EXAMPLE/20250824/ap-northeast-2/s3/aws4_request"
+                                    + "&X-Amz-Signature=abcdef0123456789..."
+                                    + "&x-amz-acl=public-read"
+                                    + "&Content-MD5=testMd5Hash2");
 
             // when
             PresignedUrlsResponse response = imageService.createAlbumFileUploadUrls(1L, request);
@@ -719,6 +728,107 @@ class ImageServiceTest extends IntegrationTest {
             assertThatThrownBy(() -> imageService.deleteUploadFailedFile(request))
                     .isInstanceOf(CustomException.class)
                     .hasMessage(ImageErrorCode.PRESIGNED_IMAGES_NOT_MINE.getMessage());
+        }
+    }
+
+    @Nested
+    class 앨범_이미지를_삭제할_때 {
+
+        @BeforeEach
+        void setUp() {
+            Member member =
+                    Member.createMember(
+                            OauthInfo.createOauthInfo("testOauthId", "testOauthProvider"),
+                            "testNickname",
+                            "testProfileImageUrl");
+            memberRepository.save(member);
+            given(memberUtil.getCurrentMember()).willReturn(member);
+
+            Album album1 = Album.createAlbum("testTitle1", "testCoverUrl1", AlbumPlan.BASIC, false);
+            Album album2 = Album.createAlbum("testTitle2", "testCoverUrl2", AlbumPlan.BASIC, false);
+            Album album3 = Album.createAlbum("testTitle3", "testCoverUrl3", AlbumPlan.BASIC, false);
+            albumRepository.saveAll(List.of(album1, album2, album3));
+
+            Participant participant1 =
+                    Participant.createParticipant(member, album1, ParticipantRole.HOST);
+            Participant participant2 =
+                    Participant.createParticipant(member, album2, ParticipantRole.LIMITED);
+            participantRepository.saveAll(List.of(participant1, participant2));
+
+            Image image1 = Image.createImage(album1, 1L, "testUrl1", LocalDateTime.now());
+            Image image2 = Image.createImage(album1, 1L, "testUrl2", LocalDateTime.now());
+            Image image3 = Image.createImage(album2, 1L, "testUrl3", LocalDateTime.now());
+            imageRepository.saveAll(List.of(image1, image2, image3));
+        }
+
+        @Test
+        void 유효한_요청이면_앨범_이미지를_삭제한다() {
+            // given
+            AlbumImageDeleteRequest request = new AlbumImageDeleteRequest(List.of(1L, 2L));
+
+            // when
+            imageService.deleteAlbumImage(1L, request);
+
+            // then
+            assertThat(imageRepository.findAllById(List.of(1L, 2L))).isEmpty();
+        }
+
+        @Test
+        void 앨범_이미지를_삭제하는_경우_S3에서_이미지를_삭제하는_이벤트를_발행한다() {
+            // given
+            AlbumImageDeleteRequest request = new AlbumImageDeleteRequest(List.of(1L, 2L));
+
+            // when
+            imageService.deleteAlbumImage(1L, request);
+
+            // then
+            var events = applicationEvents.stream(ImagesDeleteEvent.class).toList();
+            assertThat(events.getFirst().imageUrls())
+                    .containsExactlyInAnyOrder("testUrl1", "testUrl2");
+        }
+
+        @Test
+        void 앨범이_존재하지_않을_경우_예외가_발생한다() {
+            // given
+            AlbumImageDeleteRequest request = new AlbumImageDeleteRequest(List.of(1L, 2L));
+
+            // when & then
+            assertThatThrownBy(() -> imageService.deleteAlbumImage(999L, request))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(AlbumErrorCode.ALBUM_NOT_FOUND.getMessage());
+        }
+
+        @Test
+        void 앨범에_속하지_않은_사용자가_앨범_이미지를_삭제하면_예외가_발생한다() {
+            // given
+            AlbumImageDeleteRequest request = new AlbumImageDeleteRequest(List.of(1L, 2L));
+
+            // when & then
+            assertThatThrownBy(() -> imageService.deleteAlbumImage(3L, request))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(AlbumErrorCode.NOT_ALBUM_PARTICIPANT.getMessage());
+        }
+
+        @Test
+        void LIMITED_권한의_사용자가_앨범_이미지를_삭제하면_예외가_발생한다() {
+            // given
+            AlbumImageDeleteRequest request = new AlbumImageDeleteRequest(List.of(1L, 2L));
+
+            // when & then
+            assertThatThrownBy(() -> imageService.deleteAlbumImage(2L, request))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(AlbumErrorCode.LIMITED_AUTHORITY.getMessage());
+        }
+
+        @Test
+        void 앨범에_속하지_않은_이미지가_포함되어_있으면_예외가_발생한다() {
+            // given
+            AlbumImageDeleteRequest request = new AlbumImageDeleteRequest(List.of(1L, 3L));
+
+            // when & then
+            assertThatThrownBy(() -> imageService.deleteAlbumImage(1L, request))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(AlbumErrorCode.IMAGES_NOT_IN_ALBUM.getMessage());
         }
     }
 }

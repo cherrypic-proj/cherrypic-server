@@ -1,14 +1,8 @@
 package org.cherrypic.domain.image.service;
 
-import com.amazonaws.HttpMethod;
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.Headers;
-import com.amazonaws.services.s3.model.CannedAccessControlList;
-import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 import lombok.RequiredArgsConstructor;
 import org.cherrypic.album.entity.Album;
@@ -17,6 +11,7 @@ import org.cherrypic.domain.album.repository.AlbumRepository;
 import org.cherrypic.domain.event.exception.EventErrorCode;
 import org.cherrypic.domain.event.repository.EventRepository;
 import org.cherrypic.domain.image.dto.request.AlbumFileUploadRequest;
+import org.cherrypic.domain.image.dto.request.AlbumImageDeleteRequest;
 import org.cherrypic.domain.image.dto.request.ImageUploadRequest;
 import org.cherrypic.domain.image.dto.request.UploadFailedFileDeleteRequest;
 import org.cherrypic.domain.image.dto.response.AlbumImageListResponse;
@@ -25,6 +20,7 @@ import org.cherrypic.domain.image.dto.response.PresignedUrlResponse;
 import org.cherrypic.domain.image.dto.response.PresignedUrlsResponse;
 import org.cherrypic.domain.image.enums.FileExtension;
 import org.cherrypic.domain.image.enums.ImageType;
+import org.cherrypic.domain.image.event.ImagesDeleteEvent;
 import org.cherrypic.domain.image.exception.ImageErrorCode;
 import org.cherrypic.domain.image.repository.ImageRepository;
 import org.cherrypic.domain.participant.repository.ParticipantRepository;
@@ -33,12 +29,12 @@ import org.cherrypic.exception.CustomException;
 import org.cherrypic.global.pagination.SliceResponse;
 import org.cherrypic.global.pagination.SortDirection;
 import org.cherrypic.global.util.MemberUtil;
-import org.cherrypic.helper.SpringEnvironmentHelper;
+import org.cherrypic.global.util.S3Util;
 import org.cherrypic.image.entity.Image;
 import org.cherrypic.member.entity.Member;
 import org.cherrypic.participant.entity.Participant;
 import org.cherrypic.participant.enums.ParticipantRole;
-import org.cherrypic.s3.S3Properties;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -49,14 +45,14 @@ import org.springframework.transaction.annotation.Transactional;
 public class ImageServiceImpl implements ImageService {
 
     private final MemberUtil memberUtil;
-    private final SpringEnvironmentHelper springEnvironmentHelper;
-    private final AmazonS3 amazonS3;
-    private final S3Properties s3Properties;
+    private final S3Util s3Util;
 
     private final AlbumRepository albumRepository;
     private final ImageRepository imageRepository;
     private final EventRepository eventRepository;
     private final ParticipantRepository participantRepository;
+
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     public PresignedUrlResponse createMemberProfileImageUploadUrl(ImageUploadRequest request) {
@@ -65,7 +61,7 @@ public class ImageServiceImpl implements ImageService {
         validateImageExtension(request.fileExtension());
 
         String presignedUrl =
-                createPresignedUrl(
+                s3Util.createPresignedUrl(
                         ImageType.MEMBER_PROFILE,
                         currentMember.getId(),
                         request.fileExtension(),
@@ -75,16 +71,13 @@ public class ImageServiceImpl implements ImageService {
     }
 
     @Override
-    public PresignedUrlResponse createAlbumCoverImageUploadUrl(
-            Long albumId, ImageUploadRequest request) {
+    public PresignedUrlResponse createAlbumCoverImageUploadUrl(ImageUploadRequest request) {
         final Member currentMember = memberUtil.getCurrentMember();
-        final Album album = getAlbumById(albumId);
 
-        validateAlbumHost(currentMember.getId(), album.getId());
         validateImageExtension(request.fileExtension());
 
         String presignedUrl =
-                createPresignedUrl(
+                s3Util.createPresignedUrl(
                         ImageType.ALBUM_COVER,
                         currentMember.getId(),
                         request.fileExtension(),
@@ -94,16 +87,13 @@ public class ImageServiceImpl implements ImageService {
     }
 
     @Override
-    public PresignedUrlResponse createEventCoverImageUploadUrl(
-            Long eventId, ImageUploadRequest request) {
+    public PresignedUrlResponse createEventCoverImageUploadUrl(ImageUploadRequest request) {
         final Member currentMember = memberUtil.getCurrentMember();
-        final Event event = getEventById(eventId);
 
-        validateParticipantAuthority(currentMember.getId(), event.getAlbum().getId());
         validateImageExtension(request.fileExtension());
 
         String presignedUrl =
-                createPresignedUrl(
+                s3Util.createPresignedUrl(
                         ImageType.EVENT_COVER,
                         currentMember.getId(),
                         request.fileExtension(),
@@ -128,9 +118,9 @@ public class ImageServiceImpl implements ImageService {
                 request.payloads().stream()
                         .map(
                                 req ->
-                                        createPresignedUrl(
+                                        s3Util.createPresignedUrl(
                                                 ImageType.ALBUM_IMAGE,
-                                                currentMember.getId(),
+                                                album.getId(),
                                                 req.fileExtension(),
                                                 req.md5Hashes()))
                         .toList();
@@ -197,57 +187,22 @@ public class ImageServiceImpl implements ImageService {
         imageRepository.deleteAllInBatch(images);
     }
 
-    private String createPresignedUrl(
-            ImageType imageType, Long targetId, FileExtension fileExtension, String md5Hash) {
-        String imageKey = UUID.randomUUID().toString();
-        String fileName = createFileName(imageType, targetId, imageKey, fileExtension);
+    @Override
+    public void deleteAlbumImage(Long albumId, AlbumImageDeleteRequest request) {
+        final Member currentMember = memberUtil.getCurrentMember();
+        final Album album = getAlbumById(albumId);
 
-        GeneratePresignedUrlRequest generatePresignedUrlRequest =
-                generatePresignedUrlRequest(
-                        s3Properties.bucket(), fileName, fileExtension.getExtension());
+        validateParticipantAuthority(currentMember.getId(), album.getId());
 
-        generatePresignedUrlRequest.addRequestParameter(
-                Headers.S3_CANNED_ACL, CannedAccessControlList.PublicRead.toString());
+        List<Long> distinctImageIds =
+                request.imageIds().stream().filter(Objects::nonNull).distinct().toList();
+        List<Image> images = imageRepository.findAllById(distinctImageIds);
 
-        generatePresignedUrlRequest.addRequestParameter(Headers.CONTENT_MD5, md5Hash);
+        validateImagesInAlbum(images, album);
 
-        return amazonS3.generatePresignedUrl(generatePresignedUrlRequest).toString();
-    }
-
-    private String createFileName(
-            ImageType imageType, Long targetId, String imageKey, FileExtension fileExtension) {
-        return springEnvironmentHelper.getCurrentProfile()
-                + "/"
-                + imageType.getType()
-                + "/"
-                + targetId
-                + "/"
-                + imageKey
-                + "."
-                + fileExtension.getExtension();
-    }
-
-    private GeneratePresignedUrlRequest generatePresignedUrlRequest(
-            String bucket, String fileName, String imageFileExtension) {
-        GeneratePresignedUrlRequest generatePresignedUrlRequest =
-                new GeneratePresignedUrlRequest(bucket, fileName, HttpMethod.PUT)
-                        .withKey(fileName)
-                        .withContentType("image/" + imageFileExtension)
-                        .withExpiration(getPresignedUrlExpiration());
-
-        generatePresignedUrlRequest.addRequestParameter(
-                Headers.S3_CANNED_ACL, CannedAccessControlList.PublicRead.toString());
-
-        return generatePresignedUrlRequest;
-    }
-
-    private Date getPresignedUrlExpiration() {
-        Date expiration = new Date();
-        long expTimeMillis = expiration.getTime();
-        expTimeMillis += TimeUnit.MINUTES.toMillis(1);
-        expiration.setTime(expTimeMillis);
-
-        return expiration;
+        eventPublisher.publishEvent(
+                ImagesDeleteEvent.of(images.stream().map(Image::getUrl).toList()));
+        imageRepository.deleteAllInBatch(images);
     }
 
     private Album getAlbumById(Long albumId) {
@@ -323,6 +278,15 @@ public class ImageServiceImpl implements ImageService {
 
         if (!participant.getRole().equals(ParticipantRole.HOST)) {
             throw new CustomException(AlbumErrorCode.NOT_ALBUM_HOST);
+        }
+    }
+
+    private void validateImagesInAlbum(List<Image> images, Album album) {
+        boolean containsNotInAlbum =
+                images.stream().anyMatch(ei -> !ei.getAlbum().getId().equals(album.getId()));
+
+        if (containsNotInAlbum) {
+            throw new CustomException(AlbumErrorCode.IMAGES_NOT_IN_ALBUM);
         }
     }
 }

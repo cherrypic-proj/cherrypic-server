@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.cherrypic.domain.image.dto.request.AlbumFileUploadRequest;
+import org.cherrypic.domain.image.dto.request.AlbumImageDeleteRequest;
 import org.cherrypic.domain.image.dto.request.ImageUploadRequest;
 import org.cherrypic.domain.image.dto.request.UploadFailedFileDeleteRequest;
 import org.cherrypic.domain.image.dto.response.AlbumImageListResponse;
@@ -37,22 +38,22 @@ public class ImageController {
         return imageService.createMemberProfileImageUploadUrl(request);
     }
 
-    @PostMapping("/albums/{albumId}/cover-upload-url")
+    @PostMapping("/albums/cover-upload-url")
     @Operation(
             summary = "앨범 커버 이미지 Presigned URL 생성",
             description = "앨범 커버 이미지 업로드를 위한 Presigned URL을 생성합니다.")
     public PresignedUrlResponse albumCoverImageUploadUrlCreate(
-            @PathVariable Long albumId, @Valid @RequestBody ImageUploadRequest request) {
-        return imageService.createAlbumCoverImageUploadUrl(albumId, request);
+            @Valid @RequestBody ImageUploadRequest request) {
+        return imageService.createAlbumCoverImageUploadUrl(request);
     }
 
-    @PostMapping("/events/{eventId}/cover-upload-url")
+    @PostMapping("/events/cover-upload-url")
     @Operation(
             summary = "이벤트 커버 이미지 Presigned URL 생성",
             description = "이벤트 커버 이미지 업로드를 위한 Presigned URL을 생성합니다.")
     public PresignedUrlResponse eventCoverImageUploadUrlCreate(
-            @PathVariable Long eventId, @Valid @RequestBody ImageUploadRequest request) {
-        return imageService.createEventCoverImageUploadUrl(eventId, request);
+            @Valid @RequestBody ImageUploadRequest request) {
+        return imageService.createEventCoverImageUploadUrl(request);
     }
 
     @PostMapping("/albums/{albumId}/images")
@@ -100,5 +101,13 @@ public class ImageController {
                     @RequestParam(defaultValue = "DESC")
                     SortDirection direction) {
         return imageService.getEventImages(eventId, lastEventImageId, size, direction);
+    }
+
+    @DeleteMapping("albums/{albumId}/images")
+    @Operation(summary = "앨범 이미지 삭제", description = "앨범의 이미지를 삭제합니다.")
+    public ResponseEntity<Void> albumImageDelete(
+            @PathVariable Long albumId, @Valid @RequestBody AlbumImageDeleteRequest request) {
+        imageService.deleteAlbumImage(albumId, request);
+        return ResponseEntity.noContent().build();
     }
 }
