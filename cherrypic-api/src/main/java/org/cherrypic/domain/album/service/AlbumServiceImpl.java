@@ -212,6 +212,11 @@ public class AlbumServiceImpl implements AlbumService {
         validateSubscriptionInactive(album);
         validateRemainingParticipants(album, currentMember);
 
+        s3Util.deleteAllAlbumImagesInBatchFromS3(album.getId());
+        if (album.getCoverUrl() != null) {
+            s3Util.deleteFileFromS3(album.getCoverUrl());
+        }
+
         albumRepository.delete(album);
     }
 

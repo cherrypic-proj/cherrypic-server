@@ -3,9 +3,7 @@ package org.cherrypic.global.util;
 import com.amazonaws.HttpMethod;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.Headers;
-import com.amazonaws.services.s3.model.CannedAccessControlList;
-import com.amazonaws.services.s3.model.DeleteObjectsRequest;
-import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
+import com.amazonaws.services.s3.model.*;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -81,6 +79,39 @@ public class S3Util {
 
         DeleteObjectsRequest request = new DeleteObjectsRequest(bucket).withKeys(keys);
         amazonS3.deleteObjects(request);
+    }
+
+    @Async
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void deleteAllAlbumImagesInBatchFromS3(Long albumId) {
+        String bucket = s3Properties.bucket();
+        String prefix =
+                springEnvironmentHelper.getCurrentProfile()
+                        + "/"
+                        + ImageType.ALBUM_IMAGE.getType()
+                        + "/"
+                        + albumId
+                        + "/";
+
+        ListObjectsV2Request listReq =
+                new ListObjectsV2Request().withBucketName(bucket).withPrefix(prefix);
+
+        ListObjectsV2Result result;
+        do {
+            result = amazonS3.listObjectsV2(listReq);
+
+            List<DeleteObjectsRequest.KeyVersion> keys =
+                    result.getObjectSummaries().stream()
+                            .map(S3ObjectSummary::getKey)
+                            .map(DeleteObjectsRequest.KeyVersion::new)
+                            .toList();
+
+            if (!keys.isEmpty()) {
+                amazonS3.deleteObjects(new DeleteObjectsRequest(bucket).withKeys(keys));
+            }
+
+            listReq.setContinuationToken(result.getNextContinuationToken());
+        } while (result.isTruncated());
     }
 
     @Async

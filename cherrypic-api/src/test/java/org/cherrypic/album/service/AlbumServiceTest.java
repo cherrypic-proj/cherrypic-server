@@ -1068,6 +1068,16 @@ class AlbumServiceTest extends IntegrationTest {
         }
 
         @Test
+        void 유효한_요청일_경우_S3에_존재하는_앨범_관련_이미지들도_삭제된다() {
+            // when
+            albumService.deleteAlbum(1L);
+
+            // then
+            verify(s3Util, times(1)).deleteAllAlbumImagesInBatchFromS3(1L);
+            verify(s3Util, times(1)).deleteFileFromS3("testURL1");
+        }
+
+        @Test
         void 앨범이_존재하지_않는_경우_예외가_발생한다() {
             // when & then
             assertThatThrownBy(() -> albumService.deleteAlbum(999L))
