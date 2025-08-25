@@ -32,7 +32,7 @@ CREATE TABLE payment (
                          imp_uid VARCHAR(255),
                          pg_provider VARCHAR(255),
                          amount INT NOT NULL,
-                         status VARCHAR(255) NOT NULL CHECK (status IN ('READY','PAID','FAILED','CANCELLED')),
+                         status VARCHAR(255) NOT NULL CHECK (status IN ('READY','PAID','FAILED','CANCELED')),
                          paid_at DATETIME,
                          created_at DATETIME(6) NOT NULL,
                          updated_at DATETIME(6) NOT NULL,
