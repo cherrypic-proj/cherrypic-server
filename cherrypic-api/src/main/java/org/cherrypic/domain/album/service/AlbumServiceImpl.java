@@ -29,6 +29,7 @@ import org.cherrypic.member.entity.Member;
 import org.cherrypic.participant.entity.Participant;
 import org.cherrypic.participant.enums.ParticipantRole;
 import org.cherrypic.payment.entity.Payment;
+import org.cherrypic.payment.enums.PaymentPurpose;
 import org.cherrypic.payment.enums.PaymentStatus;
 import org.cherrypic.subscription.entity.Subscription;
 import org.cherrypic.subscription.enums.SubscriptionStatus;
@@ -81,6 +82,7 @@ public class AlbumServiceImpl implements AlbumService {
             validatePaidStatus(payment);
             validatePaymentMemberMismatch(payment, currentMember);
             validatePaymentNotUsed(payment);
+            validatePaymentPurposeForAlbumCreation(payment);
 
             payment.updatePayment(album);
 
@@ -260,6 +262,12 @@ public class AlbumServiceImpl implements AlbumService {
         }
     }
 
+    private void validatePermissionControl(AlbumPlan plan, Boolean permissionControl) {
+        if (plan == AlbumPlan.BASIC && permissionControl) {
+            throw new CustomException(AlbumErrorCode.PERMISSION_CONTROL_NOT_ALLOWED_FOR_BASIC_PLAN);
+        }
+    }
+
     private void validatePaymentRequirementForPlan(AlbumPlan plan, Long paymentId) {
         if (plan.requiresPayment() && paymentId == null) {
             throw new CustomException(AlbumErrorCode.PAYMENT_REQUIRED_FOR_PAID_PLAN);
@@ -267,12 +275,6 @@ public class AlbumServiceImpl implements AlbumService {
 
         if (!plan.requiresPayment() && paymentId != null) {
             throw new CustomException(AlbumErrorCode.PAYMENT_NOT_REQUIRED_FOR_BASIC_PLAN);
-        }
-    }
-
-    private void validatePermissionControl(AlbumPlan plan, Boolean permissionControl) {
-        if (plan == AlbumPlan.BASIC && permissionControl) {
-            throw new CustomException(AlbumErrorCode.PERMISSION_CONTROL_NOT_ALLOWED_FOR_BASIC_PLAN);
         }
     }
 
@@ -291,6 +293,12 @@ public class AlbumServiceImpl implements AlbumService {
     private void validatePaymentNotUsed(Payment payment) {
         if (payment.getAlbum() != null) {
             throw new CustomException(PaymentErrorCode.ALREADY_USED_PAYMENT);
+        }
+    }
+
+    private void validatePaymentPurposeForAlbumCreation(Payment payment) {
+        if (payment.getPurpose() != PaymentPurpose.CREATION) {
+            throw new CustomException(PaymentErrorCode.PAYMENT_PURPOSE_MISMATCH);
         }
     }
 
