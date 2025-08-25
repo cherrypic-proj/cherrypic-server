@@ -19,6 +19,8 @@ public enum PaymentErrorCode implements BaseErrorCode {
     PAYMENT_MEMBER_MISMATCH(403, "결제한 사용자와 일치하지 않습니다."),
 
     ALREADY_USED_PAYMENT(400, "이미 다른 앨범에 사용된 결제입니다."),
+
+    DOWNGRADE_NOT_ALLOWED(400, "현재 구독 플랜보다 낮은 플랜으로는 결제를 진행할 수 없습니다."),
     ;
 
     private final int status;

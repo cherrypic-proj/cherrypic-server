@@ -10,7 +10,11 @@ import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.cherrypic.album.entity.Album;
 import org.cherrypic.album.enums.AlbumPlan;
+import org.cherrypic.domain.album.exception.AlbumErrorCode;
+import org.cherrypic.domain.album.repository.AlbumRepository;
+import org.cherrypic.domain.participant.repository.ParticipantRepository;
 import org.cherrypic.domain.payment.dto.request.PaymentReadyRequest;
 import org.cherrypic.domain.payment.dto.response.PaymentReadyResponse;
 import org.cherrypic.domain.payment.dto.response.PaymentVerificationResponse;
@@ -19,6 +23,8 @@ import org.cherrypic.domain.payment.repository.PaymentRepository;
 import org.cherrypic.exception.CustomException;
 import org.cherrypic.global.util.MemberUtil;
 import org.cherrypic.member.entity.Member;
+import org.cherrypic.participant.entity.Participant;
+import org.cherrypic.participant.enums.ParticipantRole;
 import org.cherrypic.payment.entity.Payment;
 import org.cherrypic.payment.enums.PaymentPurpose;
 import org.cherrypic.payment.enums.PaymentStatus;
@@ -33,7 +39,10 @@ public class PaymentServiceImpl implements PaymentService {
 
     private final MemberUtil memberUtil;
     private final IamportClient iamportClient;
+
     private final PaymentRepository paymentRepository;
+    private final AlbumRepository albumRepository;
+    private final ParticipantRepository participantRepository;
 
     @Override
     public PaymentReadyResponse preparePayment(PaymentReadyRequest request) {
@@ -48,11 +57,13 @@ public class PaymentServiceImpl implements PaymentService {
         String merchantUid = generateMerchantUid(currentMember.getId(), plan);
         String buyerName = currentMember.getNickname();
 
-        Payment payment =
-                Payment.createPayment(currentMember, merchantUid, price, PaymentPurpose.CREATION);
+        PaymentPurpose purpose =
+                determinePaymentPurpose(currentMember.getId(), request.albumId(), plan);
+
+        Payment payment = Payment.createPayment(currentMember, merchantUid, price, purpose);
         paymentRepository.save(payment);
 
-        return PaymentReadyResponse.of(plan, price, merchantUid, buyerName);
+        return PaymentReadyResponse.of(plan, price, merchantUid, buyerName, purpose);
     }
 
     @Override
@@ -101,5 +112,46 @@ public class PaymentServiceImpl implements PaymentService {
         String uuid = UUID.randomUUID().toString().replace("-", "").substring(0, 12);
 
         return String.format("album_%s_%s_%d_%s", date, plan.name().toLowerCase(), memberId, uuid);
+    }
+
+    private PaymentPurpose determinePaymentPurpose(Long memberId, Long albumId, AlbumPlan plan) {
+        if (albumId == null) {
+            return PaymentPurpose.CREATION;
+        }
+
+        final Album album = getAlbumById(albumId);
+        validateAlbumHost(memberId, album.getId());
+
+        AlbumPlan currentPlan = album.getPlan();
+
+        if (currentPlan == plan) {
+            return PaymentPurpose.RENEWAL;
+        }
+
+        if (plan.getPrice() > currentPlan.getPrice()) {
+            return PaymentPurpose.UPGRADE;
+        }
+
+        throw new CustomException(PaymentErrorCode.DOWNGRADE_NOT_ALLOWED);
+    }
+
+    private Album getAlbumById(Long albumId) {
+        return albumRepository
+                .findById(albumId)
+                .orElseThrow(() -> new CustomException(AlbumErrorCode.ALBUM_NOT_FOUND));
+    }
+
+    private Participant getParticipantByMemberIdAndAlbumId(Long memberId, Long albumId) {
+        return participantRepository
+                .findByMemberIdAndAlbumId(memberId, albumId)
+                .orElseThrow(() -> new CustomException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT));
+    }
+
+    private void validateAlbumHost(Long memberId, Long albumId) {
+        Participant participant = getParticipantByMemberIdAndAlbumId(memberId, albumId);
+
+        if (!participant.getRole().equals(ParticipantRole.HOST)) {
+            throw new CustomException(AlbumErrorCode.NOT_ALBUM_HOST);
+        }
     }
 }
