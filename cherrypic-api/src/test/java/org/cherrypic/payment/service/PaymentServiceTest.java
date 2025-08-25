@@ -27,6 +27,7 @@ import org.cherrypic.global.util.MemberUtil;
 import org.cherrypic.member.entity.Member;
 import org.cherrypic.member.entity.OauthInfo;
 import org.cherrypic.payment.entity.Payment;
+import org.cherrypic.payment.enums.PaymentPurpose;
 import org.cherrypic.payment.enums.PaymentStatus;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -84,7 +85,8 @@ public class PaymentServiceTest extends IntegrationTest {
                     () -> assertThat(payment.getMerchantUid()).startsWith("album_"),
                     () -> assertThat(payment.getMerchantUid()).contains("pro"),
                     () -> assertThat(payment.getAmount()).isEqualTo(5900),
-                    () -> assertThat(payment.getStatus()).isEqualTo(PaymentStatus.READY));
+                    () -> assertThat(payment.getStatus()).isEqualTo(PaymentStatus.READY),
+                    () -> assertThat(payment.getPurpose()).isEqualTo(PaymentPurpose.CREATION));
         }
 
         @Test
@@ -108,7 +110,9 @@ public class PaymentServiceTest extends IntegrationTest {
 
         @BeforeEach
         void setUp() {
-            paymentRepository.save(Payment.createPayment(member, MERCHANT_UID_EXISTING, 3900));
+            paymentRepository.save(
+                    Payment.createPayment(
+                            member, MERCHANT_UID_EXISTING, 3900, PaymentPurpose.CREATION));
         }
 
         @Test

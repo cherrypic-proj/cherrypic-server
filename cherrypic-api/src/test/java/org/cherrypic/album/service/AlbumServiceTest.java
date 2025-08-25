@@ -49,6 +49,7 @@ import org.cherrypic.member.entity.OauthInfo;
 import org.cherrypic.participant.entity.Participant;
 import org.cherrypic.participant.enums.ParticipantRole;
 import org.cherrypic.payment.entity.Payment;
+import org.cherrypic.payment.enums.PaymentPurpose;
 import org.cherrypic.payment.enums.PaymentStatus;
 import org.cherrypic.subscription.entity.Subscription;
 import org.cherrypic.subscription.enums.SubscriptionStatus;
@@ -192,13 +193,19 @@ class AlbumServiceTest extends IntegrationTest {
                 albumRepository.save(album);
 
                 // 검증 완료된 결제
-                Payment payment1 = Payment.createPayment(member1, "testMerchantUid", 3900);
+                Payment payment1 =
+                        Payment.createPayment(
+                                member1, "testMerchantUid", 3900, PaymentPurpose.CREATION);
                 payment1.updatePayment(
                         "testImpUid", "testPgProvider", PaymentStatus.PAID, LocalDateTime.now());
                 // 검증되지 않은 결제
-                Payment payment2 = Payment.createPayment(member1, "testMerchantUid", 3900);
+                Payment payment2 =
+                        Payment.createPayment(
+                                member1, "testMerchantUid", 3900, PaymentPurpose.CREATION);
                 // 검증 완료 + 유료 앨범에 쓰인 결제
-                Payment payment3 = Payment.createPayment(member1, "testMerchantUid", 3900);
+                Payment payment3 =
+                        Payment.createPayment(
+                                member1, "testMerchantUid", 3900, PaymentPurpose.CREATION);
                 payment3.updatePayment(
                         "testImpUid", "testPgProvider", PaymentStatus.PAID, LocalDateTime.now());
                 payment3.updatePayment(album);
