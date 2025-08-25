@@ -70,30 +70,6 @@ class PaymentControllerTest {
                     .andExpect(jsonPath("$.data.buyerName").value("상냥한 너구리"));
         }
 
-        @ParameterizedTest
-        @NullSource
-        @EmptySource
-        @ValueSource(strings = {" ", "PROO", "PREMIUMM"})
-        void 앨범_플랜이_null_또는_지원하지_않는_형식이면_예외가_발생한다(String plan) throws Exception {
-            // given
-            PaymentReadyRequest request = new PaymentReadyRequest(AlbumPlan.from(plan));
-
-            // when & then
-            ResultActions perform =
-                    mockMvc.perform(
-                            post("/payments/ready")
-                                    .contentType(MediaType.APPLICATION_JSON)
-                                    .content(objectMapper.writeValueAsString(request)));
-
-            perform.andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.success").value(false))
-                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
-                    .andExpect(jsonPath("$.data.code").value("MethodArgumentNotValidException"))
-                    .andExpect(
-                            jsonPath("$.data.message")
-                                    .value("앨범 구독 플랜은 비워둘 수 없으며, PRO, PREMIUM만 지원됩니다."));
-        }
-
         @Test
         void 앨범_플랜이_BASIC이면_예외가_발생한다() throws Exception {
             // given
@@ -117,6 +93,30 @@ class PaymentControllerTest {
                             jsonPath("$.data.message")
                                     .value(
                                             "해당 플랜은 유료 결제가 필요하지 않습니다. PRO 또는 PREMIUM 플랜만 결제가 가능합니다."));
+        }
+
+        @ParameterizedTest
+        @NullSource
+        @EmptySource
+        @ValueSource(strings = {" ", "PROO", "PREMIUMM"})
+        void 앨범_플랜이_null_또는_지원하지_않는_형식이면_예외가_발생한다(String plan) throws Exception {
+            // given
+            PaymentReadyRequest request = new PaymentReadyRequest(AlbumPlan.from(plan));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/payments/ready")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("MethodArgumentNotValidException"))
+                    .andExpect(
+                            jsonPath("$.data.message")
+                                    .value("앨범 구독 플랜은 비워둘 수 없으며, PRO, PREMIUM만 지원됩니다."));
         }
     }
 
