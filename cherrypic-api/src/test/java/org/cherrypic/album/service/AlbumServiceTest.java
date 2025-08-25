@@ -195,21 +195,27 @@ class AlbumServiceTest extends IntegrationTest {
                 // 검증 완료된 결제
                 Payment payment1 =
                         Payment.createPayment(
-                                member1, "testMerchantUid", 3900, PaymentPurpose.CREATION);
+                                member1, "testMerchantUid", 5900, PaymentPurpose.CREATION);
                 payment1.updatePayment(
                         "testImpUid", "testPgProvider", PaymentStatus.PAID, LocalDateTime.now());
                 // 검증되지 않은 결제
                 Payment payment2 =
                         Payment.createPayment(
-                                member1, "testMerchantUid", 3900, PaymentPurpose.CREATION);
+                                member1, "testMerchantUid", 5900, PaymentPurpose.CREATION);
                 // 검증 완료 + 유료 앨범에 쓰인 결제
                 Payment payment3 =
                         Payment.createPayment(
-                                member1, "testMerchantUid", 3900, PaymentPurpose.CREATION);
+                                member1, "testMerchantUid", 5900, PaymentPurpose.CREATION);
                 payment3.updatePayment(
                         "testImpUid", "testPgProvider", PaymentStatus.PAID, LocalDateTime.now());
                 payment3.updatePayment(album);
-                paymentRepository.saveAll(List.of(payment1, payment2, payment3));
+                // 구독 갱신 목적으로 쓰인 결제
+                Payment payment4 =
+                        Payment.createPayment(
+                                member1, "testMerchantUid", 5900, PaymentPurpose.RENEWAL);
+                payment4.updatePayment(
+                        "testImpUid", "testPgProvider", PaymentStatus.PAID, LocalDateTime.now());
+                paymentRepository.saveAll(List.of(payment1, payment2, payment3, payment4));
             }
 
             @Test
@@ -355,6 +361,19 @@ class AlbumServiceTest extends IntegrationTest {
                 assertThatThrownBy(() -> albumService.createAlbum(request))
                         .isInstanceOf(CustomException.class)
                         .hasMessage(PaymentErrorCode.ALREADY_USED_PAYMENT.getMessage());
+            }
+
+            @Test
+            void 결제의_목적이_앨범_생성과_일치하지_않으면_예외가_발생한다() {
+                // given
+                AlbumCreateRequest request =
+                        new AlbumCreateRequest(
+                                "testTitle", "testCoverUrl", AlbumPlan.PRO, 4L, false);
+
+                // when & then
+                assertThatThrownBy(() -> albumService.createAlbum(request))
+                        .isInstanceOf(CustomException.class)
+                        .hasMessage(PaymentErrorCode.PAYMENT_PURPOSE_MISMATCH.getMessage());
             }
         }
     }
