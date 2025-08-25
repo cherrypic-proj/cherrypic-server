@@ -86,7 +86,7 @@ class ImageServiceTest extends IntegrationTest {
             // given
             ImageUploadRequest request = new ImageUploadRequest(FileExtension.JPEG, "testMd5Hash");
             given(
-                            s3Util.createPresignedUrl(
+                            s3Util.createUploadPresignedUrl(
                                     ImageType.MEMBER_PROFILE,
                                     1L,
                                     FileExtension.JPEG,
@@ -154,7 +154,7 @@ class ImageServiceTest extends IntegrationTest {
             // given
             ImageUploadRequest request = new ImageUploadRequest(FileExtension.JPEG, "testMd5Hash");
             given(
-                            s3Util.createPresignedUrl(
+                            s3Util.createUploadPresignedUrl(
                                     ImageType.ALBUM_COVER, 1L, FileExtension.JPEG, "testMd5Hash"))
                     .willReturn(
                             "https://test-bucket.s3.ap-northeast-2.amazonaws.com/local/album-cover/1/550e8400-e29b-41d4-a716-446655440000.jpeg\n"
@@ -223,7 +223,7 @@ class ImageServiceTest extends IntegrationTest {
             // given
             ImageUploadRequest request = new ImageUploadRequest(FileExtension.JPEG, "testMd5Hash");
             given(
-                            s3Util.createPresignedUrl(
+                            s3Util.createUploadPresignedUrl(
                                     ImageType.EVENT_COVER, 1L, FileExtension.JPEG, "testMd5Hash"))
                     .willReturn(
                             "https://my-bucket.s3.ap-northeast-2.amazonaws.com/local/event-cover/1/550e8400-e29b-41d4-a716-446655440000.jpeg\n"
@@ -299,7 +299,7 @@ class ImageServiceTest extends IntegrationTest {
                                             "testMd5Hash2",
                                             LocalDateTime.now())));
             given(
-                            s3Util.createPresignedUrl(
+                            s3Util.createUploadPresignedUrl(
                                     eq(ImageType.ALBUM_IMAGE),
                                     eq(1L),
                                     eq(FileExtension.JPEG),

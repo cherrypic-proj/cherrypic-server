@@ -4,6 +4,10 @@ import com.amazonaws.HttpMethod;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.Headers;
 import com.amazonaws.services.s3.model.*;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -11,6 +15,8 @@ import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import org.cherrypic.domain.image.enums.FileExtension;
 import org.cherrypic.domain.image.enums.ImageType;
+import org.cherrypic.domain.tempalbum.dto.TempAlbumErrorCode;
+import org.cherrypic.exception.CustomException;
 import org.cherrypic.helper.SpringEnvironmentHelper;
 import org.cherrypic.s3.S3Properties;
 import org.springframework.stereotype.Component;
@@ -23,19 +29,43 @@ public class S3Util {
     private final AmazonS3 amazonS3;
     private final S3Properties s3Properties;
 
-    public String createPresignedUrl(
+    public String createUploadPresignedUrl(
             ImageType imageType, Long targetId, FileExtension fileExtension, String md5Hash) {
         String imageKey = UUID.randomUUID().toString();
-        String fileName = createFileName(imageType, targetId, imageKey, fileExtension);
+        String fileName = createUploadFileName(imageType, targetId, imageKey, fileExtension);
 
         GeneratePresignedUrlRequest generatePresignedUrlRequest =
-                generatePresignedUrlRequest(
-                        s3Properties.bucket(), fileName, fileExtension.getExtension(), md5Hash);
+                generateUploadPresignedUrlRequest(
+                        s3Properties.mainBucket(), fileName, fileExtension.getExtension(), md5Hash);
 
         return amazonS3.generatePresignedUrl(generatePresignedUrlRequest).toString();
     }
 
-    private String createFileName(
+    public String createReadOnlyPresignedUrl(String imageUrl, Date expirationDate) {
+
+        String fileName = extractFileName(imageUrl);
+
+        GeneratePresignedUrlRequest generatePresignedUrlRequest =
+                generateReadOnlyPresignedUrlRequest(
+                        s3Properties.mainBucket(), fileName, expirationDate);
+
+        return amazonS3.generatePresignedUrl(generatePresignedUrlRequest).toString();
+    }
+
+    public void uploadTempAlbum(String bucket, String key, String htmlContent) {
+        ObjectMetadata metadata = new ObjectMetadata();
+        metadata.setContentType("text/html; charset=UTF-8");
+        metadata.setContentLength(htmlContent.getBytes(StandardCharsets.UTF_8).length);
+
+        try (InputStream inputStream =
+                new ByteArrayInputStream(htmlContent.getBytes(StandardCharsets.UTF_8))) {
+            amazonS3.putObject(new PutObjectRequest(bucket, key, inputStream, metadata));
+        } catch (IOException e) {
+            throw new CustomException(TempAlbumErrorCode.TEMP_ALBUM_UPLOAD_FAIL);
+        }
+    }
+
+    private String createUploadFileName(
             ImageType imageType, Long targetId, String imageKey, FileExtension fileExtension) {
         return springEnvironmentHelper.getCurrentProfile()
                 + "/"
@@ -48,7 +78,15 @@ public class S3Util {
                 + fileExtension.getExtension();
     }
 
-    private GeneratePresignedUrlRequest generatePresignedUrlRequest(
+    private GeneratePresignedUrlRequest generateReadOnlyPresignedUrlRequest(
+            String bucket, String fileName, Date expiration) {
+
+        return new GeneratePresignedUrlRequest(bucket, fileName, HttpMethod.GET)
+                .withKey(fileName)
+                .withExpiration(expiration);
+    }
+
+    private GeneratePresignedUrlRequest generateUploadPresignedUrlRequest(
             String bucket, String fileName, String imageFileExtension, String md5Hash) {
         GeneratePresignedUrlRequest generatePresignedUrlRequest =
                 new GeneratePresignedUrlRequest(bucket, fileName, HttpMethod.PUT)
@@ -65,7 +103,7 @@ public class S3Util {
     }
 
     public void deleteFilesInBatchFromS3(List<String> urls) {
-        String bucket = s3Properties.bucket();
+        String bucket = s3Properties.mainBucket();
         List<DeleteObjectsRequest.KeyVersion> keys =
                 urls.stream()
                         .map(this::extractObjectKey)
@@ -77,7 +115,7 @@ public class S3Util {
     }
 
     public void deleteAllAlbumImagesInBatchFromS3(Long albumId) {
-        String bucket = s3Properties.bucket();
+        String bucket = s3Properties.mainBucket();
         String prefix =
                 springEnvironmentHelper.getCurrentProfile()
                         + "/"
@@ -108,13 +146,13 @@ public class S3Util {
     }
 
     public void deleteFileFromS3(String url) {
-        String bucket = s3Properties.bucket();
+        String bucket = s3Properties.mainBucket();
         String objectKey = extractObjectKey(url);
         amazonS3.deleteObject(bucket, objectKey);
     }
 
     private String extractObjectKey(String url) {
-        String bucket = s3Properties.bucket();
+        String bucket = s3Properties.mainBucket();
         int idx = url.indexOf(bucket) + bucket.length() + 1;
         return url.substring(idx);
     }
@@ -126,5 +164,9 @@ public class S3Util {
         expiration.setTime(expTimeMillis);
 
         return expiration;
+    }
+
+    private String extractFileName(String url) {
+        return url.substring(url.lastIndexOf("/") + 1);
     }
 }

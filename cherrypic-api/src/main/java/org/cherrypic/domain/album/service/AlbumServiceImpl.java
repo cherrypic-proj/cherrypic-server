@@ -51,7 +51,6 @@ public class AlbumServiceImpl implements AlbumService {
     private final SubscriptionRepository subscriptionRepository;
     private final InvitationCodeRepository invitationCodeRepository;
     private final EventRepository eventRepository;
-
     private final ApplicationEventPublisher eventPublisher;
 
     @Override

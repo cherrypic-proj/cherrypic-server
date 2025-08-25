@@ -61,7 +61,7 @@ public class ImageServiceImpl implements ImageService {
         validateImageExtension(request.fileExtension());
 
         String presignedUrl =
-                s3Util.createPresignedUrl(
+                s3Util.createUploadPresignedUrl(
                         ImageType.MEMBER_PROFILE,
                         currentMember.getId(),
                         request.fileExtension(),
@@ -77,7 +77,7 @@ public class ImageServiceImpl implements ImageService {
         validateImageExtension(request.fileExtension());
 
         String presignedUrl =
-                s3Util.createPresignedUrl(
+                s3Util.createUploadPresignedUrl(
                         ImageType.ALBUM_COVER,
                         currentMember.getId(),
                         request.fileExtension(),
@@ -93,7 +93,7 @@ public class ImageServiceImpl implements ImageService {
         validateImageExtension(request.fileExtension());
 
         String presignedUrl =
-                s3Util.createPresignedUrl(
+                s3Util.createUploadPresignedUrl(
                         ImageType.EVENT_COVER,
                         currentMember.getId(),
                         request.fileExtension(),
@@ -118,7 +118,7 @@ public class ImageServiceImpl implements ImageService {
                 request.payloads().stream()
                         .map(
                                 req ->
-                                        s3Util.createPresignedUrl(
+                                        s3Util.createUploadPresignedUrl(
                                                 ImageType.ALBUM_IMAGE,
                                                 album.getId(),
                                                 req.fileExtension(),

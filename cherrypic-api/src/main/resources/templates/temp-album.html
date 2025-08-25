@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${fileTitle}"></title>
+</head>
+<body>
+<header>
+    <img th:src="|https://${bucketName}.s3.ap-northeast-2.amazonaws.com/cherrypic.png|" alt="CherryPic 로고">
+    <h1 th:text="${albumTitle}"></h1>
+</header>
+
+<main>
+    <div th:each="url : ${imageUrls}">
+        <img th:src="${url}" alt="image"/>
+    </div>
+</main>
+</body>
+</html>
