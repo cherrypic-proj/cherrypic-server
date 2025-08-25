@@ -49,19 +49,27 @@ public class Payment extends BaseTimeEntity {
     private LocalDateTime paidAt;
 
     @Builder(access = AccessLevel.PRIVATE)
-    private Payment(Member member, String merchantUid, int amount, PaymentStatus status) {
+    private Payment(
+            Member member,
+            String merchantUid,
+            int amount,
+            PaymentStatus status,
+            PaymentPurpose purpose) {
         this.member = member;
         this.merchantUid = merchantUid;
         this.amount = amount;
         this.status = status;
+        this.purpose = purpose;
     }
 
-    public static Payment createPayment(Member member, String merchantUid, int amount) {
+    public static Payment createPayment(
+            Member member, String merchantUid, int amount, PaymentPurpose purpose) {
         return Payment.builder()
                 .member(member)
                 .merchantUid(merchantUid)
                 .amount(amount)
                 .status(PaymentStatus.READY)
+                .purpose(purpose)
                 .build();
     }
 

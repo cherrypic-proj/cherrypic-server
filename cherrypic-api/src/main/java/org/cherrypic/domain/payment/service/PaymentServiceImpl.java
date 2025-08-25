@@ -20,6 +20,7 @@ import org.cherrypic.exception.CustomException;
 import org.cherrypic.global.util.MemberUtil;
 import org.cherrypic.member.entity.Member;
 import org.cherrypic.payment.entity.Payment;
+import org.cherrypic.payment.enums.PaymentPurpose;
 import org.cherrypic.payment.enums.PaymentStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -47,7 +48,8 @@ public class PaymentServiceImpl implements PaymentService {
         String merchantUid = generateMerchantUid(currentMember.getId(), plan);
         String buyerName = currentMember.getNickname();
 
-        Payment payment = Payment.createPayment(currentMember, merchantUid, price);
+        Payment payment =
+                Payment.createPayment(currentMember, merchantUid, price, PaymentPurpose.CREATION);
         paymentRepository.save(payment);
 
         return PaymentReadyResponse.of(plan, price, merchantUid, buyerName);
