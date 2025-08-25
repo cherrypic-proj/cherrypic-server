@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 import org.cherrypic.album.entity.Album;
 import org.cherrypic.common.model.BaseTimeEntity;
 import org.cherrypic.member.entity.Member;
+import org.cherrypic.payment.enums.PaymentPurpose;
 import org.cherrypic.payment.enums.PaymentStatus;
 
 @Getter
@@ -40,6 +41,10 @@ public class Payment extends BaseTimeEntity {
     @NotNull
     @Enumerated(EnumType.STRING)
     private PaymentStatus status;
+
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    private PaymentPurpose purpose;
 
     private LocalDateTime paidAt;
 
