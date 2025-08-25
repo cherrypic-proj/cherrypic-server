@@ -1,6 +1,5 @@
 package org.cherrypic.domain.tempalbum.service;
 
-import java.time.LocalDate;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
@@ -63,17 +62,19 @@ public class TempAlbumServiceImpl implements TempAlbumService {
                                                 image.getUrl(), expirationDate))
                         .toList();
 
-        String html = generateAlbumHtml(album.getTitle(), album.getTitle(), presignedUrls);
+        String html = generateTempAlbumHtml(album.getTitle(), album.getTitle(), presignedUrls);
 
         s3Util.uploadTempAlbum(
-                s3Properties.tempAlbumBucket(), createTempAlbumKey(album.getId()), html);
+                s3Properties.tempAlbumBucket(),
+                createTempAlbumKey(expirationDate, album.getId()),
+                html);
     }
 
-    private String createTempAlbumKey(Long albumId) {
-        return LocalDate.now() + "/" + albumId + "/" + UUID.randomUUID().toString() + ".html";
+    private String createTempAlbumKey(Date expirationDate, Long albumId) {
+        return expirationDate + "/" + albumId + "/" + UUID.randomUUID() + ".html";
     }
 
-    private String generateAlbumHtml(
+    private String generateTempAlbumHtml(
             String fileTitle, String albumTitle, List<String> presignedUrls) {
         Context context = new Context();
         context.setVariable("bucketName", s3Properties.mainBucket());
