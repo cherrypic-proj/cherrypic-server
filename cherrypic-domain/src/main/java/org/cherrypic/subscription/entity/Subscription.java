@@ -9,8 +9,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.cherrypic.album.entity.Album;
 import org.cherrypic.common.model.BaseTimeEntity;
+import org.cherrypic.exception.CustomException;
 import org.cherrypic.member.entity.Member;
 import org.cherrypic.subscription.enums.SubscriptionStatus;
+import org.cherrypic.subscription.exception.SubscriptionDomainErrorCode;
 
 @Getter
 @Entity
@@ -67,7 +69,14 @@ public class Subscription extends BaseTimeEntity {
                 .build();
     }
 
-    public void cancelSubscription() {
+    public void cancel() {
+        if (this.status == SubscriptionStatus.CANCELED) {
+            throw new CustomException(SubscriptionDomainErrorCode.ALREADY_CANCELED);
+        }
+        if (this.endAt.isBefore(LocalDateTime.now())) {
+            throw new CustomException(SubscriptionDomainErrorCode.ALREADY_ENDED);
+        }
+
         this.status = SubscriptionStatus.CANCELED;
     }
 }
