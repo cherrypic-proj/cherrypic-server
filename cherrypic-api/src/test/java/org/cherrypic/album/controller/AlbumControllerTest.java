@@ -20,6 +20,7 @@ import org.cherrypic.exception.CustomException;
 import org.cherrypic.global.pagination.SliceResponse;
 import org.cherrypic.global.pagination.SortDirection;
 import org.cherrypic.participant.enums.ParticipantRole;
+import org.cherrypic.payment.exception.PaymentDomainErrorCode;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -224,30 +225,6 @@ class AlbumControllerTest {
             }
 
             @Test
-            void 결제상태가_PAID가_아니면_예외가_발생한다() throws Exception {
-                // given
-                AlbumCreateRequest request =
-                        new AlbumCreateRequest(
-                                "testTitle", "testCoverUrl", AlbumPlan.PRO, 1L, false);
-
-                given(albumService.createAlbum(request))
-                        .willThrow(new CustomException(PaymentErrorCode.NOT_PAID));
-
-                // when & then
-                ResultActions perform =
-                        mockMvc.perform(
-                                post("/albums")
-                                        .contentType(MediaType.APPLICATION_JSON)
-                                        .content(objectMapper.writeValueAsString(request)));
-
-                perform.andExpect(status().isBadRequest())
-                        .andExpect(jsonPath("$.success").value(false))
-                        .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
-                        .andExpect(jsonPath("$.data.code").value("NOT_PAID"))
-                        .andExpect(jsonPath("$.data.message").value("결제가 완료되지 않아 검증에 실패했습니다."));
-            }
-
-            @Test
             void 결제한_회원과_로그인_회원이_일치하지_않으면_예외가_발생한다() throws Exception {
                 // given
                 AlbumCreateRequest request =
@@ -272,6 +249,30 @@ class AlbumControllerTest {
             }
 
             @Test
+            void 결제상태가_PAID가_아니면_예외가_발생한다() throws Exception {
+                // given
+                AlbumCreateRequest request =
+                        new AlbumCreateRequest(
+                                "testTitle", "testCoverUrl", AlbumPlan.PRO, 1L, false);
+
+                given(albumService.createAlbum(request))
+                        .willThrow(new CustomException(PaymentDomainErrorCode.NOT_PAID));
+
+                // when & then
+                ResultActions perform =
+                        mockMvc.perform(
+                                post("/albums")
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(objectMapper.writeValueAsString(request)));
+
+                perform.andExpect(status().isBadRequest())
+                        .andExpect(jsonPath("$.success").value(false))
+                        .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                        .andExpect(jsonPath("$.data.code").value("NOT_PAID"))
+                        .andExpect(jsonPath("$.data.message").value("결제가 완료되지 않아 검증에 실패했습니다."));
+            }
+
+            @Test
             void 결제가_이미_사용된_경우_예외가_발생한다() throws Exception {
                 // given
                 AlbumCreateRequest request =
@@ -279,7 +280,8 @@ class AlbumControllerTest {
                                 "testTitle", "testCoverUrl", AlbumPlan.PRO, 1L, false);
 
                 given(albumService.createAlbum(request))
-                        .willThrow(new CustomException(PaymentErrorCode.ALREADY_USED_PAYMENT));
+                        .willThrow(
+                                new CustomException(PaymentDomainErrorCode.ALREADY_USED_PAYMENT));
 
                 // when & then
                 ResultActions perform =
@@ -303,7 +305,9 @@ class AlbumControllerTest {
                                 "testTitle", "testCoverUrl", AlbumPlan.PRO, 1L, false);
 
                 given(albumService.createAlbum(request))
-                        .willThrow(new CustomException(PaymentErrorCode.PAYMENT_PURPOSE_MISMATCH));
+                        .willThrow(
+                                new CustomException(
+                                        PaymentDomainErrorCode.PAYMENT_PURPOSE_MISMATCH));
 
                 // when & then
                 ResultActions perform =

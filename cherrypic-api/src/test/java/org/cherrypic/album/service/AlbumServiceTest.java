@@ -51,6 +51,7 @@ import org.cherrypic.participant.enums.ParticipantRole;
 import org.cherrypic.payment.entity.Payment;
 import org.cherrypic.payment.enums.PaymentPurpose;
 import org.cherrypic.payment.enums.PaymentStatus;
+import org.cherrypic.payment.exception.PaymentDomainErrorCode;
 import org.cherrypic.subscription.entity.Subscription;
 import org.cherrypic.subscription.enums.SubscriptionStatus;
 import org.junit.jupiter.api.*;
@@ -208,7 +209,7 @@ class AlbumServiceTest extends IntegrationTest {
                                 member1, "testMerchantUid", 5900, PaymentPurpose.CREATION);
                 payment3.updatePayment(
                         "testImpUid", "testPgProvider", PaymentStatus.PAID, LocalDateTime.now());
-                payment3.updatePayment(album);
+                payment3.updatePayment(PaymentPurpose.CREATION, album);
                 // 구독 갱신 목적으로 쓰인 결제
                 Payment payment4 =
                         Payment.createPayment(
@@ -322,19 +323,6 @@ class AlbumServiceTest extends IntegrationTest {
             }
 
             @Test
-            void 결제상태가_PAID가_아니면_예외가_발생한다() {
-                // given
-                AlbumCreateRequest request =
-                        new AlbumCreateRequest(
-                                "testTitle", "testCoverUrl", AlbumPlan.PRO, 2L, false);
-
-                // when & then
-                assertThatThrownBy(() -> albumService.createAlbum(request))
-                        .isInstanceOf(CustomException.class)
-                        .hasMessage(PaymentErrorCode.NOT_PAID.getMessage());
-            }
-
-            @Test
             void 결제한_회원과_로그인_회원이_일치하지_않으면_예외가_발생한다() {
                 // given
                 given(memberUtil.getCurrentMember())
@@ -351,6 +339,19 @@ class AlbumServiceTest extends IntegrationTest {
             }
 
             @Test
+            void 결제상태가_PAID가_아니면_예외가_발생한다() {
+                // given
+                AlbumCreateRequest request =
+                        new AlbumCreateRequest(
+                                "testTitle", "testCoverUrl", AlbumPlan.PRO, 2L, false);
+
+                // when & then
+                assertThatThrownBy(() -> albumService.createAlbum(request))
+                        .isInstanceOf(CustomException.class)
+                        .hasMessage(PaymentDomainErrorCode.NOT_PAID.getMessage());
+            }
+
+            @Test
             void 결제가_이미_사용된_경우_예외가_발생한다() {
                 // given
                 AlbumCreateRequest request =
@@ -360,7 +361,7 @@ class AlbumServiceTest extends IntegrationTest {
                 // when & then
                 assertThatThrownBy(() -> albumService.createAlbum(request))
                         .isInstanceOf(CustomException.class)
-                        .hasMessage(PaymentErrorCode.ALREADY_USED_PAYMENT.getMessage());
+                        .hasMessage(PaymentDomainErrorCode.ALREADY_USED_PAYMENT.getMessage());
             }
 
             @Test
@@ -373,7 +374,7 @@ class AlbumServiceTest extends IntegrationTest {
                 // when & then
                 assertThatThrownBy(() -> albumService.createAlbum(request))
                         .isInstanceOf(CustomException.class)
-                        .hasMessage(PaymentErrorCode.PAYMENT_PURPOSE_MISMATCH.getMessage());
+                        .hasMessage(PaymentDomainErrorCode.PAYMENT_PURPOSE_MISMATCH.getMessage());
             }
         }
     }
