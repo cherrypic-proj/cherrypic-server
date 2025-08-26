@@ -294,6 +294,30 @@ class AlbumControllerTest {
                         .andExpect(jsonPath("$.data.code").value("ALREADY_USED_PAYMENT"))
                         .andExpect(jsonPath("$.data.message").value("이미 다른 앨범에 사용된 결제입니다."));
             }
+
+            @Test
+            void 결제의_목적이_앨범_생성과_일치하지_않으면_예외가_발생한다() throws Exception {
+                // given
+                AlbumCreateRequest request =
+                        new AlbumCreateRequest(
+                                "testTitle", "testCoverUrl", AlbumPlan.PRO, 1L, false);
+
+                given(albumService.createAlbum(request))
+                        .willThrow(new CustomException(PaymentErrorCode.PAYMENT_PURPOSE_MISMATCH));
+
+                // when & then
+                ResultActions perform =
+                        mockMvc.perform(
+                                post("/albums")
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(objectMapper.writeValueAsString(request)));
+
+                perform.andExpect(status().isBadRequest())
+                        .andExpect(jsonPath("$.success").value(false))
+                        .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                        .andExpect(jsonPath("$.data.code").value("PAYMENT_PURPOSE_MISMATCH"))
+                        .andExpect(jsonPath("$.data.message").value("결제 목적이 요청하려는 작업과 일치하지 않습니다."));
+            }
         }
 
         @ParameterizedTest

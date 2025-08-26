@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 import org.cherrypic.album.entity.Album;
 import org.cherrypic.common.model.BaseTimeEntity;
 import org.cherrypic.member.entity.Member;
+import org.cherrypic.payment.enums.PaymentPurpose;
 import org.cherrypic.payment.enums.PaymentStatus;
 
 @Getter
@@ -41,22 +42,34 @@ public class Payment extends BaseTimeEntity {
     @Enumerated(EnumType.STRING)
     private PaymentStatus status;
 
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    private PaymentPurpose purpose;
+
     private LocalDateTime paidAt;
 
     @Builder(access = AccessLevel.PRIVATE)
-    private Payment(Member member, String merchantUid, int amount, PaymentStatus status) {
+    private Payment(
+            Member member,
+            String merchantUid,
+            int amount,
+            PaymentStatus status,
+            PaymentPurpose purpose) {
         this.member = member;
         this.merchantUid = merchantUid;
         this.amount = amount;
         this.status = status;
+        this.purpose = purpose;
     }
 
-    public static Payment createPayment(Member member, String merchantUid, int amount) {
+    public static Payment createPayment(
+            Member member, String merchantUid, int amount, PaymentPurpose purpose) {
         return Payment.builder()
                 .member(member)
                 .merchantUid(merchantUid)
                 .amount(amount)
                 .status(PaymentStatus.READY)
+                .purpose(purpose)
                 .build();
     }
 
