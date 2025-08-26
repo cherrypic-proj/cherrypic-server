@@ -9,9 +9,11 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.cherrypic.album.entity.Album;
 import org.cherrypic.common.model.BaseTimeEntity;
+import org.cherrypic.exception.CustomException;
 import org.cherrypic.member.entity.Member;
 import org.cherrypic.payment.enums.PaymentPurpose;
 import org.cherrypic.payment.enums.PaymentStatus;
+import org.cherrypic.payment.exception.PaymentDomainErrorCode;
 
 @Getter
 @Entity
@@ -81,7 +83,17 @@ public class Payment extends BaseTimeEntity {
         this.paidAt = paidAt;
     }
 
-    public void updatePayment(Album album) {
+    public void updatePayment(PaymentPurpose purpose, Album album) {
+        if (this.status != PaymentStatus.PAID) {
+            throw new CustomException(PaymentDomainErrorCode.NOT_PAID);
+        }
+        if (this.album != null) {
+            throw new CustomException(PaymentDomainErrorCode.ALREADY_USED_PAYMENT);
+        }
+        if (this.purpose != purpose) {
+            throw new CustomException(PaymentDomainErrorCode.PAYMENT_PURPOSE_MISMATCH);
+        }
+
         this.album = album;
     }
 }
