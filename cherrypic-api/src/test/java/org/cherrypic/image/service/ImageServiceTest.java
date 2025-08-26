@@ -55,8 +55,8 @@ import org.springframework.test.context.event.RecordApplicationEvents;
 @RecordApplicationEvents
 class ImageServiceTest extends IntegrationTest {
 
-    @MockitoBean MemberUtil memberUtil;
-    @MockitoBean S3Util s3Util;
+    @MockitoBean private MemberUtil memberUtil;
+    @MockitoBean private S3Util s3Util;
 
     @Autowired private ImageService imageService;
     @Autowired private ApplicationEvents applicationEvents;

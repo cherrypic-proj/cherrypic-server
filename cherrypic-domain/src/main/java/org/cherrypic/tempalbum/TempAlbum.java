@@ -2,8 +2,8 @@ package org.cherrypic.tempalbum;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
+import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -30,19 +30,19 @@ public class TempAlbum extends BaseTimeEntity {
     @JoinColumn(name = "album_id")
     private Album album;
 
-    @NotNull private Date expiredAt;
+    @NotNull private LocalDate expiredAt;
 
     @OneToMany(mappedBy = "tempAlbum", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TempAlbumImage> tempAlbumImages = new ArrayList<>();
 
     @Builder(access = AccessLevel.PRIVATE)
-    private TempAlbum(Album album, Member member, Date expiredAt) {
+    private TempAlbum(Album album, Member member, LocalDate expiredAt) {
         this.album = album;
         this.member = member;
         this.expiredAt = expiredAt;
     }
 
-    public static TempAlbum createTempAlbum(Album album, Member member, Date expiredAt) {
+    public static TempAlbum createTempAlbum(Album album, Member member, LocalDate expiredAt) {
         return TempAlbum.builder().album(album).member(member).expiredAt(expiredAt).build();
     }
 

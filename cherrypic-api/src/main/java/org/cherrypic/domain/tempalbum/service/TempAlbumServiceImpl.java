@@ -1,9 +1,8 @@
 package org.cherrypic.domain.tempalbum.service;
 
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import org.cherrypic.album.entity.Album;
 import org.cherrypic.album.enums.AlbumPlan;
@@ -22,9 +21,11 @@ import org.cherrypic.participant.enums.ParticipantRole;
 import org.cherrypic.tempalbum.TempAlbum;
 import org.cherrypic.tempalbum.TempAlbumImage;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class TempAlbumServiceImpl implements TempAlbumService {
 
     private final MemberUtil memberUtil;
@@ -60,17 +61,15 @@ public class TempAlbumServiceImpl implements TempAlbumService {
         tempAlbumRepository.save(tempAlbum);
     }
 
-    private Date getExpirationByAlbumPlan(AlbumPlan albumPlan) {
-        Date expiration = new Date();
-        long expTimeMillis = expiration.getTime();
+    private LocalDate getExpirationByAlbumPlan(AlbumPlan albumPlan) {
+        LocalDate expiration = LocalDate.now();
 
         if (AlbumPlan.BASIC == albumPlan) {
-            expTimeMillis += TimeUnit.DAYS.toMillis(3);
+            expiration = expiration.plusDays(3);
         } else {
-            expTimeMillis += TimeUnit.DAYS.toMillis(14);
+            expiration = expiration.plusDays(14);
         }
 
-        expiration.setTime(expTimeMillis);
         return expiration;
     }
 
