@@ -81,11 +81,11 @@ public class Subscription extends BaseTimeEntity {
     }
 
     public void renew() {
-        if (this.status == SubscriptionStatus.ACTIVE) {
-            throw new CustomException(SubscriptionDomainErrorCode.ALREADY_ACTIVE);
-        }
         if (this.endAt.isBefore(LocalDateTime.now())) {
             throw new CustomException(SubscriptionDomainErrorCode.ALREADY_ENDED);
+        }
+        if (this.status == SubscriptionStatus.ACTIVE) {
+            throw new CustomException(SubscriptionDomainErrorCode.ALREADY_ACTIVE);
         }
 
         this.status = SubscriptionStatus.ACTIVE;
