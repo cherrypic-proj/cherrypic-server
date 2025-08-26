@@ -10,7 +10,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.cherrypic.album.enums.AlbumPlan;
-import org.cherrypic.common.exception.DomainErrorCode;
+import org.cherrypic.album.exception.AlbumDomainErrorCode;
 import org.cherrypic.common.model.BaseTimeEntity;
 import org.cherrypic.event.entity.Event;
 import org.cherrypic.exception.CustomException;
@@ -98,14 +98,14 @@ public class Album extends BaseTimeEntity {
 
     public void increaseCapacity(BigDecimal decimal) {
         if (this.capacityGb.add(decimal).compareTo(BigDecimal.valueOf(9999.99)) > 0) {
-            throw new CustomException(DomainErrorCode.ALBUM_CAPACITY_INCREASE_OVER_LIMIT);
+            throw new CustomException(AlbumDomainErrorCode.ALBUM_CAPACITY_INCREASE_OVER_LIMIT);
         }
         this.capacityGb = capacityGb.add(decimal);
     }
 
     public void decreaseCapacity(BigDecimal decimal) {
         if (this.capacityGb.subtract(decimal).compareTo(BigDecimal.ZERO) < 0) {
-            throw new CustomException(DomainErrorCode.ALBUM_CAPACITY_DECREASE_UNDER_ZERO);
+            throw new CustomException(AlbumDomainErrorCode.ALBUM_CAPACITY_DECREASE_UNDER_ZERO);
         }
         this.capacityGb = capacityGb.subtract(decimal);
     }

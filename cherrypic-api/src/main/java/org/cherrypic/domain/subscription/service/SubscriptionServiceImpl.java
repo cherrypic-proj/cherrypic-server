@@ -1,6 +1,5 @@
 package org.cherrypic.domain.subscription.service;
 
-import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import org.cherrypic.album.entity.Album;
 import org.cherrypic.album.enums.AlbumPlan;
@@ -15,7 +14,6 @@ import org.cherrypic.member.entity.Member;
 import org.cherrypic.participant.entity.Participant;
 import org.cherrypic.participant.enums.ParticipantRole;
 import org.cherrypic.subscription.entity.Subscription;
-import org.cherrypic.subscription.enums.SubscriptionStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,10 +38,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
         final Subscription subscription = getSubscriptionByAlbumId(album.getId());
 
-        validateSubscriptionNotExpired(subscription.getEndAt());
-        validateSubscriptionNotCanceled(subscription.getStatus());
-
-        subscription.cancelSubscription();
+        subscription.cancel();
     }
 
     private Album getAlbumById(Long albumId) {
@@ -78,17 +73,5 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 .findByAlbumId(albumId)
                 .orElseThrow(
                         () -> new CustomException(SubscriptionErrorCode.SUBSCRIPTION_NOT_FOUND));
-    }
-
-    private void validateSubscriptionNotCanceled(SubscriptionStatus status) {
-        if (status == SubscriptionStatus.CANCELED) {
-            throw new CustomException(SubscriptionErrorCode.SUBSCRIPTION_ALREADY_CANCELED);
-        }
-    }
-
-    private void validateSubscriptionNotExpired(LocalDateTime endAt) {
-        if (endAt.isBefore(LocalDateTime.now())) {
-            throw new CustomException(SubscriptionErrorCode.SUBSCRIPTION_ALREADY_ENDED);
-        }
     }
 }

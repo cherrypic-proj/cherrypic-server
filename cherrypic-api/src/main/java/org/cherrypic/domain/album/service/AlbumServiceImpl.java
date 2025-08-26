@@ -30,7 +30,6 @@ import org.cherrypic.participant.entity.Participant;
 import org.cherrypic.participant.enums.ParticipantRole;
 import org.cherrypic.payment.entity.Payment;
 import org.cherrypic.payment.enums.PaymentPurpose;
-import org.cherrypic.payment.enums.PaymentStatus;
 import org.cherrypic.subscription.entity.Subscription;
 import org.cherrypic.subscription.enums.SubscriptionStatus;
 import org.springframework.context.ApplicationEventPublisher;
@@ -79,16 +78,12 @@ public class AlbumServiceImpl implements AlbumService {
         if (request.plan() != AlbumPlan.BASIC) {
             final Payment payment = getPaidPaymentById(request.paymentId());
 
-            validatePaidStatus(payment);
             validatePaymentMemberMismatch(payment, currentMember);
-            validatePaymentNotUsed(payment);
-            validatePaymentPurposeForAlbumCreation(payment);
 
-            payment.updatePayment(album);
+            payment.updatePayment(PaymentPurpose.CREATION, album);
 
-            Subscription subscription =
-                    Subscription.createSubscription(currentMember, album, payment.getPaidAt());
-            subscriptionRepository.save(subscription);
+            subscriptionRepository.save(
+                    Subscription.createSubscription(currentMember, album, payment.getPaidAt()));
         }
 
         albumRepository.save(album);
@@ -278,34 +273,16 @@ public class AlbumServiceImpl implements AlbumService {
         }
     }
 
-    private void validatePaidStatus(Payment payment) {
-        if (payment.getStatus() != PaymentStatus.PAID) {
-            throw new CustomException(PaymentErrorCode.NOT_PAID);
-        }
+    private Payment getPaidPaymentById(Long paymentId) {
+        return paymentRepository
+                .findById(paymentId)
+                .orElseThrow(() -> new CustomException(PaymentErrorCode.PAYMENT_NOT_FOUND));
     }
 
     private void validatePaymentMemberMismatch(Payment payment, Member member) {
         if (!payment.getMember().getId().equals(member.getId())) {
             throw new CustomException(PaymentErrorCode.PAYMENT_MEMBER_MISMATCH);
         }
-    }
-
-    private void validatePaymentNotUsed(Payment payment) {
-        if (payment.getAlbum() != null) {
-            throw new CustomException(PaymentErrorCode.ALREADY_USED_PAYMENT);
-        }
-    }
-
-    private void validatePaymentPurposeForAlbumCreation(Payment payment) {
-        if (payment.getPurpose() != PaymentPurpose.CREATION) {
-            throw new CustomException(PaymentErrorCode.PAYMENT_PURPOSE_MISMATCH);
-        }
-    }
-
-    private Payment getPaidPaymentById(Long paymentId) {
-        return paymentRepository
-                .findById(paymentId)
-                .orElseThrow(() -> new CustomException(PaymentErrorCode.PAYMENT_NOT_FOUND));
     }
 
     private void validateMaxParticipantLimit(Album album) {
