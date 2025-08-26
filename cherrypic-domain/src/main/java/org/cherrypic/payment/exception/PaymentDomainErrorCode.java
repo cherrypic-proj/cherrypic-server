@@ -7,8 +7,8 @@ import org.cherrypic.exception.BaseErrorCode;
 @Getter
 @AllArgsConstructor
 public enum PaymentDomainErrorCode implements BaseErrorCode {
-    NOT_PAID(400, "결제가 완료되지 않아 검증에 실패했습니다."),
-    ALREADY_USED_PAYMENT(400, "이미 다른 앨범에 사용된 결제입니다."),
+    NOT_PAID(400, "아직 결제가 완료되지 않았습니다."),
+    ALREADY_USED_PAYMENT(400, "해당 결제는 이미 사용되었습니다."),
     PAYMENT_PURPOSE_MISMATCH(400, "결제 목적이 요청하려는 작업과 일치하지 않습니다."),
     ;
 

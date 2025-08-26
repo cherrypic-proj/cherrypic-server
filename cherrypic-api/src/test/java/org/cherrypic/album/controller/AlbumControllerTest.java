@@ -269,7 +269,7 @@ class AlbumControllerTest {
                         .andExpect(jsonPath("$.success").value(false))
                         .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
                         .andExpect(jsonPath("$.data.code").value("NOT_PAID"))
-                        .andExpect(jsonPath("$.data.message").value("결제가 완료되지 않아 검증에 실패했습니다."));
+                        .andExpect(jsonPath("$.data.message").value("아직 결제가 완료되지 않았습니다."));
             }
 
             @Test
@@ -294,7 +294,7 @@ class AlbumControllerTest {
                         .andExpect(jsonPath("$.success").value(false))
                         .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
                         .andExpect(jsonPath("$.data.code").value("ALREADY_USED_PAYMENT"))
-                        .andExpect(jsonPath("$.data.message").value("이미 다른 앨범에 사용된 결제입니다."));
+                        .andExpect(jsonPath("$.data.message").value("해당 결제는 이미 사용되었습니다."));
             }
 
             @Test
