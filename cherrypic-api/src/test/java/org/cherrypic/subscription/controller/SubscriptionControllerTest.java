@@ -6,18 +6,26 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.LocalDateTime;
 import org.cherrypic.domain.album.dto.response.*;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
+import org.cherrypic.domain.payment.exception.PaymentErrorCode;
 import org.cherrypic.domain.subscription.controller.SubscriptionController;
+import org.cherrypic.domain.subscription.dto.request.SubscriptionRenewRequest;
+import org.cherrypic.domain.subscription.dto.response.SubscriptionRenewResponse;
 import org.cherrypic.domain.subscription.exception.SubscriptionErrorCode;
 import org.cherrypic.domain.subscription.service.SubscriptionService;
 import org.cherrypic.exception.CustomException;
+import org.cherrypic.payment.exception.PaymentDomainErrorCode;
+import org.cherrypic.subscription.enums.SubscriptionStatus;
+import org.cherrypic.subscription.exception.SubscriptionDomainErrorCode;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
@@ -140,7 +148,7 @@ class SubscriptionControllerTest {
         @Test
         void 이미_해지된_구독이면_예외가_발생한다() throws Exception {
             // given
-            willThrow(new CustomException(SubscriptionErrorCode.SUBSCRIPTION_ALREADY_CANCELED))
+            willThrow(new CustomException(SubscriptionDomainErrorCode.ALREADY_CANCELED))
                     .given(subscriptionService)
                     .cancelSubscription(1L);
 
@@ -150,14 +158,14 @@ class SubscriptionControllerTest {
             perform.andExpect(status().isConflict())
                     .andExpect(jsonPath("$.success").value(false))
                     .andExpect(jsonPath("$.status").value(HttpStatus.CONFLICT.value()))
-                    .andExpect(jsonPath("$.data.code").value("SUBSCRIPTION_ALREADY_CANCELED"))
+                    .andExpect(jsonPath("$.data.code").value("ALREADY_CANCELED"))
                     .andExpect(jsonPath("$.data.message").value("이미 해지된 구독입니다."));
         }
 
         @Test
         void 종료된_구독이면_예외가_발생한다() throws Exception {
             // given
-            willThrow(new CustomException(SubscriptionErrorCode.SUBSCRIPTION_ALREADY_ENDED))
+            willThrow(new CustomException(SubscriptionDomainErrorCode.ALREADY_ENDED))
                     .given(subscriptionService)
                     .cancelSubscription(1L);
 
@@ -167,7 +175,309 @@ class SubscriptionControllerTest {
             perform.andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.success").value(false))
                     .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
-                    .andExpect(jsonPath("$.data.code").value("SUBSCRIPTION_ALREADY_ENDED"))
+                    .andExpect(jsonPath("$.data.code").value("ALREADY_ENDED"))
+                    .andExpect(jsonPath("$.data.message").value("이미 종료된 구독입니다. 해지 또는 갱신할 수 없습니다."));
+        }
+    }
+
+    @Nested
+    class 구독_갱신_요청_시 {
+
+        @Test
+        void 유효한_요청이면_구독을_갱신하고_갱신_정보를_반환한다() throws Exception {
+            // given
+            SubscriptionRenewRequest request = new SubscriptionRenewRequest(1L);
+            SubscriptionRenewResponse response =
+                    new SubscriptionRenewResponse(
+                            LocalDateTime.of(2025, 7, 1, 0, 0),
+                            LocalDateTime.of(2025, 8, 1, 0, 0),
+                            LocalDateTime.of(2025, 8, 2, 0, 0),
+                            SubscriptionStatus.ACTIVE);
+
+            given(subscriptionService.renewSubscription(1L, request)).willReturn(response);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            patch("/albums/1/subscriptions/renew")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
+                    .andExpect(jsonPath("$.data.subscriptionStartAt").value("2025-07-01"))
+                    .andExpect(jsonPath("$.data.subscriptionEndAt").value("2025-08-01"))
+                    .andExpect(jsonPath("$.data.subscriptionNextBillingAt").value("2025-08-02"))
+                    .andExpect(jsonPath("$.data.status").value("ACTIVE"));
+        }
+
+        @Test
+        void 앨범이_존재하지_않는_경우_예외가_발생한다() throws Exception {
+            // given
+            SubscriptionRenewRequest request = new SubscriptionRenewRequest(1L);
+
+            given(subscriptionService.renewSubscription(1L, request))
+                    .willThrow(new CustomException(AlbumErrorCode.ALBUM_NOT_FOUND));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            patch("/albums/1/subscriptions/renew")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.NOT_FOUND.value()))
+                    .andExpect(jsonPath("$.data.code").value("ALBUM_NOT_FOUND"))
+                    .andExpect(jsonPath("$.data.message").value("앨범이 존재하지 않습니다."));
+        }
+
+        @Test
+        void 앨범_참가자가_아닌_경우_예외가_발생한다() throws Exception {
+            // given
+            SubscriptionRenewRequest request = new SubscriptionRenewRequest(1L);
+
+            given(subscriptionService.renewSubscription(1L, request))
+                    .willThrow(new CustomException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            patch("/albums/1/subscriptions/renew")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.FORBIDDEN.value()))
+                    .andExpect(jsonPath("$.data.code").value("NOT_ALBUM_PARTICIPANT"))
+                    .andExpect(jsonPath("$.data.message").value("앨범에 속하지 않은 사용자입니다."));
+        }
+
+        @Test
+        void 앨범_방장이_아닌_경우_예외가_발생한다() throws Exception {
+            // given
+            SubscriptionRenewRequest request = new SubscriptionRenewRequest(1L);
+
+            given(subscriptionService.renewSubscription(1L, request))
+                    .willThrow(new CustomException(AlbumErrorCode.NOT_ALBUM_HOST));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            patch("/albums/1/subscriptions/renew")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.FORBIDDEN.value()))
+                    .andExpect(jsonPath("$.data.code").value("NOT_ALBUM_HOST"))
+                    .andExpect(jsonPath("$.data.message").value("방장이 아닌 경우 권한이 없습니다."));
+        }
+
+        @Test
+        void BASIC_플랜인_경우_예외가_발생한다() throws Exception {
+            // given
+            SubscriptionRenewRequest request = new SubscriptionRenewRequest(1L);
+
+            given(subscriptionService.renewSubscription(1L, request))
+                    .willThrow(
+                            new CustomException(
+                                    SubscriptionErrorCode
+                                            .SUBSCRIPTION_NOT_SUPPORTED_FOR_BASIC_PLAN));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            patch("/albums/1/subscriptions/renew")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(
+                            jsonPath("$.data.code")
+                                    .value("SUBSCRIPTION_NOT_SUPPORTED_FOR_BASIC_PLAN"))
+                    .andExpect(jsonPath("$.data.message").value("BASIC 플랜은 구독 기능을 지원하지 않습니다."));
+        }
+
+        @Test
+        void 결제가_존재하지_않는_경우_예외가_발생한다() throws Exception {
+            // given
+            SubscriptionRenewRequest request = new SubscriptionRenewRequest(1L);
+
+            given(subscriptionService.renewSubscription(1L, request))
+                    .willThrow(new CustomException(PaymentErrorCode.PAYMENT_NOT_FOUND));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            patch("/albums/1/subscriptions/renew")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.NOT_FOUND.value()))
+                    .andExpect(jsonPath("$.data.code").value("PAYMENT_NOT_FOUND"))
+                    .andExpect(jsonPath("$.data.message").value("결제 정보가 존재하지 않습니다."));
+        }
+
+        @Test
+        void 결제한_회원과_구독을_갱신하려는_회원이_일치하지_않으면_예외가_발생한다() throws Exception {
+            // given
+            SubscriptionRenewRequest request = new SubscriptionRenewRequest(1L);
+
+            given(subscriptionService.renewSubscription(1L, request))
+                    .willThrow(new CustomException(PaymentErrorCode.PAYMENT_MEMBER_MISMATCH));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            patch("/albums/1/subscriptions/renew")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.FORBIDDEN.value()))
+                    .andExpect(jsonPath("$.data.code").value("PAYMENT_MEMBER_MISMATCH"))
+                    .andExpect(jsonPath("$.data.message").value("결제한 사용자와 일치하지 않습니다."));
+        }
+
+        @Test
+        void 결제상태가_PAID가_아니면_예외가_발생한다() throws Exception {
+            // given
+            SubscriptionRenewRequest request = new SubscriptionRenewRequest(1L);
+
+            given(subscriptionService.renewSubscription(1L, request))
+                    .willThrow(new CustomException(PaymentDomainErrorCode.NOT_PAID));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            patch("/albums/1/subscriptions/renew")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("NOT_PAID"))
+                    .andExpect(jsonPath("$.data.message").value("아직 결제가 완료되지 않았습니다."));
+        }
+
+        @Test
+        void 결제가_이미_사용된_경우_예외가_발생한다() throws Exception {
+            // given
+            SubscriptionRenewRequest request = new SubscriptionRenewRequest(1L);
+
+            given(subscriptionService.renewSubscription(1L, request))
+                    .willThrow(new CustomException(PaymentDomainErrorCode.ALREADY_USED_PAYMENT));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            patch("/albums/1/subscriptions/renew")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("ALREADY_USED_PAYMENT"))
+                    .andExpect(jsonPath("$.data.message").value("해당 결제는 이미 사용되었습니다."));
+        }
+
+        @Test
+        void 결제의_목적이_구독_갱신과_일치하지_않으면_예외가_발생한다() throws Exception {
+            SubscriptionRenewRequest request = new SubscriptionRenewRequest(1L);
+
+            given(subscriptionService.renewSubscription(1L, request))
+                    .willThrow(
+                            new CustomException(PaymentDomainErrorCode.PAYMENT_PURPOSE_MISMATCH));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            patch("/albums/1/subscriptions/renew")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("PAYMENT_PURPOSE_MISMATCH"))
+                    .andExpect(jsonPath("$.data.message").value("결제 목적이 요청하려는 작업과 일치하지 않습니다."));
+        }
+
+        @Test
+        void 구독이_존재하지_않는_경우_예외가_발생한다() throws Exception {
+            // given
+            SubscriptionRenewRequest request = new SubscriptionRenewRequest(1L);
+
+            given(subscriptionService.renewSubscription(1L, request))
+                    .willThrow(new CustomException(SubscriptionErrorCode.SUBSCRIPTION_NOT_FOUND));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            patch("/albums/1/subscriptions/renew")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.NOT_FOUND.value()))
+                    .andExpect(jsonPath("$.data.code").value("SUBSCRIPTION_NOT_FOUND"))
+                    .andExpect(jsonPath("$.data.message").value("구독 정보가 존재하지 않습니다."));
+        }
+
+        @Test
+        void 이미_구독_중인_상태면_예외가_발생한다() throws Exception {
+            // given
+            SubscriptionRenewRequest request = new SubscriptionRenewRequest(1L);
+
+            given(subscriptionService.renewSubscription(1L, request))
+                    .willThrow(new CustomException(SubscriptionDomainErrorCode.ALREADY_ACTIVE));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            patch("/albums/1/subscriptions/renew")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isConflict())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.CONFLICT.value()))
+                    .andExpect(jsonPath("$.data.code").value("ALREADY_ACTIVE"))
+                    .andExpect(jsonPath("$.data.message").value("이미 구독 중인 상태입니다."));
+        }
+
+        @Test
+        void 종료된_구독이면_예외가_발생한다() throws Exception {
+            // given
+            SubscriptionRenewRequest request = new SubscriptionRenewRequest(1L);
+
+            given(subscriptionService.renewSubscription(1L, request))
+                    .willThrow(new CustomException(SubscriptionDomainErrorCode.ALREADY_ENDED));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            patch("/albums/1/subscriptions/renew")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("ALREADY_ENDED"))
                     .andExpect(jsonPath("$.data.message").value("이미 종료된 구독입니다. 해지 또는 갱신할 수 없습니다."));
         }
     }
