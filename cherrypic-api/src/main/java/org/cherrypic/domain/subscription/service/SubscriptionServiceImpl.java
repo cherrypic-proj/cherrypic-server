@@ -6,6 +6,10 @@ import org.cherrypic.album.enums.AlbumPlan;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.album.repository.AlbumRepository;
 import org.cherrypic.domain.participant.repository.ParticipantRepository;
+import org.cherrypic.domain.payment.exception.PaymentErrorCode;
+import org.cherrypic.domain.payment.repository.PaymentRepository;
+import org.cherrypic.domain.subscription.dto.request.SubscriptionRenewRequest;
+import org.cherrypic.domain.subscription.dto.response.SubscriptionRenewResponse;
 import org.cherrypic.domain.subscription.exception.SubscriptionErrorCode;
 import org.cherrypic.domain.subscription.repository.SubscriptionRepository;
 import org.cherrypic.exception.CustomException;
@@ -13,6 +17,8 @@ import org.cherrypic.global.util.MemberUtil;
 import org.cherrypic.member.entity.Member;
 import org.cherrypic.participant.entity.Participant;
 import org.cherrypic.participant.enums.ParticipantRole;
+import org.cherrypic.payment.entity.Payment;
+import org.cherrypic.payment.enums.PaymentPurpose;
 import org.cherrypic.subscription.entity.Subscription;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +33,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     private final SubscriptionRepository subscriptionRepository;
     private final AlbumRepository albumRepository;
     private final ParticipantRepository participantRepository;
+    private final PaymentRepository paymentRepository;
 
     @Override
     public void cancelSubscription(Long albumId) {
@@ -34,11 +41,33 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         final Album album = getAlbumById(albumId);
 
         validateAlbumHost(currentMember.getId(), album.getId());
-        validateSubscriptionSupported(album.getPlan());
+        validateSubscriptionSupported(album);
 
         final Subscription subscription = getSubscriptionByAlbumId(album.getId());
 
         subscription.cancel();
+    }
+
+    @Override
+    public SubscriptionRenewResponse renewSubscription(
+            Long albumId, SubscriptionRenewRequest request) {
+        final Member currentMember = memberUtil.getCurrentMember();
+        final Album album = getAlbumById(albumId);
+
+        validateAlbumHost(currentMember.getId(), album.getId());
+        validateSubscriptionSupported(album);
+
+        final Payment payment = getPaidPaymentById(request.paymentId());
+
+        validatePaymentMemberMismatch(payment, currentMember);
+
+        payment.updatePayment(PaymentPurpose.RENEWAL, album);
+
+        final Subscription subscription = getSubscriptionByAlbumId(album.getId());
+
+        subscription.renew();
+
+        return SubscriptionRenewResponse.from(subscription);
     }
 
     private Album getAlbumById(Long albumId) {
@@ -61,8 +90,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         }
     }
 
-    private void validateSubscriptionSupported(AlbumPlan plan) {
-        if (plan == AlbumPlan.BASIC) {
+    private void validateSubscriptionSupported(Album album) {
+        if (album.getPlan() == AlbumPlan.BASIC) {
             throw new CustomException(
                     SubscriptionErrorCode.SUBSCRIPTION_NOT_SUPPORTED_FOR_BASIC_PLAN);
         }
@@ -73,5 +102,17 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 .findByAlbumId(albumId)
                 .orElseThrow(
                         () -> new CustomException(SubscriptionErrorCode.SUBSCRIPTION_NOT_FOUND));
+    }
+
+    private Payment getPaidPaymentById(Long paymentId) {
+        return paymentRepository
+                .findById(paymentId)
+                .orElseThrow(() -> new CustomException(PaymentErrorCode.PAYMENT_NOT_FOUND));
+    }
+
+    private void validatePaymentMemberMismatch(Payment payment, Member member) {
+        if (!payment.getMember().getId().equals(member.getId())) {
+            throw new CustomException(PaymentErrorCode.PAYMENT_MEMBER_MISMATCH);
+        }
     }
 }

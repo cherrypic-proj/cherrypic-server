@@ -2,8 +2,10 @@ package org.cherrypic.domain.subscription.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.cherrypic.domain.album.dto.response.*;
+import org.cherrypic.domain.subscription.dto.request.SubscriptionRenewRequest;
+import org.cherrypic.domain.subscription.dto.response.SubscriptionRenewResponse;
 import org.cherrypic.domain.subscription.service.SubscriptionService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,5 +23,12 @@ public class SubscriptionController {
     public ResponseEntity<Void> subscriptionCancel(@PathVariable Long albumId) {
         subscriptionService.cancelSubscription(albumId);
         return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/renew")
+    @Operation(summary = "구독 갱신", description = "해지된 유료 앨범의 구독을 다시 갱신합니다.")
+    public SubscriptionRenewResponse subscriptionRenew(
+            @PathVariable Long albumId, @Valid @RequestBody SubscriptionRenewRequest request) {
+        return subscriptionService.renewSubscription(albumId, request);
     }
 }

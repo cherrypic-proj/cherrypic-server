@@ -79,4 +79,18 @@ public class Subscription extends BaseTimeEntity {
 
         this.status = SubscriptionStatus.CANCELED;
     }
+
+    public void renew() {
+        if (this.status == SubscriptionStatus.ACTIVE) {
+            throw new CustomException(SubscriptionDomainErrorCode.ALREADY_ACTIVE);
+        }
+        if (this.endAt.isBefore(LocalDateTime.now())) {
+            throw new CustomException(SubscriptionDomainErrorCode.ALREADY_ENDED);
+        }
+
+        this.status = SubscriptionStatus.ACTIVE;
+        this.startAt = this.endAt.plusDays(1);
+        this.endAt = this.startAt.plusMonths(1);
+        this.nextBillingAt = this.endAt.plusDays(1);
+    }
 }
