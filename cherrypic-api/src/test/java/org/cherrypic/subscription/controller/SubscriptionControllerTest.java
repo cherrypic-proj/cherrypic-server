@@ -395,6 +395,7 @@ class SubscriptionControllerTest {
 
         @Test
         void 결제의_목적이_구독_갱신과_일치하지_않으면_예외가_발생한다() throws Exception {
+            // given
             SubscriptionRenewRequest request = new SubscriptionRenewRequest(1L);
 
             given(subscriptionService.renewSubscription(1L, request))
