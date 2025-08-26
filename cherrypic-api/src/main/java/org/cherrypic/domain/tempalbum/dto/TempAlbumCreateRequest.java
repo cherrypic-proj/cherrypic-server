@@ -5,6 +5,6 @@ import jakarta.validation.constraints.NotEmpty;
 import java.util.List;
 
 public record TempAlbumCreateRequest(
-        @NotEmpty(message = "임시 앨범으로 공유할 사진들은 비워둘 수 없습니다.")
-                @Schema(description = "임시 앨범으로 공유할 사진들의 ID", example = "[1,2,3,4]")
+        @NotEmpty(message = "임시 앨범으로 공유할 이미지 ID들은 비워둘 수 없습니다.")
+                @Schema(description = "임시 앨범으로 공유할 이미지들의 ID", example = "[1,2,3,4]")
                 List<Long> imageIds) {}
