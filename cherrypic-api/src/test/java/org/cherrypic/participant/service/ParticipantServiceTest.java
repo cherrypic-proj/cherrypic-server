@@ -307,11 +307,12 @@ class ParticipantServiceTest extends IntegrationTest {
             memberRepository.saveAll(List.of(member1, member2));
             given(memberUtil.getCurrentMember()).willReturn(member1);
 
-            Album album1 = Album.createAlbum("testAlbum1", "testURL1", AlbumPlan.BASIC, false);
-            Album album2 = Album.createAlbum("testAlbum2", "testURL2", AlbumPlan.BASIC, false);
-            Album album3 = Album.createAlbum("testAlbum3", "testURL3", AlbumPlan.BASIC, false);
-            Album album4 = Album.createAlbum("testAlbum3", "testURL3", AlbumPlan.PRO, false);
-            albumRepository.saveAll(List.of(album1, album2, album3, album4));
+            Album album1 = Album.createAlbum("testAlbum1", "testURL1", AlbumPlan.PRO, true);
+            Album album2 = Album.createAlbum("testAlbum2", "testURL2", AlbumPlan.PRO, true);
+            Album album3 = Album.createAlbum("testAlbum3", "testURL3", AlbumPlan.PRO, true);
+            Album album4 = Album.createAlbum("testAlbum4", "testURL4", AlbumPlan.PRO, true);
+            Album album5 = Album.createAlbum("testAlbum5", "testURL5", AlbumPlan.BASIC, false);
+            albumRepository.saveAll(List.of(album1, album2, album3, album4, album5));
 
             Participant participant1 =
                     Participant.createParticipant(member1, album1, ParticipantRole.HOST);
@@ -325,6 +326,10 @@ class ParticipantServiceTest extends IntegrationTest {
                     Participant.createParticipant(member1, album4, ParticipantRole.HOST);
             Participant participant6 =
                     Participant.createParticipant(member2, album4, ParticipantRole.STANDARD);
+            Participant participant7 =
+                    Participant.createParticipant(member1, album5, ParticipantRole.HOST);
+            Participant participant8 =
+                    Participant.createParticipant(member2, album5, ParticipantRole.STANDARD);
             participantRepository.saveAll(
                     List.of(
                             participant1,
@@ -332,12 +337,20 @@ class ParticipantServiceTest extends IntegrationTest {
                             participant3,
                             participant4,
                             participant5,
-                            participant6));
+                            participant6,
+                            participant7,
+                            participant8));
 
-            Subscription subscription =
+            // 15일 전에 시작되어 현재는 해지된 구독
+            Subscription subscription1 =
+                    Subscription.createSubscription(
+                            member1, album1, LocalDateTime.now().minusDays(15));
+            subscription1.cancel();
+            // 구독 중인 앨범
+            Subscription subscription2 =
                     Subscription.createSubscription(
                             member1, album4, LocalDateTime.now().minusDays(15));
-            subscriptionRepository.save(subscription);
+            subscriptionRepository.saveAll(List.of(subscription1, subscription2));
         }
 
         @Test
@@ -467,6 +480,18 @@ class ParticipantServiceTest extends IntegrationTest {
                     .hasMessage(
                             AlbumErrorCode.SUBSCRIPTION_ACTIVE_HOST_TRANSFER_NOT_ALLOWED
                                     .getMessage());
+        }
+
+        @Test
+        void 권한_변경_기능이_비활성화된_앨범의_경우_예외가_발생한다() {
+            // given
+            ParticipantRoleUpdateRequest request =
+                    new ParticipantRoleUpdateRequest(ParticipantRole.LIMITED);
+
+            // when & then
+            assertThatThrownBy(() -> participantService.updateParticipantRole(5L, 8L, request))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(AlbumErrorCode.PERMISSION_CONTROL_NOT_AVAILABLE.getMessage());
         }
     }
 

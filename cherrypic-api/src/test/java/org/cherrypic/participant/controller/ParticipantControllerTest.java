@@ -447,6 +447,30 @@ class ParticipantControllerTest {
                     .andExpect(jsonPath("$.data.message").value("구독 중인 앨범에서는 방장 권한을 넘길 수 없습니다."));
         }
 
+        @Test
+        void 권한_변경_기능이_비활성화된_앨범의_경우_예외가_발생한다() throws Exception {
+            // given
+            ParticipantRoleUpdateRequest request =
+                    new ParticipantRoleUpdateRequest(ParticipantRole.LIMITED);
+
+            willThrow(new CustomException(AlbumErrorCode.PERMISSION_CONTROL_NOT_AVAILABLE))
+                    .given(participantService)
+                    .updateParticipantRole(1L, 1L, request);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            patch("/albums/1/participants/1/role")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("PERMISSION_CONTROL_NOT_AVAILABLE"))
+                    .andExpect(jsonPath("$.data.message").value("참가자 권한 변경 기능이 비활성화된 앨범입니다."));
+        }
+
         @ParameterizedTest
         @NullSource
         @EmptySource

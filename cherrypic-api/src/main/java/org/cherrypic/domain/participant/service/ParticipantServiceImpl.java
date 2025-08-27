@@ -82,6 +82,7 @@ public class ParticipantServiceImpl implements ParticipantService {
         final Participant target = getParticipantById(participantId);
 
         validateAlbumHost(requester);
+        validatePermissionControlAvailable(album);
         validateSelfRoleChange(requester, target);
         validateParticipantBelongsToAlbum(target, album);
 
@@ -171,6 +172,12 @@ public class ParticipantServiceImpl implements ParticipantService {
     private void validateSelfKick(Participant requester, Participant target) {
         if (requester.getId().equals(target.getId())) {
             throw new CustomException(AlbumErrorCode.HOST_SELF_KICK_NOT_ALLOWED);
+        }
+    }
+
+    private void validatePermissionControlAvailable(Album album) {
+        if (album.getPlan() == AlbumPlan.BASIC || !album.getPermissionControl()) {
+            throw new CustomException(AlbumErrorCode.PERMISSION_CONTROL_NOT_AVAILABLE);
         }
     }
 
