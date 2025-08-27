@@ -60,9 +60,7 @@ CREATE TABLE participant (
                              id BIGINT AUTO_INCREMENT PRIMARY KEY,
                              member_id BIGINT NOT NULL,
                              album_id BIGINT NOT NULL,
-                             role VARCHAR(255) NOT NULL CHECK (role IN ('HOST','STANDARD','LIMITED')),
-                             password VARCHAR(255),
-                             created_at DATETIME(6) NOT NULL,
+                             role VARCHAR(255) NOT NULL CHECK (role IN ('HOST','STANDARD','LIMITED')),g                             created_at DATETIME(6) NOT NULL,
                              updated_at DATETIME(6) NOT NULL,
                              CONSTRAINT fk_participant_member FOREIGN KEY (member_id) REFERENCES member (id),
                              CONSTRAINT fk_participant_album FOREIGN KEY (album_id) REFERENCES album (id)

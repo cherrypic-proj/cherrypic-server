@@ -3,7 +3,9 @@ package org.cherrypic.domain.participant.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.cherrypic.domain.participant.dto.request.ParticipantRoleUpdateRequest;
 import org.cherrypic.domain.participant.dto.response.ParticipantListResponse;
 import org.cherrypic.domain.participant.service.ParticipantService;
 import org.cherrypic.global.annotation.PageSize;
@@ -33,6 +35,16 @@ public class ParticipantController {
     public ResponseEntity<Void> participantKick(
             @PathVariable Long albumId, @PathVariable Long participantId) {
         participantService.kickParticipant(albumId, participantId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{participantId}/role")
+    @Operation(summary = "참가자 권한 변경", description = "앨범 방장이 특정 참가자의 권한을 변경합니다.")
+    public ResponseEntity<Void> participantRoleUpdate(
+            @PathVariable Long albumId,
+            @PathVariable Long participantId,
+            @Valid @RequestBody ParticipantRoleUpdateRequest request) {
+        participantService.updateParticipantRole(albumId, participantId, request);
         return ResponseEntity.noContent().build();
     }
 

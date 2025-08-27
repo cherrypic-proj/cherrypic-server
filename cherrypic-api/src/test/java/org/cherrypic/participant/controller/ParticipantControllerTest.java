@@ -10,6 +10,7 @@ import java.util.List;
 import org.cherrypic.domain.album.dto.response.*;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.participant.controller.ParticipantController;
+import org.cherrypic.domain.participant.dto.request.ParticipantRoleUpdateRequest;
 import org.cherrypic.domain.participant.dto.response.ParticipantListResponse;
 import org.cherrypic.domain.participant.exception.ParticipantErrorCode;
 import org.cherrypic.domain.participant.service.ParticipantService;
@@ -19,11 +20,14 @@ import org.cherrypic.participant.enums.ParticipantRole;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EmptySource;
+import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
@@ -221,6 +225,275 @@ class ParticipantControllerTest {
                     .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
                     .andExpect(jsonPath("$.data.code").value("PARTICIPANT_NOT_IN_ALBUM"))
                     .andExpect(jsonPath("$.data.message").value("해당 참가자는 이 앨범에 속해 있지 않습니다."));
+        }
+    }
+
+    @Nested
+    class 참가자_권한_변경_요청_시 {
+
+        @Test
+        void 유효한_요청이면_앨범_방장이_참가자의_권한을_변경하고_NO_CONTENT_로_반환한다() throws Exception {
+            // given
+            ParticipantRoleUpdateRequest request =
+                    new ParticipantRoleUpdateRequest(ParticipantRole.LIMITED);
+
+            willDoNothing().given(participantService).updateParticipantRole(1L, 1L, request);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            patch("/albums/1/participants/1/role")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isNoContent())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.NO_CONTENT.value()));
+        }
+
+        @Test
+        void 앨범이_존재하지_않는_경우_예외가_발생한다() throws Exception {
+            // given
+            ParticipantRoleUpdateRequest request =
+                    new ParticipantRoleUpdateRequest(ParticipantRole.LIMITED);
+
+            willThrow(new CustomException(AlbumErrorCode.ALBUM_NOT_FOUND))
+                    .given(participantService)
+                    .updateParticipantRole(1L, 1L, request);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            patch("/albums/1/participants/1/role")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.NOT_FOUND.value()))
+                    .andExpect(jsonPath("$.data.code").value("ALBUM_NOT_FOUND"))
+                    .andExpect(jsonPath("$.data.message").value("앨범이 존재하지 않습니다."));
+        }
+
+        @Test
+        void 권한_변경_요청자가_앨범_참가자가_아닌_경우_예외가_발생한다() throws Exception {
+            // given
+            ParticipantRoleUpdateRequest request =
+                    new ParticipantRoleUpdateRequest(ParticipantRole.LIMITED);
+
+            willThrow(new CustomException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT))
+                    .given(participantService)
+                    .updateParticipantRole(1L, 1L, request);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            patch("/albums/1/participants/1/role")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.FORBIDDEN.value()))
+                    .andExpect(jsonPath("$.data.code").value("NOT_ALBUM_PARTICIPANT"))
+                    .andExpect(jsonPath("$.data.message").value("앨범에 속하지 않은 사용자입니다."));
+        }
+
+        @Test
+        void 권한_변경_요청자가_앨범_방장이_아닌_경우_예외가_발생한다() throws Exception {
+            // given
+            ParticipantRoleUpdateRequest request =
+                    new ParticipantRoleUpdateRequest(ParticipantRole.LIMITED);
+
+            willThrow(new CustomException(AlbumErrorCode.NOT_ALBUM_HOST))
+                    .given(participantService)
+                    .updateParticipantRole(1L, 1L, request);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            patch("/albums/1/participants/1/role")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.FORBIDDEN.value()))
+                    .andExpect(jsonPath("$.data.code").value("NOT_ALBUM_HOST"))
+                    .andExpect(jsonPath("$.data.message").value("방장이 아닌 경우 권한이 없습니다."));
+        }
+
+        @Test
+        void 앨범_방장이_자기_자신의_권한을_변경하려는_경우_예외가_발생한다() throws Exception {
+            // given
+            ParticipantRoleUpdateRequest request =
+                    new ParticipantRoleUpdateRequest(ParticipantRole.LIMITED);
+
+            willThrow(new CustomException(AlbumErrorCode.HOST_SELF_ROLE_CHANGE_NOT_ALLOWED))
+                    .given(participantService)
+                    .updateParticipantRole(1L, 1L, request);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            patch("/albums/1/participants/1/role")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("HOST_SELF_ROLE_CHANGE_NOT_ALLOWED"))
+                    .andExpect(jsonPath("$.data.message").value("방장은 자기 자신의 권한을 직접 변경할 수 없습니다."));
+        }
+
+        @Test
+        void 권한_변경_대상_참가자가_존재하지_않는_경우_예외가_발생한다() throws Exception {
+            // given
+            ParticipantRoleUpdateRequest request =
+                    new ParticipantRoleUpdateRequest(ParticipantRole.LIMITED);
+
+            willThrow(new CustomException(ParticipantErrorCode.PARTICIPANT_NOT_FOUND))
+                    .given(participantService)
+                    .updateParticipantRole(1L, 1L, request);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            patch("/albums/1/participants/1/role")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.NOT_FOUND.value()))
+                    .andExpect(jsonPath("$.data.code").value("PARTICIPANT_NOT_FOUND"))
+                    .andExpect(jsonPath("$.data.message").value("참가자를 찾을 수 없습니다."));
+        }
+
+        @Test
+        void 권한_변경_대상이_앨범_참가자가_아닌_경우_예외가_발생한다() throws Exception {
+            // given
+            ParticipantRoleUpdateRequest request =
+                    new ParticipantRoleUpdateRequest(ParticipantRole.LIMITED);
+
+            willThrow(new CustomException(AlbumErrorCode.PARTICIPANT_NOT_IN_ALBUM))
+                    .given(participantService)
+                    .updateParticipantRole(1L, 1L, request);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            patch("/albums/1/participants/1/role")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("PARTICIPANT_NOT_IN_ALBUM"))
+                    .andExpect(jsonPath("$.data.message").value("해당 참가자는 이 앨범에 속해 있지 않습니다."));
+        }
+
+        @Test
+        void 현재_권한과_같은_권한으로_변경하려는_경우_예외가_발생한다() throws Exception {
+            // given
+            ParticipantRoleUpdateRequest request =
+                    new ParticipantRoleUpdateRequest(ParticipantRole.STANDARD);
+
+            willThrow(new CustomException(ParticipantErrorCode.ROLE_ALREADY_ASSIGNED))
+                    .given(participantService)
+                    .updateParticipantRole(1L, 1L, request);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            patch("/albums/1/participants/1/role")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isConflict())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.CONFLICT.value()))
+                    .andExpect(jsonPath("$.data.code").value("ROLE_ALREADY_ASSIGNED"))
+                    .andExpect(jsonPath("$.data.message").value("이미 해당 권한이 부여되어 있습니다."));
+        }
+
+        @Test
+        void 구독_중인_앨범에서_방장_권한을_넘기려는_경우_예외가_발생한다() throws Exception {
+            // given
+            ParticipantRoleUpdateRequest request =
+                    new ParticipantRoleUpdateRequest(ParticipantRole.HOST);
+
+            willThrow(
+                            new CustomException(
+                                    AlbumErrorCode.SUBSCRIPTION_ACTIVE_HOST_TRANSFER_NOT_ALLOWED))
+                    .given(participantService)
+                    .updateParticipantRole(1L, 1L, request);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            patch("/albums/1/participants/1/role")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(
+                            jsonPath("$.data.code")
+                                    .value("SUBSCRIPTION_ACTIVE_HOST_TRANSFER_NOT_ALLOWED"))
+                    .andExpect(jsonPath("$.data.message").value("구독 중인 앨범에서는 방장 권한을 넘길 수 없습니다."));
+        }
+
+        @Test
+        void 권한_변경_기능이_비활성화된_앨범의_경우_예외가_발생한다() throws Exception {
+            // given
+            ParticipantRoleUpdateRequest request =
+                    new ParticipantRoleUpdateRequest(ParticipantRole.LIMITED);
+
+            willThrow(new CustomException(AlbumErrorCode.PERMISSION_CONTROL_NOT_AVAILABLE))
+                    .given(participantService)
+                    .updateParticipantRole(1L, 1L, request);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            patch("/albums/1/participants/1/role")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("PERMISSION_CONTROL_NOT_AVAILABLE"))
+                    .andExpect(jsonPath("$.data.message").value("참가자 권한 변경 기능이 비활성화된 앨범입니다."));
+        }
+
+        @ParameterizedTest
+        @NullSource
+        @EmptySource
+        @ValueSource(strings = {" ", "HOSTT", "STANDARDD", "LIMITEDD"})
+        void 참가자_권한이_null_또는_지원하지_않는_형식이면_예외가_발생한다(String role) throws Exception {
+            // given
+            ParticipantRoleUpdateRequest request =
+                    new ParticipantRoleUpdateRequest(ParticipantRole.from(role));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            patch("/albums/1/participants/1/role")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("MethodArgumentNotValidException"))
+                    .andExpect(
+                            jsonPath("$.data.message")
+                                    .value("참가자 권한은 비워둘 수 없으며, HOST, STANDARD, LIMITED만 지원됩니다."));
         }
     }
 
