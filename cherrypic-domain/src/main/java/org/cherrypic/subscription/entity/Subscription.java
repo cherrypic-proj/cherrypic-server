@@ -65,7 +65,7 @@ public class Subscription extends BaseTimeEntity {
                 .status(SubscriptionStatus.ACTIVE)
                 .startAt(paidAt)
                 .endAt(paidAt.plusMonths(1))
-                .nextBillingAt(paidAt.plusMonths(1).plusDays(1))
+                .nextBillingAt(paidAt.plusMonths(1).minusDays(3))
                 .build();
     }
 
@@ -74,9 +74,22 @@ public class Subscription extends BaseTimeEntity {
             throw new CustomException(SubscriptionDomainErrorCode.ALREADY_CANCELED);
         }
         if (this.endAt.isBefore(LocalDateTime.now())) {
-            throw new CustomException(SubscriptionDomainErrorCode.ALREADY_ENDED);
+            throw new CustomException(SubscriptionDomainErrorCode.ALREADY_EXPIRED);
         }
 
         this.status = SubscriptionStatus.CANCELED;
+    }
+
+    public void renew() {
+        if (this.endAt.isBefore(LocalDateTime.now())) {
+            throw new CustomException(SubscriptionDomainErrorCode.ALREADY_EXPIRED);
+        }
+        if (this.status == SubscriptionStatus.ACTIVE) {
+            throw new CustomException(SubscriptionDomainErrorCode.ALREADY_ACTIVE);
+        }
+
+        this.status = SubscriptionStatus.ACTIVE;
+        this.endAt = this.endAt.plusMonths(1);
+        this.nextBillingAt = this.endAt.minusDays(3);
     }
 }
