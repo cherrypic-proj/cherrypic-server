@@ -165,7 +165,7 @@ class SubscriptionServiceTest extends IntegrationTest {
             // when & then
             assertThatThrownBy(() -> subscriptionService.cancelSubscription(3L))
                     .isInstanceOf(CustomException.class)
-                    .hasMessage(SubscriptionDomainErrorCode.ALREADY_ENDED.getMessage());
+                    .hasMessage(SubscriptionDomainErrorCode.ALREADY_EXPIRED.getMessage());
         }
     }
 
@@ -440,14 +440,14 @@ class SubscriptionServiceTest extends IntegrationTest {
         }
 
         @Test
-        void 종료된_구독이면_예외가_발생한다() {
+        void 만료된_구독이면_예외가_발생한다() {
             // given
             SubscriptionRenewRequest request = new SubscriptionRenewRequest(1L);
 
             // when & then
             assertThatThrownBy(() -> subscriptionService.renewSubscription(7L, request))
                     .isInstanceOf(CustomException.class)
-                    .hasMessage(SubscriptionDomainErrorCode.ALREADY_ENDED.getMessage());
+                    .hasMessage(SubscriptionDomainErrorCode.ALREADY_EXPIRED.getMessage());
         }
     }
 }

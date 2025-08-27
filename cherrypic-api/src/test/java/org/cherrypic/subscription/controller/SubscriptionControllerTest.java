@@ -7,7 +7,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDateTime;
-import org.cherrypic.domain.album.dto.response.*;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.payment.exception.PaymentErrorCode;
 import org.cherrypic.domain.subscription.controller.SubscriptionController;
@@ -165,7 +164,7 @@ class SubscriptionControllerTest {
         @Test
         void 종료된_구독이면_예외가_발생한다() throws Exception {
             // given
-            willThrow(new CustomException(SubscriptionDomainErrorCode.ALREADY_ENDED))
+            willThrow(new CustomException(SubscriptionDomainErrorCode.ALREADY_EXPIRED))
                     .given(subscriptionService)
                     .cancelSubscription(1L);
 
@@ -461,12 +460,12 @@ class SubscriptionControllerTest {
         }
 
         @Test
-        void 종료된_구독이면_예외가_발생한다() throws Exception {
+        void 만료된_구독이면_예외가_발생한다() throws Exception {
             // given
             SubscriptionRenewRequest request = new SubscriptionRenewRequest(1L);
 
             given(subscriptionService.renewSubscription(1L, request))
-                    .willThrow(new CustomException(SubscriptionDomainErrorCode.ALREADY_ENDED));
+                    .willThrow(new CustomException(SubscriptionDomainErrorCode.ALREADY_EXPIRED));
 
             // when & then
             ResultActions perform =
@@ -479,7 +478,7 @@ class SubscriptionControllerTest {
                     .andExpect(jsonPath("$.success").value(false))
                     .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
                     .andExpect(jsonPath("$.data.code").value("ALREADY_ENDED"))
-                    .andExpect(jsonPath("$.data.message").value("이미 종료된 구독입니다. 해지 또는 갱신할 수 없습니다."));
+                    .andExpect(jsonPath("$.data.message").value("이미 만료된 구독입니다. 해지 또는 갱신할 수 없습니다."));
         }
     }
 }
