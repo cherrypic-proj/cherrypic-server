@@ -226,6 +226,8 @@ class AlbumServiceTest extends IntegrationTest {
                         new AlbumCreateRequest(
                                 "testTitle", "testCoverUrl", AlbumPlan.PRO, 1L, true);
 
+                LocalDateTime startAt = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
+
                 // when
                 albumService.createAlbum(request);
 
@@ -275,25 +277,16 @@ class AlbumServiceTest extends IntegrationTest {
                                                 subscription
                                                         .getStartAt()
                                                         .truncatedTo(ChronoUnit.MINUTES))
-                                        .isEqualTo(
-                                                LocalDateTime.now()
-                                                        .truncatedTo(ChronoUnit.MINUTES)),
+                                        .isEqualTo(startAt),
                         () ->
                                 assertThat(subscription.getEndAt().truncatedTo(ChronoUnit.MINUTES))
-                                        .isEqualTo(
-                                                LocalDateTime.now()
-                                                        .truncatedTo(ChronoUnit.MINUTES)
-                                                        .plusMonths(1)),
+                                        .isEqualTo(startAt.plusMonths(1)),
                         () ->
                                 assertThat(
                                                 subscription
                                                         .getNextBillingAt()
                                                         .truncatedTo(ChronoUnit.MINUTES))
-                                        .isEqualTo(
-                                                LocalDateTime.now()
-                                                        .truncatedTo(ChronoUnit.MINUTES)
-                                                        .plusMonths(1)
-                                                        .plusDays(1)));
+                                        .isEqualTo(startAt.plusMonths(1).minusDays(3)));
             }
 
             @Test

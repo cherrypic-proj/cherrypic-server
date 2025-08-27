@@ -310,7 +310,7 @@ class SubscriptionServiceTest extends IntegrationTest {
                                             subscription
                                                     .getNextBillingAt()
                                                     .truncatedTo(ChronoUnit.MINUTES))
-                                    .isEqualTo(previousEndAt.plusMonths(1).plusDays(1)));
+                                    .isEqualTo(previousEndAt.plusMonths(1).minusDays(3)));
         }
 
         @Test

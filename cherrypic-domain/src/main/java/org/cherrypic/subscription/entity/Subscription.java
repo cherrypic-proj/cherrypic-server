@@ -65,7 +65,7 @@ public class Subscription extends BaseTimeEntity {
                 .status(SubscriptionStatus.ACTIVE)
                 .startAt(paidAt)
                 .endAt(paidAt.plusMonths(1))
-                .nextBillingAt(paidAt.plusMonths(1).plusDays(1))
+                .nextBillingAt(paidAt.plusMonths(1).minusDays(3))
                 .build();
     }
 
@@ -90,6 +90,6 @@ public class Subscription extends BaseTimeEntity {
 
         this.status = SubscriptionStatus.ACTIVE;
         this.endAt = this.endAt.plusMonths(1);
-        this.nextBillingAt = this.endAt.plusDays(1);
+        this.nextBillingAt = this.endAt.minusDays(3);
     }
 }
