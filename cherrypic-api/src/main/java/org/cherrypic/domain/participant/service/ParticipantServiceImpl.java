@@ -4,9 +4,11 @@ import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.cherrypic.album.entity.Album;
+import org.cherrypic.album.enums.AlbumPlan;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.album.repository.AlbumRepository;
 import org.cherrypic.domain.notification.repository.NotificationRepository;
+import org.cherrypic.domain.participant.dto.request.ParticipantRoleUpdateRequest;
 import org.cherrypic.domain.participant.dto.response.ParticipantListResponse;
 import org.cherrypic.domain.participant.exception.ParticipantErrorCode;
 import org.cherrypic.domain.participant.repository.ParticipantRepository;
@@ -16,6 +18,7 @@ import org.cherrypic.global.util.MemberUtil;
 import org.cherrypic.member.entity.Member;
 import org.cherrypic.participant.entity.Participant;
 import org.cherrypic.participant.enums.ParticipantRole;
+import org.cherrypic.subscription.enums.SubscriptionStatus;
 import org.springframework.data.domain.Slice;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
@@ -66,6 +69,30 @@ public class ParticipantServiceImpl implements ParticipantService {
             notificationRepository.deleteByReceiverIdAndAlbumId(
                     target.getMember().getId(), album.getId());
         } catch (ObjectOptimisticLockingFailureException ignored) {
+        }
+    }
+
+    @Override
+    public void updateParticipantRole(
+            Long albumId, Long participantId, ParticipantRoleUpdateRequest request) {
+        final Member currentMember = memberUtil.getCurrentMember();
+        final Album album = getAlbumById(albumId);
+        final Participant requester =
+                getParticipantByMemberIdAndAlbumId(currentMember.getId(), album.getId());
+        final Participant target = getParticipantById(participantId);
+
+        validateAlbumHost(requester);
+        validateSelfRoleChange(requester, target);
+        validateParticipantBelongsToAlbum(target, album);
+
+        final ParticipantRole newRole = request.role();
+
+        validateNotSameRole(target, newRole);
+
+        target.changeRole(newRole);
+        if (newRole == ParticipantRole.HOST) {
+            validateSubscriptionInactive(album);
+            requester.changeRole(ParticipantRole.STANDARD);
         }
     }
 
@@ -147,9 +174,29 @@ public class ParticipantServiceImpl implements ParticipantService {
         }
     }
 
+    private void validateSelfRoleChange(Participant requester, Participant target) {
+        if (requester.getId().equals(target.getId())) {
+            throw new CustomException(AlbumErrorCode.HOST_SELF_ROLE_CHANGE_NOT_ALLOWED);
+        }
+    }
+
     private void validateParticipantBelongsToAlbum(Participant target, Album album) {
         if (!target.getAlbum().getId().equals(album.getId())) {
             throw new CustomException(AlbumErrorCode.PARTICIPANT_NOT_IN_ALBUM);
+        }
+    }
+
+    private void validateSubscriptionInactive(Album album) {
+        if (album.getPlan() == AlbumPlan.BASIC) return;
+
+        if (album.getSubscription().getStatus() == SubscriptionStatus.ACTIVE) {
+            throw new CustomException(AlbumErrorCode.SUBSCRIPTION_ACTIVE_HOST_TRANSFER_NOT_ALLOWED);
+        }
+    }
+
+    private void validateNotSameRole(Participant target, ParticipantRole role) {
+        if (target.getRole() == role) {
+            throw new CustomException(ParticipantErrorCode.ROLE_ALREADY_ASSIGNED);
         }
     }
 }

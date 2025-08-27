@@ -50,4 +50,8 @@ public class Participant extends BaseTimeEntity {
     public void assignFavorites() {
         this.favorites = Favorites.createFavorites(this);
     }
+
+    public void changeRole(ParticipantRole role) {
+        this.role = role;
+    }
 }
