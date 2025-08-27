@@ -89,8 +89,7 @@ public class Subscription extends BaseTimeEntity {
         }
 
         this.status = SubscriptionStatus.ACTIVE;
-        this.startAt = this.endAt.plusDays(1);
-        this.endAt = this.startAt.plusMonths(1);
+        this.endAt = this.endAt.plusMonths(1);
         this.nextBillingAt = this.endAt.plusDays(1);
     }
 }

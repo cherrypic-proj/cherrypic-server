@@ -270,7 +270,7 @@ class SubscriptionServiceTest extends IntegrationTest {
         }
 
         @Test
-        void 유효한_요청이면_구독을_갱신하고_결제에_앨범을_정상_연결한다() {
+        void 유효한_요청이면_구독을_갱신하고_결제에_앨범을_연결한다() {
             // given
             Subscription canceledSubscription = subscriptionRepository.findById(1L).get();
             LocalDateTime previousEndAt =
@@ -303,17 +303,14 @@ class SubscriptionServiceTest extends IntegrationTest {
                                     .extracting("id", "member.id", "album.id", "status")
                                     .containsExactly(1L, 1L, 1L, SubscriptionStatus.ACTIVE),
                     () ->
-                            assertThat(subscription.getStartAt().truncatedTo(ChronoUnit.MINUTES))
-                                    .isEqualTo(previousEndAt.plusDays(1)),
-                    () ->
                             assertThat(subscription.getEndAt().truncatedTo(ChronoUnit.MINUTES))
-                                    .isEqualTo(previousEndAt.plusMonths(1).plusDays(1)),
+                                    .isEqualTo(previousEndAt.plusMonths(1)),
                     () ->
                             assertThat(
                                             subscription
                                                     .getNextBillingAt()
                                                     .truncatedTo(ChronoUnit.MINUTES))
-                                    .isEqualTo(previousEndAt.plusMonths(1).plusDays(2)));
+                                    .isEqualTo(previousEndAt.plusMonths(1).plusDays(1)));
         }
 
         @Test
