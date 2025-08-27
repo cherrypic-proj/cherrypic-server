@@ -174,8 +174,8 @@ class SubscriptionControllerTest {
             perform.andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.success").value(false))
                     .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
-                    .andExpect(jsonPath("$.data.code").value("ALREADY_ENDED"))
-                    .andExpect(jsonPath("$.data.message").value("이미 종료된 구독입니다. 해지 또는 갱신할 수 없습니다."));
+                    .andExpect(jsonPath("$.data.code").value("ALREADY_EXPIRED"))
+                    .andExpect(jsonPath("$.data.message").value("이미 만료된 구독입니다. 해지 또는 갱신할 수 없습니다."));
         }
     }
 
@@ -477,7 +477,7 @@ class SubscriptionControllerTest {
             perform.andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.success").value(false))
                     .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
-                    .andExpect(jsonPath("$.data.code").value("ALREADY_ENDED"))
+                    .andExpect(jsonPath("$.data.code").value("ALREADY_EXPIRED"))
                     .andExpect(jsonPath("$.data.message").value("이미 만료된 구독입니다. 해지 또는 갱신할 수 없습니다."));
         }
     }
