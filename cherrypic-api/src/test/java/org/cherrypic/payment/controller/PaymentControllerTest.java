@@ -385,7 +385,7 @@ class PaymentControllerTest {
     }
 
     @Nested
-    class 앨범_유료_플랜_결제_검증_요청_시 {
+    class 결제_검증_요청_시 {
 
         @Test
         void 유효한_요청이면_결제_ID를_반환한다() throws Exception {

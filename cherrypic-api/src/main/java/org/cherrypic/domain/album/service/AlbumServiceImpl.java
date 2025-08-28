@@ -58,7 +58,7 @@ public class AlbumServiceImpl implements AlbumService {
     public AlbumCreateResponse createAlbum(AlbumCreateRequest request) {
         final Member currentMember = memberUtil.getCurrentMember();
 
-        validatePaymentRequirementForPlan(request.type(), request.paymentId());
+        validatePaymentRequirementForType(request.type(), request.paymentId());
 
         validatePermissionControl(request.type(), request.permissionControl());
 
@@ -194,12 +194,12 @@ public class AlbumServiceImpl implements AlbumService {
     @Override
     @Transactional(readOnly = true)
     public SliceResponse<AlbumListResponse> getParticipatingAlbumsByCondition(
-            AlbumType plan, String keyword, Long lastAlbumId, int size, SortDirection direction) {
+            AlbumType type, String keyword, Long lastAlbumId, int size, SortDirection direction) {
         final Member currentMember = memberUtil.getCurrentMember();
 
         Slice<AlbumListResponse> results =
-                albumRepository.findAllByMemberIdAndPlanAndKeyword(
-                        currentMember.getId(), plan, keyword, lastAlbumId, size, direction);
+                albumRepository.findAllByMemberIdAndTypeAndKeyword(
+                        currentMember.getId(), type, keyword, lastAlbumId, size, direction);
 
         return SliceResponse.from(results);
     }
@@ -257,18 +257,18 @@ public class AlbumServiceImpl implements AlbumService {
         }
     }
 
-    private void validatePermissionControl(AlbumType plan, Boolean permissionControl) {
-        if (plan == AlbumType.BASIC && permissionControl) {
+    private void validatePermissionControl(AlbumType type, Boolean permissionControl) {
+        if (type == AlbumType.BASIC && permissionControl) {
             throw new CustomException(AlbumErrorCode.PERMISSION_CONTROL_NOT_ALLOWED_FOR_BASIC_TYPE);
         }
     }
 
-    private void validatePaymentRequirementForPlan(AlbumType plan, Long paymentId) {
-        if (plan.requiresPayment() && paymentId == null) {
+    private void validatePaymentRequirementForType(AlbumType type, Long paymentId) {
+        if (type.requiresPayment() && paymentId == null) {
             throw new CustomException(AlbumErrorCode.PAYMENT_REQUIRED_FOR_PAID_TYPE);
         }
 
-        if (!plan.requiresPayment() && paymentId != null) {
+        if (!type.requiresPayment() && paymentId != null) {
             throw new CustomException(AlbumErrorCode.PAYMENT_NOT_REQUIRED_FOR_BASIC_TYPE);
         }
     }

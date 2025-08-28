@@ -6,7 +6,7 @@ import org.cherrypic.global.pagination.SortDirection;
 import org.springframework.data.domain.Slice;
 
 public interface AlbumRepositoryCustom {
-    Slice<AlbumListResponse> findAllByMemberIdAndPlanAndKeyword(
+    Slice<AlbumListResponse> findAllByMemberIdAndTypeAndKeyword(
             Long memberId,
             AlbumType type,
             String keyword,

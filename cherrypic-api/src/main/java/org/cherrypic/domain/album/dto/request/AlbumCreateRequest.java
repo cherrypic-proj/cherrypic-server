@@ -16,7 +16,7 @@ public record AlbumCreateRequest(
         @Enum(message = "앨범 유형은 비워둘 수 없으며, BASIC, PRO, PREMIUM만 지원됩니다.")
                 @Schema(description = "앨범 유형 (BASIC: 무료, PRO/PREMIUM: 유료)", example = "BASIC")
                 AlbumType type,
-        @Schema(description = "유료 플랜(PRO, PREMIUM)인 경우 필수. 결제 검증 후 받은 결제 ID", example = "1")
+        @Schema(description = "유료 앨범 유형(PRO, PREMIUM)인 경우 필수. 결제 검증 후 받은 결제 ID", example = "1")
                 Long paymentId,
         @NotNull(message = "권한 부여 활성화 여부는 비워둘 수 없습니다.")
                 @Schema(description = "권한 부여 활성화 여부", example = "false")

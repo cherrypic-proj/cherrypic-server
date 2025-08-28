@@ -23,7 +23,7 @@ public class AlbumRepositoryImpl implements AlbumRepositoryCustom {
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public Slice<AlbumListResponse> findAllByMemberIdAndPlanAndKeyword(
+    public Slice<AlbumListResponse> findAllByMemberIdAndTypeAndKeyword(
             Long memberId,
             AlbumType type,
             String keyword,
