@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.siot.IamportRestClient.IamportClient;
 import com.siot.IamportRestClient.exception.IamportResponseException;
@@ -19,7 +18,7 @@ import okhttp3.MediaType;
 import okhttp3.ResponseBody;
 import org.cherrypic.IntegrationTest;
 import org.cherrypic.album.entity.Album;
-import org.cherrypic.album.enums.AlbumPlan;
+import org.cherrypic.album.enums.AlbumType;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.album.repository.AlbumRepository;
 import org.cherrypic.domain.member.repository.MemberRepository;
@@ -62,47 +61,44 @@ public class PaymentServiceTest extends IntegrationTest {
     @Mock private IamportResponse<com.siot.IamportRestClient.response.Payment> iamportResponse;
     @Mock private com.siot.IamportRestClient.response.Payment iamportPayment;
 
-    private Member member;
-
-    @BeforeEach
-    void setUp() {
-        member =
-                Member.createMember(
-                        OauthInfo.createOauthInfo("testOauthId", "testOauthProvider"),
-                        "testNickname",
-                        "testProfileImageUrl");
-        memberRepository.save(member);
-
-        given(memberUtil.getCurrentMember()).willReturn(member);
-
-        Album proAlbum = Album.createAlbum("testTitle1", "testCoverUrl1", AlbumPlan.PRO, false);
-        Album premiumAlbum =
-                Album.createAlbum("testTitle2", "testCoverUrl2", AlbumPlan.PREMIUM, false);
-        Album basicAlbum1 =
-                Album.createAlbum("testTitle3", "testCoverUrl3", AlbumPlan.BASIC, false);
-        Album basicAlbum2 =
-                Album.createAlbum("testTitle4", "testCoverUrl4", AlbumPlan.BASIC, false);
-        albumRepository.saveAll(List.of(proAlbum, premiumAlbum, basicAlbum1, basicAlbum2));
-
-        Participant participant1 =
-                Participant.createParticipant(member, proAlbum, ParticipantRole.HOST);
-        Participant participant2 =
-                Participant.createParticipant(member, premiumAlbum, ParticipantRole.HOST);
-        Participant participant3 =
-                Participant.createParticipant(member, basicAlbum2, ParticipantRole.STANDARD);
-        participantRepository.saveAll(List.of(participant1, participant2, participant3));
-    }
-
     @Nested
     class 결제를_준비할_때 {
 
+        @BeforeEach
+        void setUp() {
+            Member member =
+                    Member.createMember(
+                            OauthInfo.createOauthInfo("testOauthId", "testOauthProvider"),
+                            "testNickname",
+                            "testProfileImageUrl");
+            memberRepository.save(member);
+            given(memberUtil.getCurrentMember()).willReturn(member);
+
+            Album proAlbum = Album.createAlbum("testTitle1", "testCoverUrl1", AlbumType.PRO, false);
+            Album premiumAlbum =
+                    Album.createAlbum("testTitle2", "testCoverUrl2", AlbumType.PREMIUM, false);
+            Album basicAlbum1 =
+                    Album.createAlbum("testTitle3", "testCoverUrl3", AlbumType.BASIC, false);
+            Album basicAlbum2 =
+                    Album.createAlbum("testTitle4", "testCoverUrl4", AlbumType.BASIC, false);
+            albumRepository.saveAll(List.of(proAlbum, premiumAlbum, basicAlbum1, basicAlbum2));
+
+            Participant participant1 =
+                    Participant.createParticipant(member, proAlbum, ParticipantRole.HOST);
+            Participant participant2 =
+                    Participant.createParticipant(member, premiumAlbum, ParticipantRole.HOST);
+            Participant participant3 =
+                    Participant.createParticipant(member, basicAlbum2, ParticipantRole.STANDARD);
+            participantRepository.saveAll(List.of(participant1, participant2, participant3));
+        }
+
         @Nested
-        class 유료_앨범_최초_생성의_경우 {
+        class 유료_앨범_생성의_경우 {
 
             @Test
             void CREATION_목적의_결제_준비_정보를_생성한다() {
                 // given
-                PaymentReadyRequest request = new PaymentReadyRequest(AlbumPlan.PRO, null);
+                PaymentReadyRequest request = new PaymentReadyRequest(AlbumType.PRO, null);
 
                 // when
                 paymentService.preparePayment(request);
@@ -126,7 +122,7 @@ public class PaymentServiceTest extends IntegrationTest {
             @Test
             void RENEWAL_목적의_결제_준비_정보를_생성한다() {
                 // given
-                PaymentReadyRequest request = new PaymentReadyRequest(AlbumPlan.PRO, 1L);
+                PaymentReadyRequest request = new PaymentReadyRequest(AlbumType.PRO, 1L);
 
                 // when
                 paymentService.preparePayment(request);
@@ -144,9 +140,9 @@ public class PaymentServiceTest extends IntegrationTest {
             }
 
             @Test
-            void 하위_플랜으로_결제_준비를_요청하면_예외가_발생한다() {
+            void 하위_앨범_유형으로_결제_준비를_요청하면_예외가_발생한다() {
                 // given
-                PaymentReadyRequest request = new PaymentReadyRequest(AlbumPlan.PRO, 2L);
+                PaymentReadyRequest request = new PaymentReadyRequest(AlbumType.PRO, 2L);
 
                 // when & then
                 assertThatThrownBy(() -> paymentService.preparePayment(request))
@@ -157,7 +153,7 @@ public class PaymentServiceTest extends IntegrationTest {
             @Test
             void 앨범이_존재하지_않는_경우_예외가_발생한다() {
                 // given
-                PaymentReadyRequest request = new PaymentReadyRequest(AlbumPlan.PRO, 999L);
+                PaymentReadyRequest request = new PaymentReadyRequest(AlbumType.PRO, 999L);
 
                 // when & then
                 assertThatThrownBy(() -> paymentService.preparePayment(request))
@@ -168,7 +164,7 @@ public class PaymentServiceTest extends IntegrationTest {
             @Test
             void 앨범_참가자가_아닌_경우_예외가_발생한다() {
                 // given
-                PaymentReadyRequest request = new PaymentReadyRequest(AlbumPlan.PRO, 3L);
+                PaymentReadyRequest request = new PaymentReadyRequest(AlbumType.PRO, 3L);
 
                 // when & then
                 assertThatThrownBy(() -> paymentService.preparePayment(request))
@@ -179,7 +175,7 @@ public class PaymentServiceTest extends IntegrationTest {
             @Test
             void 앨범_방장이_아닌_경우_예외가_발생한다() {
                 // given
-                PaymentReadyRequest request = new PaymentReadyRequest(AlbumPlan.PRO, 4L);
+                PaymentReadyRequest request = new PaymentReadyRequest(AlbumType.PRO, 4L);
 
                 // when & then
                 assertThatThrownBy(() -> paymentService.preparePayment(request))
@@ -194,7 +190,7 @@ public class PaymentServiceTest extends IntegrationTest {
             @Test
             void UPGRADE_목적의_결제_준비_정보를_생성한다() {
                 // given
-                PaymentReadyRequest request = new PaymentReadyRequest(AlbumPlan.PREMIUM, 1L);
+                PaymentReadyRequest request = new PaymentReadyRequest(AlbumType.PREMIUM, 1L);
 
                 // when
                 paymentService.preparePayment(request);
@@ -212,9 +208,9 @@ public class PaymentServiceTest extends IntegrationTest {
             }
 
             @Test
-            void 하위_플랜으로_결제_준비를_요청하면_예외가_발생한다() {
+            void 하위_앨범_유형으로_결제_준비를_요청하면_예외가_발생한다() {
                 // given
-                PaymentReadyRequest request = new PaymentReadyRequest(AlbumPlan.PRO, 2L);
+                PaymentReadyRequest request = new PaymentReadyRequest(AlbumType.PRO, 2L);
 
                 // when & then
                 assertThatThrownBy(() -> paymentService.preparePayment(request))
@@ -225,7 +221,7 @@ public class PaymentServiceTest extends IntegrationTest {
             @Test
             void 앨범이_존재하지_않는_경우_예외가_발생한다() {
                 // given
-                PaymentReadyRequest request = new PaymentReadyRequest(AlbumPlan.PREMIUM, 999L);
+                PaymentReadyRequest request = new PaymentReadyRequest(AlbumType.PREMIUM, 999L);
 
                 // when & then
                 assertThatThrownBy(() -> paymentService.preparePayment(request))
@@ -236,7 +232,7 @@ public class PaymentServiceTest extends IntegrationTest {
             @Test
             void 앨범_참가자가_아닌_경우_예외가_발생한다() {
                 // given
-                PaymentReadyRequest request = new PaymentReadyRequest(AlbumPlan.PREMIUM, 3L);
+                PaymentReadyRequest request = new PaymentReadyRequest(AlbumType.PREMIUM, 3L);
 
                 // when & then
                 assertThatThrownBy(() -> paymentService.preparePayment(request))
@@ -247,7 +243,7 @@ public class PaymentServiceTest extends IntegrationTest {
             @Test
             void 앨범_방장이_아닌_경우_예외가_발생한다() {
                 // given
-                PaymentReadyRequest request = new PaymentReadyRequest(AlbumPlan.PREMIUM, 4L);
+                PaymentReadyRequest request = new PaymentReadyRequest(AlbumType.PREMIUM, 4L);
 
                 // when & then
                 assertThatThrownBy(() -> paymentService.preparePayment(request))
@@ -257,19 +253,19 @@ public class PaymentServiceTest extends IntegrationTest {
         }
 
         @Test
-        void BASIC_플랜으로_결제_준비를_요청하면_예외가_발생한다() {
+        void BASIC_유형으로_결제_준비를_요청하면_예외가_발생한다() {
             // given
-            PaymentReadyRequest request = new PaymentReadyRequest(AlbumPlan.BASIC, null);
+            PaymentReadyRequest request = new PaymentReadyRequest(AlbumType.BASIC, null);
 
             // when & then
             assertThatThrownBy(() -> paymentService.preparePayment(request))
                     .isInstanceOf(CustomException.class)
-                    .hasMessage(PaymentErrorCode.UNSUPPORTED_PAYMENT_PLAN.getMessage());
+                    .hasMessage(PaymentErrorCode.UNSUPPORTED_PAYMENT.getMessage());
         }
     }
 
     @Nested
-    class 앨범_유료_플랜_결제를_검증할_때 {
+    class 결제를_검증할_때 {
 
         private static final String MERCHANT_UID_EXISTING = "album_20250724_pro_1_a5c5dd8beaa6";
         private static final String MERCHANT_UID_NON_EXISTING =
@@ -277,6 +273,14 @@ public class PaymentServiceTest extends IntegrationTest {
 
         @BeforeEach
         void setUp() {
+            Member member =
+                    Member.createMember(
+                            OauthInfo.createOauthInfo("testOauthId", "testOauthProvider"),
+                            "testNickname",
+                            "testProfileImageUrl");
+            memberRepository.save(member);
+            given(memberUtil.getCurrentMember()).willReturn(member);
+
             paymentRepository.save(
                     Payment.createPayment(
                             member, MERCHANT_UID_EXISTING, 3900, PaymentPurpose.CREATION));

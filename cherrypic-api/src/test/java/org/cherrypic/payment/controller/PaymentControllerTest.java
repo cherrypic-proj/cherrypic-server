@@ -6,7 +6,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.cherrypic.album.enums.AlbumPlan;
+import org.cherrypic.album.enums.AlbumType;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.payment.controller.PaymentController;
 import org.cherrypic.domain.payment.dto.request.PaymentReadyRequest;
@@ -44,16 +44,16 @@ class PaymentControllerTest {
     class 결제_준비_요청_시 {
 
         @Nested
-        class 유료_앨범_최초_생성의_경우 {
+        class 유료_앨범_생성의_경우 {
 
             @Test
             void CREATION_목적의_결제_준비_정보를_반환한다() throws Exception {
                 // given
-                PaymentReadyRequest request = new PaymentReadyRequest(AlbumPlan.PRO, null);
+                PaymentReadyRequest request = new PaymentReadyRequest(AlbumType.PRO, null);
 
                 PaymentReadyResponse response =
                         new PaymentReadyResponse(
-                                AlbumPlan.PRO,
+                                AlbumType.PRO,
                                 3900,
                                 "album_20250723_pro_1_a5c5dd8beaa6",
                                 "상냥한 너구리",
@@ -71,7 +71,7 @@ class PaymentControllerTest {
                 perform.andExpect(status().isOk())
                         .andExpect(jsonPath("$.success").value(true))
                         .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
-                        .andExpect(jsonPath("$.data.plan").value("PRO"))
+                        .andExpect(jsonPath("$.data.type").value("PRO"))
                         .andExpect(jsonPath("$.data.price").value("3900"))
                         .andExpect(
                                 jsonPath("$.data.merchantUid")
@@ -87,11 +87,11 @@ class PaymentControllerTest {
             @Test
             void RENEWAL_목적의_결제_준비_정보를_반환한다() throws Exception {
                 // given
-                PaymentReadyRequest request = new PaymentReadyRequest(AlbumPlan.PRO, 1L);
+                PaymentReadyRequest request = new PaymentReadyRequest(AlbumType.PRO, 1L);
 
                 PaymentReadyResponse response =
                         new PaymentReadyResponse(
-                                AlbumPlan.PRO,
+                                AlbumType.PRO,
                                 5900,
                                 "album_20250723_pro_1_a5c5dd8beaa6",
                                 "상냥한 너구리",
@@ -109,7 +109,7 @@ class PaymentControllerTest {
                 perform.andExpect(status().isOk())
                         .andExpect(jsonPath("$.success").value(true))
                         .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
-                        .andExpect(jsonPath("$.data.plan").value("PRO"))
+                        .andExpect(jsonPath("$.data.type").value("PRO"))
                         .andExpect(jsonPath("$.data.price").value("5900"))
                         .andExpect(
                                 jsonPath("$.data.merchantUid")
@@ -119,9 +119,9 @@ class PaymentControllerTest {
             }
 
             @Test
-            void 하위_플랜으로_결제_준비를_요청하면_예외가_발생한다() throws Exception {
+            void 하위_앨범_유형으로_결제_준비를_요청하면_예외가_발생한다() throws Exception {
                 // given
-                PaymentReadyRequest request = new PaymentReadyRequest(AlbumPlan.PRO, 1L);
+                PaymentReadyRequest request = new PaymentReadyRequest(AlbumType.PRO, 1L);
 
                 given(paymentService.preparePayment(request))
                         .willThrow(new CustomException(PaymentErrorCode.DOWNGRADE_NOT_ALLOWED));
@@ -139,13 +139,13 @@ class PaymentControllerTest {
                         .andExpect(jsonPath("$.data.code").value("DOWNGRADE_NOT_ALLOWED"))
                         .andExpect(
                                 jsonPath("$.data.message")
-                                        .value("현재 구독 플랜보다 낮은 플랜으로는 결제를 진행할 수 없습니다."));
+                                        .value("현재 앨범 유형보다 낮은 유형으로 결제를 진행할 수 없습니다."));
             }
 
             @Test
             void 앨범이_존재하지_않는_경우_예외가_발생한다() throws Exception {
                 // given
-                PaymentReadyRequest request = new PaymentReadyRequest(AlbumPlan.PRO, 1L);
+                PaymentReadyRequest request = new PaymentReadyRequest(AlbumType.PRO, 1L);
 
                 given(paymentService.preparePayment(request))
                         .willThrow(new CustomException(AlbumErrorCode.ALBUM_NOT_FOUND));
@@ -167,7 +167,7 @@ class PaymentControllerTest {
             @Test
             void 앨범_참가자가_아닌_경우_예외가_발생한다() throws Exception {
                 // given
-                PaymentReadyRequest request = new PaymentReadyRequest(AlbumPlan.PRO, 1L);
+                PaymentReadyRequest request = new PaymentReadyRequest(AlbumType.PRO, 1L);
 
                 given(paymentService.preparePayment(request))
                         .willThrow(new CustomException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT));
@@ -189,7 +189,7 @@ class PaymentControllerTest {
             @Test
             void 앨범_방장이_아닌_경우_예외가_발생한다() throws Exception {
                 // given
-                PaymentReadyRequest request = new PaymentReadyRequest(AlbumPlan.PRO, 1L);
+                PaymentReadyRequest request = new PaymentReadyRequest(AlbumType.PRO, 1L);
 
                 given(paymentService.preparePayment(request))
                         .willThrow(new CustomException(AlbumErrorCode.NOT_ALBUM_HOST));
@@ -215,11 +215,11 @@ class PaymentControllerTest {
             @Test
             void UPGRADE_목적의_결제_준비_정보를_반환한다() throws Exception {
                 // given
-                PaymentReadyRequest request = new PaymentReadyRequest(AlbumPlan.PREMIUM, 1L);
+                PaymentReadyRequest request = new PaymentReadyRequest(AlbumType.PREMIUM, 1L);
 
                 PaymentReadyResponse response =
                         new PaymentReadyResponse(
-                                AlbumPlan.PREMIUM,
+                                AlbumType.PREMIUM,
                                 12900,
                                 "album_20250723_pro_1_a5c5dd8beaa6",
                                 "상냥한 너구리",
@@ -237,7 +237,7 @@ class PaymentControllerTest {
                 perform.andExpect(status().isOk())
                         .andExpect(jsonPath("$.success").value(true))
                         .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
-                        .andExpect(jsonPath("$.data.plan").value("PREMIUM"))
+                        .andExpect(jsonPath("$.data.type").value("PREMIUM"))
                         .andExpect(jsonPath("$.data.price").value("12900"))
                         .andExpect(
                                 jsonPath("$.data.merchantUid")
@@ -247,9 +247,9 @@ class PaymentControllerTest {
             }
 
             @Test
-            void 하위_플랜으로_결제_준비를_요청하면_예외가_발생한다() throws Exception {
+            void 하위_앨범_유형으로_결제_준비를_요청하면_예외가_발생한다() throws Exception {
                 // given
-                PaymentReadyRequest request = new PaymentReadyRequest(AlbumPlan.PRO, 1L);
+                PaymentReadyRequest request = new PaymentReadyRequest(AlbumType.PRO, 1L);
 
                 given(paymentService.preparePayment(request))
                         .willThrow(new CustomException(PaymentErrorCode.DOWNGRADE_NOT_ALLOWED));
@@ -267,13 +267,13 @@ class PaymentControllerTest {
                         .andExpect(jsonPath("$.data.code").value("DOWNGRADE_NOT_ALLOWED"))
                         .andExpect(
                                 jsonPath("$.data.message")
-                                        .value("현재 구독 플랜보다 낮은 플랜으로는 결제를 진행할 수 없습니다."));
+                                        .value("현재 앨범 유형보다 낮은 유형으로 결제를 진행할 수 없습니다."));
             }
 
             @Test
             void 앨범이_존재하지_않는_경우_예외가_발생한다() throws Exception {
                 // given
-                PaymentReadyRequest request = new PaymentReadyRequest(AlbumPlan.PRO, 1L);
+                PaymentReadyRequest request = new PaymentReadyRequest(AlbumType.PRO, 1L);
 
                 given(paymentService.preparePayment(request))
                         .willThrow(new CustomException(AlbumErrorCode.ALBUM_NOT_FOUND));
@@ -295,7 +295,7 @@ class PaymentControllerTest {
             @Test
             void 앨범_참가자가_아닌_경우_예외가_발생한다() throws Exception {
                 // given
-                PaymentReadyRequest request = new PaymentReadyRequest(AlbumPlan.PRO, 1L);
+                PaymentReadyRequest request = new PaymentReadyRequest(AlbumType.PRO, 1L);
 
                 given(paymentService.preparePayment(request))
                         .willThrow(new CustomException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT));
@@ -317,7 +317,7 @@ class PaymentControllerTest {
             @Test
             void 앨범_방장이_아닌_경우_예외가_발생한다() throws Exception {
                 // given
-                PaymentReadyRequest request = new PaymentReadyRequest(AlbumPlan.PRO, 1L);
+                PaymentReadyRequest request = new PaymentReadyRequest(AlbumType.PRO, 1L);
 
                 given(paymentService.preparePayment(request))
                         .willThrow(new CustomException(AlbumErrorCode.NOT_ALBUM_HOST));
@@ -338,12 +338,12 @@ class PaymentControllerTest {
         }
 
         @Test
-        void BASIC_플랜으로_결제_준비를_요청하면_예외가_발생한다() throws Exception {
+        void BASIC_유형으로_결제_준비를_요청하면_예외가_발생한다() throws Exception {
             // given
-            PaymentReadyRequest request = new PaymentReadyRequest(AlbumPlan.BASIC, null);
+            PaymentReadyRequest request = new PaymentReadyRequest(AlbumType.BASIC, null);
 
             given(paymentService.preparePayment(request))
-                    .willThrow(new CustomException(PaymentErrorCode.UNSUPPORTED_PAYMENT_PLAN));
+                    .willThrow(new CustomException(PaymentErrorCode.UNSUPPORTED_PAYMENT));
 
             // when & then
             ResultActions perform =
@@ -355,20 +355,17 @@ class PaymentControllerTest {
             perform.andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.success").value(false))
                     .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
-                    .andExpect(jsonPath("$.data.code").value("UNSUPPORTED_PAYMENT_PLAN"))
-                    .andExpect(
-                            jsonPath("$.data.message")
-                                    .value(
-                                            "해당 플랜은 유료 결제가 필요하지 않습니다. PRO 또는 PREMIUM 플랜만 결제가 가능합니다."));
+                    .andExpect(jsonPath("$.data.code").value("UNSUPPORTED_PAYMENT"))
+                    .andExpect(jsonPath("$.data.message").value("BASIC 유형은 결제를 지원하지 않습니다."));
         }
 
         @ParameterizedTest
         @NullSource
         @EmptySource
         @ValueSource(strings = {" ", "PROO", "PREMIUMM"})
-        void 앨범_플랜이_null_또는_지원하지_않는_형식이면_예외가_발생한다(String plan) throws Exception {
+        void 앨범_유형이_null_또는_지원하지_않는_형식이면_예외가_발생한다(String type) throws Exception {
             // given
-            PaymentReadyRequest request = new PaymentReadyRequest(AlbumPlan.from(plan), null);
+            PaymentReadyRequest request = new PaymentReadyRequest(AlbumType.from(type), null);
 
             // when & then
             ResultActions perform =
@@ -383,7 +380,7 @@ class PaymentControllerTest {
                     .andExpect(jsonPath("$.data.code").value("MethodArgumentNotValidException"))
                     .andExpect(
                             jsonPath("$.data.message")
-                                    .value("앨범 구독 플랜은 비워둘 수 없으며, PRO, PREMIUM만 지원됩니다."));
+                                    .value("유료 앨범 유형은 비워둘 수 없으며, PRO, PREMIUM만 지원됩니다."));
         }
     }
 

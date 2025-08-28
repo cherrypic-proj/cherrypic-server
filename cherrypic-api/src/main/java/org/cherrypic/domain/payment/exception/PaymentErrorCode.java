@@ -7,7 +7,7 @@ import org.cherrypic.exception.BaseErrorCode;
 @Getter
 @AllArgsConstructor
 public enum PaymentErrorCode implements BaseErrorCode {
-    UNSUPPORTED_PAYMENT_PLAN(400, "해당 플랜은 유료 결제가 필요하지 않습니다. PRO 또는 PREMIUM 플랜만 결제가 가능합니다."),
+    UNSUPPORTED_PAYMENT(400, "BASIC 유형은 결제를 지원하지 않습니다."),
 
     PAYMENT_NOT_FOUND(404, "결제 정보가 존재하지 않습니다."),
 
@@ -18,7 +18,7 @@ public enum PaymentErrorCode implements BaseErrorCode {
 
     PAYMENT_MEMBER_MISMATCH(403, "결제한 사용자와 일치하지 않습니다."),
 
-    DOWNGRADE_NOT_ALLOWED(400, "현재 구독 플랜보다 낮은 플랜으로는 결제를 진행할 수 없습니다."),
+    DOWNGRADE_NOT_ALLOWED(400, "현재 앨범 유형보다 낮은 유형으로 결제를 진행할 수 없습니다."),
     ;
 
     private final int status;
