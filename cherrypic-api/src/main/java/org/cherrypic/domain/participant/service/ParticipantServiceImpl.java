@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.cherrypic.album.entity.Album;
-import org.cherrypic.album.enums.AlbumPlan;
+import org.cherrypic.album.enums.AlbumType;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.album.repository.AlbumRepository;
 import org.cherrypic.domain.notification.repository.NotificationRepository;
@@ -176,7 +176,7 @@ public class ParticipantServiceImpl implements ParticipantService {
     }
 
     private void validatePermissionControlAvailable(Album album) {
-        if (album.getPlan() == AlbumPlan.BASIC || !album.getPermissionControl()) {
+        if (album.getType() == AlbumType.BASIC || !album.getPermissionControl()) {
             throw new CustomException(AlbumErrorCode.PERMISSION_CONTROL_NOT_AVAILABLE);
         }
     }
@@ -194,7 +194,7 @@ public class ParticipantServiceImpl implements ParticipantService {
     }
 
     private void validateSubscriptionInactive(Album album) {
-        if (album.getPlan() == AlbumPlan.BASIC) return;
+        if (album.getType() == AlbumType.BASIC) return;
 
         if (album.getSubscription().getStatus() == SubscriptionStatus.ACTIVE) {
             throw new CustomException(AlbumErrorCode.SUBSCRIPTION_ACTIVE_HOST_TRANSFER_NOT_ALLOWED);
