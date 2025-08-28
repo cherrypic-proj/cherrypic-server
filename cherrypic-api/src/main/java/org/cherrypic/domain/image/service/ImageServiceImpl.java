@@ -249,7 +249,7 @@ public class ImageServiceImpl implements ImageService {
     }
 
     private void validateAlbumCapacity(Album album, BigDecimal additionalUpload) {
-        BigDecimal maxCapacity = album.getPlan().getCapacityGb();
+        BigDecimal maxCapacity = album.getType().getCapacityGb();
         BigDecimal current = album.getCapacityGb();
         BigDecimal afterUpload = current.add(additionalUpload);
 
@@ -270,14 +270,6 @@ public class ImageServiceImpl implements ImageService {
     private void validateImageExtension(FileExtension extension) {
         if (!FileExtension.getImageExtensions().contains(extension)) {
             throw new CustomException(ImageErrorCode.NOT_IMAGE_EXTENSION);
-        }
-    }
-
-    private void validateAlbumHost(Long memberId, Long albumId) {
-        Participant participant = getParticipantByMemberIdAndAlbumId(memberId, albumId);
-
-        if (!participant.getRole().equals(ParticipantRole.HOST)) {
-            throw new CustomException(AlbumErrorCode.NOT_ALBUM_HOST);
         }
     }
 
