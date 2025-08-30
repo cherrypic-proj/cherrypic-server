@@ -929,6 +929,16 @@ class AlbumServiceTest extends IntegrationTest {
             Assertions.assertAll(
                     () -> assertThat(response.content().get(0).albumId()).isEqualTo(3),
                     () -> assertThat(response.content().get(0).type()).isEqualTo(AlbumType.PRO),
+                    () ->
+                            assertThat(response.content().get(0).price())
+                                    .isEqualTo(AlbumType.PRO.getPrice()),
+                    () ->
+                            assertThat(
+                                            response.content()
+                                                    .get(0)
+                                                    .createdAt()
+                                                    .truncatedTo(ChronoUnit.MINUTES))
+                                    .isEqualTo(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES)),
                     () -> assertThat(response.isLast()).isTrue());
         }
 

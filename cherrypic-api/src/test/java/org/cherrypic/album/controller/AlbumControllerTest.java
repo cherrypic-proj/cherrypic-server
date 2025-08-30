@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import org.cherrypic.album.enums.AlbumType;
 import org.cherrypic.domain.album.controller.AlbumController;
@@ -844,7 +845,7 @@ class AlbumControllerTest {
     }
 
     @Nested
-    class 개별_앨범을_조회_요청_시 {
+    class 개별_앨범_조회_요청_시 {
 
         @Test
         void 유효한_요청인_경우_앨범_정보를_반환한다() throws Exception {
@@ -936,9 +937,21 @@ class AlbumControllerTest {
             List<AlbumListResponse> albums =
                     List.of(
                             new AlbumListResponse(
-                                    2L, "testTitle2", "testCoverUrl2", AlbumType.PRO, true),
+                                    2L,
+                                    "testTitle2",
+                                    "testCoverUrl2",
+                                    AlbumType.PRO,
+                                    AlbumType.PRO.getPrice(),
+                                    LocalDateTime.now(),
+                                    true),
                             new AlbumListResponse(
-                                    1L, "testTitle1", "testCoverUrl1", AlbumType.PRO, false));
+                                    1L,
+                                    "testTitle1",
+                                    "testCoverUrl1",
+                                    AlbumType.PRO,
+                                    AlbumType.PRO.getPrice(),
+                                    LocalDateTime.now(),
+                                    false));
 
             given(
                             albumService.getParticipatingAlbumsByCondition(
@@ -963,9 +976,21 @@ class AlbumControllerTest {
             List<AlbumListResponse> albums =
                     List.of(
                             new AlbumListResponse(
-                                    2L, "testTitle2", "testCoverUrl2", AlbumType.BASIC, true),
+                                    2L,
+                                    "testTitle2",
+                                    "testCoverUrl2",
+                                    AlbumType.BASIC,
+                                    AlbumType.BASIC.getPrice(),
+                                    LocalDateTime.now(),
+                                    true),
                             new AlbumListResponse(
-                                    1L, "testTitle1", "testCoverUrl1", AlbumType.BASIC, false));
+                                    1L,
+                                    "testTitle1",
+                                    "testCoverUrl1",
+                                    AlbumType.BASIC,
+                                    AlbumType.BASIC.getPrice(),
+                                    LocalDateTime.now(),
+                                    false));
 
             given(
                             albumService.getParticipatingAlbumsByCondition(
@@ -991,9 +1016,21 @@ class AlbumControllerTest {
             List<AlbumListResponse> albums =
                     List.of(
                             new AlbumListResponse(
-                                    2L, "testTitle2", "testCoverUrl2", AlbumType.PRO, true),
+                                    2L,
+                                    "testTitle2",
+                                    "testCoverUrl2",
+                                    AlbumType.PRO,
+                                    AlbumType.PRO.getPrice(),
+                                    LocalDateTime.now(),
+                                    true),
                             new AlbumListResponse(
-                                    1L, "testTitle1", "testCoverUrl1", AlbumType.PRO, false));
+                                    1L,
+                                    "testTitle1",
+                                    "testCoverUrl1",
+                                    AlbumType.PRO,
+                                    AlbumType.PRO.getPrice(),
+                                    LocalDateTime.now(),
+                                    false));
 
             given(
                             albumService.getParticipatingAlbumsByCondition(
@@ -1022,9 +1059,21 @@ class AlbumControllerTest {
             List<AlbumListResponse> albums =
                     List.of(
                             new AlbumListResponse(
-                                    1L, "testTitle1", "testCoverUrl1", AlbumType.BASIC, false),
+                                    1L,
+                                    "testTitle1",
+                                    "testCoverUrl1",
+                                    AlbumType.BASIC,
+                                    AlbumType.BASIC.getPrice(),
+                                    LocalDateTime.now(),
+                                    false),
                             new AlbumListResponse(
-                                    2L, "testTitle2", "testCoverUrl2", AlbumType.PRO, true));
+                                    2L,
+                                    "testTitle2",
+                                    "testCoverUrl2",
+                                    AlbumType.PRO,
+                                    AlbumType.PRO.getPrice(),
+                                    LocalDateTime.now(),
+                                    true));
 
             given(
                             albumService.getParticipatingAlbumsByCondition(
@@ -1049,9 +1098,21 @@ class AlbumControllerTest {
             List<AlbumListResponse> albums =
                     List.of(
                             new AlbumListResponse(
-                                    2L, "testTitle2", "testCoverUrl2", AlbumType.PRO, true),
+                                    2L,
+                                    "testTitle2",
+                                    "testCoverUrl2",
+                                    AlbumType.PRO,
+                                    AlbumType.PRO.getPrice(),
+                                    LocalDateTime.now(),
+                                    true),
                             new AlbumListResponse(
-                                    1L, "testTitle1", "testCoverUrl1", AlbumType.BASIC, false));
+                                    1L,
+                                    "testTitle1",
+                                    "testCoverUrl1",
+                                    AlbumType.BASIC,
+                                    AlbumType.BASIC.getPrice(),
+                                    LocalDateTime.now(),
+                                    false));
 
             given(
                             albumService.getParticipatingAlbumsByCondition(
@@ -1076,7 +1137,13 @@ class AlbumControllerTest {
             List<AlbumListResponse> albums =
                     List.of(
                             new AlbumListResponse(
-                                    1L, "testTitle1", "testCoverUrl1", AlbumType.BASIC, false));
+                                    1L,
+                                    "testTitle1",
+                                    "testCoverUrl1",
+                                    AlbumType.BASIC,
+                                    AlbumType.BASIC.getPrice(),
+                                    LocalDateTime.now(),
+                                    false));
 
             given(
                             albumService.getParticipatingAlbumsByCondition(
@@ -1100,9 +1167,21 @@ class AlbumControllerTest {
             List<AlbumListResponse> albums =
                     List.of(
                             new AlbumListResponse(
-                                    2L, "testTitle2", "testCoverUrl2", AlbumType.PRO, true),
+                                    2L,
+                                    "testTitle2",
+                                    "testCoverUrl2",
+                                    AlbumType.PRO,
+                                    AlbumType.PRO.getPrice(),
+                                    LocalDateTime.now(),
+                                    true),
                             new AlbumListResponse(
-                                    1L, "testTitle1", "testCoverUrl1", AlbumType.BASIC, false));
+                                    1L,
+                                    "testTitle1",
+                                    "testCoverUrl1",
+                                    AlbumType.BASIC,
+                                    AlbumType.BASIC.getPrice(),
+                                    LocalDateTime.now(),
+                                    false));
 
             given(
                             albumService.getParticipatingAlbumsByCondition(
