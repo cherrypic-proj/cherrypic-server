@@ -569,7 +569,7 @@ public class EventServiceTest extends IntegrationTest {
             // when & then
             assertThatThrownBy(() -> eventService.addImages(1L, request))
                     .isInstanceOf(CustomException.class)
-                    .hasMessage(ImageErrorCode.IMAGES_IN_OTHER_ALBUM.getMessage());
+                    .hasMessage(AlbumErrorCode.IMAGES_NOT_IN_ALBUM.getMessage());
         }
 
         @Test

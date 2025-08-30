@@ -197,7 +197,7 @@ public class EventServiceImpl implements EventService {
 
     private void validateAllImageAlbum(List<Long> imageIds, Long albumId) {
         if (imageRepository.countByIdInAndAlbumId(imageIds, albumId) != imageIds.size()) {
-            throw new CustomException(ImageErrorCode.IMAGES_IN_OTHER_ALBUM);
+            throw new CustomException(AlbumErrorCode.IMAGES_NOT_IN_ALBUM);
         }
     }
 
