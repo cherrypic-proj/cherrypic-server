@@ -675,7 +675,7 @@ public class EventControllerTest {
         void 다른_앨범에_속한_이미지를_추가하면_예외가_발생한다() throws Exception {
             // given
             EventImageAddRequest request = new EventImageAddRequest(List.of(1L));
-            willThrow(new CustomException(ImageErrorCode.IMAGES_IN_OTHER_ALBUM))
+            willThrow(new CustomException(AlbumErrorCode.IMAGES_NOT_IN_ALBUM))
                     .given(eventService)
                     .addImages(1L, request);
 
@@ -689,8 +689,8 @@ public class EventControllerTest {
             perform.andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.success").value(false))
                     .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
-                    .andExpect(jsonPath("$.data.code").value("IMAGES_IN_OTHER_ALBUM"))
-                    .andExpect(jsonPath("$.data.message").value("앨범 소속이 아닌 이미지를 포함하고 있습니다."));
+                    .andExpect(jsonPath("$.data.code").value("IMAGES_NOT_IN_ALBUM"))
+                    .andExpect(jsonPath("$.data.message").value("앨범에 속해 있지 않은 이미지가 포함되어 있습니다."));
         }
 
         @ParameterizedTest
