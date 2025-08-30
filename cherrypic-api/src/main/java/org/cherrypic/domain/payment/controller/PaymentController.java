@@ -20,8 +20,8 @@ public class PaymentController {
 
     @PostMapping("/ready")
     @Operation(
-            summary = "앨범 구독 플랜 결제 준비",
-            description = "사용자가 선택한 앨범 구독 플랜에 대해 결제 요청에 필요한 정보를 생성합니다.")
+            summary = "유료 앨범 결제 준비",
+            description = "유료 앨범 유형(PRO 또는 PREMIUM)에 대해 최초 생성, 구독 갱신, 구독 업그레이드의 상황에 맞게 결제를 준비합니다.")
     public PaymentReadyResponse paymentPrepare(@Valid @RequestBody PaymentReadyRequest request) {
         return paymentService.preparePayment(request);
     }

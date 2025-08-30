@@ -106,12 +106,12 @@ class SubscriptionControllerTest {
         }
 
         @Test
-        void BASIC_플랜인_경우_예외가_발생한다() throws Exception {
+        void BASIC_유형인_경우_예외가_발생한다() throws Exception {
             // given
             willThrow(
                             new CustomException(
                                     SubscriptionErrorCode
-                                            .SUBSCRIPTION_NOT_SUPPORTED_FOR_BASIC_PLAN))
+                                            .SUBSCRIPTION_NOT_SUPPORTED_FOR_BASIC_TYPE))
                     .given(subscriptionService)
                     .cancelSubscription(1L);
 
@@ -123,8 +123,8 @@ class SubscriptionControllerTest {
                     .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
                     .andExpect(
                             jsonPath("$.data.code")
-                                    .value("SUBSCRIPTION_NOT_SUPPORTED_FOR_BASIC_PLAN"))
-                    .andExpect(jsonPath("$.data.message").value("BASIC 플랜은 구독 기능을 지원하지 않습니다."));
+                                    .value("SUBSCRIPTION_NOT_SUPPORTED_FOR_BASIC_TYPE"))
+                    .andExpect(jsonPath("$.data.message").value("BASIC 유형은 구독 기능을 지원하지 않습니다."));
         }
 
         @Test
@@ -162,7 +162,7 @@ class SubscriptionControllerTest {
         }
 
         @Test
-        void 종료된_구독이면_예외가_발생한다() throws Exception {
+        void 만료된_구독이면_예외가_발생한다() throws Exception {
             // given
             willThrow(new CustomException(SubscriptionDomainErrorCode.ALREADY_EXPIRED))
                     .given(subscriptionService)
@@ -278,7 +278,7 @@ class SubscriptionControllerTest {
         }
 
         @Test
-        void BASIC_플랜인_경우_예외가_발생한다() throws Exception {
+        void BASIC_유형인_경우_예외가_발생한다() throws Exception {
             // given
             SubscriptionRenewRequest request = new SubscriptionRenewRequest(1L);
 
@@ -286,7 +286,7 @@ class SubscriptionControllerTest {
                     .willThrow(
                             new CustomException(
                                     SubscriptionErrorCode
-                                            .SUBSCRIPTION_NOT_SUPPORTED_FOR_BASIC_PLAN));
+                                            .SUBSCRIPTION_NOT_SUPPORTED_FOR_BASIC_TYPE));
 
             // when & then
             ResultActions perform =
@@ -300,8 +300,8 @@ class SubscriptionControllerTest {
                     .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
                     .andExpect(
                             jsonPath("$.data.code")
-                                    .value("SUBSCRIPTION_NOT_SUPPORTED_FOR_BASIC_PLAN"))
-                    .andExpect(jsonPath("$.data.message").value("BASIC 플랜은 구독 기능을 지원하지 않습니다."));
+                                    .value("SUBSCRIPTION_NOT_SUPPORTED_FOR_BASIC_TYPE"))
+                    .andExpect(jsonPath("$.data.message").value("BASIC 유형은 구독 기능을 지원하지 않습니다."));
         }
 
         @Test

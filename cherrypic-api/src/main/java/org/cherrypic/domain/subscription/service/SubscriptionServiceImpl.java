@@ -2,7 +2,7 @@ package org.cherrypic.domain.subscription.service;
 
 import lombok.RequiredArgsConstructor;
 import org.cherrypic.album.entity.Album;
-import org.cherrypic.album.enums.AlbumPlan;
+import org.cherrypic.album.enums.AlbumType;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.album.repository.AlbumRepository;
 import org.cherrypic.domain.participant.repository.ParticipantRepository;
@@ -91,9 +91,9 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
     private void validateSubscriptionSupported(Album album) {
-        if (album.getPlan() == AlbumPlan.BASIC) {
+        if (album.getType() == AlbumType.BASIC) {
             throw new CustomException(
-                    SubscriptionErrorCode.SUBSCRIPTION_NOT_SUPPORTED_FOR_BASIC_PLAN);
+                    SubscriptionErrorCode.SUBSCRIPTION_NOT_SUPPORTED_FOR_BASIC_TYPE);
         }
     }
 

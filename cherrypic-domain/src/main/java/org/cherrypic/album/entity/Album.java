@@ -9,7 +9,7 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.cherrypic.album.enums.AlbumPlan;
+import org.cherrypic.album.enums.AlbumType;
 import org.cherrypic.album.exception.AlbumDomainErrorCode;
 import org.cherrypic.common.model.BaseTimeEntity;
 import org.cherrypic.event.entity.Event;
@@ -34,7 +34,7 @@ public class Album extends BaseTimeEntity {
     private String coverUrl;
 
     @Enumerated(EnumType.STRING)
-    private AlbumPlan plan;
+    private AlbumType type;
 
     @NotNull private Boolean permissionControl;
 
@@ -62,22 +62,22 @@ public class Album extends BaseTimeEntity {
     private Album(
             String title,
             String coverUrl,
-            AlbumPlan plan,
+            AlbumType type,
             boolean permissionControl,
             BigDecimal capacityGb) {
         this.title = title;
         this.coverUrl = coverUrl;
-        this.plan = plan;
+        this.type = type;
         this.permissionControl = permissionControl;
         this.capacityGb = capacityGb;
     }
 
     public static Album createAlbum(
-            String title, String coverUrl, AlbumPlan plan, boolean permissionControl) {
+            String title, String coverUrl, AlbumType type, boolean permissionControl) {
         return Album.builder()
                 .title(title)
                 .coverUrl(coverUrl)
-                .plan(plan)
+                .type(type)
                 .permissionControl(permissionControl)
                 .capacityGb(BigDecimal.ZERO)
                 .build();

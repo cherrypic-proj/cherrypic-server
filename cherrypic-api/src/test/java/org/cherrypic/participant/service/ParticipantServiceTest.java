@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import org.cherrypic.IntegrationTest;
 import org.cherrypic.album.entity.Album;
-import org.cherrypic.album.enums.AlbumPlan;
+import org.cherrypic.album.enums.AlbumType;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.album.repository.AlbumRepository;
 import org.cherrypic.domain.member.repository.MemberRepository;
@@ -66,9 +66,9 @@ class ParticipantServiceTest extends IntegrationTest {
             memberRepository.save(member2);
             given(memberUtil.getCurrentMember()).willReturn(member1);
 
-            Album album1 = Album.createAlbum("testAlbum1", "testURL1", AlbumPlan.BASIC, false);
-            Album album2 = Album.createAlbum("testAlbum2", "testURL2", AlbumPlan.BASIC, false);
-            Album album3 = Album.createAlbum("testAlbum3", "testURL3", AlbumPlan.BASIC, false);
+            Album album1 = Album.createAlbum("testAlbum1", "testURL1", AlbumType.BASIC, false);
+            Album album2 = Album.createAlbum("testAlbum2", "testURL2", AlbumType.BASIC, false);
+            Album album3 = Album.createAlbum("testAlbum3", "testURL3", AlbumType.BASIC, false);
             albumRepository.saveAll(List.of(album1, album2, album3));
 
             Participant participant1 =
@@ -177,9 +177,9 @@ class ParticipantServiceTest extends IntegrationTest {
             memberRepository.saveAll(List.of(member1, member2));
             given(memberUtil.getCurrentMember()).willReturn(member1);
 
-            Album album1 = Album.createAlbum("testAlbum1", "testURL1", AlbumPlan.BASIC, false);
-            Album album2 = Album.createAlbum("testAlbum2", "testURL2", AlbumPlan.BASIC, false);
-            Album album3 = Album.createAlbum("testAlbum3", "testURL3", AlbumPlan.BASIC, false);
+            Album album1 = Album.createAlbum("testAlbum1", "testURL1", AlbumType.BASIC, false);
+            Album album2 = Album.createAlbum("testAlbum2", "testURL2", AlbumType.BASIC, false);
+            Album album3 = Album.createAlbum("testAlbum3", "testURL3", AlbumType.BASIC, false);
             albumRepository.saveAll(List.of(album1, album2, album3));
 
             Participant participant1 =
@@ -307,11 +307,11 @@ class ParticipantServiceTest extends IntegrationTest {
             memberRepository.saveAll(List.of(member1, member2));
             given(memberUtil.getCurrentMember()).willReturn(member1);
 
-            Album album1 = Album.createAlbum("testAlbum1", "testURL1", AlbumPlan.PRO, true);
-            Album album2 = Album.createAlbum("testAlbum2", "testURL2", AlbumPlan.PRO, true);
-            Album album3 = Album.createAlbum("testAlbum3", "testURL3", AlbumPlan.PRO, true);
-            Album album4 = Album.createAlbum("testAlbum4", "testURL4", AlbumPlan.PRO, true);
-            Album album5 = Album.createAlbum("testAlbum5", "testURL5", AlbumPlan.BASIC, false);
+            Album album1 = Album.createAlbum("testAlbum1", "testURL1", AlbumType.PRO, true);
+            Album album2 = Album.createAlbum("testAlbum2", "testURL2", AlbumType.PRO, true);
+            Album album3 = Album.createAlbum("testAlbum3", "testURL3", AlbumType.PRO, true);
+            Album album4 = Album.createAlbum("testAlbum4", "testURL4", AlbumType.PRO, true);
+            Album album5 = Album.createAlbum("testAlbum5", "testURL5", AlbumType.BASIC, false);
             albumRepository.saveAll(List.of(album1, album2, album3, album4, album5));
 
             Participant participant1 =
@@ -523,8 +523,8 @@ class ParticipantServiceTest extends IntegrationTest {
             memberRepository.saveAll(List.of(member1, member2, member3, member4));
             given(memberUtil.getCurrentMember()).willReturn(member1);
 
-            Album album1 = Album.createAlbum("testAlbum1", "testURL1", AlbumPlan.BASIC, false);
-            Album album2 = Album.createAlbum("testAlbum2", "testURL2", AlbumPlan.BASIC, false);
+            Album album1 = Album.createAlbum("testAlbum1", "testURL1", AlbumType.BASIC, false);
+            Album album2 = Album.createAlbum("testAlbum2", "testURL2", AlbumType.BASIC, false);
             albumRepository.saveAll(List.of(album1, album2));
 
             Participant participant1 =

@@ -13,10 +13,10 @@ public enum AlbumErrorCode implements BaseErrorCode {
     NOT_ALBUM_PARTICIPANT(403, "앨범에 속하지 않은 사용자입니다."),
     LIMITED_AUTHORITY(403, "앨범에 대한 생성/수정 권한이 없습니다."),
 
-    PERMISSION_CONTROL_NOT_ALLOWED_FOR_BASIC_PLAN(400, "BASIC 플랜에서는 권한 부여 활성화가 허용되지 않습니다."),
+    PERMISSION_CONTROL_NOT_ALLOWED_FOR_BASIC_TYPE(400, "BASIC 유형에서는 권한 부여 활성화가 허용되지 않습니다."),
 
-    PAYMENT_REQUIRED_FOR_PAID_PLAN(400, "유료 플랜은 결제 ID가 필요합니다."),
-    PAYMENT_NOT_REQUIRED_FOR_BASIC_PLAN(400, "BASIC 플랜에서는 결제 ID가 필요하지 않습니다."),
+    PAYMENT_REQUIRED_FOR_PAID_TYPE(400, "유료 앨범 유형은 결제 ID가 필요합니다."),
+    PAYMENT_NOT_REQUIRED_FOR_BASIC_TYPE(400, "BASIC 유형에서는 결제 ID가 필요하지 않습니다."),
 
     INVITATION_CODE_NOT_FOUND(404, "앨범의 초대 코드가 만료되었습니다."),
     INVITATION_CODE_MISMATCH(400, "초대 코드가 올바르지 않습니다."),

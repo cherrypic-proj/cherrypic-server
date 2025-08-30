@@ -5,7 +5,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.cherrypic.album.enums.AlbumPlan;
+import org.cherrypic.album.enums.AlbumType;
 import org.cherrypic.domain.album.dto.request.AlbumCreateRequest;
 import org.cherrypic.domain.album.dto.request.AlbumUpdateRequest;
 import org.cherrypic.domain.album.dto.response.*;
@@ -75,11 +75,11 @@ public class AlbumController {
     @Operation(
             summary = "앨범 목록 조회",
             description =
-                    "회원이 참여 중인 앨범 목록을 커서 기반 페이징 방식으로 조회합니다. 앨범 플랜을 지정하면 해당 플랜에 해당하는 앨범만 필터링하여 조회합니다.")
+                    "회원이 참여 중인 앨범 목록을 커서 기반 페이징 방식으로 조회합니다. 앨범 유형을 지정하면 해당 유형에 해당하는 앨범만 필터링하여 조회합니다.")
     public SliceResponse<AlbumListResponse> albumsGet(
-            @Parameter(description = "앨범 플랜 (BASIC, PRO, PREMIUM). 생략 시 전체 조회")
+            @Parameter(description = "앨범 유형 (BASIC, PRO, PREMIUM). 생략 시 전체 조회")
                     @RequestParam(required = false)
-                    AlbumPlan plan,
+                    AlbumType type,
             @Parameter(description = "검색 키워드 (앨범 제목에 포함된 단어). 생략 시 전체 조회")
                     @RequestParam(required = false)
                     String keyword,
@@ -91,7 +91,7 @@ public class AlbumController {
                     @RequestParam(defaultValue = "DESC")
                     SortDirection direction) {
         return albumService.getParticipatingAlbumsByCondition(
-                plan, keyword, lastAlbumId, size, direction);
+                type, keyword, lastAlbumId, size, direction);
     }
 
     @DeleteMapping("/{albumId}")

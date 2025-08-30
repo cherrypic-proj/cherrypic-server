@@ -8,7 +8,7 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public enum AlbumPlan {
+public enum AlbumType {
     BASIC(0, new BigDecimal("3"), 10),
     PRO(5900, new BigDecimal("200"), 50),
     PREMIUM(12900, new BigDecimal("2048"), Integer.MAX_VALUE);
@@ -18,9 +18,9 @@ public enum AlbumPlan {
     private final int maxParticipants;
 
     @JsonCreator
-    public static AlbumPlan from(String plan) {
+    public static AlbumType from(String type) {
         return Stream.of(values())
-                .filter(p -> p.name().equalsIgnoreCase(plan))
+                .filter(p -> p.name().equalsIgnoreCase(type))
                 .findFirst()
                 .orElse(null);
     }

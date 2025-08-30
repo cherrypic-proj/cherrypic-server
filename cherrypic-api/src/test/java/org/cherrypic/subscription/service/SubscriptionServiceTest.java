@@ -9,7 +9,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import org.cherrypic.IntegrationTest;
 import org.cherrypic.album.entity.Album;
-import org.cherrypic.album.enums.AlbumPlan;
+import org.cherrypic.album.enums.AlbumType;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.album.repository.AlbumRepository;
 import org.cherrypic.domain.member.repository.MemberRepository;
@@ -64,12 +64,12 @@ class SubscriptionServiceTest extends IntegrationTest {
             memberRepository.save(member);
             given(memberUtil.getCurrentMember()).willReturn(member);
 
-            Album album1 = Album.createAlbum("testAlbum1", "testURL1", AlbumPlan.BASIC, false);
-            Album album2 = Album.createAlbum("testAlbum2", "testURL2", AlbumPlan.PRO, false);
-            Album album3 = Album.createAlbum("testAlbum3", "testURL3", AlbumPlan.PRO, false);
-            Album album4 = Album.createAlbum("testAlbum4", "testURL4", AlbumPlan.PREMIUM, false);
-            Album album5 = Album.createAlbum("testAlbum5", "testURL5", AlbumPlan.PREMIUM, false);
-            Album album6 = Album.createAlbum("testAlbum6", "testURL6", AlbumPlan.PREMIUM, false);
+            Album album1 = Album.createAlbum("testAlbum1", "testURL1", AlbumType.BASIC, false);
+            Album album2 = Album.createAlbum("testAlbum2", "testURL2", AlbumType.PRO, false);
+            Album album3 = Album.createAlbum("testAlbum3", "testURL3", AlbumType.PRO, false);
+            Album album4 = Album.createAlbum("testAlbum4", "testURL4", AlbumType.PREMIUM, false);
+            Album album5 = Album.createAlbum("testAlbum5", "testURL5", AlbumType.PREMIUM, false);
+            Album album6 = Album.createAlbum("testAlbum6", "testURL6", AlbumType.PREMIUM, false);
             albumRepository.saveAll(List.of(album1, album2, album3, album4, album5, album6));
 
             Participant participant1 =
@@ -132,12 +132,12 @@ class SubscriptionServiceTest extends IntegrationTest {
         }
 
         @Test
-        void BASIC_플랜인_경우_예외가_발생한다() {
+        void BASIC_유형인_경우_예외가_발생한다() {
             // when & then
             assertThatThrownBy(() -> subscriptionService.cancelSubscription(1L))
                     .isInstanceOf(CustomException.class)
                     .hasMessage(
-                            SubscriptionErrorCode.SUBSCRIPTION_NOT_SUPPORTED_FOR_BASIC_PLAN
+                            SubscriptionErrorCode.SUBSCRIPTION_NOT_SUPPORTED_FOR_BASIC_TYPE
                                     .getMessage());
         }
 
@@ -161,7 +161,7 @@ class SubscriptionServiceTest extends IntegrationTest {
         }
 
         @Test
-        void 종료된_구독이면_예외가_발생한다() {
+        void 만료된_구독이면_예외가_발생한다() {
             // when & then
             assertThatThrownBy(() -> subscriptionService.cancelSubscription(3L))
                     .isInstanceOf(CustomException.class)
@@ -187,13 +187,13 @@ class SubscriptionServiceTest extends IntegrationTest {
             memberRepository.saveAll(List.of(member1, member2));
             given(memberUtil.getCurrentMember()).willReturn(member1);
 
-            Album album1 = Album.createAlbum("testAlbum1", "testURL1", AlbumPlan.PRO, false);
-            Album album2 = Album.createAlbum("testAlbum2", "testURL2", AlbumPlan.PRO, false);
-            Album album3 = Album.createAlbum("testAlbum3", "testURL3", AlbumPlan.PRO, false);
-            Album album4 = Album.createAlbum("testAlbum4", "testURL4", AlbumPlan.BASIC, false);
-            Album album5 = Album.createAlbum("testAlbum5", "testURL5", AlbumPlan.PREMIUM, false);
-            Album album6 = Album.createAlbum("testAlbum6", "testURL6", AlbumPlan.PREMIUM, false);
-            Album album7 = Album.createAlbum("testAlbum7", "testURL7", AlbumPlan.PREMIUM, false);
+            Album album1 = Album.createAlbum("testAlbum1", "testURL1", AlbumType.PRO, false);
+            Album album2 = Album.createAlbum("testAlbum2", "testURL2", AlbumType.PRO, false);
+            Album album3 = Album.createAlbum("testAlbum3", "testURL3", AlbumType.PRO, false);
+            Album album4 = Album.createAlbum("testAlbum4", "testURL4", AlbumType.BASIC, false);
+            Album album5 = Album.createAlbum("testAlbum5", "testURL5", AlbumType.PREMIUM, false);
+            Album album6 = Album.createAlbum("testAlbum6", "testURL6", AlbumType.PREMIUM, false);
+            Album album7 = Album.createAlbum("testAlbum7", "testURL7", AlbumType.PREMIUM, false);
             albumRepository.saveAll(
                     List.of(album1, album2, album3, album4, album5, album6, album7));
 
@@ -347,7 +347,7 @@ class SubscriptionServiceTest extends IntegrationTest {
         }
 
         @Test
-        void BASIC_플랜인_경우_예외가_발생한다() {
+        void BASIC_유형인_경우_예외가_발생한다() {
             // given
             SubscriptionRenewRequest request = new SubscriptionRenewRequest(1L);
 
@@ -355,7 +355,7 @@ class SubscriptionServiceTest extends IntegrationTest {
             assertThatThrownBy(() -> subscriptionService.renewSubscription(4L, request))
                     .isInstanceOf(CustomException.class)
                     .hasMessage(
-                            SubscriptionErrorCode.SUBSCRIPTION_NOT_SUPPORTED_FOR_BASIC_PLAN
+                            SubscriptionErrorCode.SUBSCRIPTION_NOT_SUPPORTED_FOR_BASIC_TYPE
                                     .getMessage());
         }
 

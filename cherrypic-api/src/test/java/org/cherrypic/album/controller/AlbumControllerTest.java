@@ -8,7 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.math.BigDecimal;
 import java.util.List;
-import org.cherrypic.album.enums.AlbumPlan;
+import org.cherrypic.album.enums.AlbumType;
 import org.cherrypic.domain.album.controller.AlbumController;
 import org.cherrypic.domain.album.dto.request.AlbumCreateRequest;
 import org.cherrypic.domain.album.dto.request.AlbumUpdateRequest;
@@ -49,18 +49,18 @@ class AlbumControllerTest {
     class 앨범_생성_요청_시 {
 
         @Nested
-        class BASIC_플랜인_경우 {
+        class BASIC_유형인_경우 {
 
             @Test
             void 결제ID_없이_요청하면_앨범_생성_정보를_반환한다() throws Exception {
                 // given
                 AlbumCreateRequest request =
                         new AlbumCreateRequest(
-                                "testTitle", "testCoverUrl", AlbumPlan.BASIC, null, false);
+                                "testTitle", "testCoverUrl", AlbumType.BASIC, null, false);
 
                 AlbumCreateResponse response =
                         new AlbumCreateResponse(
-                                1L, "testTitle", "testCoverUrl", AlbumPlan.BASIC, false);
+                                1L, "testTitle", "testCoverUrl", AlbumType.BASIC, false);
 
                 given(albumService.createAlbum(request)).willReturn(response);
 
@@ -77,7 +77,7 @@ class AlbumControllerTest {
                         .andExpect(jsonPath("$.data.albumId").value(1))
                         .andExpect(jsonPath("$.data.title").value("testTitle"))
                         .andExpect(jsonPath("$.data.coverUrl").value("testCoverUrl"))
-                        .andExpect(jsonPath("$.data.plan").value("BASIC"))
+                        .andExpect(jsonPath("$.data.type").value("BASIC"))
                         .andExpect(jsonPath("$.data.permissionControl").value("false"));
             }
 
@@ -86,12 +86,12 @@ class AlbumControllerTest {
                 // given
                 AlbumCreateRequest request =
                         new AlbumCreateRequest(
-                                "testTitle", "testCoverUrl", AlbumPlan.BASIC, 1L, false);
+                                "testTitle", "testCoverUrl", AlbumType.BASIC, 1L, false);
 
                 given(albumService.createAlbum(request))
                         .willThrow(
                                 new CustomException(
-                                        AlbumErrorCode.PAYMENT_NOT_REQUIRED_FOR_BASIC_PLAN));
+                                        AlbumErrorCode.PAYMENT_NOT_REQUIRED_FOR_BASIC_TYPE));
 
                 // when & then
                 ResultActions perform =
@@ -105,9 +105,9 @@ class AlbumControllerTest {
                         .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
                         .andExpect(
                                 jsonPath("$.data.code")
-                                        .value("PAYMENT_NOT_REQUIRED_FOR_BASIC_PLAN"))
+                                        .value("PAYMENT_NOT_REQUIRED_FOR_BASIC_TYPE"))
                         .andExpect(
-                                jsonPath("$.data.message").value("BASIC 플랜에서는 결제 ID가 필요하지 않습니다."));
+                                jsonPath("$.data.message").value("BASIC 유형에서는 결제 ID가 필요하지 않습니다."));
             }
 
             @Test
@@ -115,13 +115,13 @@ class AlbumControllerTest {
                 // given
                 AlbumCreateRequest request =
                         new AlbumCreateRequest(
-                                "testTitle", "testCoverUrl", AlbumPlan.BASIC, null, true);
+                                "testTitle", "testCoverUrl", AlbumType.BASIC, null, true);
 
                 given(albumService.createAlbum(request))
                         .willThrow(
                                 new CustomException(
                                         AlbumErrorCode
-                                                .PERMISSION_CONTROL_NOT_ALLOWED_FOR_BASIC_PLAN));
+                                                .PERMISSION_CONTROL_NOT_ALLOWED_FOR_BASIC_TYPE));
 
                 // when & then
                 ResultActions perform =
@@ -135,26 +135,26 @@ class AlbumControllerTest {
                         .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
                         .andExpect(
                                 jsonPath("$.data.code")
-                                        .value("PERMISSION_CONTROL_NOT_ALLOWED_FOR_BASIC_PLAN"))
+                                        .value("PERMISSION_CONTROL_NOT_ALLOWED_FOR_BASIC_TYPE"))
                         .andExpect(
                                 jsonPath("$.data.message")
-                                        .value("BASIC 플랜에서는 권한 부여 활성화가 허용되지 않습니다."));
+                                        .value("BASIC 유형에서는 권한 부여 활성화가 허용되지 않습니다."));
             }
         }
 
         @Nested
-        class PRO_또는_PREMIUM_플랜인_경우 {
+        class PRO_또는_PREMIUM_유형인_경우 {
 
             @Test
             void 유효한_결제ID면_앨범_생성_정보를_반환한다() throws Exception {
                 // given
                 AlbumCreateRequest request =
                         new AlbumCreateRequest(
-                                "testTitle", "testCoverUrl", AlbumPlan.PRO, 1L, true);
+                                "testTitle", "testCoverUrl", AlbumType.PRO, 1L, true);
 
                 AlbumCreateResponse response =
                         new AlbumCreateResponse(
-                                1L, "testTitle", "testCoverUrl", AlbumPlan.PRO, true);
+                                1L, "testTitle", "testCoverUrl", AlbumType.PRO, true);
 
                 given(albumService.createAlbum(request)).willReturn(response);
 
@@ -171,7 +171,7 @@ class AlbumControllerTest {
                         .andExpect(jsonPath("$.data.albumId").value(1))
                         .andExpect(jsonPath("$.data.title").value("testTitle"))
                         .andExpect(jsonPath("$.data.coverUrl").value("testCoverUrl"))
-                        .andExpect(jsonPath("$.data.plan").value("PRO"))
+                        .andExpect(jsonPath("$.data.type").value("PRO"))
                         .andExpect(jsonPath("$.data.permissionControl").value("true"));
             }
 
@@ -180,11 +180,11 @@ class AlbumControllerTest {
                 // given
                 AlbumCreateRequest request =
                         new AlbumCreateRequest(
-                                "testTitle", "testCoverUrl", AlbumPlan.PRO, null, false);
+                                "testTitle", "testCoverUrl", AlbumType.PRO, null, false);
 
                 given(albumService.createAlbum(request))
                         .willThrow(
-                                new CustomException(AlbumErrorCode.PAYMENT_REQUIRED_FOR_PAID_PLAN));
+                                new CustomException(AlbumErrorCode.PAYMENT_REQUIRED_FOR_PAID_TYPE));
 
                 // when & then
                 ResultActions perform =
@@ -196,8 +196,8 @@ class AlbumControllerTest {
                 perform.andExpect(status().isBadRequest())
                         .andExpect(jsonPath("$.success").value(false))
                         .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
-                        .andExpect(jsonPath("$.data.code").value("PAYMENT_REQUIRED_FOR_PAID_PLAN"))
-                        .andExpect(jsonPath("$.data.message").value("유료 플랜은 결제 ID가 필요합니다."));
+                        .andExpect(jsonPath("$.data.code").value("PAYMENT_REQUIRED_FOR_PAID_TYPE"))
+                        .andExpect(jsonPath("$.data.message").value("유료 앨범 유형은 결제 ID가 필요합니다."));
             }
 
             @Test
@@ -205,7 +205,7 @@ class AlbumControllerTest {
                 // given
                 AlbumCreateRequest request =
                         new AlbumCreateRequest(
-                                "testTitle", "testCoverUrl", AlbumPlan.PRO, 999L, false);
+                                "testTitle", "testCoverUrl", AlbumType.PRO, 999L, false);
 
                 given(albumService.createAlbum(request))
                         .willThrow(new CustomException(PaymentErrorCode.PAYMENT_NOT_FOUND));
@@ -229,7 +229,7 @@ class AlbumControllerTest {
                 // given
                 AlbumCreateRequest request =
                         new AlbumCreateRequest(
-                                "testTitle", "testCoverUrl", AlbumPlan.PRO, 1L, false);
+                                "testTitle", "testCoverUrl", AlbumType.PRO, 1L, false);
 
                 given(albumService.createAlbum(request))
                         .willThrow(new CustomException(PaymentErrorCode.PAYMENT_MEMBER_MISMATCH));
@@ -253,7 +253,7 @@ class AlbumControllerTest {
                 // given
                 AlbumCreateRequest request =
                         new AlbumCreateRequest(
-                                "testTitle", "testCoverUrl", AlbumPlan.PRO, 1L, false);
+                                "testTitle", "testCoverUrl", AlbumType.PRO, 1L, false);
 
                 given(albumService.createAlbum(request))
                         .willThrow(new CustomException(PaymentDomainErrorCode.NOT_PAID));
@@ -277,7 +277,7 @@ class AlbumControllerTest {
                 // given
                 AlbumCreateRequest request =
                         new AlbumCreateRequest(
-                                "testTitle", "testCoverUrl", AlbumPlan.PRO, 1L, false);
+                                "testTitle", "testCoverUrl", AlbumType.PRO, 1L, false);
 
                 given(albumService.createAlbum(request))
                         .willThrow(
@@ -302,7 +302,7 @@ class AlbumControllerTest {
                 // given
                 AlbumCreateRequest request =
                         new AlbumCreateRequest(
-                                "testTitle", "testCoverUrl", AlbumPlan.PRO, 1L, false);
+                                "testTitle", "testCoverUrl", AlbumType.PRO, 1L, false);
 
                 given(albumService.createAlbum(request))
                         .willThrow(
@@ -331,7 +331,7 @@ class AlbumControllerTest {
         void 앨범_이름이_null_또는_공백이면_예외가_발생한다(String title) throws Exception {
             // given
             AlbumCreateRequest request =
-                    new AlbumCreateRequest(title, "testCoverUrl", AlbumPlan.BASIC, null, false);
+                    new AlbumCreateRequest(title, "testCoverUrl", AlbumType.BASIC, null, false);
 
             // when & then
             ResultActions perform =
@@ -352,7 +352,7 @@ class AlbumControllerTest {
             // given
             AlbumCreateRequest request =
                     new AlbumCreateRequest(
-                            "t".repeat(21), "testCoverUrl", AlbumPlan.BASIC, null, false);
+                            "t".repeat(21), "testCoverUrl", AlbumType.BASIC, null, false);
 
             // when & then
             ResultActions perform =
@@ -372,11 +372,11 @@ class AlbumControllerTest {
         @NullSource
         @EmptySource
         @ValueSource(strings = {" ", "PROO", "PREMIUMM"})
-        void 앨범_플랜이_null_또는_지원하지_않는_형식이면_예외가_발생한다(String plan) throws Exception {
+        void 앨범_유형이_null_또는_지원하지_않는_형식이면_예외가_발생한다(String type) throws Exception {
             // given
             AlbumCreateRequest request =
                     new AlbumCreateRequest(
-                            "testTitle", "testCoverUrl", AlbumPlan.from(plan), 1L, false);
+                            "testTitle", "testCoverUrl", AlbumType.from(type), 1L, false);
 
             // when & then
             ResultActions perform =
@@ -391,7 +391,7 @@ class AlbumControllerTest {
                     .andExpect(jsonPath("$.data.code").value("MethodArgumentNotValidException"))
                     .andExpect(
                             jsonPath("$.data.message")
-                                    .value("앨범 플랜은 비워둘 수 없으며, BASIC, PRO, PREMIUM만 지원됩니다."));
+                                    .value("앨범 유형은 비워둘 수 없으며, BASIC, PRO, PREMIUM만 지원됩니다."));
         }
 
         @ParameterizedTest
@@ -400,7 +400,7 @@ class AlbumControllerTest {
             // given
             AlbumCreateRequest request =
                     new AlbumCreateRequest(
-                            "testTitle", "testCoverUrl", AlbumPlan.BASIC, 1L, permissionControl);
+                            "testTitle", "testCoverUrl", AlbumType.BASIC, 1L, permissionControl);
 
             // when & then
             ResultActions perform =
@@ -428,7 +428,7 @@ class AlbumControllerTest {
 
             AlbumUpdateResponse response =
                     new AlbumUpdateResponse(
-                            1L, "testUpdatedTitle", "testUpdatedCoverUrl", AlbumPlan.BASIC);
+                            1L, "testUpdatedTitle", "testUpdatedCoverUrl", AlbumType.BASIC);
 
             given(albumService.updateAlbum(1L, request)).willReturn(response);
 
@@ -623,12 +623,12 @@ class AlbumControllerTest {
         }
 
         @Test
-        void BASIC_플랜인_경우_예외가_발생한다() throws Exception {
+        void BASIC_유형인_경우_예외가_발생한다() throws Exception {
             // given
             given(albumService.togglePermission(1L))
                     .willThrow(
                             new CustomException(
-                                    AlbumErrorCode.PERMISSION_CONTROL_NOT_ALLOWED_FOR_BASIC_PLAN));
+                                    AlbumErrorCode.PERMISSION_CONTROL_NOT_ALLOWED_FOR_BASIC_TYPE));
 
             // when & then
             ResultActions perform = mockMvc.perform(patch("/albums/1/permission"));
@@ -638,9 +638,9 @@ class AlbumControllerTest {
                     .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
                     .andExpect(
                             jsonPath("$.data.code")
-                                    .value("PERMISSION_CONTROL_NOT_ALLOWED_FOR_BASIC_PLAN"))
+                                    .value("PERMISSION_CONTROL_NOT_ALLOWED_FOR_BASIC_TYPE"))
                     .andExpect(
-                            jsonPath("$.data.message").value("BASIC 플랜에서는 권한 부여 활성화가 허용되지 않습니다."));
+                            jsonPath("$.data.message").value("BASIC 유형에서는 권한 부여 활성화가 허용되지 않습니다."));
         }
     }
 
@@ -853,7 +853,7 @@ class AlbumControllerTest {
                     new AlbumInfoResponse(
                             "testAlbum",
                             "testUrl",
-                            AlbumPlan.BASIC,
+                            AlbumType.BASIC,
                             new BigDecimal("0.00"),
                             new BigDecimal("3"),
                             "testNickname",
@@ -868,7 +868,7 @@ class AlbumControllerTest {
                     .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
                     .andExpect(jsonPath("$.data.title").value("testAlbum"))
                     .andExpect(jsonPath("$.data.coverUrl").value("testUrl"))
-                    .andExpect(jsonPath("$.data.albumPlan").value("BASIC"))
+                    .andExpect(jsonPath("$.data.type").value("BASIC"))
                     .andExpect(jsonPath("$.data.capacityUsed").value("0.00"))
                     .andExpect(jsonPath("$.data.totalCapacity").value("3"))
                     .andExpect(jsonPath("$.data.hostName").value("testNickname"))
@@ -931,29 +931,29 @@ class AlbumControllerTest {
     class 앨범_목록_조회_요청_시 {
 
         @Test
-        void PRO_플랜으로_필터링하면_PRO_앨범만_응답한다() throws Exception {
+        void PRO_유형으로_필터링하면_PRO_앨범만_응답한다() throws Exception {
             // given
             List<AlbumListResponse> albums =
                     List.of(
                             new AlbumListResponse(
-                                    2L, "testTitle2", "testCoverUrl2", AlbumPlan.PRO, true),
+                                    2L, "testTitle2", "testCoverUrl2", AlbumType.PRO, true),
                             new AlbumListResponse(
-                                    1L, "testTitle1", "testCoverUrl1", AlbumPlan.PRO, false));
+                                    1L, "testTitle1", "testCoverUrl1", AlbumType.PRO, false));
 
             given(
                             albumService.getParticipatingAlbumsByCondition(
-                                    AlbumPlan.PRO, null, null, 2, SortDirection.DESC))
+                                    AlbumType.PRO, null, null, 2, SortDirection.DESC))
                     .willReturn(new SliceResponse<>(albums, true));
 
             // when & then
             ResultActions perform =
-                    mockMvc.perform(get("/albums").param("plan", "PRO").param("size", "2"));
+                    mockMvc.perform(get("/albums").param("type", "PRO").param("size", "2"));
 
             perform.andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
-                    .andExpect(jsonPath("$.data.content[0].plan").value("PRO"))
-                    .andExpect(jsonPath("$.data.content[1].plan").value("PRO"))
+                    .andExpect(jsonPath("$.data.content[0].type").value("PRO"))
+                    .andExpect(jsonPath("$.data.content[1].type").value("PRO"))
                     .andExpect(jsonPath("$.data.isLast").value(true));
         }
 
@@ -963,9 +963,9 @@ class AlbumControllerTest {
             List<AlbumListResponse> albums =
                     List.of(
                             new AlbumListResponse(
-                                    2L, "testTitle2", "testCoverUrl2", AlbumPlan.BASIC, true),
+                                    2L, "testTitle2", "testCoverUrl2", AlbumType.BASIC, true),
                             new AlbumListResponse(
-                                    1L, "testTitle1", "testCoverUrl1", AlbumPlan.BASIC, false));
+                                    1L, "testTitle1", "testCoverUrl1", AlbumType.BASIC, false));
 
             given(
                             albumService.getParticipatingAlbumsByCondition(
@@ -986,25 +986,25 @@ class AlbumControllerTest {
         }
 
         @Test
-        void PRO_플랜과_앨범_이름으로_필터링하면_조건을_모두_만족하는_앨범만_응답한다() throws Exception {
+        void PRO_유형과_앨범_이름으로_필터링하면_조건을_모두_만족하는_앨범만_응답한다() throws Exception {
             // given
             List<AlbumListResponse> albums =
                     List.of(
                             new AlbumListResponse(
-                                    2L, "testTitle2", "testCoverUrl2", AlbumPlan.PRO, true),
+                                    2L, "testTitle2", "testCoverUrl2", AlbumType.PRO, true),
                             new AlbumListResponse(
-                                    1L, "testTitle1", "testCoverUrl1", AlbumPlan.PRO, false));
+                                    1L, "testTitle1", "testCoverUrl1", AlbumType.PRO, false));
 
             given(
                             albumService.getParticipatingAlbumsByCondition(
-                                    AlbumPlan.PRO, "testTitle", null, 2, SortDirection.DESC))
+                                    AlbumType.PRO, "testTitle", null, 2, SortDirection.DESC))
                     .willReturn(new SliceResponse<>(albums, true));
 
             // when & then
             ResultActions perform =
                     mockMvc.perform(
                             get("/albums")
-                                    .param("plan", "PRO")
+                                    .param("type", "PRO")
                                     .param("keyword", "testTitle")
                                     .param("size", "2"));
 
@@ -1022,9 +1022,9 @@ class AlbumControllerTest {
             List<AlbumListResponse> albums =
                     List.of(
                             new AlbumListResponse(
-                                    1L, "testTitle1", "testCoverUrl1", AlbumPlan.BASIC, false),
+                                    1L, "testTitle1", "testCoverUrl1", AlbumType.BASIC, false),
                             new AlbumListResponse(
-                                    2L, "testTitle2", "testCoverUrl2", AlbumPlan.PRO, true));
+                                    2L, "testTitle2", "testCoverUrl2", AlbumType.PRO, true));
 
             given(
                             albumService.getParticipatingAlbumsByCondition(
@@ -1049,9 +1049,9 @@ class AlbumControllerTest {
             List<AlbumListResponse> albums =
                     List.of(
                             new AlbumListResponse(
-                                    2L, "testTitle2", "testCoverUrl2", AlbumPlan.PRO, true),
+                                    2L, "testTitle2", "testCoverUrl2", AlbumType.PRO, true),
                             new AlbumListResponse(
-                                    1L, "testTitle1", "testCoverUrl1", AlbumPlan.BASIC, false));
+                                    1L, "testTitle1", "testCoverUrl1", AlbumType.BASIC, false));
 
             given(
                             albumService.getParticipatingAlbumsByCondition(
@@ -1076,7 +1076,7 @@ class AlbumControllerTest {
             List<AlbumListResponse> albums =
                     List.of(
                             new AlbumListResponse(
-                                    1L, "testTitle1", "testCoverUrl1", AlbumPlan.BASIC, false));
+                                    1L, "testTitle1", "testCoverUrl1", AlbumType.BASIC, false));
 
             given(
                             albumService.getParticipatingAlbumsByCondition(
@@ -1100,9 +1100,9 @@ class AlbumControllerTest {
             List<AlbumListResponse> albums =
                     List.of(
                             new AlbumListResponse(
-                                    2L, "testTitle2", "testCoverUrl2", AlbumPlan.PRO, true),
+                                    2L, "testTitle2", "testCoverUrl2", AlbumType.PRO, true),
                             new AlbumListResponse(
-                                    1L, "testTitle1", "testCoverUrl1", AlbumPlan.BASIC, false));
+                                    1L, "testTitle1", "testCoverUrl1", AlbumType.BASIC, false));
 
             given(
                             albumService.getParticipatingAlbumsByCondition(

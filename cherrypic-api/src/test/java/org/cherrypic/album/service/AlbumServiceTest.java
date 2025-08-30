@@ -14,7 +14,7 @@ import org.cherrypic.IntegrationTest;
 import org.cherrypic.RedisCleaner;
 import org.cherrypic.album.entity.Album;
 import org.cherrypic.album.entity.InvitationCode;
-import org.cherrypic.album.enums.AlbumPlan;
+import org.cherrypic.album.enums.AlbumType;
 import org.cherrypic.domain.album.dto.request.AlbumCreateRequest;
 import org.cherrypic.domain.album.dto.request.AlbumUpdateRequest;
 import org.cherrypic.domain.album.dto.response.AlbumInfoResponse;
@@ -84,7 +84,7 @@ class AlbumServiceTest extends IntegrationTest {
     class 앨범을_생성할_때 {
 
         @Nested
-        class BASIC_플랜인_경우 {
+        class BASIC_유형인_경우 {
 
             @BeforeEach
             void setUp() {
@@ -103,7 +103,7 @@ class AlbumServiceTest extends IntegrationTest {
                 // given
                 AlbumCreateRequest request =
                         new AlbumCreateRequest(
-                                "testTitle", "testCoverUrl", AlbumPlan.BASIC, null, false);
+                                "testTitle", "testCoverUrl", AlbumType.BASIC, null, false);
 
                 // when
                 albumService.createAlbum(request);
@@ -125,13 +125,13 @@ class AlbumServiceTest extends IntegrationTest {
                                                 "id",
                                                 "title",
                                                 "coverUrl",
-                                                "plan",
+                                                "type",
                                                 "permissionControl")
                                         .containsExactly(
                                                 1L,
                                                 "testTitle",
                                                 "testCoverUrl",
-                                                AlbumPlan.BASIC,
+                                                AlbumType.BASIC,
                                                 false),
                         () ->
                                 assertThat(participant)
@@ -144,13 +144,13 @@ class AlbumServiceTest extends IntegrationTest {
                 // given
                 AlbumCreateRequest request =
                         new AlbumCreateRequest(
-                                "testTitle", "testCoverUrl", AlbumPlan.BASIC, 1L, false);
+                                "testTitle", "testCoverUrl", AlbumType.BASIC, 1L, false);
 
                 // when & then
                 assertThatThrownBy(() -> albumService.createAlbum(request))
                         .isInstanceOf(CustomException.class)
                         .hasMessage(
-                                AlbumErrorCode.PAYMENT_NOT_REQUIRED_FOR_BASIC_PLAN.getMessage());
+                                AlbumErrorCode.PAYMENT_NOT_REQUIRED_FOR_BASIC_TYPE.getMessage());
             }
 
             @Test
@@ -158,19 +158,19 @@ class AlbumServiceTest extends IntegrationTest {
                 // given
                 AlbumCreateRequest request =
                         new AlbumCreateRequest(
-                                "testTitle", "testCoverUrl", AlbumPlan.BASIC, null, true);
+                                "testTitle", "testCoverUrl", AlbumType.BASIC, null, true);
 
                 // when & then
                 assertThatThrownBy(() -> albumService.createAlbum(request))
                         .isInstanceOf(CustomException.class)
                         .hasMessage(
-                                AlbumErrorCode.PERMISSION_CONTROL_NOT_ALLOWED_FOR_BASIC_PLAN
+                                AlbumErrorCode.PERMISSION_CONTROL_NOT_ALLOWED_FOR_BASIC_TYPE
                                         .getMessage());
             }
         }
 
         @Nested
-        class PRO_또는_PREMIUM_플랜인_경우 {
+        class PRO_또는_PREMIUM_유형인_경우 {
 
             @BeforeEach
             void setUp() {
@@ -190,7 +190,7 @@ class AlbumServiceTest extends IntegrationTest {
 
                 Album album =
                         Album.createAlbum(
-                                "testPaidTitle", "testPaidCoverUrl", AlbumPlan.PRO, false);
+                                "testPaidTitle", "testPaidCoverUrl", AlbumType.PRO, false);
                 albumRepository.save(album);
 
                 // 검증 완료된 결제
@@ -224,7 +224,7 @@ class AlbumServiceTest extends IntegrationTest {
                 // given
                 AlbumCreateRequest request =
                         new AlbumCreateRequest(
-                                "testTitle", "testCoverUrl", AlbumPlan.PRO, 1L, true);
+                                "testTitle", "testCoverUrl", AlbumType.PRO, 1L, true);
 
                 LocalDateTime startAt = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
 
@@ -252,13 +252,13 @@ class AlbumServiceTest extends IntegrationTest {
                                                 "id",
                                                 "title",
                                                 "coverUrl",
-                                                "plan",
+                                                "type",
                                                 "permissionControl")
                                         .containsExactly(
                                                 2L,
                                                 "testTitle",
                                                 "testCoverUrl",
-                                                AlbumPlan.PRO,
+                                                AlbumType.PRO,
                                                 true),
                         () ->
                                 assertThat(participant)
@@ -294,12 +294,12 @@ class AlbumServiceTest extends IntegrationTest {
                 // given
                 AlbumCreateRequest request =
                         new AlbumCreateRequest(
-                                "testTitle", "testCoverUrl", AlbumPlan.PRO, null, false);
+                                "testTitle", "testCoverUrl", AlbumType.PRO, null, false);
 
                 // when & then
                 assertThatThrownBy(() -> albumService.createAlbum(request))
                         .isInstanceOf(CustomException.class)
-                        .hasMessage(AlbumErrorCode.PAYMENT_REQUIRED_FOR_PAID_PLAN.getMessage());
+                        .hasMessage(AlbumErrorCode.PAYMENT_REQUIRED_FOR_PAID_TYPE.getMessage());
             }
 
             @Test
@@ -307,7 +307,7 @@ class AlbumServiceTest extends IntegrationTest {
                 // given
                 AlbumCreateRequest request =
                         new AlbumCreateRequest(
-                                "testTitle", "testCoverUrl", AlbumPlan.PRO, 999L, false);
+                                "testTitle", "testCoverUrl", AlbumType.PRO, 999L, false);
 
                 // when & then
                 assertThatThrownBy(() -> albumService.createAlbum(request))
@@ -323,7 +323,7 @@ class AlbumServiceTest extends IntegrationTest {
 
                 AlbumCreateRequest request =
                         new AlbumCreateRequest(
-                                "testTitle", "testCoverUrl", AlbumPlan.PRO, 1L, false);
+                                "testTitle", "testCoverUrl", AlbumType.PRO, 1L, false);
 
                 // when & then
                 assertThatThrownBy(() -> albumService.createAlbum(request))
@@ -336,7 +336,7 @@ class AlbumServiceTest extends IntegrationTest {
                 // given
                 AlbumCreateRequest request =
                         new AlbumCreateRequest(
-                                "testTitle", "testCoverUrl", AlbumPlan.PRO, 2L, false);
+                                "testTitle", "testCoverUrl", AlbumType.PRO, 2L, false);
 
                 // when & then
                 assertThatThrownBy(() -> albumService.createAlbum(request))
@@ -349,7 +349,7 @@ class AlbumServiceTest extends IntegrationTest {
                 // given
                 AlbumCreateRequest request =
                         new AlbumCreateRequest(
-                                "testTitle", "testCoverUrl", AlbumPlan.PRO, 3L, false);
+                                "testTitle", "testCoverUrl", AlbumType.PRO, 3L, false);
 
                 // when & then
                 assertThatThrownBy(() -> albumService.createAlbum(request))
@@ -362,7 +362,7 @@ class AlbumServiceTest extends IntegrationTest {
                 // given
                 AlbumCreateRequest request =
                         new AlbumCreateRequest(
-                                "testTitle", "testCoverUrl", AlbumPlan.PRO, 4L, false);
+                                "testTitle", "testCoverUrl", AlbumType.PRO, 4L, false);
 
                 // when & then
                 assertThatThrownBy(() -> albumService.createAlbum(request))
@@ -385,9 +385,9 @@ class AlbumServiceTest extends IntegrationTest {
             memberRepository.save(member);
             given(memberUtil.getCurrentMember()).willReturn(member);
 
-            Album album1 = Album.createAlbum("testAlbum1", "testURL1", AlbumPlan.BASIC, false);
-            Album album2 = Album.createAlbum("testAlbum2", "testURL2", AlbumPlan.BASIC, false);
-            Album album3 = Album.createAlbum("testAlbum3", "testURL3", AlbumPlan.BASIC, false);
+            Album album1 = Album.createAlbum("testAlbum1", "testURL1", AlbumType.BASIC, false);
+            Album album2 = Album.createAlbum("testAlbum2", "testURL2", AlbumType.BASIC, false);
+            Album album3 = Album.createAlbum("testAlbum3", "testURL3", AlbumType.BASIC, false);
             albumRepository.saveAll(List.of(album1, album2, album3));
 
             Participant participant1 =
@@ -411,12 +411,12 @@ class AlbumServiceTest extends IntegrationTest {
             Assertions.assertAll(
                     () ->
                             assertThat(album)
-                                    .extracting("id", "title", "coverUrl", "plan")
+                                    .extracting("id", "title", "coverUrl", "type")
                                     .containsExactly(
                                             1L,
                                             "testUpdatedTitle",
                                             "testUpdatedCoverUrl",
-                                            AlbumPlan.BASIC));
+                                            AlbumType.BASIC));
         }
 
         @Test
@@ -496,10 +496,10 @@ class AlbumServiceTest extends IntegrationTest {
             memberRepository.saveAll(List.of(member1, member2, member3, member4));
             given(memberUtil.getCurrentMember()).willReturn(member1);
 
-            Album album1 = Album.createAlbum("testAlbum1", "testURL1", AlbumPlan.PRO, true);
-            Album album2 = Album.createAlbum("testAlbum2", "testURL2", AlbumPlan.BASIC, false);
-            Album album3 = Album.createAlbum("testAlbum3", "testURL3", AlbumPlan.BASIC, false);
-            Album album4 = Album.createAlbum("testAlbum3", "testURL3", AlbumPlan.BASIC, false);
+            Album album1 = Album.createAlbum("testAlbum1", "testURL1", AlbumType.PRO, true);
+            Album album2 = Album.createAlbum("testAlbum2", "testURL2", AlbumType.BASIC, false);
+            Album album3 = Album.createAlbum("testAlbum3", "testURL3", AlbumType.BASIC, false);
+            Album album4 = Album.createAlbum("testAlbum3", "testURL3", AlbumType.BASIC, false);
             albumRepository.saveAll(List.of(album1, album2, album3, album4));
 
             Participant participant1 =
@@ -576,12 +576,12 @@ class AlbumServiceTest extends IntegrationTest {
         }
 
         @Test
-        void BASIC_플랜인_경우_예외가_발생한다() {
+        void BASIC_유형인_경우_예외가_발생한다() {
             // when & then
             assertThatThrownBy(() -> albumService.togglePermission(3L))
                     .isInstanceOf(CustomException.class)
                     .hasMessage(
-                            AlbumErrorCode.PERMISSION_CONTROL_NOT_ALLOWED_FOR_BASIC_PLAN
+                            AlbumErrorCode.PERMISSION_CONTROL_NOT_ALLOWED_FOR_BASIC_TYPE
                                     .getMessage());
         }
     }
@@ -604,8 +604,8 @@ class AlbumServiceTest extends IntegrationTest {
             memberRepository.saveAll(List.of(member1, member2));
             given(memberUtil.getCurrentMember()).willReturn(member1);
 
-            Album album1 = Album.createAlbum("testAlbum1", "testURL1", AlbumPlan.BASIC, false);
-            Album album2 = Album.createAlbum("testAlbum2", "testURL2", AlbumPlan.BASIC, false);
+            Album album1 = Album.createAlbum("testAlbum1", "testURL1", AlbumType.BASIC, false);
+            Album album2 = Album.createAlbum("testAlbum2", "testURL2", AlbumType.BASIC, false);
             albumRepository.saveAll(List.of(album1, album2));
 
             Participant participant1 =
@@ -710,9 +710,9 @@ class AlbumServiceTest extends IntegrationTest {
             memberRepository.save(member);
             given(memberUtil.getCurrentMember()).willReturn(member);
 
-            Album album1 = Album.createAlbum("testAlbum1", "testURL1", AlbumPlan.BASIC, false);
-            Album album2 = Album.createAlbum("testAlbum2", "testURL2", AlbumPlan.BASIC, false);
-            Album album3 = Album.createAlbum("testAlbum3", "testURL3", AlbumPlan.BASIC, false);
+            Album album1 = Album.createAlbum("testAlbum1", "testURL1", AlbumType.BASIC, false);
+            Album album2 = Album.createAlbum("testAlbum2", "testURL2", AlbumType.BASIC, false);
+            Album album3 = Album.createAlbum("testAlbum3", "testURL3", AlbumType.BASIC, false);
             albumRepository.saveAll(List.of(album1, album2, album3));
 
             Participant participant =
@@ -789,7 +789,7 @@ class AlbumServiceTest extends IntegrationTest {
         void 최대_참가자_수를_초과하면_예외가_발생한다() {
             // given
             Album album = albumRepository.findById(1L).orElseThrow();
-            int maxParticipants = album.getPlan().getMaxParticipants();
+            int maxParticipants = album.getType().getMaxParticipants();
 
             for (int i = 0; i < maxParticipants; i++) {
                 Member member =
@@ -824,9 +824,9 @@ class AlbumServiceTest extends IntegrationTest {
             memberRepository.save(member);
             given(memberUtil.getCurrentMember()).willReturn(member);
 
-            Album album1 = Album.createAlbum("testAlbum1", "testURL1", AlbumPlan.BASIC, false);
-            Album album2 = Album.createAlbum("testAlbum2", "testURL2", AlbumPlan.BASIC, false);
-            Album album3 = Album.createAlbum("testAlbum3", "testURL3", AlbumPlan.BASIC, false);
+            Album album1 = Album.createAlbum("testAlbum1", "testURL1", AlbumType.BASIC, false);
+            Album album2 = Album.createAlbum("testAlbum2", "testURL2", AlbumType.BASIC, false);
+            Album album3 = Album.createAlbum("testAlbum3", "testURL3", AlbumType.BASIC, false);
             albumRepository.saveAll(List.of(album1, album2, album3));
 
             Participant participant1 =
@@ -846,7 +846,7 @@ class AlbumServiceTest extends IntegrationTest {
                     .extracting(
                             "title",
                             "coverUrl",
-                            "albumPlan",
+                            "type",
                             "capacityUsed",
                             "totalCapacity",
                             "hostName",
@@ -854,7 +854,7 @@ class AlbumServiceTest extends IntegrationTest {
                     .containsExactly(
                             "testAlbum1",
                             "testURL1",
-                            AlbumPlan.BASIC,
+                            AlbumType.BASIC,
                             new BigDecimal("0.00"),
                             new BigDecimal("3"),
                             "testNickname",
@@ -899,9 +899,9 @@ class AlbumServiceTest extends IntegrationTest {
             memberRepository.save(member);
             given(memberUtil.getCurrentMember()).willReturn(member);
 
-            Album album1 = Album.createAlbum("testTitle1", "testCoverUrl1", AlbumPlan.BASIC, false);
-            Album album2 = Album.createAlbum("testTitle2", "testCoverUrl2", AlbumPlan.BASIC, false);
-            Album album3 = Album.createAlbum("testTitle3", "testCoverUrl3", AlbumPlan.PRO, false);
+            Album album1 = Album.createAlbum("testTitle1", "testCoverUrl1", AlbumType.BASIC, false);
+            Album album2 = Album.createAlbum("testTitle2", "testCoverUrl2", AlbumType.BASIC, false);
+            Album album3 = Album.createAlbum("testTitle3", "testCoverUrl3", AlbumType.PRO, false);
             albumRepository.saveAll(List.of(album1, album2, album3));
 
             Participant participant1 =
@@ -919,16 +919,16 @@ class AlbumServiceTest extends IntegrationTest {
         }
 
         @Test
-        void PRO_플랜으로_필터링하면_PRO_앨범만_조회한다() {
+        void PRO_유형으로_필터링하면_PRO_앨범만_조회한다() {
             // given
             SliceResponse<AlbumListResponse> response =
                     albumService.getParticipatingAlbumsByCondition(
-                            AlbumPlan.PRO, null, null, 1, SortDirection.DESC);
+                            AlbumType.PRO, null, null, 1, SortDirection.DESC);
 
             // when & then
             Assertions.assertAll(
                     () -> assertThat(response.content().get(0).albumId()).isEqualTo(3),
-                    () -> assertThat(response.content().get(0).plan()).isEqualTo(AlbumPlan.PRO),
+                    () -> assertThat(response.content().get(0).type()).isEqualTo(AlbumType.PRO),
                     () -> assertThat(response.isLast()).isTrue());
         }
 
@@ -947,17 +947,17 @@ class AlbumServiceTest extends IntegrationTest {
         }
 
         @Test
-        void PRO_플랜과_앨범_이름으로_필터링하면_조건을_모두_만족하는_앨범만_조회한다() {
+        void PRO_유형과_앨범_이름으로_필터링하면_조건을_모두_만족하는_앨범만_조회한다() {
             // given
             SliceResponse<AlbumListResponse> response =
                     albumService.getParticipatingAlbumsByCondition(
-                            AlbumPlan.PRO, "title3", null, 1, SortDirection.DESC);
+                            AlbumType.PRO, "title3", null, 1, SortDirection.DESC);
 
             // when & then
             Assertions.assertAll(
                     () -> assertThat(response.content().get(0).albumId()).isEqualTo(3),
                     () -> assertThat(response.content().get(0).title()).isEqualTo("testTitle3"),
-                    () -> assertThat(response.content().get(0).plan()).isEqualTo(AlbumPlan.PRO),
+                    () -> assertThat(response.content().get(0).type()).isEqualTo(AlbumType.PRO),
                     () -> assertThat(response.isLast()).isTrue());
         }
 
@@ -1054,11 +1054,11 @@ class AlbumServiceTest extends IntegrationTest {
             memberRepository.saveAll(List.of(member1, member2));
             given(memberUtil.getCurrentMember()).willReturn(member1);
 
-            Album album1 = Album.createAlbum("testAlbum1", "testURL1", AlbumPlan.BASIC, false);
-            Album album2 = Album.createAlbum("testAlbum2", "testURL2", AlbumPlan.BASIC, false);
-            Album album3 = Album.createAlbum("testAlbum3", "testURL3", AlbumPlan.BASIC, false);
-            Album album4 = Album.createAlbum("testAlbum4", "testURL4", AlbumPlan.BASIC, false);
-            Album album5 = Album.createAlbum("testAlbum5", "testURL5", AlbumPlan.PRO, false);
+            Album album1 = Album.createAlbum("testAlbum1", "testURL1", AlbumType.BASIC, false);
+            Album album2 = Album.createAlbum("testAlbum2", "testURL2", AlbumType.BASIC, false);
+            Album album3 = Album.createAlbum("testAlbum3", "testURL3", AlbumType.BASIC, false);
+            Album album4 = Album.createAlbum("testAlbum4", "testURL4", AlbumType.BASIC, false);
+            Album album5 = Album.createAlbum("testAlbum5", "testURL5", AlbumType.PRO, false);
             albumRepository.saveAll(List.of(album1, album2, album3, album4, album5));
 
             Image image = Image.createImage(album1, 1L, "testUrl", LocalDateTime.now());

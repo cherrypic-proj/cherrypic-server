@@ -10,7 +10,7 @@ import java.util.List;
 import org.cherrypic.IntegrationTest;
 import org.cherrypic.RedisCleaner;
 import org.cherrypic.album.entity.Album;
-import org.cherrypic.album.enums.AlbumPlan;
+import org.cherrypic.album.enums.AlbumType;
 import org.cherrypic.domain.album.repository.AlbumRepository;
 import org.cherrypic.domain.member.repository.MemberRepository;
 import org.cherrypic.domain.notification.repository.NotificationRepository;
@@ -66,7 +66,7 @@ class NotificationServiceTest extends IntegrationTest {
             memberRepository.saveAll(List.of(member1, member2, member3));
             given(memberUtil.getCurrentMember()).willReturn(member1);
 
-            Album album = Album.createAlbum("testAlbum", "testURL", AlbumPlan.BASIC, false);
+            Album album = Album.createAlbum("testAlbum", "testURL", AlbumType.BASIC, false);
             albumRepository.save(album);
 
             Participant participant1 =

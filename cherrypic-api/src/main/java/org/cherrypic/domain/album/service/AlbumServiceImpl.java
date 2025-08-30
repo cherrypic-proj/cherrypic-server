@@ -4,7 +4,7 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.cherrypic.album.entity.Album;
 import org.cherrypic.album.entity.InvitationCode;
-import org.cherrypic.album.enums.AlbumPlan;
+import org.cherrypic.album.enums.AlbumType;
 import org.cherrypic.domain.album.dto.request.AlbumCreateRequest;
 import org.cherrypic.domain.album.dto.request.AlbumUpdateRequest;
 import org.cherrypic.domain.album.dto.response.*;
@@ -58,15 +58,15 @@ public class AlbumServiceImpl implements AlbumService {
     public AlbumCreateResponse createAlbum(AlbumCreateRequest request) {
         final Member currentMember = memberUtil.getCurrentMember();
 
-        validatePaymentRequirementForPlan(request.plan(), request.paymentId());
+        validatePaymentRequirementForType(request.type(), request.paymentId());
 
-        validatePermissionControl(request.plan(), request.permissionControl());
+        validatePermissionControl(request.type(), request.permissionControl());
 
         Album album =
                 Album.createAlbum(
                         request.title(),
                         request.coverUrl(),
-                        request.plan(),
+                        request.type(),
                         request.permissionControl());
 
         Participant participant =
@@ -75,7 +75,7 @@ public class AlbumServiceImpl implements AlbumService {
 
         album.addParticipant(participant);
 
-        if (request.plan() != AlbumPlan.BASIC) {
+        if (request.type() != AlbumType.BASIC) {
             final Payment payment = getPaidPaymentById(request.paymentId());
 
             validatePaymentMemberMismatch(payment, currentMember);
@@ -113,7 +113,7 @@ public class AlbumServiceImpl implements AlbumService {
         final Album album = getAlbumById(albumId);
 
         validateAlbumHost(currentMember.getId(), album.getId());
-        validatePermissionControl(album.getPlan(), true);
+        validatePermissionControl(album.getType(), true);
 
         album.togglePermissionControl();
 
@@ -184,9 +184,9 @@ public class AlbumServiceImpl implements AlbumService {
         return AlbumInfoResponse.of(
                 album.getTitle(),
                 album.getCoverUrl(),
-                album.getPlan(),
+                album.getType(),
                 album.getCapacityGb(),
-                album.getPlan().getCapacityGb(),
+                album.getType().getCapacityGb(),
                 hostName,
                 numOfParticipants);
     }
@@ -194,12 +194,12 @@ public class AlbumServiceImpl implements AlbumService {
     @Override
     @Transactional(readOnly = true)
     public SliceResponse<AlbumListResponse> getParticipatingAlbumsByCondition(
-            AlbumPlan plan, String keyword, Long lastAlbumId, int size, SortDirection direction) {
+            AlbumType type, String keyword, Long lastAlbumId, int size, SortDirection direction) {
         final Member currentMember = memberUtil.getCurrentMember();
 
         Slice<AlbumListResponse> results =
-                albumRepository.findAllByMemberIdAndPlanAndKeyword(
-                        currentMember.getId(), plan, keyword, lastAlbumId, size, direction);
+                albumRepository.findAllByMemberIdAndTypeAndKeyword(
+                        currentMember.getId(), type, keyword, lastAlbumId, size, direction);
 
         return SliceResponse.from(results);
     }
@@ -257,19 +257,19 @@ public class AlbumServiceImpl implements AlbumService {
         }
     }
 
-    private void validatePermissionControl(AlbumPlan plan, Boolean permissionControl) {
-        if (plan == AlbumPlan.BASIC && permissionControl) {
-            throw new CustomException(AlbumErrorCode.PERMISSION_CONTROL_NOT_ALLOWED_FOR_BASIC_PLAN);
+    private void validatePermissionControl(AlbumType type, Boolean permissionControl) {
+        if (type == AlbumType.BASIC && permissionControl) {
+            throw new CustomException(AlbumErrorCode.PERMISSION_CONTROL_NOT_ALLOWED_FOR_BASIC_TYPE);
         }
     }
 
-    private void validatePaymentRequirementForPlan(AlbumPlan plan, Long paymentId) {
-        if (plan.requiresPayment() && paymentId == null) {
-            throw new CustomException(AlbumErrorCode.PAYMENT_REQUIRED_FOR_PAID_PLAN);
+    private void validatePaymentRequirementForType(AlbumType type, Long paymentId) {
+        if (type.requiresPayment() && paymentId == null) {
+            throw new CustomException(AlbumErrorCode.PAYMENT_REQUIRED_FOR_PAID_TYPE);
         }
 
-        if (!plan.requiresPayment() && paymentId != null) {
-            throw new CustomException(AlbumErrorCode.PAYMENT_NOT_REQUIRED_FOR_BASIC_PLAN);
+        if (!type.requiresPayment() && paymentId != null) {
+            throw new CustomException(AlbumErrorCode.PAYMENT_NOT_REQUIRED_FOR_BASIC_TYPE);
         }
     }
 
@@ -287,7 +287,7 @@ public class AlbumServiceImpl implements AlbumService {
 
     private void validateMaxParticipantLimit(Album album) {
         if (participantRepository.countByAlbumId(album.getId())
-                >= album.getPlan().getMaxParticipants()) {
+                >= album.getType().getMaxParticipants()) {
             throw new CustomException(AlbumErrorCode.ALBUM_PARTICIPANT_LIMIT_EXCEEDED);
         }
     }
@@ -324,7 +324,7 @@ public class AlbumServiceImpl implements AlbumService {
     }
 
     private void validateSubscriptionInactive(Album album) {
-        if (album.getPlan() == AlbumPlan.BASIC) return;
+        if (album.getType() == AlbumType.BASIC) return;
 
         if (album.getSubscription().getStatus() == SubscriptionStatus.ACTIVE) {
             throw new CustomException(AlbumErrorCode.SUBSCRIPTION_ACTIVE);

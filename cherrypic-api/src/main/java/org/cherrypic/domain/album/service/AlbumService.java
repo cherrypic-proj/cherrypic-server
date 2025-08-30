@@ -1,6 +1,6 @@
 package org.cherrypic.domain.album.service;
 
-import org.cherrypic.album.enums.AlbumPlan;
+import org.cherrypic.album.enums.AlbumType;
 import org.cherrypic.domain.album.dto.request.AlbumCreateRequest;
 import org.cherrypic.domain.album.dto.request.AlbumUpdateRequest;
 import org.cherrypic.domain.album.dto.response.*;
@@ -21,7 +21,7 @@ public interface AlbumService {
     AlbumInfoResponse getAlbum(Long albumId);
 
     SliceResponse<AlbumListResponse> getParticipatingAlbumsByCondition(
-            AlbumPlan plan, String keyword, Long lastAlbumId, int size, SortDirection direction);
+            AlbumType type, String keyword, Long lastAlbumId, int size, SortDirection direction);
 
     void deleteAlbum(Long albumId);
 }

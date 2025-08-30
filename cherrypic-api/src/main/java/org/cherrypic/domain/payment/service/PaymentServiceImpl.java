@@ -11,7 +11,7 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.cherrypic.album.entity.Album;
-import org.cherrypic.album.enums.AlbumPlan;
+import org.cherrypic.album.enums.AlbumType;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.album.repository.AlbumRepository;
 import org.cherrypic.domain.participant.repository.ParticipantRepository;
@@ -48,22 +48,22 @@ public class PaymentServiceImpl implements PaymentService {
     public PaymentReadyResponse preparePayment(PaymentReadyRequest request) {
         final Member currentMember = memberUtil.getCurrentMember();
 
-        AlbumPlan plan = request.plan();
-        if (plan.equals(AlbumPlan.BASIC)) {
-            throw new CustomException(PaymentErrorCode.UNSUPPORTED_PAYMENT_PLAN);
+        AlbumType type = request.type();
+        if (type.equals(AlbumType.BASIC)) {
+            throw new CustomException(PaymentErrorCode.UNSUPPORTED_PAYMENT);
         }
 
-        int price = plan.getPrice();
-        String merchantUid = generateMerchantUid(currentMember.getId(), plan);
+        int price = type.getPrice();
+        String merchantUid = generateMerchantUid(currentMember.getId(), type);
         String buyerName = currentMember.getNickname();
 
         PaymentPurpose purpose =
-                determinePaymentPurpose(currentMember.getId(), request.albumId(), plan);
+                determinePaymentPurpose(currentMember.getId(), request.albumId(), type);
 
         Payment payment = Payment.createPayment(currentMember, merchantUid, price, purpose);
         paymentRepository.save(payment);
 
-        return PaymentReadyResponse.of(plan, price, merchantUid, buyerName, purpose);
+        return PaymentReadyResponse.of(type, price, merchantUid, buyerName, purpose);
     }
 
     @Override
@@ -107,14 +107,14 @@ public class PaymentServiceImpl implements PaymentService {
         }
     }
 
-    private String generateMerchantUid(Long memberId, AlbumPlan plan) {
+    private String generateMerchantUid(Long memberId, AlbumType type) {
         String date = LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE);
         String uuid = UUID.randomUUID().toString().replace("-", "").substring(0, 12);
 
-        return String.format("album_%s_%s_%d_%s", date, plan.name().toLowerCase(), memberId, uuid);
+        return String.format("album_%s_%s_%d_%s", date, type.name().toLowerCase(), memberId, uuid);
     }
 
-    private PaymentPurpose determinePaymentPurpose(Long memberId, Long albumId, AlbumPlan plan) {
+    private PaymentPurpose determinePaymentPurpose(Long memberId, Long albumId, AlbumType type) {
         if (albumId == null) {
             return PaymentPurpose.CREATION;
         }
@@ -122,13 +122,13 @@ public class PaymentServiceImpl implements PaymentService {
         final Album album = getAlbumById(albumId);
         validateAlbumHost(memberId, album.getId());
 
-        AlbumPlan currentPlan = album.getPlan();
+        AlbumType currentType = album.getType();
 
-        if (currentPlan == plan) {
+        if (currentType == type) {
             return PaymentPurpose.RENEWAL;
         }
 
-        if (plan.getPrice() > currentPlan.getPrice()) {
+        if (type.getPrice() > currentType.getPrice()) {
             return PaymentPurpose.UPGRADE;
         }
 
