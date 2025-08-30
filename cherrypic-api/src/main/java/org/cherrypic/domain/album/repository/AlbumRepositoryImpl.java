@@ -1,12 +1,14 @@
 package org.cherrypic.domain.album.repository;
 
 import static org.cherrypic.album.entity.QAlbum.album;
+import static org.cherrypic.favorites.entity.QFavorites.favorites;
 import static org.cherrypic.participant.entity.QParticipant.participant;
 
-import com.querydsl.core.types.Projections;
+import com.querydsl.core.Tuple;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.util.List;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.cherrypic.album.enums.AlbumType;
 import org.cherrypic.domain.album.dto.response.AlbumListResponse;
@@ -30,16 +32,15 @@ public class AlbumRepositoryImpl implements AlbumRepositoryCustom {
             Long lastAlbumId,
             int size,
             SortDirection direction) {
-        List<AlbumListResponse> results =
+        List<Tuple> tuples =
                 queryFactory
                         .select(
-                                Projections.constructor(
-                                        AlbumListResponse.class,
-                                        album.id,
-                                        album.title,
-                                        album.coverUrl,
-                                        album.type,
-                                        participant.favorites.marked))
+                                album.id,
+                                album.title,
+                                album.coverUrl,
+                                album.type,
+                                album.createdAt,
+                                participant.favorites.marked)
                         .from(participant)
                         .join(participant.album, album)
                         .where(
@@ -50,6 +51,19 @@ public class AlbumRepositoryImpl implements AlbumRepositoryCustom {
                         .orderBy(direction == SortDirection.DESC ? album.id.desc() : album.id.asc())
                         .limit(size + 1)
                         .fetch();
+
+        List<AlbumListResponse> results =
+                tuples.stream()
+                        .map(
+                                tuple ->
+                                        AlbumListResponse.of(
+                                                tuple.get(album.id),
+                                                tuple.get(album.title),
+                                                tuple.get(album.coverUrl),
+                                                tuple.get(album.type),
+                                                tuple.get(album.createdAt),
+                                                tuple.get(favorites.marked)))
+                        .collect(Collectors.toList());
 
         return checkLastPage(size, results);
     }
