@@ -25,6 +25,7 @@ import org.cherrypic.domain.album.repository.AlbumRepository;
 import org.cherrypic.domain.member.repository.MemberRepository;
 import org.cherrypic.domain.participant.repository.ParticipantRepository;
 import org.cherrypic.domain.payment.dto.request.PaymentReadyRequest;
+import org.cherrypic.domain.payment.dto.response.PaymentUnlinkedResponse;
 import org.cherrypic.domain.payment.exception.PaymentErrorCode;
 import org.cherrypic.domain.payment.repository.PaymentRepository;
 import org.cherrypic.domain.payment.service.PaymentService;
@@ -402,6 +403,59 @@ public class PaymentServiceTest extends IntegrationTest {
             given(iamportPayment.getAmount()).willReturn(amount);
             given(iamportPayment.getStatus()).willReturn(status);
             given(iamportPayment.getPaidAt()).willReturn(new Date());
+        }
+    }
+
+    @Nested
+    class 앨범과_연결되지_않은_완료된_결제_내역을_조회할_때 {
+
+        @BeforeEach
+        void setUp() {
+            Member member =
+                    Member.createMember(
+                            OauthInfo.createOauthInfo("testOauthId", "testOauthProvider"),
+                            "testNickname",
+                            "testProfileImageUrl");
+            memberRepository.save(member);
+            given(memberUtil.getCurrentMember()).willReturn(member);
+        }
+
+        @Test
+        void 존재하면_1건의_결제_내역을_반환한다() {
+            // given
+            Member member = memberRepository.findById(1L).get();
+
+            // 결제는 완료되었지만 아직 앨범과 연결되지 않은 유료 앨범 최초 생성 결제
+            Payment payment =
+                    Payment.createPayment(member, "testMerchantUid", 5900, PaymentPurpose.CREATION);
+            payment.updatePayment(
+                    "testImpUid",
+                    "kakaopay",
+                    PaymentStatus.PAID,
+                    LocalDateTime.of(2025, 8, 31, 20, 0));
+            paymentRepository.save(payment);
+
+            PaymentUnlinkedResponse response = paymentService.getUnlinkedPayment();
+
+            // when & then
+            Assertions.assertAll(
+                    () ->
+                            assertThat(response)
+                                    .extracting("paymentId", "amount", "purpose", "paidAt")
+                                    .containsExactly(
+                                            1L,
+                                            5900,
+                                            PaymentPurpose.CREATION,
+                                            LocalDateTime.of(2025, 8, 31, 20, 0)));
+        }
+
+        @Test
+        void 존재하지_않으면_null을_반환한다() {
+            // given
+            PaymentUnlinkedResponse response = paymentService.getUnlinkedPayment();
+
+            // when & then
+            assertThat(response).isNull();
         }
     }
 }
