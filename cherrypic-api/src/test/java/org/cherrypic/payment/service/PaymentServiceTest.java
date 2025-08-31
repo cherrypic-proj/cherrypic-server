@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.siot.IamportRestClient.IamportClient;
 import com.siot.IamportRestClient.exception.IamportResponseException;
@@ -261,6 +262,25 @@ public class PaymentServiceTest extends IntegrationTest {
             assertThatThrownBy(() -> paymentService.preparePayment(request))
                     .isInstanceOf(CustomException.class)
                     .hasMessage(PaymentErrorCode.UNSUPPORTED_PAYMENT.getMessage());
+        }
+
+        @Test
+        void 사용되지_않은_완료된_결제가_존재하면_예외가_발생한다() {
+            // given
+            Member member = memberRepository.findById(1L).get();
+
+            Payment payment =
+                    Payment.createPayment(member, "testMerchantUid", 5900, PaymentPurpose.RENEWAL);
+            payment.updatePayment(
+                    "testImpUid", "kakaopay", PaymentStatus.PAID, LocalDateTime.now());
+            paymentRepository.save(payment);
+
+            PaymentReadyRequest request = new PaymentReadyRequest(AlbumType.PRO, null);
+
+            // when & then
+            assertThatThrownBy(() -> paymentService.preparePayment(request))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(PaymentErrorCode.UNLINKED_PAYMENT_ALREADY_EXISTS.getMessage());
         }
     }
 

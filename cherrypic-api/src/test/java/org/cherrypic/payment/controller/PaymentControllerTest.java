@@ -359,6 +359,31 @@ class PaymentControllerTest {
                     .andExpect(jsonPath("$.data.message").value("BASIC 유형은 결제를 지원하지 않습니다."));
         }
 
+        @Test
+        void 사용되지_않은_완료된_결제가_존재하면_예외가_발생한다() throws Exception {
+            // given
+            PaymentReadyRequest request = new PaymentReadyRequest(AlbumType.PRO, null);
+
+            given(paymentService.preparePayment(request))
+                    .willThrow(
+                            new CustomException(PaymentErrorCode.UNLINKED_PAYMENT_ALREADY_EXISTS));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/payments/ready")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("UNLINKED_PAYMENT_ALREADY_EXISTS"))
+                    .andExpect(
+                            jsonPath("$.data.message")
+                                    .value("아직 사용되지 않은 완료된 결제 내역이 존재합니다. 앨범 생성 또는 구독을 먼저 완료해주세요."));
+        }
+
         @ParameterizedTest
         @NullSource
         @EmptySource
