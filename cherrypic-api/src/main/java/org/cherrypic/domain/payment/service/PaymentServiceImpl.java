@@ -54,6 +54,14 @@ public class PaymentServiceImpl implements PaymentService {
             throw new CustomException(PaymentErrorCode.UNSUPPORTED_PAYMENT);
         }
 
+        paymentRepository
+                .findLatestPaidUnlinkedPayment(currentMember.getId())
+                .ifPresent(
+                        payment -> {
+                            throw new CustomException(
+                                    PaymentErrorCode.UNLINKED_PAYMENT_ALREADY_EXISTS);
+                        });
+
         int price = type.getPrice();
         String merchantUid = generateMerchantUid(currentMember.getId(), type);
         String buyerName = currentMember.getNickname();
