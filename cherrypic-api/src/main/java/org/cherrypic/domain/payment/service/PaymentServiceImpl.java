@@ -17,6 +17,7 @@ import org.cherrypic.domain.album.repository.AlbumRepository;
 import org.cherrypic.domain.participant.repository.ParticipantRepository;
 import org.cherrypic.domain.payment.dto.request.PaymentReadyRequest;
 import org.cherrypic.domain.payment.dto.response.PaymentReadyResponse;
+import org.cherrypic.domain.payment.dto.response.PaymentUnlinkedResponse;
 import org.cherrypic.domain.payment.dto.response.PaymentVerificationResponse;
 import org.cherrypic.domain.payment.exception.PaymentErrorCode;
 import org.cherrypic.domain.payment.repository.PaymentRepository;
@@ -105,6 +106,14 @@ public class PaymentServiceImpl implements PaymentService {
         } catch (IOException e) {
             throw new CustomException(PaymentErrorCode.IAMPORT_API_UNAVAILABLE);
         }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PaymentUnlinkedResponse getUnlinkedPayment() {
+        final Member currentMember = memberUtil.getCurrentMember();
+
+        return paymentRepository.findLatestPaidUnlinkedPayment(currentMember.getId()).orElse(null);
     }
 
     private String generateMerchantUid(Long memberId, AlbumType type) {
