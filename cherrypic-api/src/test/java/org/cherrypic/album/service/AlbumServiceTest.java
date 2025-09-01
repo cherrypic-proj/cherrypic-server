@@ -196,24 +196,40 @@ class AlbumServiceTest extends IntegrationTest {
                 // 검증 완료된 결제
                 Payment payment1 =
                         Payment.createPayment(
-                                member1, "testMerchantUid", 5900, PaymentPurpose.CREATION);
+                                member1,
+                                "testMerchantUid",
+                                5900,
+                                PaymentPurpose.CREATION,
+                                AlbumType.PRO);
                 payment1.updatePayment(
                         "testImpUid", "testPgProvider", PaymentStatus.PAID, LocalDateTime.now());
                 // 검증되지 않은 결제
                 Payment payment2 =
                         Payment.createPayment(
-                                member1, "testMerchantUid", 5900, PaymentPurpose.CREATION);
+                                member1,
+                                "testMerchantUid",
+                                5900,
+                                PaymentPurpose.CREATION,
+                                AlbumType.PRO);
                 // 검증 완료 + 유료 앨범에 쓰인 결제
                 Payment payment3 =
                         Payment.createPayment(
-                                member1, "testMerchantUid", 5900, PaymentPurpose.CREATION);
+                                member1,
+                                "testMerchantUid",
+                                5900,
+                                PaymentPurpose.CREATION,
+                                AlbumType.PRO);
                 payment3.updatePayment(
                         "testImpUid", "testPgProvider", PaymentStatus.PAID, LocalDateTime.now());
                 payment3.updatePayment(PaymentPurpose.CREATION, album);
                 // 구독 갱신 목적으로 쓰인 결제
                 Payment payment4 =
                         Payment.createPayment(
-                                member1, "testMerchantUid", 5900, PaymentPurpose.RENEWAL);
+                                member1,
+                                "testMerchantUid",
+                                5900,
+                                PaymentPurpose.RENEWAL,
+                                AlbumType.PRO);
                 payment4.updatePayment(
                         "testImpUid", "testPgProvider", PaymentStatus.PAID, LocalDateTime.now());
                 paymentRepository.saveAll(List.of(payment1, payment2, payment3, payment4));

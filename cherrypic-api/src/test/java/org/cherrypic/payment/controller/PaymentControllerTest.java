@@ -1,16 +1,20 @@
 package org.cherrypic.payment.controller;
 
+import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.BDDMockito.given;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.LocalDateTime;
 import org.cherrypic.album.enums.AlbumType;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.payment.controller.PaymentController;
 import org.cherrypic.domain.payment.dto.request.PaymentReadyRequest;
 import org.cherrypic.domain.payment.dto.response.PaymentReadyResponse;
+import org.cherrypic.domain.payment.dto.response.PaymentUnlinkedResponse;
 import org.cherrypic.domain.payment.dto.response.PaymentVerificationResponse;
 import org.cherrypic.domain.payment.exception.PaymentErrorCode;
 import org.cherrypic.domain.payment.service.PaymentService;
@@ -359,6 +363,31 @@ class PaymentControllerTest {
                     .andExpect(jsonPath("$.data.message").value("BASIC 유형은 결제를 지원하지 않습니다."));
         }
 
+        @Test
+        void 사용되지_않은_완료된_결제가_존재하면_예외가_발생한다() throws Exception {
+            // given
+            PaymentReadyRequest request = new PaymentReadyRequest(AlbumType.PRO, null);
+
+            given(paymentService.preparePayment(request))
+                    .willThrow(
+                            new CustomException(PaymentErrorCode.UNLINKED_PAYMENT_ALREADY_EXISTS));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/payments/ready")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("UNLINKED_PAYMENT_ALREADY_EXISTS"))
+                    .andExpect(
+                            jsonPath("$.data.message")
+                                    .value("아직 사용되지 않은 완료된 결제 내역이 존재합니다. 앨범 생성 또는 구독을 먼저 완료해주세요."));
+        }
+
         @ParameterizedTest
         @NullSource
         @EmptySource
@@ -483,6 +512,50 @@ class PaymentControllerTest {
                     .andExpect(
                             jsonPath("$.data.message")
                                     .value("결제 대행 시스템(Iamport)과의 통신에 실패했습니다. 잠시 후 다시 시도해주세요."));
+        }
+    }
+
+    @Nested
+    class 앨범과_연결되지_않은_완료된_결제_내역_조회_요청_시 {
+
+        @Test
+        void 존재하면_1건의_결제_내역을_반환한다() throws Exception {
+            // given
+            PaymentUnlinkedResponse response =
+                    new PaymentUnlinkedResponse(
+                            1L,
+                            AlbumType.PRO,
+                            5900,
+                            PaymentPurpose.RENEWAL,
+                            LocalDateTime.of(2025, 8, 31, 20, 0));
+
+            given(paymentService.getUnlinkedPayment()).willReturn(response);
+
+            // when & then
+            ResultActions perform = mockMvc.perform(get("/payments/unlinked"));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
+                    .andExpect(jsonPath("$.data.paymentId").value("1"))
+                    .andExpect(jsonPath("$.data.albumType").value("PRO"))
+                    .andExpect(jsonPath("$.data.amount").value("5900"))
+                    .andExpect(jsonPath("$.data.purpose").value("RENEWAL"))
+                    .andExpect(jsonPath("$.data.paidAt").value("2025-08-31T20:00:00"));
+        }
+
+        @Test
+        void 존재하지_않으면_null을_반환한다() throws Exception {
+            // given
+            given(paymentService.getUnlinkedPayment()).willReturn(null);
+
+            // when & then
+            ResultActions perform = mockMvc.perform(get("/payments/unlinked"));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
+                    .andExpect(jsonPath("$.data").value(nullValue()));
         }
     }
 }

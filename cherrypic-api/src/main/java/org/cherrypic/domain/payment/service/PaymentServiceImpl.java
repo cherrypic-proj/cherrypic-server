@@ -17,6 +17,7 @@ import org.cherrypic.domain.album.repository.AlbumRepository;
 import org.cherrypic.domain.participant.repository.ParticipantRepository;
 import org.cherrypic.domain.payment.dto.request.PaymentReadyRequest;
 import org.cherrypic.domain.payment.dto.response.PaymentReadyResponse;
+import org.cherrypic.domain.payment.dto.response.PaymentUnlinkedResponse;
 import org.cherrypic.domain.payment.dto.response.PaymentVerificationResponse;
 import org.cherrypic.domain.payment.exception.PaymentErrorCode;
 import org.cherrypic.domain.payment.repository.PaymentRepository;
@@ -53,6 +54,14 @@ public class PaymentServiceImpl implements PaymentService {
             throw new CustomException(PaymentErrorCode.UNSUPPORTED_PAYMENT);
         }
 
+        paymentRepository
+                .findLatestPaidUnlinkedPayment(currentMember.getId())
+                .ifPresent(
+                        payment -> {
+                            throw new CustomException(
+                                    PaymentErrorCode.UNLINKED_PAYMENT_ALREADY_EXISTS);
+                        });
+
         int price = type.getPrice();
         String merchantUid = generateMerchantUid(currentMember.getId(), type);
         String buyerName = currentMember.getNickname();
@@ -60,7 +69,7 @@ public class PaymentServiceImpl implements PaymentService {
         PaymentPurpose purpose =
                 determinePaymentPurpose(currentMember.getId(), request.albumId(), type);
 
-        Payment payment = Payment.createPayment(currentMember, merchantUid, price, purpose);
+        Payment payment = Payment.createPayment(currentMember, merchantUid, price, purpose, type);
         paymentRepository.save(payment);
 
         return PaymentReadyResponse.of(type, price, merchantUid, buyerName, purpose);
@@ -105,6 +114,14 @@ public class PaymentServiceImpl implements PaymentService {
         } catch (IOException e) {
             throw new CustomException(PaymentErrorCode.IAMPORT_API_UNAVAILABLE);
         }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PaymentUnlinkedResponse getUnlinkedPayment() {
+        final Member currentMember = memberUtil.getCurrentMember();
+
+        return paymentRepository.findLatestPaidUnlinkedPayment(currentMember.getId()).orElse(null);
     }
 
     private String generateMerchantUid(Long memberId, AlbumType type) {

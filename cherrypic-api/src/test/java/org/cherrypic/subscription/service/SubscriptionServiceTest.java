@@ -237,24 +237,43 @@ class SubscriptionServiceTest extends IntegrationTest {
 
             // 완료된 결제
             Payment payment1 =
-                    Payment.createPayment(member1, "testMerchantUid", 5900, PaymentPurpose.RENEWAL);
+                    Payment.createPayment(
+                            member1,
+                            "testMerchantUid",
+                            5900,
+                            PaymentPurpose.RENEWAL,
+                            AlbumType.PRO);
             payment1.updatePayment(
                     "testImpUid", "testPgProvider", PaymentStatus.PAID, LocalDateTime.now());
 
             // 완료된 다른 회원의 결제
             Payment payment2 =
-                    Payment.createPayment(member2, "testMerchantUid", 5900, PaymentPurpose.RENEWAL);
+                    Payment.createPayment(
+                            member2,
+                            "testMerchantUid",
+                            5900,
+                            PaymentPurpose.RENEWAL,
+                            AlbumType.PRO);
             payment2.updatePayment(
                     "testImpUid", "testPgProvider", PaymentStatus.PAID, LocalDateTime.now());
 
             // 완료되지 않은 결제
             Payment payment3 =
-                    Payment.createPayment(member1, "testMerchantUid", 5900, PaymentPurpose.RENEWAL);
+                    Payment.createPayment(
+                            member1,
+                            "testMerchantUid",
+                            5900,
+                            PaymentPurpose.RENEWAL,
+                            AlbumType.PRO);
 
             // 유료 앨범 생성에 쓰인 완료된 결제
             Payment payment4 =
                     Payment.createPayment(
-                            member1, "testMerchantUid", 5900, PaymentPurpose.CREATION);
+                            member1,
+                            "testMerchantUid",
+                            5900,
+                            PaymentPurpose.CREATION,
+                            AlbumType.PRO);
             payment4.updatePayment(
                     "testImpUid", "testPgProvider", PaymentStatus.PAID, LocalDateTime.now());
             payment4.updatePayment(PaymentPurpose.CREATION, album1);
@@ -262,7 +281,11 @@ class SubscriptionServiceTest extends IntegrationTest {
             // 구독 업그레이드 목적으로 쓰인 결제
             Payment payment5 =
                     Payment.createPayment(
-                            member1, "testMerchantUid", 12900, PaymentPurpose.UPGRADE);
+                            member1,
+                            "testMerchantUid",
+                            12900,
+                            PaymentPurpose.UPGRADE,
+                            AlbumType.PREMIUM);
             payment5.updatePayment(
                     "testImpUid", "testPgProvider", PaymentStatus.PAID, LocalDateTime.now());
 
