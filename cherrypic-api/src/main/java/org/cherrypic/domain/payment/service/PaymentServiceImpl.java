@@ -69,7 +69,7 @@ public class PaymentServiceImpl implements PaymentService {
         PaymentPurpose purpose =
                 determinePaymentPurpose(currentMember.getId(), request.albumId(), type);
 
-        Payment payment = Payment.createPayment(currentMember, merchantUid, price, purpose);
+        Payment payment = Payment.createPayment(currentMember, merchantUid, price, purpose, type);
         paymentRepository.save(payment);
 
         return PaymentReadyResponse.of(type, price, merchantUid, buyerName, purpose);
