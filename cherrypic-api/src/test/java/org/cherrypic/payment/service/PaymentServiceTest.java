@@ -271,7 +271,8 @@ public class PaymentServiceTest extends IntegrationTest {
             Member member = memberRepository.findById(1L).get();
 
             Payment payment =
-                    Payment.createPayment(member, "testMerchantUid", 5900, PaymentPurpose.RENEWAL);
+                    Payment.createPayment(
+                            member, "testMerchantUid", 5900, PaymentPurpose.RENEWAL, AlbumType.PRO);
             payment.updatePayment(
                     "testImpUid", "kakaopay", PaymentStatus.PAID, LocalDateTime.now());
             paymentRepository.save(payment);
@@ -304,7 +305,11 @@ public class PaymentServiceTest extends IntegrationTest {
 
             paymentRepository.save(
                     Payment.createPayment(
-                            member, MERCHANT_UID_EXISTING, 3900, PaymentPurpose.CREATION));
+                            member,
+                            MERCHANT_UID_EXISTING,
+                            3900,
+                            PaymentPurpose.CREATION,
+                            AlbumType.PRO));
         }
 
         @Test
@@ -427,7 +432,12 @@ public class PaymentServiceTest extends IntegrationTest {
 
             // 결제는 완료되었지만 아직 앨범과 연결되지 않은 유료 앨범 최초 생성 결제
             Payment payment =
-                    Payment.createPayment(member, "testMerchantUid", 5900, PaymentPurpose.CREATION);
+                    Payment.createPayment(
+                            member,
+                            "testMerchantUid",
+                            5900,
+                            PaymentPurpose.CREATION,
+                            AlbumType.PRO);
             payment.updatePayment(
                     "testImpUid",
                     "kakaopay",
