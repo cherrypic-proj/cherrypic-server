@@ -451,9 +451,11 @@ public class PaymentServiceTest extends IntegrationTest {
             Assertions.assertAll(
                     () ->
                             assertThat(response)
-                                    .extracting("paymentId", "amount", "purpose", "paidAt")
+                                    .extracting(
+                                            "paymentId", "albumType", "amount", "purpose", "paidAt")
                                     .containsExactly(
                                             1L,
+                                            AlbumType.PRO,
                                             5900,
                                             PaymentPurpose.CREATION,
                                             LocalDateTime.of(2025, 8, 31, 20, 0)));

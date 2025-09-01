@@ -24,6 +24,7 @@ public class PaymentRepositoryImpl implements PaymentRepositoryCustom {
                                 Projections.constructor(
                                         PaymentUnlinkedResponse.class,
                                         payment.id,
+                                        payment.albumType,
                                         payment.amount,
                                         payment.purpose,
                                         payment.paidAt))

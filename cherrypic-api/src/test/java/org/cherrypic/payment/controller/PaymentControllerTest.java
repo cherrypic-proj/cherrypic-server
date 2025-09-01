@@ -523,7 +523,11 @@ class PaymentControllerTest {
             // given
             PaymentUnlinkedResponse response =
                     new PaymentUnlinkedResponse(
-                            1L, 5900, PaymentPurpose.RENEWAL, LocalDateTime.of(2025, 8, 31, 20, 0));
+                            1L,
+                            AlbumType.PRO,
+                            5900,
+                            PaymentPurpose.RENEWAL,
+                            LocalDateTime.of(2025, 8, 31, 20, 0));
 
             given(paymentService.getUnlinkedPayment()).willReturn(response);
 
@@ -534,6 +538,7 @@ class PaymentControllerTest {
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
                     .andExpect(jsonPath("$.data.paymentId").value("1"))
+                    .andExpect(jsonPath("$.data.albumType").value("PRO"))
                     .andExpect(jsonPath("$.data.amount").value("5900"))
                     .andExpect(jsonPath("$.data.purpose").value("RENEWAL"))
                     .andExpect(jsonPath("$.data.paidAt").value("2025-08-31T20:00:00"));
