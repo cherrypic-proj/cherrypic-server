@@ -3,7 +3,7 @@ package org.cherrypic.tempalbum.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.AccessLevel;
@@ -34,7 +34,7 @@ public class TempAlbum extends BaseTimeEntity {
     @Enumerated(EnumType.STRING)
     private TempAlbumType type;
 
-    @NotNull private LocalDateTime expiredAt;
+    @NotNull private LocalDate expiredAt;
 
     private String url;
 
@@ -47,7 +47,7 @@ public class TempAlbum extends BaseTimeEntity {
             String title,
             BigDecimal capacityGb,
             TempAlbumType type,
-            LocalDateTime expiredAt) {
+            LocalDate expiredAt) {
         this.member = member;
         this.title = title;
         this.capacityGb = capacityGb;
@@ -61,7 +61,7 @@ public class TempAlbum extends BaseTimeEntity {
                 .title(title)
                 .capacityGb(BigDecimal.ZERO)
                 .type(TempAlbumType.DEFAULT)
-                .expiredAt(LocalDateTime.now().plusDays(TempAlbumType.DEFAULT.getDaysToLive()))
+                .expiredAt(LocalDate.now().plusDays(TempAlbumType.DEFAULT.getDaysToLive()))
                 .build();
     }
 }
