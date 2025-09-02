@@ -360,7 +360,7 @@ class PaymentControllerTest {
                     .andExpect(jsonPath("$.success").value(false))
                     .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
                     .andExpect(jsonPath("$.data.code").value("UNSUPPORTED_PAYMENT"))
-                    .andExpect(jsonPath("$.data.message").value("BASIC 유형은 결제를 지원하지 않습니다."));
+                    .andExpect(jsonPath("$.data.message").value("BASIC 앨범 유형은 결제 기능을 지원하지 않습니다."));
         }
 
         @Test
