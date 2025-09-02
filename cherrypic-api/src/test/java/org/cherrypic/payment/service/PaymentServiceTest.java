@@ -1,10 +1,9 @@
 package org.cherrypic.payment.service;
 
+import static org.assertj.core.api.Assertions.*;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.siot.IamportRestClient.IamportClient;
 import com.siot.IamportRestClient.exception.IamportResponseException;
@@ -25,11 +24,14 @@ import org.cherrypic.domain.album.repository.AlbumRepository;
 import org.cherrypic.domain.member.repository.MemberRepository;
 import org.cherrypic.domain.participant.repository.ParticipantRepository;
 import org.cherrypic.domain.payment.dto.request.PaymentReadyRequest;
+import org.cherrypic.domain.payment.dto.response.PaymentListResponse;
 import org.cherrypic.domain.payment.dto.response.PaymentUnlinkedResponse;
 import org.cherrypic.domain.payment.exception.PaymentErrorCode;
 import org.cherrypic.domain.payment.repository.PaymentRepository;
 import org.cherrypic.domain.payment.service.PaymentService;
 import org.cherrypic.exception.CustomException;
+import org.cherrypic.global.pagination.SliceResponse;
+import org.cherrypic.global.pagination.SortDirection;
 import org.cherrypic.global.util.MemberUtil;
 import org.cherrypic.member.entity.Member;
 import org.cherrypic.member.entity.OauthInfo;
@@ -468,6 +470,163 @@ public class PaymentServiceTest extends IntegrationTest {
 
             // when & then
             assertThat(response).isNull();
+        }
+    }
+
+    @Nested
+    class 앨범의_결제_내역_목록을_조회할_때 {
+
+        @BeforeEach
+        void setUp() {
+            Member member1 =
+                    Member.createMember(
+                            OauthInfo.createOauthInfo("testOauthId1", "testOauthProvider1"),
+                            "testNickname1",
+                            "testProfileImageUrl1");
+            Member member2 =
+                    Member.createMember(
+                            OauthInfo.createOauthInfo("testOauthId2", "testOauthProvider2"),
+                            "testNickname2",
+                            "testProfileImageUrl2");
+            memberRepository.saveAll(List.of(member1, member2));
+            given(memberUtil.getCurrentMember()).willReturn(member1);
+
+            Album album1 = Album.createAlbum("testTitle1", "testCoverUrl1", AlbumType.PRO, false);
+            Album album2 =
+                    Album.createAlbum("testTitle2", "testCoverUrl2", AlbumType.PREMIUM, false);
+            Album album3 = Album.createAlbum("testTitle3", "testCoverUrl3", AlbumType.PRO, false);
+            Album album4 = Album.createAlbum("testTitle4", "testCoverUrl4", AlbumType.PRO, false);
+            Album album5 = Album.createAlbum("testTitle5", "testCoverUrl5", AlbumType.BASIC, false);
+            albumRepository.saveAll(List.of(album1, album2, album3, album4, album5));
+
+            Participant participant1 =
+                    Participant.createParticipant(member1, album1, ParticipantRole.HOST);
+            Participant participant2 =
+                    Participant.createParticipant(member1, album2, ParticipantRole.HOST);
+            Participant participant3 =
+                    Participant.createParticipant(member1, album4, ParticipantRole.STANDARD);
+            Participant participant4 =
+                    Participant.createParticipant(member1, album5, ParticipantRole.HOST);
+            participantRepository.saveAll(
+                    List.of(participant1, participant2, participant3, participant4));
+
+            Payment payment1 =
+                    Payment.createPayment(
+                            member1,
+                            "testMerchantUid1",
+                            5900,
+                            PaymentPurpose.CREATION,
+                            AlbumType.PRO);
+            payment1.updatePayment(
+                    "testImpUid1",
+                    "kakaopay",
+                    PaymentStatus.PAID,
+                    LocalDateTime.of(2025, 8, 1, 20, 0));
+            payment1.updatePayment(PaymentPurpose.CREATION, album1);
+            Payment payment2 =
+                    Payment.createPayment(
+                            member1,
+                            "testMerchantUid2",
+                            12900,
+                            PaymentPurpose.RENEWAL,
+                            AlbumType.PRO);
+            payment2.updatePayment(
+                    "testImpUid2",
+                    "kakaopay",
+                    PaymentStatus.PAID,
+                    LocalDateTime.of(2025, 9, 1, 20, 0));
+            payment2.updatePayment(PaymentPurpose.RENEWAL, album1);
+            paymentRepository.saveAll(List.of(payment1, payment2));
+        }
+
+        @Test
+        void 정렬_조건이_ASC이면_paymentId를_오름차순으로_조회한다() {
+            // when
+            SliceResponse<PaymentListResponse> response =
+                    paymentService.getAlbumPayments(1L, null, 2, SortDirection.ASC);
+
+            // then
+            Assertions.assertAll(
+                    () ->
+                            assertThat(response.content())
+                                    .extracting("paymentId")
+                                    .containsExactly(1L, 2L),
+                    () -> assertThat(response.isLast()).isTrue());
+        }
+
+        @Test
+        void 정렬_조건이_DESC이면_paymentId를_내림차순으로_조회한다() {
+            // when
+            SliceResponse<PaymentListResponse> response =
+                    paymentService.getAlbumPayments(1L, null, 2, SortDirection.DESC);
+
+            // then
+            Assertions.assertAll(
+                    () ->
+                            assertThat(response.content())
+                                    .extracting("paymentId")
+                                    .containsExactly(2L, 1L),
+                    () -> assertThat(response.isLast()).isTrue());
+        }
+
+        @Test
+        void 마지막_페이지인_경우_isLast를_true로_반환한다() {
+            SliceResponse<PaymentListResponse> response =
+                    paymentService.getAlbumPayments(1L, null, 2, SortDirection.DESC);
+
+            // then
+            Assertions.assertAll(
+                    () -> assertThat(response.content().size()).isEqualTo(2),
+                    () -> assertThat(response.isLast()).isTrue());
+        }
+
+        @Test
+        void 마지막_페이지가_아닌_경우_isLast를_false로_반환한다() {
+            SliceResponse<PaymentListResponse> response =
+                    paymentService.getAlbumPayments(1L, null, 1, SortDirection.DESC);
+
+            // then
+            Assertions.assertAll(
+                    () -> assertThat(response.content().size()).isEqualTo(1),
+                    () -> assertThat(response.isLast()).isFalse());
+        }
+
+        @Test
+        void 앨범이_존재하지_않는_경우_예외가_발생한다() {
+            // when & then
+            assertThatThrownBy(
+                            () ->
+                                    paymentService.getAlbumPayments(
+                                            999L, null, 2, SortDirection.DESC))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(AlbumErrorCode.ALBUM_NOT_FOUND.getMessage());
+        }
+
+        @Test
+        void 앨범_참가자가_아닌_경우_예외가_발생한다() {
+            // when & then
+            assertThatThrownBy(
+                            () -> paymentService.getAlbumPayments(3L, null, 2, SortDirection.DESC))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(AlbumErrorCode.NOT_ALBUM_PARTICIPANT.getMessage());
+        }
+
+        @Test
+        void 앨범_방장이_아닌_경우_예외가_발생한다() {
+            // when & then
+            assertThatThrownBy(
+                            () -> paymentService.getAlbumPayments(4L, null, 2, SortDirection.DESC))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(AlbumErrorCode.NOT_ALBUM_HOST.getMessage());
+        }
+
+        @Test
+        void BASIC_유형인_경우_예외가_발생한다() {
+            // when & then
+            assertThatThrownBy(
+                            () -> paymentService.getAlbumPayments(5L, null, 2, SortDirection.DESC))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(PaymentErrorCode.UNSUPPORTED_PAYMENT.getMessage());
         }
     }
 }
