@@ -46,7 +46,7 @@ public class PaymentRepositoryImpl implements PaymentRepositoryCustom {
 
     @Override
     public Slice<PaymentListResponse> findAllByAlbumId(
-            Long albumId, Long lastPaymentId, int size, SortDirection direction) {
+            Long memberId, Long albumId, Long lastPaymentId, int size, SortDirection direction) {
         List<PaymentListResponse> results =
                 queryFactory
                         .select(
@@ -59,6 +59,7 @@ public class PaymentRepositoryImpl implements PaymentRepositoryCustom {
                         .where(
                                 payment.album.id.eq(albumId),
                                 payment.status.eq(PaymentStatus.PAID),
+                                payment.member.id.eq(memberId),
                                 lastPaymentIdCondition(lastPaymentId, direction))
                         .orderBy(
                                 direction == SortDirection.DESC

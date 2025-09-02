@@ -129,7 +129,8 @@ public class PaymentServiceImpl implements PaymentService {
         validatePaidAlbumType(album.getType());
 
         Slice<PaymentListResponse> results =
-                paymentRepository.findAllByAlbumId(albumId, lastPaymentId, size, direction);
+                paymentRepository.findAllByAlbumId(
+                        currentMember.getId(), albumId, lastPaymentId, size, direction);
 
         return SliceResponse.from(results);
     }

@@ -10,5 +10,5 @@ public interface PaymentRepositoryCustom {
     Optional<PaymentUnlinkedResponse> findLatestPaidUnlinkedPayment(Long memberId);
 
     Slice<PaymentListResponse> findAllByAlbumId(
-            Long albumId, Long lastPaymentId, int size, SortDirection direction);
+            Long memberId, Long albumId, Long lastPaymentId, int size, SortDirection direction);
 }
