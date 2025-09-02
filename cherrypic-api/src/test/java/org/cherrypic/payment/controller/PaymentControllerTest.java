@@ -8,7 +8,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import org.cherrypic.album.enums.AlbumType;
@@ -572,8 +571,8 @@ class PaymentControllerTest {
             // given
             List<PaymentListResponse> payments =
                     List.of(
-                            new PaymentListResponse(1L, LocalDate.of(2025, 9, 2), 5900),
-                            new PaymentListResponse(2L, LocalDate.of(2025, 10, 2), 5900));
+                            new PaymentListResponse(1L, LocalDateTime.of(2025, 9, 2, 0, 0), 5900),
+                            new PaymentListResponse(2L, LocalDateTime.of(2025, 10, 2, 0, 0), 5900));
 
             given(paymentService.getAlbumPayments(1L, null, 2, SortDirection.ASC))
                     .willReturn(new SliceResponse<>(payments, true));
@@ -599,8 +598,8 @@ class PaymentControllerTest {
             // given
             List<PaymentListResponse> payments =
                     List.of(
-                            new PaymentListResponse(2L, LocalDate.of(2025, 10, 2), 5900),
-                            new PaymentListResponse(1L, LocalDate.of(2025, 9, 2), 5900));
+                            new PaymentListResponse(2L, LocalDateTime.of(2025, 10, 2, 0, 0), 5900),
+                            new PaymentListResponse(1L, LocalDateTime.of(2025, 9, 2, 0, 0), 5900));
 
             given(paymentService.getAlbumPayments(1L, null, 2, SortDirection.DESC))
                     .willReturn(new SliceResponse<>(payments, true));
@@ -621,7 +620,7 @@ class PaymentControllerTest {
         void 마지막_페이지인_경우_isLast를_true로_응답한다() throws Exception {
             // given
             List<PaymentListResponse> payments =
-                    List.of(new PaymentListResponse(1L, LocalDate.of(2025, 9, 2), 5900));
+                    List.of(new PaymentListResponse(1L, LocalDateTime.of(2025, 9, 2, 0, 0), 5900));
 
             given(paymentService.getAlbumPayments(1L, null, 1, SortDirection.DESC))
                     .willReturn(new SliceResponse<>(payments, true));
@@ -642,8 +641,8 @@ class PaymentControllerTest {
             // given
             List<PaymentListResponse> payments =
                     List.of(
-                            new PaymentListResponse(2L, LocalDate.of(2025, 10, 2), 5900),
-                            new PaymentListResponse(1L, LocalDate.of(2025, 9, 2), 5900));
+                            new PaymentListResponse(2L, LocalDateTime.of(2025, 10, 2, 0, 0), 5900),
+                            new PaymentListResponse(1L, LocalDateTime.of(2025, 9, 2, 0, 0), 5900));
 
             given(paymentService.getAlbumPayments(1L, null, 1, SortDirection.DESC))
                     .willReturn(new SliceResponse<>(payments, false));
