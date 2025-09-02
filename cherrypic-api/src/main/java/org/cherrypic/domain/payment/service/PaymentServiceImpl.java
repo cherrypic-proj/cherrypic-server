@@ -54,9 +54,7 @@ public class PaymentServiceImpl implements PaymentService {
         final Member currentMember = memberUtil.getCurrentMember();
 
         AlbumType type = request.type();
-        if (type.equals(AlbumType.BASIC)) {
-            throw new CustomException(PaymentErrorCode.UNSUPPORTED_PAYMENT);
-        }
+        validatePaidAlbumType(type);
 
         paymentRepository
                 .findLatestPaidUnlinkedPayment(currentMember.getId())
@@ -128,6 +126,7 @@ public class PaymentServiceImpl implements PaymentService {
         final Album album = getAlbumById(albumId);
 
         validateAlbumHost(currentMember.getId(), album.getId());
+        validatePaidAlbumType(album.getType());
 
         Slice<PaymentListResponse> results =
                 paymentRepository.findAllByAlbumId(albumId, lastPaymentId, size, direction);
@@ -188,6 +187,12 @@ public class PaymentServiceImpl implements PaymentService {
 
         if (!participant.getRole().equals(ParticipantRole.HOST)) {
             throw new CustomException(AlbumErrorCode.NOT_ALBUM_HOST);
+        }
+    }
+
+    private void validatePaidAlbumType(AlbumType type) {
+        if (type == AlbumType.BASIC) {
+            throw new CustomException(PaymentErrorCode.UNSUPPORTED_PAYMENT);
         }
     }
 }
