@@ -14,6 +14,7 @@ import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.album.repository.AlbumRepository;
 import org.cherrypic.domain.album.repository.InvitationCodeRepository;
 import org.cherrypic.domain.event.repository.EventRepository;
+import org.cherrypic.domain.image.enums.BucketType;
 import org.cherrypic.domain.image.event.ImageDeleteEvent;
 import org.cherrypic.domain.image.event.ImagesDeleteEvent;
 import org.cherrypic.domain.participant.repository.ParticipantRepository;
@@ -99,7 +100,7 @@ public class AlbumServiceImpl implements AlbumService {
         validateAlbumHost(currentMember.getId(), album.getId());
 
         if (album.getCoverUrl() != null && !album.getCoverUrl().equals(request.coverUrl())) {
-            eventPublisher.publishEvent(ImageDeleteEvent.of(album.getCoverUrl()));
+            eventPublisher.publishEvent(ImageDeleteEvent.of(BucketType.MAIN, album.getCoverUrl()));
         }
 
         album.updateAlbum(request.title(), request.coverUrl());
@@ -214,12 +215,14 @@ public class AlbumServiceImpl implements AlbumService {
         validateRemainingParticipants(album, currentMember);
 
         final List<Event> events = eventRepository.findAllByAlbumId(album.getId());
+
         eventPublisher.publishEvent(
-                ImagesDeleteEvent.of(events.stream().map(Event::getCoverUrl).toList()));
+                ImagesDeleteEvent.of(
+                        BucketType.MAIN, events.stream().map(Event::getCoverUrl).toList()));
 
         eventPublisher.publishEvent(AlbumImagesDeleteEvent.of(album.getId()));
         if (album.getCoverUrl() != null) {
-            eventPublisher.publishEvent(ImageDeleteEvent.of(album.getCoverUrl()));
+            eventPublisher.publishEvent(ImageDeleteEvent.of(BucketType.MAIN, album.getCoverUrl()));
         }
 
         albumRepository.delete(album);

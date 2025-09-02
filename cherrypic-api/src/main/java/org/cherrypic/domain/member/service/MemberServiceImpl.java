@@ -1,6 +1,7 @@
 package org.cherrypic.domain.member.service;
 
 import lombok.RequiredArgsConstructor;
+import org.cherrypic.domain.image.enums.BucketType;
 import org.cherrypic.domain.image.event.ImageDeleteEvent;
 import org.cherrypic.domain.member.dto.request.FcmTokenSaveRequest;
 import org.cherrypic.domain.member.dto.request.MemberProfileUpdateRequest;
@@ -36,7 +37,8 @@ public class MemberServiceImpl implements MemberService {
 
         if (currentMember.getProfileImageUrl() != null
                 && !currentMember.getProfileImageUrl().equals(request.profileImageUrl())) {
-            eventPublisher.publishEvent(ImageDeleteEvent.of(currentMember.getProfileImageUrl()));
+            eventPublisher.publishEvent(
+                    ImageDeleteEvent.of(BucketType.MAIN, currentMember.getProfileImageUrl()));
         }
 
         currentMember.updateMember(request.nickname(), request.profileImageUrl());

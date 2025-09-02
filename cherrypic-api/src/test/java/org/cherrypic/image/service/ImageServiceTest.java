@@ -22,6 +22,7 @@ import org.cherrypic.domain.image.dto.response.AlbumImageListResponse;
 import org.cherrypic.domain.image.dto.response.EventImageListResponse;
 import org.cherrypic.domain.image.dto.response.PresignedUrlResponse;
 import org.cherrypic.domain.image.dto.response.PresignedUrlsResponse;
+import org.cherrypic.domain.image.enums.BucketType;
 import org.cherrypic.domain.image.enums.FileExtension;
 import org.cherrypic.domain.image.enums.ImageType;
 import org.cherrypic.domain.image.event.ImagesDeleteEvent;
@@ -87,6 +88,7 @@ class ImageServiceTest extends IntegrationTest {
             ImageUploadRequest request = new ImageUploadRequest(FileExtension.JPEG, "testMd5Hash");
             given(
                             s3Util.createPresignedUrl(
+                                    BucketType.MAIN,
                                     ImageType.MEMBER_PROFILE,
                                     1L,
                                     FileExtension.JPEG,
@@ -155,7 +157,11 @@ class ImageServiceTest extends IntegrationTest {
             ImageUploadRequest request = new ImageUploadRequest(FileExtension.JPEG, "testMd5Hash");
             given(
                             s3Util.createPresignedUrl(
-                                    ImageType.ALBUM_COVER, 1L, FileExtension.JPEG, "testMd5Hash"))
+                                    BucketType.MAIN,
+                                    ImageType.ALBUM_COVER,
+                                    1L,
+                                    FileExtension.JPEG,
+                                    "testMd5Hash"))
                     .willReturn(
                             "https://test-bucket.s3.ap-northeast-2.amazonaws.com/local/album-cover/1/550e8400-e29b-41d4-a716-446655440000.jpeg\n"
                                     + "?X-Amz-Algorithm=AWS4-HMAC-SHA256\n"
@@ -224,7 +230,11 @@ class ImageServiceTest extends IntegrationTest {
             ImageUploadRequest request = new ImageUploadRequest(FileExtension.JPEG, "testMd5Hash");
             given(
                             s3Util.createPresignedUrl(
-                                    ImageType.EVENT_COVER, 1L, FileExtension.JPEG, "testMd5Hash"))
+                                    BucketType.MAIN,
+                                    ImageType.EVENT_COVER,
+                                    1L,
+                                    FileExtension.JPEG,
+                                    "testMd5Hash"))
                     .willReturn(
                             "https://my-bucket.s3.ap-northeast-2.amazonaws.com/local/event-cover/1/550e8400-e29b-41d4-a716-446655440000.jpeg\n"
                                     + "?X-Amz-Algorithm=AWS4-HMAC-SHA256\n"
@@ -300,6 +310,7 @@ class ImageServiceTest extends IntegrationTest {
                                             LocalDateTime.now())));
             given(
                             s3Util.createPresignedUrl(
+                                    eq(BucketType.MAIN),
                                     eq(ImageType.ALBUM_IMAGE),
                                     eq(1L),
                                     eq(FileExtension.JPEG),

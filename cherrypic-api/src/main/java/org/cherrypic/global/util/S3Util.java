@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
+import org.cherrypic.domain.image.enums.BucketType;
 import org.cherrypic.domain.image.enums.FileExtension;
 import org.cherrypic.domain.image.enums.ImageType;
 import org.cherrypic.helper.SpringEnvironmentHelper;
@@ -24,13 +25,21 @@ public class S3Util {
     private final S3Properties s3Properties;
 
     public String createPresignedUrl(
-            ImageType imageType, Long targetId, FileExtension fileExtension, String md5Hash) {
+            BucketType bucketType,
+            ImageType imageType,
+            Long targetId,
+            FileExtension fileExtension,
+            String md5Hash) {
         String imageKey = UUID.randomUUID().toString();
         String fileName = createFileName(imageType, targetId, imageKey, fileExtension);
+        String bucket =
+                (bucketType == BucketType.MAIN)
+                        ? s3Properties.mainBucket()
+                        : s3Properties.tempAlbumBucket();
 
         GeneratePresignedUrlRequest generatePresignedUrlRequest =
                 generatePresignedUrlRequest(
-                        s3Properties.bucket(), fileName, fileExtension.getExtension(), md5Hash);
+                        bucket, fileName, fileExtension.getExtension(), md5Hash);
 
         return amazonS3.generatePresignedUrl(generatePresignedUrlRequest).toString();
     }
@@ -64,11 +73,14 @@ public class S3Util {
         return generatePresignedUrlRequest;
     }
 
-    public void deleteFilesInBatchFromS3(List<String> urls) {
-        String bucket = s3Properties.bucket();
+    public void deleteAllByUrls(BucketType bucketType, List<String> urls) {
+        String bucket =
+                (bucketType == BucketType.MAIN)
+                        ? s3Properties.mainBucket()
+                        : s3Properties.tempAlbumBucket();
         List<DeleteObjectsRequest.KeyVersion> keys =
                 urls.stream()
-                        .map(this::extractObjectKey)
+                        .map(url -> extractObjectKey(bucketType, url))
                         .map(DeleteObjectsRequest.KeyVersion::new)
                         .toList();
 
@@ -76,14 +88,18 @@ public class S3Util {
         amazonS3.deleteObjects(request);
     }
 
-    public void deleteAllAlbumImagesInBatchFromS3(Long albumId) {
-        String bucket = s3Properties.bucket();
+    public void deleteAllByImageTypeAndTargetId(
+            BucketType bucketType, ImageType imageType, Long targetId) {
+        String bucket =
+                (bucketType == BucketType.MAIN)
+                        ? s3Properties.mainBucket()
+                        : s3Properties.tempAlbumBucket();
         String prefix =
                 springEnvironmentHelper.getCurrentProfile()
                         + "/"
-                        + ImageType.ALBUM_IMAGE.getType()
+                        + imageType.getType()
                         + "/"
-                        + albumId
+                        + targetId
                         + "/";
 
         ListObjectsV2Request listReq =
@@ -107,14 +123,20 @@ public class S3Util {
         } while (result.isTruncated());
     }
 
-    public void deleteFileFromS3(String url) {
-        String bucket = s3Properties.bucket();
-        String objectKey = extractObjectKey(url);
+    public void deleteByUrl(BucketType bucketType, String url) {
+        String bucket =
+                (bucketType == BucketType.MAIN)
+                        ? s3Properties.mainBucket()
+                        : s3Properties.tempAlbumBucket();
+        String objectKey = extractObjectKey(bucketType, url);
         amazonS3.deleteObject(bucket, objectKey);
     }
 
-    private String extractObjectKey(String url) {
-        String bucket = s3Properties.bucket();
+    private String extractObjectKey(BucketType bucketType, String url) {
+        String bucket =
+                (bucketType == BucketType.MAIN)
+                        ? s3Properties.mainBucket()
+                        : s3Properties.tempAlbumBucket();
         int idx = url.indexOf(bucket) + bucket.length() + 1;
         return url.substring(idx);
     }
