@@ -45,8 +45,7 @@ aws:
   secret-access-key: ${AWS_SECRET_ACCESS_KEY}
   region: ${AWS_REGION}
   s3:
-    main-bucket: ${S3_MAIN_BUCKET}
-    temp-album-bucket: ${S3_TEMP_ALBUM_BUCKET}
+    main-bucket: ${S3_BUCKET}
     endpoint: ${S3_ENDPOINT:https://s3.ap-northeast-2.amazonaws.com}
 
 iamport:

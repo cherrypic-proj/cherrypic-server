@@ -73,16 +73,13 @@ public class S3Util {
         return generatePresignedUrlRequest;
     }
 
-    public void deleteAllByUrls(BucketType bucketType, List<String> urls) {
+    public void deleteAllByUrls(List<String> urls) {
         String bucket =
-                (bucketType == BucketType.MAIN)
-                        ? s3Properties.mainBucket()
-                        : s3Properties.tempAlbumBucket();
-        List<DeleteObjectsRequest.KeyVersion> keys =
-                urls.stream()
-                        .map(url -> extractObjectKey(bucketType, url))
-                        .map(DeleteObjectsRequest.KeyVersion::new)
-                        .toList();
+                s3Properties.List < DeleteObjectsRequest.KeyVersion > keys =
+                        urls.stream()
+                                .map(url -> extractObjectKey(bucketType, url))
+                                .map(DeleteObjectsRequest.KeyVersion::new)
+                                .toList();
 
         DeleteObjectsRequest request = new DeleteObjectsRequest(bucket).withKeys(keys);
         amazonS3.deleteObjects(request);
