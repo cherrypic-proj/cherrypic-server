@@ -67,7 +67,7 @@ public class TempAlbumServiceTest extends IntegrationTest {
                             "testTitle",
                             new BigDecimal("0.00"),
                             TempAlbumType.DEFAULT,
-                            LocalDate.now().plusDays(4),
+                            LocalDate.now().plusDays(3),
                             null);
         }
 
