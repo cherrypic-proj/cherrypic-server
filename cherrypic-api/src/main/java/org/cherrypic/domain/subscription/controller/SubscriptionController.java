@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.cherrypic.domain.subscription.dto.request.SubscriptionRenewRequest;
+import org.cherrypic.domain.subscription.dto.response.SubscriptionInfoResponse;
 import org.cherrypic.domain.subscription.dto.response.SubscriptionRenewResponse;
 import org.cherrypic.domain.subscription.service.SubscriptionService;
 import org.springframework.http.ResponseEntity;
@@ -30,5 +31,11 @@ public class SubscriptionController {
     public SubscriptionRenewResponse subscriptionRenew(
             @PathVariable Long albumId, @Valid @RequestBody SubscriptionRenewRequest request) {
         return subscriptionService.renewSubscription(albumId, request);
+    }
+
+    @GetMapping
+    @Operation(summary = "구독 정보 조회", description = "앨범의 구독 정보를 조회합니다.")
+    public SubscriptionInfoResponse SubscriptionInfoGet(@PathVariable Long albumId) {
+        return subscriptionService.getSubscriptionInfo(albumId);
     }
 }

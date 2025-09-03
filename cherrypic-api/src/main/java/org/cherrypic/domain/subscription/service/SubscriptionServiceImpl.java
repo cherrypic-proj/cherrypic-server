@@ -9,6 +9,7 @@ import org.cherrypic.domain.participant.repository.ParticipantRepository;
 import org.cherrypic.domain.payment.exception.PaymentErrorCode;
 import org.cherrypic.domain.payment.repository.PaymentRepository;
 import org.cherrypic.domain.subscription.dto.request.SubscriptionRenewRequest;
+import org.cherrypic.domain.subscription.dto.response.SubscriptionInfoResponse;
 import org.cherrypic.domain.subscription.dto.response.SubscriptionRenewResponse;
 import org.cherrypic.domain.subscription.exception.SubscriptionErrorCode;
 import org.cherrypic.domain.subscription.repository.SubscriptionRepository;
@@ -68,6 +69,20 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         subscription.renew();
 
         return SubscriptionRenewResponse.from(subscription);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public SubscriptionInfoResponse getSubscriptionInfo(Long albumId) {
+        final Member currentMember = memberUtil.getCurrentMember();
+        final Album album = getAlbumById(albumId);
+
+        validateAlbumHost(currentMember.getId(), album.getId());
+        validateSubscriptionSupported(album);
+
+        final Subscription subscription = getSubscriptionByAlbumId(albumId);
+
+        return SubscriptionInfoResponse.from(subscription);
     }
 
     private Album getAlbumById(Long albumId) {
