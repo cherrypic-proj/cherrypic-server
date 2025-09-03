@@ -7,7 +7,7 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum TempAlbumType {
-    DEFAULT(BigDecimal.ONE, 4);
+    DEFAULT(BigDecimal.ONE, 3);
 
     private final BigDecimal capacityGb;
     private final int daysToLive;
