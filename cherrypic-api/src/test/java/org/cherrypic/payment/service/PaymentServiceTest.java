@@ -110,13 +110,18 @@ public class PaymentServiceTest extends IntegrationTest {
                 // then
                 Payment payment = paymentRepository.findById(1L).orElseThrow();
                 Assertions.assertAll(
-                        () -> assertThat(payment.getId()).isEqualTo(1L),
-                        () -> assertThat(payment.getMember().getId()).isEqualTo(1L),
+                        () ->
+                                assertThat(payment)
+                                        .extracting(
+                                                "id", "member.id", "amount", "status", "purpose")
+                                        .containsExactly(
+                                                1L,
+                                                1L,
+                                                5900,
+                                                PaymentStatus.READY,
+                                                PaymentPurpose.CREATION),
                         () -> assertThat(payment.getMerchantUid()).startsWith("album_"),
-                        () -> assertThat(payment.getMerchantUid()).contains("pro"),
-                        () -> assertThat(payment.getAmount()).isEqualTo(5900),
-                        () -> assertThat(payment.getStatus()).isEqualTo(PaymentStatus.READY),
-                        () -> assertThat(payment.getPurpose()).isEqualTo(PaymentPurpose.CREATION));
+                        () -> assertThat(payment.getMerchantUid()).contains("pro"));
             }
         }
 
@@ -134,13 +139,18 @@ public class PaymentServiceTest extends IntegrationTest {
                 // then
                 Payment payment = paymentRepository.findById(1L).orElseThrow();
                 Assertions.assertAll(
-                        () -> assertThat(payment.getId()).isEqualTo(1L),
-                        () -> assertThat(payment.getMember().getId()).isEqualTo(1L),
+                        () ->
+                                assertThat(payment)
+                                        .extracting(
+                                                "id", "member.id", "amount", "status", "purpose")
+                                        .containsExactly(
+                                                1L,
+                                                1L,
+                                                5900,
+                                                PaymentStatus.READY,
+                                                PaymentPurpose.RENEWAL),
                         () -> assertThat(payment.getMerchantUid()).startsWith("album_"),
-                        () -> assertThat(payment.getMerchantUid()).contains("pro"),
-                        () -> assertThat(payment.getAmount()).isEqualTo(5900),
-                        () -> assertThat(payment.getStatus()).isEqualTo(PaymentStatus.READY),
-                        () -> assertThat(payment.getPurpose()).isEqualTo(PaymentPurpose.RENEWAL));
+                        () -> assertThat(payment.getMerchantUid()).contains("pro"));
             }
 
             @Test
@@ -202,13 +212,18 @@ public class PaymentServiceTest extends IntegrationTest {
                 // then
                 Payment payment = paymentRepository.findById(1L).orElseThrow();
                 Assertions.assertAll(
-                        () -> assertThat(payment.getId()).isEqualTo(1L),
-                        () -> assertThat(payment.getMember().getId()).isEqualTo(1L),
+                        () ->
+                                assertThat(payment)
+                                        .extracting(
+                                                "id", "member.id", "amount", "status", "purpose")
+                                        .containsExactly(
+                                                1L,
+                                                1L,
+                                                12900,
+                                                PaymentStatus.READY,
+                                                PaymentPurpose.UPGRADE),
                         () -> assertThat(payment.getMerchantUid()).startsWith("album_"),
-                        () -> assertThat(payment.getMerchantUid()).contains("premium"),
-                        () -> assertThat(payment.getAmount()).isEqualTo(12900),
-                        () -> assertThat(payment.getStatus()).isEqualTo(PaymentStatus.READY),
-                        () -> assertThat(payment.getPurpose()).isEqualTo(PaymentPurpose.UPGRADE));
+                        () -> assertThat(payment.getMerchantUid()).contains("premium"));
             }
 
             @Test
@@ -324,14 +339,14 @@ public class PaymentServiceTest extends IntegrationTest {
 
             // then
             Payment payment = paymentRepository.findById(1L).orElseThrow();
-            Assertions.assertAll(
-                    () -> assertThat(payment.getId()).isEqualTo(1L),
-                    () -> assertThat(payment.getImpUid()).isEqualTo("imp_1234"),
-                    () -> assertThat(payment.getAmount()).isEqualTo(5900),
-                    () -> assertThat(payment.getStatus()).isEqualTo(PaymentStatus.PAID),
-                    () ->
-                            assertThat(payment.getPaidAt())
-                                    .isEqualTo(LocalDateTime.of(2025, 8, 1, 13, 0)));
+            assertThat(payment)
+                    .extracting("id", "impUid", "amount", "status", "paidAt")
+                    .containsExactly(
+                            1L,
+                            "imp_1234",
+                            5900,
+                            PaymentStatus.PAID,
+                            LocalDateTime.of(2025, 8, 1, 13, 0));
         }
 
         @Test
