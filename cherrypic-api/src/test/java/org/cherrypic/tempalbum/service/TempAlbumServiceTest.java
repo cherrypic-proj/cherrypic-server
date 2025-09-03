@@ -61,7 +61,7 @@ public class TempAlbumServiceTest extends IntegrationTest {
             TempAlbum tempAlbum = tempAlbumRepository.findById(1L).orElseThrow();
 
             assertThat(tempAlbum)
-                    .extracting("member.id", "title", "capacityGb", "type", "expiredAt", "url")
+                    .extracting("member.id", "title", "capacityGb", "type", "expiredAt", "webUrl")
                     .containsExactly(
                             1L,
                             "testTitle",
