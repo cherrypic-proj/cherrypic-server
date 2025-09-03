@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
-import org.cherrypic.domain.image.enums.BucketType;
 import org.cherrypic.domain.image.enums.FileExtension;
 import org.cherrypic.domain.image.enums.ImageType;
 import org.cherrypic.helper.SpringEnvironmentHelper;
@@ -71,7 +70,7 @@ public class S3Util {
 
         List<DeleteObjectsRequest.KeyVersion> keys =
                 urls.stream()
-                        .map(url -> extractObjectKey(bucketType, url))
+                        .map(this::extractObjectKey)
                         .map(DeleteObjectsRequest.KeyVersion::new)
                         .toList();
 
@@ -79,12 +78,8 @@ public class S3Util {
         amazonS3.deleteObjects(request);
     }
 
-    public void deleteAllByImageTypeAndTargetId(
-            BucketType bucketType, ImageType imageType, Long targetId) {
-        String bucket =
-                (bucketType == BucketType.MAIN)
-                        ? s3Properties.mainBucket()
-                        : s3Properties.tempAlbumBucket();
+    public void deleteAllByImageTypeAndTargetId(ImageType imageType, Long targetId) {
+        String bucket = s3Properties.bucket();
         String prefix =
                 springEnvironmentHelper.getCurrentProfile()
                         + "/"
@@ -114,20 +109,14 @@ public class S3Util {
         } while (result.isTruncated());
     }
 
-    public void deleteByUrl(BucketType bucketType, String url) {
-        String bucket =
-                (bucketType == BucketType.MAIN)
-                        ? s3Properties.mainBucket()
-                        : s3Properties.tempAlbumBucket();
-        String objectKey = extractObjectKey(bucketType, url);
+    public void deleteByUrl(String url) {
+        String bucket = s3Properties.bucket();
+        String objectKey = extractObjectKey(url);
         amazonS3.deleteObject(bucket, objectKey);
     }
 
-    private String extractObjectKey(BucketType bucketType, String url) {
-        String bucket =
-                (bucketType == BucketType.MAIN)
-                        ? s3Properties.mainBucket()
-                        : s3Properties.tempAlbumBucket();
+    private String extractObjectKey(String url) {
+        String bucket = s3Properties.bucket();
         int idx = url.indexOf(bucket) + bucket.length() + 1;
         return url.substring(idx);
     }

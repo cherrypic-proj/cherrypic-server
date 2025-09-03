@@ -18,19 +18,18 @@ public class ImageEventListener {
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleAlbumImagesDeleteEvent(AlbumImagesDeleteEvent event) {
-        s3Util.deleteAllByImageTypeAndTargetId(
-                event.bucketType(), ImageType.ALBUM_IMAGE, event.albumId());
+        s3Util.deleteAllByImageTypeAndTargetId(ImageType.ALBUM_IMAGE, event.albumId());
     }
 
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleImagesDeleteEvent(ImagesDeleteEvent event) {
-        s3Util.deleteAllByUrls(event.bucketType(), event.imageUrls());
+        s3Util.deleteAllByUrls(event.imageUrls());
     }
 
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleImageDeleteEvent(ImageDeleteEvent event) {
-        s3Util.deleteByUrl(event.bucketType(), event.imageUrl());
+        s3Util.deleteByUrl(event.imageUrl());
     }
 }

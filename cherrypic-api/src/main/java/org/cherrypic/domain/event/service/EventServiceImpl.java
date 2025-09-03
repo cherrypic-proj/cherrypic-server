@@ -15,7 +15,6 @@ import org.cherrypic.domain.event.dto.response.EventListResponse;
 import org.cherrypic.domain.event.dto.response.EventUpdateResponse;
 import org.cherrypic.domain.event.exception.EventErrorCode;
 import org.cherrypic.domain.event.repository.EventRepository;
-import org.cherrypic.domain.image.enums.BucketType;
 import org.cherrypic.domain.image.event.ImageDeleteEvent;
 import org.cherrypic.domain.image.exception.ImageErrorCode;
 import org.cherrypic.domain.image.repository.EventImageRepository;
@@ -75,7 +74,7 @@ public class EventServiceImpl implements EventService {
         validateParticipantAuthority(currentMember, event.getAlbum());
 
         if (event.getCoverUrl() != null && !event.getCoverUrl().equals(request.coverUrl())) {
-            eventPublisher.publishEvent(ImageDeleteEvent.of(BucketType.MAIN, event.getCoverUrl()));
+            eventPublisher.publishEvent(ImageDeleteEvent.of(event.getCoverUrl()));
         }
 
         event.updateEvent(request.title(), request.coverUrl());
@@ -105,7 +104,7 @@ public class EventServiceImpl implements EventService {
         validateParticipantAuthority(currentMember, event.getAlbum());
 
         if (event.getCoverUrl() != null) {
-            eventPublisher.publishEvent(ImageDeleteEvent.of(BucketType.MAIN, event.getCoverUrl()));
+            eventPublisher.publishEvent(ImageDeleteEvent.of(event.getCoverUrl()));
         }
 
         eventRepository.delete(event);

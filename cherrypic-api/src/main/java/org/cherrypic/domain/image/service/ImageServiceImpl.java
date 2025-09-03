@@ -18,7 +18,6 @@ import org.cherrypic.domain.image.dto.response.AlbumImageListResponse;
 import org.cherrypic.domain.image.dto.response.EventImageListResponse;
 import org.cherrypic.domain.image.dto.response.PresignedUrlResponse;
 import org.cherrypic.domain.image.dto.response.PresignedUrlsResponse;
-import org.cherrypic.domain.image.enums.BucketType;
 import org.cherrypic.domain.image.enums.FileExtension;
 import org.cherrypic.domain.image.enums.ImageType;
 import org.cherrypic.domain.image.event.ImagesDeleteEvent;
@@ -63,7 +62,6 @@ public class ImageServiceImpl implements ImageService {
 
         String presignedUrl =
                 s3Util.createPresignedUrl(
-                        BucketType.MAIN,
                         ImageType.MEMBER_PROFILE,
                         currentMember.getId(),
                         request.fileExtension(),
@@ -80,7 +78,6 @@ public class ImageServiceImpl implements ImageService {
 
         String presignedUrl =
                 s3Util.createPresignedUrl(
-                        BucketType.MAIN,
                         ImageType.ALBUM_COVER,
                         currentMember.getId(),
                         request.fileExtension(),
@@ -97,7 +94,6 @@ public class ImageServiceImpl implements ImageService {
 
         String presignedUrl =
                 s3Util.createPresignedUrl(
-                        BucketType.MAIN,
                         ImageType.EVENT_COVER,
                         currentMember.getId(),
                         request.fileExtension(),
@@ -123,7 +119,6 @@ public class ImageServiceImpl implements ImageService {
                         .map(
                                 req ->
                                         s3Util.createPresignedUrl(
-                                                BucketType.MAIN,
                                                 ImageType.ALBUM_IMAGE,
                                                 album.getId(),
                                                 req.fileExtension(),
@@ -206,7 +201,7 @@ public class ImageServiceImpl implements ImageService {
         validateImagesInAlbum(images, album);
 
         eventPublisher.publishEvent(
-                ImagesDeleteEvent.of(BucketType.MAIN, images.stream().map(Image::getUrl).toList()));
+                ImagesDeleteEvent.of(images.stream().map(Image::getUrl).toList()));
         imageRepository.deleteAllInBatch(images);
     }
 
