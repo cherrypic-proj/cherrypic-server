@@ -27,10 +27,11 @@ public class S3Util {
             ImageType imageType, Long targetId, FileExtension fileExtension, String md5Hash) {
         String imageKey = UUID.randomUUID().toString();
         String fileName = createFileName(imageType, targetId, imageKey, fileExtension);
+        String bucket = s3Properties.bucket();
 
         GeneratePresignedUrlRequest generatePresignedUrlRequest =
                 generatePresignedUrlRequest(
-                        s3Properties.bucket(), fileName, fileExtension.getExtension(), md5Hash);
+                        bucket, fileName, fileExtension.getExtension(), md5Hash);
 
         return amazonS3.generatePresignedUrl(generatePresignedUrlRequest).toString();
     }
@@ -64,8 +65,9 @@ public class S3Util {
         return generatePresignedUrlRequest;
     }
 
-    public void deleteFilesInBatchFromS3(List<String> urls) {
+    public void deleteAllByUrls(List<String> urls) {
         String bucket = s3Properties.bucket();
+
         List<DeleteObjectsRequest.KeyVersion> keys =
                 urls.stream()
                         .map(this::extractObjectKey)
@@ -76,14 +78,14 @@ public class S3Util {
         amazonS3.deleteObjects(request);
     }
 
-    public void deleteAllAlbumImagesInBatchFromS3(Long albumId) {
+    public void deleteAllByImageTypeAndTargetId(ImageType imageType, Long targetId) {
         String bucket = s3Properties.bucket();
         String prefix =
                 springEnvironmentHelper.getCurrentProfile()
                         + "/"
-                        + ImageType.ALBUM_IMAGE.getType()
+                        + imageType.getType()
                         + "/"
-                        + albumId
+                        + targetId
                         + "/";
 
         ListObjectsV2Request listReq =
@@ -107,7 +109,7 @@ public class S3Util {
         } while (result.isTruncated());
     }
 
-    public void deleteFileFromS3(String url) {
+    public void deleteByUrl(String url) {
         String bucket = s3Properties.bucket();
         String objectKey = extractObjectKey(url);
         amazonS3.deleteObject(bucket, objectKey);

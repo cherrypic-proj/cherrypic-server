@@ -11,6 +11,7 @@ import org.cherrypic.member.enums.MemberStatus;
 import org.cherrypic.participant.entity.Participant;
 import org.cherrypic.payment.entity.Payment;
 import org.cherrypic.subscription.entity.Subscription;
+import org.cherrypic.tempalbum.entity.TempAlbum;
 
 @Getter
 @Entity
@@ -45,6 +46,9 @@ public class Member extends BaseTimeEntity {
 
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Participant> participants = new ArrayList<>();
+
+    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<TempAlbum> tempAlbums = new ArrayList<>();
 
     @Builder(access = AccessLevel.PRIVATE)
     private Member(

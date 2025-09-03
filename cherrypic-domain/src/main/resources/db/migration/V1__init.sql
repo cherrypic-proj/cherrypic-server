@@ -16,7 +16,7 @@ CREATE TABLE album (
                        id BIGINT AUTO_INCREMENT PRIMARY KEY,
                        title VARCHAR(20) NOT NULL,
                        cover_url VARCHAR(255),
-                       type VARCHAR(20) CHECK (type IN ('BASIC','PRO','PREMIUM')),
+                       type VARCHAR(20) NOT NULL CHECK (type IN ('BASIC','PRO','PREMIUM')),
                        permission_control BOOLEAN NOT NULL,
                        capacity_gb DECIMAL(6,2) NOT NULL,
                        created_at DATETIME(6) NOT NULL,

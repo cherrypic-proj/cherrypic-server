@@ -25,7 +25,8 @@ sonarqube {
         property 'sonar.test.inclusions', '**/*Test.java'
         property 'sonar.exclusions', '**/test/**, **/Q*.java, **/*Doc*.java, **/resources/**, **/*Application*.java, **/*Config*.java,' +
                 '**/*Dto*.java, **/*Request*.java, **/*Response*.java, **/*Exception*.java, **/*ErrorCode*.java, **/*Validator*.java,' +
-                '**/*FcmService*.java, **/EventImage.java, **/Notification.java, **/Favorites.java'
+                '**/*FcmService*.java, **/EventImage.java, **/Notification.java, **/Favorites.java ,**/ImageEventListener.java' +
+                ',**/TempAlbum.java,**/TempAlbumImage.java,**/TempAlbumType.java'
         property 'sonar.java.coveragePlugin', 'jacoco'
     }
 }

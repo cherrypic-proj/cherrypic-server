@@ -2,6 +2,7 @@ package org.cherrypic.domain.image.event;
 
 import lombok.RequiredArgsConstructor;
 import org.cherrypic.domain.album.event.AlbumImagesDeleteEvent;
+import org.cherrypic.domain.image.enums.ImageType;
 import org.cherrypic.global.util.S3Util;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
@@ -17,18 +18,18 @@ public class ImageEventListener {
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleAlbumImagesDeleteEvent(AlbumImagesDeleteEvent event) {
-        s3Util.deleteAllAlbumImagesInBatchFromS3(event.albumId());
+        s3Util.deleteAllByImageTypeAndTargetId(ImageType.ALBUM_IMAGE, event.albumId());
     }
 
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleImagesDeleteEvent(ImagesDeleteEvent event) {
-        s3Util.deleteFilesInBatchFromS3(event.imageUrls());
+        s3Util.deleteAllByUrls(event.imageUrls());
     }
 
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleImageDeleteEvent(ImageDeleteEvent event) {
-        s3Util.deleteFileFromS3(event.imageUrl());
+        s3Util.deleteByUrl(event.imageUrl());
     }
 }

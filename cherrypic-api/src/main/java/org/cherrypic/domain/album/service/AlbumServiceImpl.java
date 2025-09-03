@@ -214,6 +214,7 @@ public class AlbumServiceImpl implements AlbumService {
         validateRemainingParticipants(album, currentMember);
 
         final List<Event> events = eventRepository.findAllByAlbumId(album.getId());
+
         eventPublisher.publishEvent(
                 ImagesDeleteEvent.of(events.stream().map(Event::getCoverUrl).toList()));
 
