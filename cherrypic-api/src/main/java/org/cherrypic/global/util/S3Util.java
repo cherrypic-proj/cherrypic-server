@@ -25,17 +25,10 @@ public class S3Util {
     private final S3Properties s3Properties;
 
     public String createPresignedUrl(
-            BucketType bucketType,
-            ImageType imageType,
-            Long targetId,
-            FileExtension fileExtension,
-            String md5Hash) {
+            ImageType imageType, Long targetId, FileExtension fileExtension, String md5Hash) {
         String imageKey = UUID.randomUUID().toString();
         String fileName = createFileName(imageType, targetId, imageKey, fileExtension);
-        String bucket =
-                (bucketType == BucketType.MAIN)
-                        ? s3Properties.mainBucket()
-                        : s3Properties.tempAlbumBucket();
+        String bucket = s3Properties.bucket();
 
         GeneratePresignedUrlRequest generatePresignedUrlRequest =
                 generatePresignedUrlRequest(
@@ -74,12 +67,13 @@ public class S3Util {
     }
 
     public void deleteAllByUrls(List<String> urls) {
-        String bucket =
-                s3Properties.List < DeleteObjectsRequest.KeyVersion > keys =
-                        urls.stream()
-                                .map(url -> extractObjectKey(bucketType, url))
-                                .map(DeleteObjectsRequest.KeyVersion::new)
-                                .toList();
+        String bucket = s3Properties.bucket();
+
+        List<DeleteObjectsRequest.KeyVersion> keys =
+                urls.stream()
+                        .map(url -> extractObjectKey(bucketType, url))
+                        .map(DeleteObjectsRequest.KeyVersion::new)
+                        .toList();
 
         DeleteObjectsRequest request = new DeleteObjectsRequest(bucket).withKeys(keys);
         amazonS3.deleteObjects(request);
