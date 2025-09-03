@@ -244,7 +244,10 @@ class SubscriptionServiceTest extends IntegrationTest {
                             PaymentPurpose.RENEWAL,
                             AlbumType.PRO);
             payment1.updatePayment(
-                    "testImpUid", "testPgProvider", PaymentStatus.PAID, LocalDateTime.now());
+                    "testImpUid",
+                    "testPgProvider",
+                    PaymentStatus.PAID,
+                    LocalDateTime.now().minusDays(15));
 
             // 완료된 다른 회원의 결제
             Payment payment2 =
