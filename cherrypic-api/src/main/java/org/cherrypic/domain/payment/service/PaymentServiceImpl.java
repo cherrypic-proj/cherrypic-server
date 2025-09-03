@@ -16,11 +16,15 @@ import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.album.repository.AlbumRepository;
 import org.cherrypic.domain.participant.repository.ParticipantRepository;
 import org.cherrypic.domain.payment.dto.request.PaymentReadyRequest;
+import org.cherrypic.domain.payment.dto.response.PaymentListResponse;
 import org.cherrypic.domain.payment.dto.response.PaymentReadyResponse;
+import org.cherrypic.domain.payment.dto.response.PaymentUnlinkedResponse;
 import org.cherrypic.domain.payment.dto.response.PaymentVerificationResponse;
 import org.cherrypic.domain.payment.exception.PaymentErrorCode;
 import org.cherrypic.domain.payment.repository.PaymentRepository;
 import org.cherrypic.exception.CustomException;
+import org.cherrypic.global.pagination.SliceResponse;
+import org.cherrypic.global.pagination.SortDirection;
 import org.cherrypic.global.util.MemberUtil;
 import org.cherrypic.member.entity.Member;
 import org.cherrypic.participant.entity.Participant;
@@ -28,6 +32,7 @@ import org.cherrypic.participant.enums.ParticipantRole;
 import org.cherrypic.payment.entity.Payment;
 import org.cherrypic.payment.enums.PaymentPurpose;
 import org.cherrypic.payment.enums.PaymentStatus;
+import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -49,9 +54,15 @@ public class PaymentServiceImpl implements PaymentService {
         final Member currentMember = memberUtil.getCurrentMember();
 
         AlbumType type = request.type();
-        if (type.equals(AlbumType.BASIC)) {
-            throw new CustomException(PaymentErrorCode.UNSUPPORTED_PAYMENT);
-        }
+        validatePaidAlbumType(type);
+
+        paymentRepository
+                .findLatestPaidUnlinkedPayment(currentMember.getId())
+                .ifPresent(
+                        payment -> {
+                            throw new CustomException(
+                                    PaymentErrorCode.UNLINKED_PAYMENT_ALREADY_EXISTS);
+                        });
 
         int price = type.getPrice();
         String merchantUid = generateMerchantUid(currentMember.getId(), type);
@@ -60,7 +71,7 @@ public class PaymentServiceImpl implements PaymentService {
         PaymentPurpose purpose =
                 determinePaymentPurpose(currentMember.getId(), request.albumId(), type);
 
-        Payment payment = Payment.createPayment(currentMember, merchantUid, price, purpose);
+        Payment payment = Payment.createPayment(currentMember, merchantUid, price, purpose, type);
         paymentRepository.save(payment);
 
         return PaymentReadyResponse.of(type, price, merchantUid, buyerName, purpose);
@@ -105,6 +116,31 @@ public class PaymentServiceImpl implements PaymentService {
         } catch (IOException e) {
             throw new CustomException(PaymentErrorCode.IAMPORT_API_UNAVAILABLE);
         }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public SliceResponse<PaymentListResponse> getAlbumPayments(
+            Long albumId, Long lastPaymentId, int size, SortDirection direction) {
+        final Member currentMember = memberUtil.getCurrentMember();
+        final Album album = getAlbumById(albumId);
+
+        validateAlbumHost(currentMember.getId(), album.getId());
+        validatePaidAlbumType(album.getType());
+
+        Slice<PaymentListResponse> results =
+                paymentRepository.findAllByAlbumId(
+                        currentMember.getId(), albumId, lastPaymentId, size, direction);
+
+        return SliceResponse.from(results);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PaymentUnlinkedResponse getUnlinkedPayment() {
+        final Member currentMember = memberUtil.getCurrentMember();
+
+        return paymentRepository.findLatestPaidUnlinkedPayment(currentMember.getId()).orElse(null);
     }
 
     private String generateMerchantUid(Long memberId, AlbumType type) {
@@ -152,6 +188,12 @@ public class PaymentServiceImpl implements PaymentService {
 
         if (!participant.getRole().equals(ParticipantRole.HOST)) {
             throw new CustomException(AlbumErrorCode.NOT_ALBUM_HOST);
+        }
+    }
+
+    private void validatePaidAlbumType(AlbumType type) {
+        if (type == AlbumType.BASIC) {
+            throw new CustomException(PaymentErrorCode.UNSUPPORTED_PAYMENT);
         }
     }
 }

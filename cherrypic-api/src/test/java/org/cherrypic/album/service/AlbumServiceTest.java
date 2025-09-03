@@ -196,24 +196,43 @@ class AlbumServiceTest extends IntegrationTest {
                 // 검증 완료된 결제
                 Payment payment1 =
                         Payment.createPayment(
-                                member1, "testMerchantUid", 5900, PaymentPurpose.CREATION);
+                                member1,
+                                "testMerchantUid",
+                                5900,
+                                PaymentPurpose.CREATION,
+                                AlbumType.PRO);
                 payment1.updatePayment(
-                        "testImpUid", "testPgProvider", PaymentStatus.PAID, LocalDateTime.now());
+                        "testImpUid",
+                        "testPgProvider",
+                        PaymentStatus.PAID,
+                        LocalDateTime.of(2025, 8, 1, 13, 0));
                 // 검증되지 않은 결제
                 Payment payment2 =
                         Payment.createPayment(
-                                member1, "testMerchantUid", 5900, PaymentPurpose.CREATION);
+                                member1,
+                                "testMerchantUid",
+                                5900,
+                                PaymentPurpose.CREATION,
+                                AlbumType.PRO);
                 // 검증 완료 + 유료 앨범에 쓰인 결제
                 Payment payment3 =
                         Payment.createPayment(
-                                member1, "testMerchantUid", 5900, PaymentPurpose.CREATION);
+                                member1,
+                                "testMerchantUid",
+                                5900,
+                                PaymentPurpose.CREATION,
+                                AlbumType.PRO);
                 payment3.updatePayment(
                         "testImpUid", "testPgProvider", PaymentStatus.PAID, LocalDateTime.now());
                 payment3.updatePayment(PaymentPurpose.CREATION, album);
                 // 구독 갱신 목적으로 쓰인 결제
                 Payment payment4 =
                         Payment.createPayment(
-                                member1, "testMerchantUid", 5900, PaymentPurpose.RENEWAL);
+                                member1,
+                                "testMerchantUid",
+                                5900,
+                                PaymentPurpose.RENEWAL,
+                                AlbumType.PRO);
                 payment4.updatePayment(
                         "testImpUid", "testPgProvider", PaymentStatus.PAID, LocalDateTime.now());
                 paymentRepository.saveAll(List.of(payment1, payment2, payment3, payment4));
@@ -225,8 +244,6 @@ class AlbumServiceTest extends IntegrationTest {
                 AlbumCreateRequest request =
                         new AlbumCreateRequest(
                                 "testTitle", "testCoverUrl", AlbumType.PRO, 1L, true);
-
-                LocalDateTime startAt = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
 
                 // when
                 albumService.createAlbum(request);
@@ -270,23 +287,22 @@ class AlbumServiceTest extends IntegrationTest {
                                         .containsExactly(2L, PaymentStatus.PAID),
                         () ->
                                 assertThat(subscription)
-                                        .extracting("id", "member.id", "album.id", "status")
-                                        .containsExactly(1L, 1L, 2L, SubscriptionStatus.ACTIVE),
-                        () ->
-                                assertThat(
-                                                subscription
-                                                        .getStartAt()
-                                                        .truncatedTo(ChronoUnit.MINUTES))
-                                        .isEqualTo(startAt),
-                        () ->
-                                assertThat(subscription.getEndAt().truncatedTo(ChronoUnit.MINUTES))
-                                        .isEqualTo(startAt.plusMonths(1)),
-                        () ->
-                                assertThat(
-                                                subscription
-                                                        .getNextBillingAt()
-                                                        .truncatedTo(ChronoUnit.MINUTES))
-                                        .isEqualTo(startAt.plusMonths(1).minusDays(3)));
+                                        .extracting(
+                                                "id",
+                                                "member.id",
+                                                "album.id",
+                                                "status",
+                                                "startAt",
+                                                "endAt",
+                                                "nextBillingAt")
+                                        .containsExactly(
+                                                1L,
+                                                1L,
+                                                2L,
+                                                SubscriptionStatus.ACTIVE,
+                                                LocalDateTime.of(2025, 8, 1, 13, 0),
+                                                LocalDateTime.of(2025, 9, 1, 13, 0),
+                                                LocalDateTime.of(2025, 8, 29, 13, 0)));
             }
 
             @Test

@@ -34,6 +34,7 @@ CREATE TABLE payment (
                          amount INT NOT NULL,
                          status VARCHAR(20) NOT NULL CHECK (status IN ('READY','PAID','FAILED','CANCELED')),
                          purpose VARCHAR(20) NOT NULL CHECK (purpose IN ('CREATION','RENEWAL','UPGRADE')),
+                         album_type VARCHAR(20) CHECK (album_type IN ('BASIC','PRO','PREMIUM')),
                          paid_at DATETIME,
                          created_at DATETIME(6) NOT NULL,
                          updated_at DATETIME(6) NOT NULL,
