@@ -1,8 +1,9 @@
-package org.cherrypic.album.entity;
+package org.cherrypic.album.entity.album;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.math.BigDecimal;
+import org.cherrypic.album.entity.Album;
 import org.cherrypic.album.enums.AlbumType;
 import org.cherrypic.album.exception.AlbumDomainErrorCode;
 import org.cherrypic.exception.CustomException;

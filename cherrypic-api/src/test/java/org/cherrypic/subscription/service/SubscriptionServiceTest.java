@@ -237,24 +237,46 @@ class SubscriptionServiceTest extends IntegrationTest {
 
             // 완료된 결제
             Payment payment1 =
-                    Payment.createPayment(member1, "testMerchantUid", 5900, PaymentPurpose.RENEWAL);
+                    Payment.createPayment(
+                            member1,
+                            "testMerchantUid",
+                            5900,
+                            PaymentPurpose.RENEWAL,
+                            AlbumType.PRO);
             payment1.updatePayment(
-                    "testImpUid", "testPgProvider", PaymentStatus.PAID, LocalDateTime.now());
+                    "testImpUid",
+                    "testPgProvider",
+                    PaymentStatus.PAID,
+                    LocalDateTime.now().minusDays(15));
 
             // 완료된 다른 회원의 결제
             Payment payment2 =
-                    Payment.createPayment(member2, "testMerchantUid", 5900, PaymentPurpose.RENEWAL);
+                    Payment.createPayment(
+                            member2,
+                            "testMerchantUid",
+                            5900,
+                            PaymentPurpose.RENEWAL,
+                            AlbumType.PRO);
             payment2.updatePayment(
                     "testImpUid", "testPgProvider", PaymentStatus.PAID, LocalDateTime.now());
 
             // 완료되지 않은 결제
             Payment payment3 =
-                    Payment.createPayment(member1, "testMerchantUid", 5900, PaymentPurpose.RENEWAL);
+                    Payment.createPayment(
+                            member1,
+                            "testMerchantUid",
+                            5900,
+                            PaymentPurpose.RENEWAL,
+                            AlbumType.PRO);
 
             // 유료 앨범 생성에 쓰인 완료된 결제
             Payment payment4 =
                     Payment.createPayment(
-                            member1, "testMerchantUid", 5900, PaymentPurpose.CREATION);
+                            member1,
+                            "testMerchantUid",
+                            5900,
+                            PaymentPurpose.CREATION,
+                            AlbumType.PRO);
             payment4.updatePayment(
                     "testImpUid", "testPgProvider", PaymentStatus.PAID, LocalDateTime.now());
             payment4.updatePayment(PaymentPurpose.CREATION, album1);
@@ -262,7 +284,11 @@ class SubscriptionServiceTest extends IntegrationTest {
             // 구독 업그레이드 목적으로 쓰인 결제
             Payment payment5 =
                     Payment.createPayment(
-                            member1, "testMerchantUid", 12900, PaymentPurpose.UPGRADE);
+                            member1,
+                            "testMerchantUid",
+                            12900,
+                            PaymentPurpose.UPGRADE,
+                            AlbumType.PREMIUM);
             payment5.updatePayment(
                     "testImpUid", "testPgProvider", PaymentStatus.PAID, LocalDateTime.now());
 
@@ -445,6 +471,127 @@ class SubscriptionServiceTest extends IntegrationTest {
             assertThatThrownBy(() -> subscriptionService.renewSubscription(7L, request))
                     .isInstanceOf(CustomException.class)
                     .hasMessage(SubscriptionDomainErrorCode.ALREADY_EXPIRED.getMessage());
+        }
+    }
+
+    @Nested
+    class 구독_정보를_조회할_때 {
+
+        @BeforeEach
+        void setUp() {
+            Member member1 =
+                    Member.createMember(
+                            OauthInfo.createOauthInfo("testOauthId1", "testOauthProvider1"),
+                            "testNickname1",
+                            "testProfileImageUrl1");
+            Member member2 =
+                    Member.createMember(
+                            OauthInfo.createOauthInfo("testOauthId2", "testOauthProvider2"),
+                            "testNickname2",
+                            "testProfileImageUrl2");
+            memberRepository.saveAll(List.of(member1, member2));
+            given(memberUtil.getCurrentMember()).willReturn(member1);
+
+            Album album1 = Album.createAlbum("testAlbum1", "testURL1", AlbumType.PRO, false);
+            Album album2 = Album.createAlbum("testAlbum2", "testURL2", AlbumType.PRO, false);
+            Album album3 = Album.createAlbum("testAlbum3", "testURL3", AlbumType.PRO, false);
+            Album album4 = Album.createAlbum("testAlbum4", "testURL4", AlbumType.BASIC, false);
+            Album album5 = Album.createAlbum("testAlbum5", "testURL5", AlbumType.PREMIUM, false);
+            albumRepository.saveAll(List.of(album1, album2, album3, album4, album5));
+
+            Participant participant1 =
+                    Participant.createParticipant(member1, album1, ParticipantRole.HOST);
+            Participant participant2 =
+                    Participant.createParticipant(member1, album3, ParticipantRole.STANDARD);
+            Participant participant3 =
+                    Participant.createParticipant(member1, album4, ParticipantRole.HOST);
+            Participant participant4 =
+                    Participant.createParticipant(member1, album5, ParticipantRole.HOST);
+            participantRepository.saveAll(
+                    List.of(participant1, participant2, participant3, participant4));
+
+            Subscription subscription =
+                    Subscription.createSubscription(
+                            member1, album1, LocalDateTime.of(2025, 8, 4, 0, 0));
+            subscriptionRepository.save(subscription);
+        }
+
+        @Test
+        void 유효한_요청이면_구독_정보를_조회한다() {
+            // when
+            subscriptionService.getSubscriptionInfo(1L);
+
+            // then
+            Album album =
+                    transactionUtil.getResult(
+                            () -> {
+                                Album loadedAlbum = albumRepository.findById(1L).get();
+                                loadedAlbum.getSubscription();
+                                return loadedAlbum;
+                            });
+            Subscription subscription = album.getSubscription();
+
+            Assertions.assertAll(
+                    () ->
+                            assertThat(subscription)
+                                    .extracting(
+                                            "id",
+                                            "member.id",
+                                            "album.id",
+                                            "status",
+                                            "startAt",
+                                            "endAt",
+                                            "nextBillingAt")
+                                    .containsExactly(
+                                            1L,
+                                            1L,
+                                            1L,
+                                            SubscriptionStatus.ACTIVE,
+                                            LocalDateTime.of(2025, 8, 4, 0, 0),
+                                            LocalDateTime.of(2025, 9, 4, 0, 0),
+                                            LocalDateTime.of(2025, 9, 1, 0, 0)));
+        }
+
+        @Test
+        void 앨범이_존재하지_않는_경우_예외가_발생한다() {
+            // when & then
+            assertThatThrownBy(() -> subscriptionService.getSubscriptionInfo(999L))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(AlbumErrorCode.ALBUM_NOT_FOUND.getMessage());
+        }
+
+        @Test
+        void 앨범_참가자가_아닌_경우_예외가_발생한다() {
+            // when & then
+            assertThatThrownBy(() -> subscriptionService.getSubscriptionInfo(2L))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(AlbumErrorCode.NOT_ALBUM_PARTICIPANT.getMessage());
+        }
+
+        @Test
+        void 앨범_방장이_아닌_경우_예외가_발생한다() {
+            // when & then
+            assertThatThrownBy(() -> subscriptionService.getSubscriptionInfo(3L))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(AlbumErrorCode.NOT_ALBUM_HOST.getMessage());
+        }
+
+        @Test
+        void BASIC_유형인_경우_예외가_발생한다() {
+            // when & then
+            assertThatThrownBy(() -> subscriptionService.getSubscriptionInfo(4L))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(
+                            SubscriptionErrorCode.SUBSCRIPTION_NOT_SUPPORTED_FOR_BASIC_TYPE
+                                    .getMessage());
+        }
+
+        @Test
+        void 구독이_존재하지_않는_경우_예외가_발생한다() {
+            // when & then
+            assertThatThrownBy(() -> subscriptionService.getSubscriptionInfo(5L))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(SubscriptionErrorCode.SUBSCRIPTION_NOT_FOUND.getMessage());
         }
     }
 }

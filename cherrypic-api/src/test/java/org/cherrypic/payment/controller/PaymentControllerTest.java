@@ -1,20 +1,28 @@
 package org.cherrypic.payment.controller;
 
+import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.BDDMockito.given;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.LocalDateTime;
+import java.util.List;
 import org.cherrypic.album.enums.AlbumType;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.payment.controller.PaymentController;
 import org.cherrypic.domain.payment.dto.request.PaymentReadyRequest;
+import org.cherrypic.domain.payment.dto.response.PaymentListResponse;
 import org.cherrypic.domain.payment.dto.response.PaymentReadyResponse;
+import org.cherrypic.domain.payment.dto.response.PaymentUnlinkedResponse;
 import org.cherrypic.domain.payment.dto.response.PaymentVerificationResponse;
 import org.cherrypic.domain.payment.exception.PaymentErrorCode;
 import org.cherrypic.domain.payment.service.PaymentService;
 import org.cherrypic.exception.CustomException;
+import org.cherrypic.global.pagination.SliceResponse;
+import org.cherrypic.global.pagination.SortDirection;
 import org.cherrypic.payment.enums.PaymentPurpose;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -356,7 +364,32 @@ class PaymentControllerTest {
                     .andExpect(jsonPath("$.success").value(false))
                     .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
                     .andExpect(jsonPath("$.data.code").value("UNSUPPORTED_PAYMENT"))
-                    .andExpect(jsonPath("$.data.message").value("BASIC 유형은 결제를 지원하지 않습니다."));
+                    .andExpect(jsonPath("$.data.message").value("BASIC 유형은 결제 기능을 지원하지 않습니다."));
+        }
+
+        @Test
+        void 사용되지_않은_완료된_결제가_존재하면_예외가_발생한다() throws Exception {
+            // given
+            PaymentReadyRequest request = new PaymentReadyRequest(AlbumType.PRO, null);
+
+            given(paymentService.preparePayment(request))
+                    .willThrow(
+                            new CustomException(PaymentErrorCode.UNLINKED_PAYMENT_ALREADY_EXISTS));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/payments/ready")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("UNLINKED_PAYMENT_ALREADY_EXISTS"))
+                    .andExpect(
+                            jsonPath("$.data.message")
+                                    .value("아직 사용되지 않은 완료된 결제 내역이 존재합니다. 앨범 생성 또는 구독을 먼저 완료해주세요."));
         }
 
         @ParameterizedTest
@@ -483,6 +516,250 @@ class PaymentControllerTest {
                     .andExpect(
                             jsonPath("$.data.message")
                                     .value("결제 대행 시스템(Iamport)과의 통신에 실패했습니다. 잠시 후 다시 시도해주세요."));
+        }
+    }
+
+    @Nested
+    class 앨범과_연결되지_않은_완료된_결제_내역_조회_요청_시 {
+
+        @Test
+        void 존재하면_1건의_결제_내역을_반환한다() throws Exception {
+            // given
+            PaymentUnlinkedResponse response =
+                    new PaymentUnlinkedResponse(
+                            1L,
+                            AlbumType.PRO,
+                            5900,
+                            PaymentPurpose.RENEWAL,
+                            LocalDateTime.of(2025, 8, 31, 20, 0));
+
+            given(paymentService.getUnlinkedPayment()).willReturn(response);
+
+            // when & then
+            ResultActions perform = mockMvc.perform(get("/payments/unlinked"));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
+                    .andExpect(jsonPath("$.data.paymentId").value("1"))
+                    .andExpect(jsonPath("$.data.albumType").value("PRO"))
+                    .andExpect(jsonPath("$.data.amount").value("5900"))
+                    .andExpect(jsonPath("$.data.purpose").value("RENEWAL"))
+                    .andExpect(jsonPath("$.data.paidAt").value("2025-08-31T20:00:00"));
+        }
+
+        @Test
+        void 존재하지_않으면_null을_반환한다() throws Exception {
+            // given
+            given(paymentService.getUnlinkedPayment()).willReturn(null);
+
+            // when & then
+            ResultActions perform = mockMvc.perform(get("/payments/unlinked"));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
+                    .andExpect(jsonPath("$.data").value(nullValue()));
+        }
+    }
+
+    @Nested
+    class 앨범의_결제_내역_목록_조회_요청_시 {
+
+        @Test
+        void 정렬_조건이_ASC이면_paymentId를_오름차순으로_응답한다() throws Exception {
+            // given
+            List<PaymentListResponse> payments =
+                    List.of(
+                            new PaymentListResponse(1L, LocalDateTime.of(2025, 9, 2, 0, 0), 5900),
+                            new PaymentListResponse(2L, LocalDateTime.of(2025, 10, 2, 0, 0), 5900));
+
+            given(paymentService.getAlbumPayments(1L, null, 2, SortDirection.ASC))
+                    .willReturn(new SliceResponse<>(payments, true));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            get("/payments")
+                                    .param("albumId", "1")
+                                    .param("size", "2")
+                                    .param("direction", "ASC"));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
+                    .andExpect(jsonPath("$.data.content[0].paymentId").value(1))
+                    .andExpect(jsonPath("$.data.content[1].paymentId").value(2))
+                    .andExpect(jsonPath("$.data.isLast").value(true));
+        }
+
+        @Test
+        void 정렬_조건이_DESC이면_paymentId를_내림차순으로_응답한다() throws Exception {
+            // given
+            List<PaymentListResponse> payments =
+                    List.of(
+                            new PaymentListResponse(2L, LocalDateTime.of(2025, 10, 2, 0, 0), 5900),
+                            new PaymentListResponse(1L, LocalDateTime.of(2025, 9, 2, 0, 0), 5900));
+
+            given(paymentService.getAlbumPayments(1L, null, 2, SortDirection.DESC))
+                    .willReturn(new SliceResponse<>(payments, true));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(get("/payments").param("albumId", "1").param("size", "2"));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
+                    .andExpect(jsonPath("$.data.content[0].paymentId").value(2))
+                    .andExpect(jsonPath("$.data.content[1].paymentId").value(1))
+                    .andExpect(jsonPath("$.data.isLast").value(true));
+        }
+
+        @Test
+        void 마지막_페이지인_경우_isLast를_true로_응답한다() throws Exception {
+            // given
+            List<PaymentListResponse> payments =
+                    List.of(new PaymentListResponse(1L, LocalDateTime.of(2025, 9, 2, 0, 0), 5900));
+
+            given(paymentService.getAlbumPayments(1L, null, 1, SortDirection.DESC))
+                    .willReturn(new SliceResponse<>(payments, true));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(get("/payments").param("albumId", "1").param("size", "1"));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
+                    .andExpect(jsonPath("$.data.content[0].paymentId").value(1))
+                    .andExpect(jsonPath("$.data.isLast").value(true));
+        }
+
+        @Test
+        void 마지막_페이지가_아닌_경우_isLast를_false로_응답한다() throws Exception {
+            // given
+            List<PaymentListResponse> payments =
+                    List.of(
+                            new PaymentListResponse(2L, LocalDateTime.of(2025, 10, 2, 0, 0), 5900),
+                            new PaymentListResponse(1L, LocalDateTime.of(2025, 9, 2, 0, 0), 5900));
+
+            given(paymentService.getAlbumPayments(1L, null, 1, SortDirection.DESC))
+                    .willReturn(new SliceResponse<>(payments, false));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            get("/payments")
+                                    .param("albumId", "1")
+                                    .param("size", "1")
+                                    .param("direction", "DESC"));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
+                    .andExpect(jsonPath("$.data.content[0].paymentId").value(2))
+                    .andExpect(jsonPath("$.data.isLast").value(false));
+        }
+
+        @Test
+        void 앨범이_존재하지_않는_경우_예외가_발생한다() throws Exception {
+            // given
+            given(paymentService.getAlbumPayments(1L, null, 1, SortDirection.DESC))
+                    .willThrow(new CustomException(AlbumErrorCode.ALBUM_NOT_FOUND));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(get("/payments").param("albumId", "1").param("size", "1"));
+
+            perform.andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.NOT_FOUND.value()))
+                    .andExpect(jsonPath("$.data.code").value("ALBUM_NOT_FOUND"))
+                    .andExpect(jsonPath("$.data.message").value("앨범이 존재하지 않습니다."));
+        }
+
+        @Test
+        void 앨범_참가자가_아닌_경우_예외가_발생한다() throws Exception {
+            // given
+            given(paymentService.getAlbumPayments(1L, null, 1, SortDirection.DESC))
+                    .willThrow(new CustomException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(get("/payments").param("albumId", "1").param("size", "1"));
+
+            perform.andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.FORBIDDEN.value()))
+                    .andExpect(jsonPath("$.data.code").value("NOT_ALBUM_PARTICIPANT"))
+                    .andExpect(jsonPath("$.data.message").value("앨범에 속하지 않은 사용자입니다."));
+        }
+
+        @Test
+        void 앨범_방장이_아닌_경우_예외가_발생한다() throws Exception {
+            // given
+            given(paymentService.getAlbumPayments(1L, null, 1, SortDirection.DESC))
+                    .willThrow(new CustomException(AlbumErrorCode.NOT_ALBUM_HOST));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(get("/payments").param("albumId", "1").param("size", "1"));
+
+            perform.andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.FORBIDDEN.value()))
+                    .andExpect(jsonPath("$.data.code").value("NOT_ALBUM_HOST"))
+                    .andExpect(jsonPath("$.data.message").value("방장이 아닌 경우 권한이 없습니다."));
+        }
+
+        @Test
+        void BASIC_유형인_경우_예외가_발생한다() throws Exception {
+            // given
+            given(paymentService.getAlbumPayments(1L, null, 1, SortDirection.DESC))
+                    .willThrow(new CustomException(PaymentErrorCode.UNSUPPORTED_PAYMENT));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(get("/payments").param("albumId", "1").param("size", "1"));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("UNSUPPORTED_PAYMENT"))
+                    .andExpect(jsonPath("$.data.message").value("BASIC 유형은 결제 기능을 지원하지 않습니다."));
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"-1", "-999", "0"})
+        void 페이지_크기를_0_이하로_설정하면_예외가_발생한다(String pageSize) throws Exception {
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(get("/payments").param("albumId", "1").param("size", pageSize));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("ConstraintViolationException"))
+                    .andExpect(jsonPath("$.data.message").value("페이지 크기는 0보다 큰 값만 가능합니다."));
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"ASCC", "DESCC", "OLDEST", "NEWEST"})
+        void 존재하지_않는_정렬_기준을_입력한_경우_예외가_발생한다(String sort) throws Exception {
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            get("/payments")
+                                    .param("albumId", "1")
+                                    .param("size", "2")
+                                    .param("direction", sort));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("METHOD_ARGUMENT_TYPE_MISMATCH"))
+                    .andExpect(jsonPath("$.data.message").value("요청한 값의 타입이 잘못되어 처리할 수 없습니다."));
         }
     }
 }

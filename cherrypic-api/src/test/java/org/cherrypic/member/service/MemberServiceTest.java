@@ -98,11 +98,9 @@ class MemberServiceTest extends IntegrationTest {
 
             // then
             Member member = memberRepository.findById(1L).orElseThrow();
-            Assertions.assertAll(
-                    () -> assertThat(member.getNickname()).isEqualTo("updateNickname"),
-                    () ->
-                            assertThat(member.getProfileImageUrl())
-                                    .isEqualTo("updateProfileImageUrl"));
+            assertThat(member)
+                    .extracting("nickname", "profileImageUrl")
+                    .containsExactly("updateNickname", "updateProfileImageUrl");
         }
 
         @Test

@@ -3,6 +3,7 @@ package org.cherrypic.subscription.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -64,8 +65,8 @@ public class Subscription extends BaseTimeEntity {
                 .album(album)
                 .status(SubscriptionStatus.ACTIVE)
                 .startAt(paidAt)
-                .endAt(paidAt.plusMonths(1))
-                .nextBillingAt(paidAt.plusMonths(1).minusDays(3))
+                .endAt(adjustEndDate(paidAt))
+                .nextBillingAt(adjustEndDate(paidAt).minusDays(3))
                 .build();
     }
 
@@ -89,7 +90,18 @@ public class Subscription extends BaseTimeEntity {
         }
 
         this.status = SubscriptionStatus.ACTIVE;
-        this.endAt = this.endAt.plusMonths(1);
+        this.endAt = adjustEndDate(this.endAt);
         this.nextBillingAt = this.endAt.minusDays(3);
+    }
+
+    public static LocalDateTime adjustEndDate(LocalDateTime baseDate) {
+        boolean isAtEndOfMonth = baseDate.getDayOfMonth() >= 28;
+
+        if (isAtEndOfMonth) {
+            YearMonth nextMonth = YearMonth.from(baseDate.plusMonths(1));
+            return nextMonth.atEndOfMonth().atTime(baseDate.toLocalTime());
+        }
+
+        return baseDate.plusMonths(1);
     }
 }
