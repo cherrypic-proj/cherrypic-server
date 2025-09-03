@@ -11,7 +11,7 @@ import com.siot.IamportRestClient.response.IamportResponse;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
+import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
 import okhttp3.MediaType;
@@ -309,7 +309,7 @@ public class PaymentServiceTest extends IntegrationTest {
                     Payment.createPayment(
                             member,
                             MERCHANT_UID_EXISTING,
-                            3900,
+                            5900,
                             PaymentPurpose.CREATION,
                             AlbumType.PRO));
         }
@@ -317,7 +317,7 @@ public class PaymentServiceTest extends IntegrationTest {
         @Test
         void 유효한_요청이면_결제_정보를_검증한_후_갱신한다() throws IamportResponseException, IOException {
             // given
-            stubIamportPayment(MERCHANT_UID_EXISTING, BigDecimal.valueOf(3900), "PAID");
+            stubIamportPayment(MERCHANT_UID_EXISTING, BigDecimal.valueOf(5900), "PAID");
 
             // when
             paymentService.verifyPayment("imp_1234");
@@ -327,12 +327,11 @@ public class PaymentServiceTest extends IntegrationTest {
             Assertions.assertAll(
                     () -> assertThat(payment.getId()).isEqualTo(1L),
                     () -> assertThat(payment.getImpUid()).isEqualTo("imp_1234"),
-                    () -> assertThat(payment.getAmount()).isEqualTo(3900),
+                    () -> assertThat(payment.getAmount()).isEqualTo(5900),
                     () -> assertThat(payment.getStatus()).isEqualTo(PaymentStatus.PAID),
                     () ->
-                            assertThat(payment.getPaidAt().truncatedTo(ChronoUnit.MINUTES))
-                                    .isEqualTo(
-                                            LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES)));
+                            assertThat(payment.getPaidAt())
+                                    .isEqualTo(LocalDateTime.of(2025, 8, 1, 13, 0)));
         }
 
         @Test
@@ -380,7 +379,7 @@ public class PaymentServiceTest extends IntegrationTest {
         @Test
         void 결제_상태가_PAID가_아니면_예외가_발생한다() throws IamportResponseException, IOException {
             // given
-            stubIamportPayment(MERCHANT_UID_EXISTING, BigDecimal.valueOf(3900), "READY");
+            stubIamportPayment(MERCHANT_UID_EXISTING, BigDecimal.valueOf(5900), "READY");
 
             // when & then
             assertThatThrownBy(() -> paymentService.verifyPayment("imp_1234"))
@@ -409,7 +408,12 @@ public class PaymentServiceTest extends IntegrationTest {
             given(iamportPayment.getPgProvider()).willReturn("kakaopay");
             given(iamportPayment.getAmount()).willReturn(amount);
             given(iamportPayment.getStatus()).willReturn(status);
-            given(iamportPayment.getPaidAt()).willReturn(new Date());
+            given(iamportPayment.getPaidAt())
+                    .willReturn(
+                            Date.from(
+                                    LocalDateTime.of(2025, 8, 1, 13, 0)
+                                            .atZone(ZoneId.systemDefault())
+                                            .toInstant()));
         }
     }
 
