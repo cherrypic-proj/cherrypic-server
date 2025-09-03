@@ -36,7 +36,7 @@ public class TempAlbum extends BaseTimeEntity {
 
     @NotNull private LocalDate expiredAt;
 
-    private String url;
+    private String webUrl;
 
     @OneToMany(mappedBy = "tempAlbum", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TempAlbumImage> tempAlbumImages = new ArrayList<>();
