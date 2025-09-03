@@ -50,7 +50,7 @@ public class TempAlbumServiceTest extends IntegrationTest {
         }
 
         @Test
-        void 유요한_요청이면_임시앨범을_생성한다() {
+        void 유효한_요청이면_임시앨범을_생성한다() {
             // given
             TempAlbumCreateRequest request = new TempAlbumCreateRequest("testTitle");
 

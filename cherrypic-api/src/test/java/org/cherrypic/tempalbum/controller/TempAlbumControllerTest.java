@@ -39,7 +39,7 @@ class TempAlbumControllerTest {
     class 임시_앨범_생성_요청_시 {
 
         @Test
-        void 유요한_요청이면_임시_앨범을_생성하고_관련_정보를_반환한다() throws Exception {
+        void 유효한_요청이면_임시_앨범을_생성하고_관련_정보를_반환한다() throws Exception {
             // given
             TempAlbumCreateRequest request = new TempAlbumCreateRequest("testTitle");
 
