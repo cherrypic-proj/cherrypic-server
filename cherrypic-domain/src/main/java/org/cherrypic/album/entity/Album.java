@@ -33,6 +33,7 @@ public class Album extends BaseTimeEntity {
 
     private String coverUrl;
 
+    @NotNull
     @Enumerated(EnumType.STRING)
     private AlbumType type;
 

@@ -31,6 +31,7 @@ public class TempAlbum extends BaseTimeEntity {
 
     @NotNull private BigDecimal capacityGb;
 
+    @NotNull
     @Enumerated(EnumType.STRING)
     private TempAlbumType type;
 

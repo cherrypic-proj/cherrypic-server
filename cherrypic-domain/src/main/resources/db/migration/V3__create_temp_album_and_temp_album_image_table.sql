@@ -5,7 +5,7 @@ CREATE TABLE temp_album (
                             capacity_gb DECIMAL(6,2) NOT NULL,
                             type VARCHAR(255) CHECK (type IN ('DEFAULT')),
                             expired_at DATETIME NOT NULL,
-                            url VARCHAR(255) NOT NULL,
+                            web_url VARCHAR(255),
                             created_at DATETIME(6) NOT NULL,
                             updated_at DATETIME(6) NOT NULL,
 
