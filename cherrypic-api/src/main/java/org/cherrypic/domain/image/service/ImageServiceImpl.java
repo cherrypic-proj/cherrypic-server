@@ -206,6 +206,12 @@ public class ImageServiceImpl implements ImageService {
 
         validateImagesInAlbum(images, album);
 
+        album.decreaseCapacity(
+                images.stream()
+                        .map(Image::getCapacityGb)
+                        .filter(Objects::nonNull)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add));
+
         eventPublisher.publishEvent(
                 ImagesDeleteEvent.of(images.stream().map(Image::getUrl).toList()));
         imageRepository.deleteAllInBatch(images);

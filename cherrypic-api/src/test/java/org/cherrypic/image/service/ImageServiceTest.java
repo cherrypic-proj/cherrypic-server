@@ -706,6 +706,7 @@ class ImageServiceTest extends IntegrationTest {
             given(memberUtil.getCurrentMember()).willReturn(member);
 
             Album album1 = Album.createAlbum("testTitle1", "testCoverUrl1", AlbumType.BASIC, false);
+            album1.increaseCapacity(BigDecimal.valueOf(0.4));
             Album album2 = Album.createAlbum("testTitle2", "testCoverUrl2", AlbumType.BASIC, false);
             Album album3 = Album.createAlbum("testTitle3", "testCoverUrl3", AlbumType.BASIC, false);
             albumRepository.saveAll(List.of(album1, album2, album3));
@@ -729,7 +730,7 @@ class ImageServiceTest extends IntegrationTest {
         }
 
         @Test
-        void 유효한_요청이면_앨범_이미지를_삭제한다() {
+        void 유효한_요청이면_앨범_이미지를_삭제하고_앨범_용량을_내린다() {
             // given
             AlbumImageDeleteRequest request = new AlbumImageDeleteRequest(List.of(1L, 2L));
 
@@ -737,7 +738,11 @@ class ImageServiceTest extends IntegrationTest {
             imageService.deleteAlbumImage(1L, request);
 
             // then
-            assertThat(imageRepository.findAllById(List.of(1L, 2L))).isEmpty();
+            Assertions.assertAll(
+                    () -> assertThat(imageRepository.findAllById(List.of(1L, 2L))).isEmpty(),
+                    () ->
+                            assertThat(albumRepository.findById(1L).orElseThrow().getCapacityGb())
+                                    .isEqualTo(new BigDecimal("0.00")));
         }
 
         @Test
