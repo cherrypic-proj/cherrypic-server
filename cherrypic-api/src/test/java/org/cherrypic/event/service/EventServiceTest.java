@@ -183,7 +183,7 @@ public class EventServiceTest extends IntegrationTest {
         void 유효한_요청이면_이벤트가_수정된다() {
             // given
             EventUpdateRequest request =
-                    new EventUpdateRequest("changedTestEventTitle", "changedTestEventCoverUrl");
+                    new EventUpdateRequest("changedTestTitle", "changedTestEventCoverUrl");
 
             // when
             eventService.updateEvent(1L, request);
@@ -192,7 +192,7 @@ public class EventServiceTest extends IntegrationTest {
             Event event = eventRepository.findById(1L).orElseThrow();
             assertThat(event)
                     .extracting("id", "album.id", "title", "coverUrl")
-                    .containsExactly(1L, 1L, "changedTestEventTitle", "changedTestEventCoverUrl");
+                    .containsExactly(1L, 1L, "changedTestTitle", "changedTestEventCoverUrl");
         }
 
         @Test
