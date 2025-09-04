@@ -36,18 +36,16 @@ public class DatabaseCleaner implements InitializingBean {
 
     private void cleanTables(Connection conn) throws SQLException {
         Statement statement = conn.createStatement();
-        statement.executeUpdate("SET REFERENTIAL_INTEGRITY FALSE");
+        statement.executeUpdate("SET FOREIGN_KEY_CHECKS = 0");
 
         for (String name : tableNames) {
             statement.executeUpdate(String.format("TRUNCATE TABLE %s", name));
             if (columnExists(conn, name, name)) {
-                statement.executeUpdate(
-                        String.format(
-                                "ALTER TABLE %s ALTER COLUMN %s_id RESTART WITH 1", name, name));
+                statement.executeUpdate(String.format("ALTER TABLE %s AUTO_INCREMENT = 1", name));
             }
         }
 
-        statement.executeUpdate("SET REFERENTIAL_INTEGRITY TRUE");
+        statement.executeUpdate("SET FOREIGN_KEY_CHECKS = 1");
     }
 
     private boolean columnExists(Connection conn, String tableName, String columnName)
