@@ -17,4 +17,6 @@ public interface ImageRepositoryCustom {
     List<Image> findAllUnmappedToEvent(Long eventId, List<Long> imageIds);
 
     void bulkInsertImages(List<Image> images);
+
+    List<Long> findIdsByUrlsInOrder(List<String> urls);
 }

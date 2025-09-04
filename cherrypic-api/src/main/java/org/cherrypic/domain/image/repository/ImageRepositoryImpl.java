@@ -5,6 +5,8 @@ import static org.cherrypic.image.entity.QImage.image;
 
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.CaseBuilder;
+import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -94,6 +96,27 @@ public class ImageRepositoryImpl implements ImageRepositoryCustom {
                     ps.setBigDecimal(4, image.getCapacityGb()); // capacity_gb 추가
                     ps.setObject(5, image.getGeneratedAt());
                 });
+    }
+
+    @Override
+    public List<Long> findIdsByUrlsInOrder(List<String> urls) {
+        if (urls == null || urls.isEmpty()) {
+            return List.of();
+        }
+
+        var cases = new CaseBuilder().when(image.url.eq(urls.get(0))).then(0);
+
+        for (int i = 1; i < urls.size(); i++) {
+            cases = cases.when(image.url.eq(urls.get(i))).then(i);
+        }
+        NumberExpression<Integer> orderExpr = cases.otherwise(999_999);
+
+        return queryFactory
+                .select(image.id)
+                .from(image)
+                .where(image.url.in(urls))
+                .orderBy(orderExpr.asc())
+                .fetch();
     }
 
     private BooleanExpression lastImageIdCondition(Long imageId, SortDirection direction) {
