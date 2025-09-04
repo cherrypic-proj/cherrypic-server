@@ -3,7 +3,6 @@ package org.cherrypic.domain.image.service;
 import org.cherrypic.domain.image.dto.request.AlbumFileUploadRequest;
 import org.cherrypic.domain.image.dto.request.AlbumImageDeleteRequest;
 import org.cherrypic.domain.image.dto.request.ImageUploadRequest;
-import org.cherrypic.domain.image.dto.request.UploadFailedFileDeleteRequest;
 import org.cherrypic.domain.image.dto.response.AlbumImageListResponse;
 import org.cherrypic.domain.image.dto.response.EventImageListResponse;
 import org.cherrypic.domain.image.dto.response.PresignedUrlResponse;
@@ -25,8 +24,6 @@ public interface ImageService {
 
     SliceResponse<EventImageListResponse> getEventImages(
             Long eventId, Long lastImageId, int size, SortDirection direction);
-
-    void deleteUploadFailedFile(UploadFailedFileDeleteRequest request);
 
     void deleteAlbumImage(Long albumId, AlbumImageDeleteRequest request);
 }

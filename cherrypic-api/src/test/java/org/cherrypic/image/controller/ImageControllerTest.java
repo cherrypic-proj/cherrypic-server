@@ -15,7 +15,6 @@ import org.cherrypic.domain.image.controller.ImageController;
 import org.cherrypic.domain.image.dto.request.AlbumFileUploadRequest;
 import org.cherrypic.domain.image.dto.request.AlbumImageDeleteRequest;
 import org.cherrypic.domain.image.dto.request.ImageUploadRequest;
-import org.cherrypic.domain.image.dto.request.UploadFailedFileDeleteRequest;
 import org.cherrypic.domain.image.dto.response.AlbumImageListResponse;
 import org.cherrypic.domain.image.dto.response.EventImageListResponse;
 import org.cherrypic.domain.image.dto.response.PresignedUrlResponse;
@@ -1021,74 +1020,6 @@ class ImageControllerTest {
                     .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
                     .andExpect(jsonPath("$.data.code").value("METHOD_ARGUMENT_TYPE_MISMATCH"))
                     .andExpect(jsonPath("$.data.message").value("요청한 값의 타입이 잘못되어 처리할 수 없습니다."));
-        }
-    }
-
-    @Nested
-    class 업로드_실패한_이미지_삭제_요청_시 {
-
-        @Test
-        void 유효한_요청이면_이미지를_삭제하고_NO_CONTENT를_반환한다() throws Exception {
-            // given
-            UploadFailedFileDeleteRequest request =
-                    new UploadFailedFileDeleteRequest(List.of("testPresignedUrl"));
-
-            willDoNothing().given(imageService).deleteUploadFailedFile(request);
-
-            // when & then
-            ResultActions perform =
-                    mockMvc.perform(
-                            delete("/images")
-                                    .contentType(MediaType.APPLICATION_JSON)
-                                    .content(objectMapper.writeValueAsString(request)));
-
-            perform.andExpect(status().isNoContent())
-                    .andExpect(jsonPath("$.success").value(true))
-                    .andExpect(jsonPath("$.status").value(HttpStatus.NO_CONTENT.value()));
-        }
-
-        @Test
-        void 내가_업로드하지_않은_이미지를_삭제할_경우_예외가_발생한다() throws Exception {
-            // given
-            UploadFailedFileDeleteRequest request =
-                    new UploadFailedFileDeleteRequest(List.of("testPresignedUrl"));
-            willThrow(new CustomException(ImageErrorCode.PRESIGNED_IMAGES_NOT_MINE))
-                    .given(imageService)
-                    .deleteUploadFailedFile(request);
-
-            // when & then
-            ResultActions perform =
-                    mockMvc.perform(
-                            delete("/images")
-                                    .contentType(MediaType.APPLICATION_JSON)
-                                    .content(objectMapper.writeValueAsString(request)));
-
-            perform.andExpect(status().isForbidden())
-                    .andExpect(jsonPath("$.success").value(false))
-                    .andExpect(jsonPath("$.status").value(HttpStatus.FORBIDDEN.value()))
-                    .andExpect(jsonPath("$.data.code").value("PRESIGNED_IMAGES_NOT_MINE"))
-                    .andExpect(
-                            jsonPath("$.data.message")
-                                    .value("본인이 업로드하지 않은 Presigned Image는 삭제할 수 없습니다."));
-        }
-
-        @Test
-        void Presigned_URL이_없는_경우_예외가_발생한다() throws Exception {
-            // given
-            UploadFailedFileDeleteRequest request = new UploadFailedFileDeleteRequest(List.of());
-
-            // when & then
-            ResultActions perform =
-                    mockMvc.perform(
-                            delete("/images")
-                                    .contentType(MediaType.APPLICATION_JSON)
-                                    .content(objectMapper.writeValueAsString(request)));
-
-            perform.andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.success").value(false))
-                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
-                    .andExpect(jsonPath("$.data.code").value("MethodArgumentNotValidException"))
-                    .andExpect(jsonPath("$.data.message").value("Presigned URL은 비워둘 수 없습니다."));
         }
     }
 

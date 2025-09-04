@@ -8,7 +8,6 @@ import lombok.RequiredArgsConstructor;
 import org.cherrypic.domain.image.dto.request.AlbumFileUploadRequest;
 import org.cherrypic.domain.image.dto.request.AlbumImageDeleteRequest;
 import org.cherrypic.domain.image.dto.request.ImageUploadRequest;
-import org.cherrypic.domain.image.dto.request.UploadFailedFileDeleteRequest;
 import org.cherrypic.domain.image.dto.response.AlbumImageListResponse;
 import org.cherrypic.domain.image.dto.response.EventImageListResponse;
 import org.cherrypic.domain.image.dto.response.PresignedUrlResponse;
@@ -63,16 +62,6 @@ public class ImageController {
     public PresignedUrlsResponse albumFileUploadUrlsCreate(
             @PathVariable Long albumId, @Valid @RequestBody AlbumFileUploadRequest request) {
         return imageService.createAlbumFileUploadUrls(albumId, request);
-    }
-
-    @DeleteMapping("/images")
-    @Operation(
-            summary = "업로드 실패한 파일 삭제",
-            description = "업로드를 실패한 Presigned URL을 기반으로 동영상 & 이미지를 삭제합니다.")
-    public ResponseEntity<Void> uploadFailedFileDelete(
-            @Valid @RequestBody UploadFailedFileDeleteRequest request) {
-        imageService.deleteUploadFailedFile(request);
-        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/albums/{albumId}/images")
