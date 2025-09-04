@@ -249,17 +249,6 @@ public class ImageServiceImpl implements ImageService {
         }
     }
 
-    private void validatePresignedImageOwnership(Member member, List<Image> images) {
-        Long memberId = member.getId();
-
-        boolean hasInvalidImage =
-                images.stream().anyMatch(image -> !image.getMemberId().equals(memberId));
-
-        if (hasInvalidImage) {
-            throw new CustomException(ImageErrorCode.PRESIGNED_IMAGES_NOT_MINE);
-        }
-    }
-
     private void validateAlbumCapacity(Album album, BigDecimal uploadCapacity) {
 
         BigDecimal maxCapacity = album.getType().getCapacityGb();
