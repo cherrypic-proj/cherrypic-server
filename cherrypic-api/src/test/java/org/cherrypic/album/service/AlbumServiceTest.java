@@ -1087,7 +1087,8 @@ class AlbumServiceTest extends IntegrationTest {
             Album album5 = Album.createAlbum("testAlbum5", "testURL5", AlbumType.PRO, false);
             albumRepository.saveAll(List.of(album1, album2, album3, album4, album5));
 
-            Image image = Image.createImage(album1, 1L, "testUrl", LocalDateTime.now());
+            Image image =
+                    Image.createImage(album1, 1L, "testUrl", LocalDateTime.now(), BigDecimal.ONE);
             imageRepository.save(image);
 
             subscriptionRepository.save(

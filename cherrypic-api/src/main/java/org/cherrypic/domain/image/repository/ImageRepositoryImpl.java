@@ -80,8 +80,8 @@ public class ImageRepositoryImpl implements ImageRepositoryCustom {
     @Override
     public void bulkInsertImages(List<Image> images) {
         String sql =
-                "INSERT INTO image (album_id, member_id, url, generated_at, created_at, updated_at) "
-                        + "VALUES (?, ?, ?, ?, NOW(), NOW())";
+                "INSERT INTO image (album_id, member_id, url, capacity_gb, generated_at, created_at, updated_at) "
+                        + "VALUES (?, ?, ?, ?, ?, NOW(), NOW())";
 
         jdbcTemplate.batchUpdate(
                 sql,
@@ -91,7 +91,8 @@ public class ImageRepositoryImpl implements ImageRepositoryCustom {
                     ps.setLong(1, image.getAlbum().getId());
                     ps.setLong(2, image.getMemberId());
                     ps.setString(3, image.getUrl());
-                    ps.setObject(4, image.getGeneratedAt());
+                    ps.setBigDecimal(4, image.getCapacityGb()); // capacity_gb 추가
+                    ps.setObject(5, image.getGeneratedAt());
                 });
     }
 

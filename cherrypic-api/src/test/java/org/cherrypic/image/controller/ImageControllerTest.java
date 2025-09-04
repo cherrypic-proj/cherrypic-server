@@ -346,16 +346,17 @@ class ImageControllerTest {
             // given
             AlbumFileUploadRequest request =
                     new AlbumFileUploadRequest(
-                            BigDecimal.ONE,
                             List.of(
                                     new AlbumFileUploadRequest.Payload(
                                             FileExtension.JPEG,
                                             "testMd5Hash1",
-                                            LocalDateTime.now()),
+                                            LocalDateTime.now(),
+                                            BigDecimal.ONE),
                                     new AlbumFileUploadRequest.Payload(
                                             FileExtension.JPEG,
                                             "testMd5Hash2",
-                                            LocalDateTime.now())));
+                                            LocalDateTime.now(),
+                                            BigDecimal.ONE)));
 
             PresignedUrlsResponse response =
                     new PresignedUrlsResponse(List.of("testPresignedUrl1", "testPresignedUrl2"));
@@ -380,16 +381,17 @@ class ImageControllerTest {
             // given
             AlbumFileUploadRequest request =
                     new AlbumFileUploadRequest(
-                            BigDecimal.ONE,
                             List.of(
                                     new AlbumFileUploadRequest.Payload(
                                             FileExtension.JPEG,
                                             "testMd5Hash1",
-                                            LocalDateTime.now()),
+                                            LocalDateTime.now(),
+                                            BigDecimal.ONE),
                                     new AlbumFileUploadRequest.Payload(
                                             FileExtension.JPEG,
                                             "testMd5Hash2",
-                                            LocalDateTime.now())));
+                                            LocalDateTime.now(),
+                                            BigDecimal.ONE)));
 
             given(imageService.createAlbumFileUploadUrls(1L, request))
                     .willThrow(new CustomException(AlbumErrorCode.ALBUM_NOT_FOUND));
@@ -413,16 +415,17 @@ class ImageControllerTest {
             // given
             AlbumFileUploadRequest request =
                     new AlbumFileUploadRequest(
-                            BigDecimal.ONE,
                             List.of(
                                     new AlbumFileUploadRequest.Payload(
                                             FileExtension.JPEG,
                                             "testMd5Hash1",
-                                            LocalDateTime.now()),
+                                            LocalDateTime.now(),
+                                            BigDecimal.ONE),
                                     new AlbumFileUploadRequest.Payload(
                                             FileExtension.JPEG,
                                             "testMd5Hash2",
-                                            LocalDateTime.now())));
+                                            LocalDateTime.now(),
+                                            BigDecimal.ONE)));
 
             given(imageService.createAlbumFileUploadUrls(1L, request))
                     .willThrow(new CustomException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT));
@@ -446,16 +449,17 @@ class ImageControllerTest {
             // given
             AlbumFileUploadRequest request =
                     new AlbumFileUploadRequest(
-                            BigDecimal.ONE,
                             List.of(
                                     new AlbumFileUploadRequest.Payload(
                                             FileExtension.JPEG,
                                             "testMd5Hash1",
-                                            LocalDateTime.now()),
+                                            LocalDateTime.now(),
+                                            BigDecimal.ONE),
                                     new AlbumFileUploadRequest.Payload(
                                             FileExtension.JPEG,
                                             "testMd5Hash2",
-                                            LocalDateTime.now())));
+                                            LocalDateTime.now(),
+                                            BigDecimal.ONE)));
 
             given(imageService.createAlbumFileUploadUrls(1L, request))
                     .willThrow(new CustomException(AlbumErrorCode.LIMITED_AUTHORITY));
@@ -479,16 +483,17 @@ class ImageControllerTest {
             // given
             AlbumFileUploadRequest request =
                     new AlbumFileUploadRequest(
-                            BigDecimal.ONE,
                             List.of(
                                     new AlbumFileUploadRequest.Payload(
                                             FileExtension.JPEG,
                                             "testMd5Hash1",
-                                            LocalDateTime.now()),
+                                            LocalDateTime.now(),
+                                            BigDecimal.ONE),
                                     new AlbumFileUploadRequest.Payload(
                                             FileExtension.JPEG,
                                             "testMd5Hash2",
-                                            LocalDateTime.now())));
+                                            LocalDateTime.now(),
+                                            BigDecimal.ONE)));
 
             given(imageService.createAlbumFileUploadUrls(1L, request))
                     .willThrow(new CustomException(AlbumErrorCode.ALBUM_CAPACITY_EXCEEDED));
@@ -512,14 +517,17 @@ class ImageControllerTest {
             // given
             AlbumFileUploadRequest request =
                     new AlbumFileUploadRequest(
-                            BigDecimal.ONE,
                             List.of(
-                                    new AlbumFileUploadRequest.Payload(
-                                            FileExtension.JPEG, "testMd5Hash", LocalDateTime.now()),
                                     new AlbumFileUploadRequest.Payload(
                                             FileExtension.JPEG,
                                             "testMd5Hash",
-                                            LocalDateTime.now())));
+                                            LocalDateTime.now(),
+                                            BigDecimal.ONE),
+                                    new AlbumFileUploadRequest.Payload(
+                                            FileExtension.JPEG,
+                                            "testMd5Hash",
+                                            LocalDateTime.now(),
+                                            BigDecimal.ONE)));
 
             given(imageService.createAlbumFileUploadUrls(1L, request))
                     .willThrow(new CustomException(ImageErrorCode.DUPLICATE_HASHES));
@@ -546,12 +554,12 @@ class ImageControllerTest {
             // given
             AlbumFileUploadRequest request =
                     new AlbumFileUploadRequest(
-                            BigDecimal.ONE,
                             List.of(
                                     new AlbumFileUploadRequest.Payload(
                                             FileExtension.from(extension),
                                             "testMd5Hash1",
-                                            LocalDateTime.now())));
+                                            LocalDateTime.now(),
+                                            BigDecimal.ONE)));
 
             // when & then
             ResultActions perform =
@@ -571,16 +579,16 @@ class ImageControllerTest {
         }
 
         @Test
-        void 이미지_용량_총합을_비워두면_예외가_발생한다() throws Exception {
+        void 이미지_용량을_비워두면_예외가_발생한다() throws Exception {
             // given
             AlbumFileUploadRequest request =
                     new AlbumFileUploadRequest(
-                            null,
                             List.of(
                                     new AlbumFileUploadRequest.Payload(
                                             FileExtension.JPEG,
                                             "testMd5Hash",
-                                            LocalDateTime.now())));
+                                            LocalDateTime.now(),
+                                            null)));
 
             // when & then
             ResultActions perform =
@@ -593,7 +601,7 @@ class ImageControllerTest {
                     .andExpect(jsonPath("$.success").value(false))
                     .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
                     .andExpect(jsonPath("$.data.code").value("MethodArgumentNotValidException"))
-                    .andExpect(jsonPath("$.data.message").value("파일들의 용량은 비워둘 수 없습니다."));
+                    .andExpect(jsonPath("$.data.message").value("파일의 용량은 비워둘 수 없습니다."));
         }
 
         @ParameterizedTest
@@ -604,10 +612,12 @@ class ImageControllerTest {
             // given
             AlbumFileUploadRequest request =
                     new AlbumFileUploadRequest(
-                            BigDecimal.ONE,
                             List.of(
                                     new AlbumFileUploadRequest.Payload(
-                                            FileExtension.JPEG, md5Hash, LocalDateTime.now())));
+                                            FileExtension.JPEG,
+                                            md5Hash,
+                                            LocalDateTime.now(),
+                                            BigDecimal.ONE)));
 
             // when & then
             ResultActions perform =
@@ -626,7 +636,7 @@ class ImageControllerTest {
         @Test
         void 업로드_요청_정보를_비워두면_예외가_발생한다() throws Exception {
             // given
-            AlbumFileUploadRequest request = new AlbumFileUploadRequest(BigDecimal.ONE, List.of());
+            AlbumFileUploadRequest request = new AlbumFileUploadRequest(List.of());
 
             // when & then
             ResultActions perform =

@@ -108,11 +108,16 @@ public class ImageServiceImpl implements ImageService {
         final Member currentMember = memberUtil.getCurrentMember();
         final Album album = getAlbumByIdWithLock(albumId);
 
+        BigDecimal uploadCapacity =
+                request.payloads().stream()
+                        .map(AlbumFileUploadRequest.Payload::capacity)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+
         validateParticipantAuthority(currentMember.getId(), album.getId());
-        validateAlbumCapacity(album, request.capacity());
+        validateAlbumCapacity(album, uploadCapacity);
         validateDistinctHashes(request);
 
-        album.increaseCapacity(request.capacity());
+        album.increaseCapacity(uploadCapacity);
 
         List<String> presignedUrls =
                 request.payloads().stream()
@@ -141,7 +146,8 @@ public class ImageServiceImpl implements ImageService {
                                             objectUrl,
                                             req.generatedAt() != null
                                                     ? req.generatedAt()
-                                                    : LocalDateTime.now());
+                                                    : LocalDateTime.now(),
+                                            req.capacity());
                                 })
                         .toList();
 
@@ -248,10 +254,11 @@ public class ImageServiceImpl implements ImageService {
         }
     }
 
-    private void validateAlbumCapacity(Album album, BigDecimal additionalUpload) {
+    private void validateAlbumCapacity(Album album, BigDecimal uploadCapacity) {
+
         BigDecimal maxCapacity = album.getType().getCapacityGb();
         BigDecimal current = album.getCapacityGb();
-        BigDecimal afterUpload = current.add(additionalUpload);
+        BigDecimal afterUpload = current.add(uploadCapacity);
 
         if (afterUpload.compareTo(maxCapacity) > 0) {
             throw new CustomException(AlbumErrorCode.ALBUM_CAPACITY_EXCEEDED);
