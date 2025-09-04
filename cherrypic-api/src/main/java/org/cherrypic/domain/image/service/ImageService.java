@@ -6,7 +6,7 @@ import org.cherrypic.domain.image.dto.request.ImageUploadRequest;
 import org.cherrypic.domain.image.dto.response.AlbumImageListResponse;
 import org.cherrypic.domain.image.dto.response.EventImageListResponse;
 import org.cherrypic.domain.image.dto.response.PresignedUrlResponse;
-import org.cherrypic.domain.image.dto.response.PresignedUrlsResponse;
+import org.cherrypic.domain.image.dto.response.UploadFileListResponse;
 import org.cherrypic.global.pagination.SliceResponse;
 import org.cherrypic.global.pagination.SortDirection;
 
@@ -17,7 +17,7 @@ public interface ImageService {
 
     PresignedUrlResponse createEventCoverImageUploadUrl(ImageUploadRequest request);
 
-    PresignedUrlsResponse createAlbumFileUploadUrls(Long albumId, AlbumFileUploadRequest request);
+    UploadFileListResponse createAlbumFileUploadUrls(Long albumId, AlbumFileUploadRequest request);
 
     SliceResponse<AlbumImageListResponse> getAlbumImages(
             Long albumId, Long lastImageId, int size, SortDirection direction);

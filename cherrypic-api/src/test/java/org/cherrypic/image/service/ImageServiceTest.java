@@ -20,7 +20,7 @@ import org.cherrypic.domain.image.dto.request.ImageUploadRequest;
 import org.cherrypic.domain.image.dto.response.AlbumImageListResponse;
 import org.cherrypic.domain.image.dto.response.EventImageListResponse;
 import org.cherrypic.domain.image.dto.response.PresignedUrlResponse;
-import org.cherrypic.domain.image.dto.response.PresignedUrlsResponse;
+import org.cherrypic.domain.image.dto.response.UploadFileListResponse;
 import org.cherrypic.domain.image.enums.FileExtension;
 import org.cherrypic.domain.image.enums.ImageType;
 import org.cherrypic.domain.image.event.ImagesDeleteEvent;
@@ -325,7 +325,7 @@ class ImageServiceTest extends IntegrationTest {
                                     + "&Content-MD5=testMd5Hash2");
 
             // when
-            PresignedUrlsResponse response = imageService.createAlbumFileUploadUrls(1L, request);
+            UploadFileListResponse response = imageService.createAlbumFileUploadUrls(1L, request);
 
             // then
             assertThat(response.payloads())

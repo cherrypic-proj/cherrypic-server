@@ -16,7 +16,7 @@ import org.cherrypic.domain.image.dto.request.ImageUploadRequest;
 import org.cherrypic.domain.image.dto.response.AlbumImageListResponse;
 import org.cherrypic.domain.image.dto.response.EventImageListResponse;
 import org.cherrypic.domain.image.dto.response.PresignedUrlResponse;
-import org.cherrypic.domain.image.dto.response.PresignedUrlsResponse;
+import org.cherrypic.domain.image.dto.response.UploadFileListResponse;
 import org.cherrypic.domain.image.enums.FileExtension;
 import org.cherrypic.domain.image.enums.ImageType;
 import org.cherrypic.domain.image.event.ImagesDeleteEvent;
@@ -102,7 +102,7 @@ public class ImageServiceImpl implements ImageService {
     }
 
     @Override
-    public PresignedUrlsResponse createAlbumFileUploadUrls(
+    public UploadFileListResponse createAlbumFileUploadUrls(
             Long albumId, AlbumFileUploadRequest request) {
         final Member currentMember = memberUtil.getCurrentMember();
         final Album album = getAlbumByIdWithLock(albumId);
@@ -155,15 +155,15 @@ public class ImageServiceImpl implements ImageService {
         List<Long> imageIds =
                 imageRepository.findIdsByUrlsInOrder(images.stream().map(Image::getUrl).toList());
 
-        List<PresignedUrlsResponse.Payload> payloads =
+        List<UploadFileListResponse.Payload> payloads =
                 IntStream.range(0, images.size())
                         .mapToObj(
                                 i ->
-                                        PresignedUrlsResponse.Payload.of(
+                                        UploadFileListResponse.Payload.of(
                                                 imageIds.get(i), presignedUrls.get(i)))
                         .toList();
 
-        return PresignedUrlsResponse.of(payloads);
+        return UploadFileListResponse.of(payloads);
     }
 
     @Override
