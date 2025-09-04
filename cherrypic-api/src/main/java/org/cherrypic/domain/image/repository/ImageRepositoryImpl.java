@@ -77,25 +77,6 @@ public class ImageRepositoryImpl implements ImageRepositoryCustom {
                 .fetch();
     }
 
-    @Override
-    public void bulkInsertImages(List<Image> images) {
-        String sql =
-                "INSERT INTO image (album_id, member_id, url, capacity_gb, generated_at, created_at, updated_at) "
-                        + "VALUES (?, ?, ?, ?, ?, NOW(), NOW())";
-
-        jdbcTemplate.batchUpdate(
-                sql,
-                images,
-                100,
-                (ps, image) -> {
-                    ps.setLong(1, image.getAlbum().getId());
-                    ps.setLong(2, image.getMemberId());
-                    ps.setString(3, image.getUrl());
-                    ps.setBigDecimal(4, image.getCapacityGb()); // capacity_gb 추가
-                    ps.setObject(5, image.getGeneratedAt());
-                });
-    }
-
     private BooleanExpression lastImageIdCondition(Long imageId, SortDirection direction) {
         if (imageId == null) {
             return null;

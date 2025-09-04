@@ -358,7 +358,10 @@ class ImageControllerTest {
                                             BigDecimal.ONE)));
 
             PresignedUrlsResponse response =
-                    new PresignedUrlsResponse(List.of("testPresignedUrl1", "testPresignedUrl2"));
+                    new PresignedUrlsResponse(
+                            List.of(
+                                    new PresignedUrlsResponse.Payload(1L, "testPresignedUrl1"),
+                                    new PresignedUrlsResponse.Payload(2L, "testPresignedUrl2")));
 
             given(imageService.createAlbumFileUploadUrls(1L, request)).willReturn(response);
 
@@ -372,7 +375,7 @@ class ImageControllerTest {
             perform.andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
-                    .andExpect(jsonPath("$.data.presignedUrls").isNotEmpty());
+                    .andExpect(jsonPath("$.data.payloads").isNotEmpty());
         }
 
         @Test

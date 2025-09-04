@@ -328,17 +328,21 @@ class ImageServiceTest extends IntegrationTest {
             PresignedUrlsResponse response = imageService.createAlbumFileUploadUrls(1L, request);
 
             // then
-            assertThat(response.presignedUrls())
+            assertThat(response.payloads())
                     .hasSize(2)
                     .satisfiesExactly(
-                            url1 ->
-                                    assertThat(url1)
-                                            .containsPattern(
-                                                    ".*/local/album-image/1/[\\w\\-]+\\.(jpg|jpeg)\\?.+"),
-                            url2 ->
-                                    assertThat(url2)
-                                            .containsPattern(
-                                                    ".*/local/album-image/1/[\\w\\-]+\\.(jpg|jpeg)\\?.+"));
+                            payload1 -> {
+                                assertThat(payload1.imageId()).isEqualTo(1L);
+                                assertThat(payload1.presignedUrl())
+                                        .containsPattern(
+                                                ".*/local/album-image/1/[\\w\\-]+\\.(jpg|jpeg)\\?.+");
+                            },
+                            payload2 -> {
+                                assertThat(payload2.imageId()).isEqualTo(2L);
+                                assertThat(payload2.presignedUrl())
+                                        .containsPattern(
+                                                ".*/local/album-image/1/[\\w\\-]+\\.(jpg|jpeg)\\?.+");
+                            });
 
             List<Image> images = imageRepository.findAll();
             assertThat(images)

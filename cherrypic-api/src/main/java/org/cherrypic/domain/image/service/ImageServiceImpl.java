@@ -150,9 +150,17 @@ public class ImageServiceImpl implements ImageService {
                                 })
                         .toList();
 
-        imageRepository.bulkInsertImages(images);
+        imageRepository.saveAll(images);
 
-        return PresignedUrlsResponse.of(presignedUrls);
+        List<PresignedUrlsResponse.Payload> payloads =
+                IntStream.range(0, images.size())
+                        .mapToObj(
+                                i ->
+                                        PresignedUrlsResponse.Payload.of(
+                                                images.get(i).getId(), presignedUrls.get(i)))
+                        .toList();
+
+        return PresignedUrlsResponse.of(payloads);
     }
 
     @Override
