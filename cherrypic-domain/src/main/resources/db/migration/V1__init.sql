@@ -94,6 +94,7 @@ CREATE TABLE image (
                        album_id BIGINT NOT NULL,
                        url VARCHAR(255) NOT NULL,
                        generated_at DATETIME,
+                       capacity_gb DECIMAL(6,2) NOT NULL,
                        created_at DATETIME(6) NOT NULL,
                        updated_at DATETIME(6) NOT NULL,
                        CONSTRAINT fk_image_album FOREIGN KEY (album_id) REFERENCES album (id)

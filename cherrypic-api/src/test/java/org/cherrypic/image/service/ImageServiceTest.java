@@ -17,11 +17,10 @@ import org.cherrypic.domain.event.repository.EventRepository;
 import org.cherrypic.domain.image.dto.request.AlbumFileUploadRequest;
 import org.cherrypic.domain.image.dto.request.AlbumImageDeleteRequest;
 import org.cherrypic.domain.image.dto.request.ImageUploadRequest;
-import org.cherrypic.domain.image.dto.request.UploadFailedFileDeleteRequest;
 import org.cherrypic.domain.image.dto.response.AlbumImageListResponse;
 import org.cherrypic.domain.image.dto.response.EventImageListResponse;
 import org.cherrypic.domain.image.dto.response.PresignedUrlResponse;
-import org.cherrypic.domain.image.dto.response.PresignedUrlsResponse;
+import org.cherrypic.domain.image.dto.response.UploadFileListResponse;
 import org.cherrypic.domain.image.enums.FileExtension;
 import org.cherrypic.domain.image.enums.ImageType;
 import org.cherrypic.domain.image.event.ImagesDeleteEvent;
@@ -288,16 +287,17 @@ class ImageServiceTest extends IntegrationTest {
             // given
             AlbumFileUploadRequest request =
                     new AlbumFileUploadRequest(
-                            BigDecimal.ONE,
                             List.of(
                                     new AlbumFileUploadRequest.Payload(
                                             FileExtension.JPEG,
                                             "testMd5Hash1",
-                                            LocalDateTime.now()),
+                                            LocalDateTime.now(),
+                                            BigDecimal.ONE),
                                     new AlbumFileUploadRequest.Payload(
                                             FileExtension.JPEG,
                                             "testMd5Hash2",
-                                            LocalDateTime.now())));
+                                            LocalDateTime.now(),
+                                            BigDecimal.ONE)));
             given(
                             s3Util.createPresignedUrl(
                                     eq(ImageType.ALBUM_IMAGE),
@@ -325,20 +325,24 @@ class ImageServiceTest extends IntegrationTest {
                                     + "&Content-MD5=testMd5Hash2");
 
             // when
-            PresignedUrlsResponse response = imageService.createAlbumFileUploadUrls(1L, request);
+            UploadFileListResponse response = imageService.createAlbumFileUploadUrls(1L, request);
 
             // then
-            assertThat(response.presignedUrls())
+            assertThat(response.payloads())
                     .hasSize(2)
                     .satisfiesExactly(
-                            url1 ->
-                                    assertThat(url1)
-                                            .containsPattern(
-                                                    ".*/local/album-image/1/[\\w\\-]+\\.(jpg|jpeg)\\?.+"),
-                            url2 ->
-                                    assertThat(url2)
-                                            .containsPattern(
-                                                    ".*/local/album-image/1/[\\w\\-]+\\.(jpg|jpeg)\\?.+"));
+                            payload1 -> {
+                                assertThat(payload1.imageId()).isEqualTo(1L);
+                                assertThat(payload1.presignedUrl())
+                                        .containsPattern(
+                                                ".*/local/album-image/1/[\\w\\-]+\\.(jpg|jpeg)\\?.+");
+                            },
+                            payload2 -> {
+                                assertThat(payload2.imageId()).isEqualTo(2L);
+                                assertThat(payload2.presignedUrl())
+                                        .containsPattern(
+                                                ".*/local/album-image/1/[\\w\\-]+\\.(jpg|jpeg)\\?.+");
+                            });
 
             List<Image> images = imageRepository.findAll();
             assertThat(images)
@@ -360,16 +364,17 @@ class ImageServiceTest extends IntegrationTest {
             // given
             AlbumFileUploadRequest request =
                     new AlbumFileUploadRequest(
-                            BigDecimal.ONE,
                             List.of(
                                     new AlbumFileUploadRequest.Payload(
                                             FileExtension.JPEG,
                                             "testMd5Hash1",
-                                            LocalDateTime.now()),
+                                            LocalDateTime.now(),
+                                            BigDecimal.ZERO),
                                     new AlbumFileUploadRequest.Payload(
                                             FileExtension.JPEG,
                                             "testMd5Hash2",
-                                            LocalDateTime.now())));
+                                            LocalDateTime.now(),
+                                            BigDecimal.ZERO)));
 
             // when & then
             assertThatThrownBy(() -> imageService.createAlbumFileUploadUrls(999L, request))
@@ -382,16 +387,17 @@ class ImageServiceTest extends IntegrationTest {
             // given
             AlbumFileUploadRequest request =
                     new AlbumFileUploadRequest(
-                            BigDecimal.ONE,
                             List.of(
                                     new AlbumFileUploadRequest.Payload(
                                             FileExtension.JPEG,
                                             "testMd5Hash1",
-                                            LocalDateTime.now()),
+                                            LocalDateTime.now(),
+                                            BigDecimal.ZERO),
                                     new AlbumFileUploadRequest.Payload(
                                             FileExtension.JPEG,
                                             "testMd5Hash2",
-                                            LocalDateTime.now())));
+                                            LocalDateTime.now(),
+                                            BigDecimal.ZERO)));
 
             // when & then
             assertThatThrownBy(() -> imageService.createAlbumFileUploadUrls(3L, request))
@@ -404,16 +410,17 @@ class ImageServiceTest extends IntegrationTest {
             // given
             AlbumFileUploadRequest request =
                     new AlbumFileUploadRequest(
-                            BigDecimal.ONE,
                             List.of(
                                     new AlbumFileUploadRequest.Payload(
                                             FileExtension.JPEG,
                                             "testMd5Hash1",
-                                            LocalDateTime.now()),
+                                            LocalDateTime.now(),
+                                            BigDecimal.ZERO),
                                     new AlbumFileUploadRequest.Payload(
                                             FileExtension.JPEG,
                                             "testMd5Hash2",
-                                            LocalDateTime.now())));
+                                            LocalDateTime.now(),
+                                            BigDecimal.ZERO)));
 
             // when & then
             assertThatThrownBy(() -> imageService.createAlbumFileUploadUrls(2L, request))
@@ -426,16 +433,17 @@ class ImageServiceTest extends IntegrationTest {
             /// given
             AlbumFileUploadRequest request =
                     new AlbumFileUploadRequest(
-                            BigDecimal.TEN,
                             List.of(
                                     new AlbumFileUploadRequest.Payload(
                                             FileExtension.JPEG,
                                             "testMd5Hash1",
-                                            LocalDateTime.now()),
+                                            LocalDateTime.now(),
+                                            BigDecimal.TEN),
                                     new AlbumFileUploadRequest.Payload(
                                             FileExtension.JPEG,
                                             "testMd5Hash2",
-                                            LocalDateTime.now())));
+                                            LocalDateTime.now(),
+                                            BigDecimal.TEN)));
 
             // when & then
             assertThatThrownBy(() -> imageService.createAlbumFileUploadUrls(1L, request))
@@ -448,16 +456,17 @@ class ImageServiceTest extends IntegrationTest {
             // given
             AlbumFileUploadRequest request =
                     new AlbumFileUploadRequest(
-                            BigDecimal.ONE,
                             List.of(
                                     new AlbumFileUploadRequest.Payload(
                                             FileExtension.JPEG,
                                             "testMd5Hash1",
-                                            LocalDateTime.now()),
+                                            LocalDateTime.now(),
+                                            BigDecimal.ZERO),
                                     new AlbumFileUploadRequest.Payload(
                                             FileExtension.JPEG,
                                             "testMd5Hash1",
-                                            LocalDateTime.now())));
+                                            LocalDateTime.now(),
+                                            BigDecimal.ZERO)));
             // when & then
             assertThatThrownBy(() -> imageService.createAlbumFileUploadUrls(1L, request))
                     .isInstanceOf(CustomException.class)
@@ -492,9 +501,12 @@ class ImageServiceTest extends IntegrationTest {
             Event event = Event.createEvent(album1, "testTitle1", "testCoverUrl1");
             eventRepository.save(event);
 
-            Image image1 = Image.createImage(album1, 1L, "testUrl", LocalDateTime.now());
-            Image image2 = Image.createImage(album1, 1L, "testUrl2", LocalDateTime.now());
-            Image image3 = Image.createImage(album1, 1L, "testUrl2", LocalDateTime.now());
+            Image image1 =
+                    Image.createImage(album1, 1L, "testUrl", LocalDateTime.now(), BigDecimal.ZERO);
+            Image image2 =
+                    Image.createImage(album1, 1L, "testUrl2", LocalDateTime.now(), BigDecimal.ZERO);
+            Image image3 =
+                    Image.createImage(album1, 1L, "testUrl2", LocalDateTime.now(), BigDecimal.ZERO);
             imageRepository.saveAll(List.of(image1, image2, image3));
 
             EventImage eventImage = EventImage.createEventImage(event, image1);
@@ -598,8 +610,10 @@ class ImageServiceTest extends IntegrationTest {
             Event event3 = Event.createEvent(album2, "testTitle3", "testCoverUrl3");
             eventRepository.saveAll(List.of(event1, event2, event3));
 
-            Image image1 = Image.createImage(album1, 1L, "testUrl", LocalDateTime.now());
-            Image image2 = Image.createImage(album1, 1L, "testUrl2", LocalDateTime.now());
+            Image image1 =
+                    Image.createImage(album1, 1L, "testUrl", LocalDateTime.now(), BigDecimal.ZERO);
+            Image image2 =
+                    Image.createImage(album1, 1L, "testUrl2", LocalDateTime.now(), BigDecimal.ZERO);
             imageRepository.saveAll(List.of(image1, image2));
 
             EventImage eventImage1 = EventImage.createEventImage(event1, image1);
@@ -679,59 +693,6 @@ class ImageServiceTest extends IntegrationTest {
     }
 
     @Nested
-    class 업로드_실패한_이미지_삭제할_때 {
-
-        @BeforeEach
-        void setUp() {
-            Member member1 =
-                    Member.createMember(
-                            OauthInfo.createOauthInfo("testOauthId", "testOauthProvider"),
-                            "testNickname1",
-                            "testProfileImageUrl1");
-            Member member2 =
-                    Member.createMember(
-                            OauthInfo.createOauthInfo("testOauthId", "testOauthProvider"),
-                            "testNickname2",
-                            "testProfileImageUrl2");
-            memberRepository.saveAll(List.of(member1, member2));
-            given(memberUtil.getCurrentMember()).willReturn(member1);
-
-            Album album = Album.createAlbum("testTitle", "testCoverUrl", AlbumType.BASIC, false);
-            albumRepository.save(album);
-
-            Image image1 = Image.createImage(album, 1L, "testUrl1", LocalDateTime.now());
-            Image image2 = Image.createImage(album, 1L, "testUrl2", LocalDateTime.now());
-            Image image3 = Image.createImage(album, 2L, "testUrl3", LocalDateTime.now());
-            imageRepository.saveAll(List.of(image1, image2, image3));
-        }
-
-        @Test
-        void 유효한_요청이면_업로드_실패한_이미지를_삭제한다() {
-            // given
-            UploadFailedFileDeleteRequest request =
-                    new UploadFailedFileDeleteRequest(List.of("testUrl1", "testUrl2"));
-
-            // when
-            imageService.deleteUploadFailedFile(request);
-
-            // then
-            assertThat(imageRepository.findAllById(List.of(1L, 2L))).isEmpty();
-        }
-
-        @Test
-        void 내가_업로드하지_않은_이미지를_삭제할_경우_예외가_발생한다() {
-            // given
-            UploadFailedFileDeleteRequest request =
-                    new UploadFailedFileDeleteRequest(List.of("testUrl3"));
-
-            // when & then
-            assertThatThrownBy(() -> imageService.deleteUploadFailedFile(request))
-                    .isInstanceOf(CustomException.class)
-                    .hasMessage(ImageErrorCode.PRESIGNED_IMAGES_NOT_MINE.getMessage());
-        }
-    }
-
-    @Nested
     class 앨범_이미지를_삭제할_때 {
 
         @BeforeEach
@@ -745,6 +706,7 @@ class ImageServiceTest extends IntegrationTest {
             given(memberUtil.getCurrentMember()).willReturn(member);
 
             Album album1 = Album.createAlbum("testTitle1", "testCoverUrl1", AlbumType.BASIC, false);
+            album1.increaseCapacity(BigDecimal.valueOf(0.4));
             Album album2 = Album.createAlbum("testTitle2", "testCoverUrl2", AlbumType.BASIC, false);
             Album album3 = Album.createAlbum("testTitle3", "testCoverUrl3", AlbumType.BASIC, false);
             albumRepository.saveAll(List.of(album1, album2, album3));
@@ -755,14 +717,20 @@ class ImageServiceTest extends IntegrationTest {
                     Participant.createParticipant(member, album2, ParticipantRole.LIMITED);
             participantRepository.saveAll(List.of(participant1, participant2));
 
-            Image image1 = Image.createImage(album1, 1L, "testUrl1", LocalDateTime.now());
-            Image image2 = Image.createImage(album1, 1L, "testUrl2", LocalDateTime.now());
-            Image image3 = Image.createImage(album2, 1L, "testUrl3", LocalDateTime.now());
+            Image image1 =
+                    Image.createImage(
+                            album1, 1L, "testUrl1", LocalDateTime.now(), BigDecimal.valueOf(0.2));
+            Image image2 =
+                    Image.createImage(
+                            album1, 1L, "testUrl2", LocalDateTime.now(), BigDecimal.valueOf(0.2));
+            Image image3 =
+                    Image.createImage(
+                            album2, 1L, "testUrl3", LocalDateTime.now(), BigDecimal.valueOf(0.2));
             imageRepository.saveAll(List.of(image1, image2, image3));
         }
 
         @Test
-        void 유효한_요청이면_앨범_이미지를_삭제한다() {
+        void 유효한_요청이면_앨범_이미지를_삭제하고_앨범_용량을_내린다() {
             // given
             AlbumImageDeleteRequest request = new AlbumImageDeleteRequest(List.of(1L, 2L));
 
@@ -770,7 +738,11 @@ class ImageServiceTest extends IntegrationTest {
             imageService.deleteAlbumImage(1L, request);
 
             // then
-            assertThat(imageRepository.findAllById(List.of(1L, 2L))).isEmpty();
+            Assertions.assertAll(
+                    () -> assertThat(imageRepository.findAllById(List.of(1L, 2L))).isEmpty(),
+                    () ->
+                            assertThat(albumRepository.findById(1L).orElseThrow().getCapacityGb())
+                                    .isEqualTo(new BigDecimal("0.00")));
         }
 
         @Test

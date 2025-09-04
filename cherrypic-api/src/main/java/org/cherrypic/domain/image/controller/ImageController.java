@@ -8,11 +8,10 @@ import lombok.RequiredArgsConstructor;
 import org.cherrypic.domain.image.dto.request.AlbumFileUploadRequest;
 import org.cherrypic.domain.image.dto.request.AlbumImageDeleteRequest;
 import org.cherrypic.domain.image.dto.request.ImageUploadRequest;
-import org.cherrypic.domain.image.dto.request.UploadFailedFileDeleteRequest;
 import org.cherrypic.domain.image.dto.response.AlbumImageListResponse;
 import org.cherrypic.domain.image.dto.response.EventImageListResponse;
 import org.cherrypic.domain.image.dto.response.PresignedUrlResponse;
-import org.cherrypic.domain.image.dto.response.PresignedUrlsResponse;
+import org.cherrypic.domain.image.dto.response.UploadFileListResponse;
 import org.cherrypic.domain.image.service.ImageService;
 import org.cherrypic.global.annotation.PageSize;
 import org.cherrypic.global.pagination.SliceResponse;
@@ -60,19 +59,9 @@ public class ImageController {
     @Operation(
             summary = "앨범 이미지 업로드 Presigned URL들 생성",
             description = "앨범 이미지 업로드를 위한 Presigned URL들을 생성합니다.")
-    public PresignedUrlsResponse albumFileUploadUrlsCreate(
+    public UploadFileListResponse albumFileUploadUrlsCreate(
             @PathVariable Long albumId, @Valid @RequestBody AlbumFileUploadRequest request) {
         return imageService.createAlbumFileUploadUrls(albumId, request);
-    }
-
-    @DeleteMapping("/images")
-    @Operation(
-            summary = "업로드 실패한 파일 삭제",
-            description = "업로드를 실패한 Presigned URL을 기반으로 동영상 & 이미지를 삭제합니다.")
-    public ResponseEntity<Void> uploadFailedFileDelete(
-            @Valid @RequestBody UploadFailedFileDeleteRequest request) {
-        imageService.deleteUploadFailedFile(request);
-        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/albums/{albumId}/images")

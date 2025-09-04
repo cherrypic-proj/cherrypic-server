@@ -6,6 +6,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
 import jakarta.persistence.EntityManager;
+import java.math.BigDecimal;
 import java.sql.SQLIntegrityConstraintViolationException;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -359,8 +360,10 @@ public class EventServiceTest extends IntegrationTest {
             Event event2 = Event.createEvent(album1, "testTitle2", "testCoverUrl2");
             eventRepository.saveAll(List.of(event1, event2));
 
-            Image image1 = Image.createImage(album1, 1L, "testUrl", LocalDateTime.now());
-            Image image2 = Image.createImage(album1, 1L, "testUrl2", LocalDateTime.now());
+            Image image1 =
+                    Image.createImage(album1, 1L, "testUrl", LocalDateTime.now(), BigDecimal.ZERO);
+            Image image2 =
+                    Image.createImage(album1, 1L, "testUrl2", LocalDateTime.now(), BigDecimal.ZERO);
             imageRepository.saveAll(List.of(image1, image2));
 
             EventImage eventImage1 = EventImage.createEventImage(event1, image1);
@@ -479,11 +482,16 @@ public class EventServiceTest extends IntegrationTest {
             Event event3 = Event.createEvent(album3, "testTitle3", "testCoverUrl3");
             eventRepository.saveAll(List.of(event1, event2, event3));
 
-            Image image1 = Image.createImage(album1, 1L, "testUrl", LocalDateTime.now());
-            Image image2 = Image.createImage(album1, 1L, "testUrl2", LocalDateTime.now());
-            Image image3 = Image.createImage(album2, 1L, "testUrl3", LocalDateTime.now());
-            Image image4 = Image.createImage(album1, 1L, "testUrl4", LocalDateTime.now());
-            Image image5 = Image.createImage(album3, 1L, "testUrl5", LocalDateTime.now());
+            Image image1 =
+                    Image.createImage(album1, 1L, "testUrl", LocalDateTime.now(), BigDecimal.ZERO);
+            Image image2 =
+                    Image.createImage(album1, 1L, "testUrl2", LocalDateTime.now(), BigDecimal.ZERO);
+            Image image3 =
+                    Image.createImage(album2, 1L, "testUrl3", LocalDateTime.now(), BigDecimal.ZERO);
+            Image image4 =
+                    Image.createImage(album1, 1L, "testUrl4", LocalDateTime.now(), BigDecimal.ZERO);
+            Image image5 =
+                    Image.createImage(album3, 1L, "testUrl5", LocalDateTime.now(), BigDecimal.ZERO);
             imageRepository.saveAll(List.of(image1, image2, image3, image4, image5));
 
             EventImage eventImage = EventImage.createEventImage(event1, image2);
@@ -715,9 +723,12 @@ public class EventServiceTest extends IntegrationTest {
             Event event4 = Event.createEvent(album1, "testTitle4", "testCoverUrl4");
             eventRepository.saveAll(List.of(event1, event2, event3, event4));
 
-            Image image1 = Image.createImage(album1, 1L, "testUrl", LocalDateTime.now());
-            Image image2 = Image.createImage(album1, 1L, "testUrl2", LocalDateTime.now());
-            Image image3 = Image.createImage(album2, 1L, "testUrl3", LocalDateTime.now());
+            Image image1 =
+                    Image.createImage(album1, 1L, "testUrl", LocalDateTime.now(), BigDecimal.ZERO);
+            Image image2 =
+                    Image.createImage(album1, 1L, "testUrl2", LocalDateTime.now(), BigDecimal.ZERO);
+            Image image3 =
+                    Image.createImage(album2, 1L, "testUrl3", LocalDateTime.now(), BigDecimal.ZERO);
             imageRepository.saveAll(List.of(image1, image2, image3));
 
             EventImage eventImage1 = EventImage.createEventImage(event1, image1);

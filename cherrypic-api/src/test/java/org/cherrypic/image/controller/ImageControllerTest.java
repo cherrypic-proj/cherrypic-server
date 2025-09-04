@@ -15,11 +15,10 @@ import org.cherrypic.domain.image.controller.ImageController;
 import org.cherrypic.domain.image.dto.request.AlbumFileUploadRequest;
 import org.cherrypic.domain.image.dto.request.AlbumImageDeleteRequest;
 import org.cherrypic.domain.image.dto.request.ImageUploadRequest;
-import org.cherrypic.domain.image.dto.request.UploadFailedFileDeleteRequest;
 import org.cherrypic.domain.image.dto.response.AlbumImageListResponse;
 import org.cherrypic.domain.image.dto.response.EventImageListResponse;
 import org.cherrypic.domain.image.dto.response.PresignedUrlResponse;
-import org.cherrypic.domain.image.dto.response.PresignedUrlsResponse;
+import org.cherrypic.domain.image.dto.response.UploadFileListResponse;
 import org.cherrypic.domain.image.enums.FileExtension;
 import org.cherrypic.domain.image.exception.ImageErrorCode;
 import org.cherrypic.domain.image.service.ImageService;
@@ -346,19 +345,23 @@ class ImageControllerTest {
             // given
             AlbumFileUploadRequest request =
                     new AlbumFileUploadRequest(
-                            BigDecimal.ONE,
                             List.of(
                                     new AlbumFileUploadRequest.Payload(
                                             FileExtension.JPEG,
                                             "testMd5Hash1",
-                                            LocalDateTime.now()),
+                                            LocalDateTime.now(),
+                                            BigDecimal.ONE),
                                     new AlbumFileUploadRequest.Payload(
                                             FileExtension.JPEG,
                                             "testMd5Hash2",
-                                            LocalDateTime.now())));
+                                            LocalDateTime.now(),
+                                            BigDecimal.ONE)));
 
-            PresignedUrlsResponse response =
-                    new PresignedUrlsResponse(List.of("testPresignedUrl1", "testPresignedUrl2"));
+            UploadFileListResponse response =
+                    new UploadFileListResponse(
+                            List.of(
+                                    new UploadFileListResponse.Payload(1L, "testPresignedUrl1"),
+                                    new UploadFileListResponse.Payload(2L, "testPresignedUrl2")));
 
             given(imageService.createAlbumFileUploadUrls(1L, request)).willReturn(response);
 
@@ -372,7 +375,7 @@ class ImageControllerTest {
             perform.andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
-                    .andExpect(jsonPath("$.data.presignedUrls").isNotEmpty());
+                    .andExpect(jsonPath("$.data.payloads").isNotEmpty());
         }
 
         @Test
@@ -380,16 +383,17 @@ class ImageControllerTest {
             // given
             AlbumFileUploadRequest request =
                     new AlbumFileUploadRequest(
-                            BigDecimal.ONE,
                             List.of(
                                     new AlbumFileUploadRequest.Payload(
                                             FileExtension.JPEG,
                                             "testMd5Hash1",
-                                            LocalDateTime.now()),
+                                            LocalDateTime.now(),
+                                            BigDecimal.ONE),
                                     new AlbumFileUploadRequest.Payload(
                                             FileExtension.JPEG,
                                             "testMd5Hash2",
-                                            LocalDateTime.now())));
+                                            LocalDateTime.now(),
+                                            BigDecimal.ONE)));
 
             given(imageService.createAlbumFileUploadUrls(1L, request))
                     .willThrow(new CustomException(AlbumErrorCode.ALBUM_NOT_FOUND));
@@ -413,16 +417,17 @@ class ImageControllerTest {
             // given
             AlbumFileUploadRequest request =
                     new AlbumFileUploadRequest(
-                            BigDecimal.ONE,
                             List.of(
                                     new AlbumFileUploadRequest.Payload(
                                             FileExtension.JPEG,
                                             "testMd5Hash1",
-                                            LocalDateTime.now()),
+                                            LocalDateTime.now(),
+                                            BigDecimal.ONE),
                                     new AlbumFileUploadRequest.Payload(
                                             FileExtension.JPEG,
                                             "testMd5Hash2",
-                                            LocalDateTime.now())));
+                                            LocalDateTime.now(),
+                                            BigDecimal.ONE)));
 
             given(imageService.createAlbumFileUploadUrls(1L, request))
                     .willThrow(new CustomException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT));
@@ -446,16 +451,17 @@ class ImageControllerTest {
             // given
             AlbumFileUploadRequest request =
                     new AlbumFileUploadRequest(
-                            BigDecimal.ONE,
                             List.of(
                                     new AlbumFileUploadRequest.Payload(
                                             FileExtension.JPEG,
                                             "testMd5Hash1",
-                                            LocalDateTime.now()),
+                                            LocalDateTime.now(),
+                                            BigDecimal.ONE),
                                     new AlbumFileUploadRequest.Payload(
                                             FileExtension.JPEG,
                                             "testMd5Hash2",
-                                            LocalDateTime.now())));
+                                            LocalDateTime.now(),
+                                            BigDecimal.ONE)));
 
             given(imageService.createAlbumFileUploadUrls(1L, request))
                     .willThrow(new CustomException(AlbumErrorCode.LIMITED_AUTHORITY));
@@ -479,16 +485,17 @@ class ImageControllerTest {
             // given
             AlbumFileUploadRequest request =
                     new AlbumFileUploadRequest(
-                            BigDecimal.ONE,
                             List.of(
                                     new AlbumFileUploadRequest.Payload(
                                             FileExtension.JPEG,
                                             "testMd5Hash1",
-                                            LocalDateTime.now()),
+                                            LocalDateTime.now(),
+                                            BigDecimal.ONE),
                                     new AlbumFileUploadRequest.Payload(
                                             FileExtension.JPEG,
                                             "testMd5Hash2",
-                                            LocalDateTime.now())));
+                                            LocalDateTime.now(),
+                                            BigDecimal.ONE)));
 
             given(imageService.createAlbumFileUploadUrls(1L, request))
                     .willThrow(new CustomException(AlbumErrorCode.ALBUM_CAPACITY_EXCEEDED));
@@ -512,14 +519,17 @@ class ImageControllerTest {
             // given
             AlbumFileUploadRequest request =
                     new AlbumFileUploadRequest(
-                            BigDecimal.ONE,
                             List.of(
-                                    new AlbumFileUploadRequest.Payload(
-                                            FileExtension.JPEG, "testMd5Hash", LocalDateTime.now()),
                                     new AlbumFileUploadRequest.Payload(
                                             FileExtension.JPEG,
                                             "testMd5Hash",
-                                            LocalDateTime.now())));
+                                            LocalDateTime.now(),
+                                            BigDecimal.ONE),
+                                    new AlbumFileUploadRequest.Payload(
+                                            FileExtension.JPEG,
+                                            "testMd5Hash",
+                                            LocalDateTime.now(),
+                                            BigDecimal.ONE)));
 
             given(imageService.createAlbumFileUploadUrls(1L, request))
                     .willThrow(new CustomException(ImageErrorCode.DUPLICATE_HASHES));
@@ -546,12 +556,12 @@ class ImageControllerTest {
             // given
             AlbumFileUploadRequest request =
                     new AlbumFileUploadRequest(
-                            BigDecimal.ONE,
                             List.of(
                                     new AlbumFileUploadRequest.Payload(
                                             FileExtension.from(extension),
                                             "testMd5Hash1",
-                                            LocalDateTime.now())));
+                                            LocalDateTime.now(),
+                                            BigDecimal.ONE)));
 
             // when & then
             ResultActions perform =
@@ -571,16 +581,16 @@ class ImageControllerTest {
         }
 
         @Test
-        void 이미지_용량_총합을_비워두면_예외가_발생한다() throws Exception {
+        void 이미지_용량을_비워두면_예외가_발생한다() throws Exception {
             // given
             AlbumFileUploadRequest request =
                     new AlbumFileUploadRequest(
-                            null,
                             List.of(
                                     new AlbumFileUploadRequest.Payload(
                                             FileExtension.JPEG,
                                             "testMd5Hash",
-                                            LocalDateTime.now())));
+                                            LocalDateTime.now(),
+                                            null)));
 
             // when & then
             ResultActions perform =
@@ -593,7 +603,7 @@ class ImageControllerTest {
                     .andExpect(jsonPath("$.success").value(false))
                     .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
                     .andExpect(jsonPath("$.data.code").value("MethodArgumentNotValidException"))
-                    .andExpect(jsonPath("$.data.message").value("파일들의 용량은 비워둘 수 없습니다."));
+                    .andExpect(jsonPath("$.data.message").value("파일의 용량은 비워둘 수 없습니다."));
         }
 
         @ParameterizedTest
@@ -604,10 +614,12 @@ class ImageControllerTest {
             // given
             AlbumFileUploadRequest request =
                     new AlbumFileUploadRequest(
-                            BigDecimal.ONE,
                             List.of(
                                     new AlbumFileUploadRequest.Payload(
-                                            FileExtension.JPEG, md5Hash, LocalDateTime.now())));
+                                            FileExtension.JPEG,
+                                            md5Hash,
+                                            LocalDateTime.now(),
+                                            BigDecimal.ONE)));
 
             // when & then
             ResultActions perform =
@@ -626,7 +638,7 @@ class ImageControllerTest {
         @Test
         void 업로드_요청_정보를_비워두면_예외가_발생한다() throws Exception {
             // given
-            AlbumFileUploadRequest request = new AlbumFileUploadRequest(BigDecimal.ONE, List.of());
+            AlbumFileUploadRequest request = new AlbumFileUploadRequest(List.of());
 
             // when & then
             ResultActions perform =
@@ -1011,74 +1023,6 @@ class ImageControllerTest {
                     .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
                     .andExpect(jsonPath("$.data.code").value("METHOD_ARGUMENT_TYPE_MISMATCH"))
                     .andExpect(jsonPath("$.data.message").value("요청한 값의 타입이 잘못되어 처리할 수 없습니다."));
-        }
-    }
-
-    @Nested
-    class 업로드_실패한_이미지_삭제_요청_시 {
-
-        @Test
-        void 유효한_요청이면_이미지를_삭제하고_NO_CONTENT를_반환한다() throws Exception {
-            // given
-            UploadFailedFileDeleteRequest request =
-                    new UploadFailedFileDeleteRequest(List.of("testPresignedUrl"));
-
-            willDoNothing().given(imageService).deleteUploadFailedFile(request);
-
-            // when & then
-            ResultActions perform =
-                    mockMvc.perform(
-                            delete("/images")
-                                    .contentType(MediaType.APPLICATION_JSON)
-                                    .content(objectMapper.writeValueAsString(request)));
-
-            perform.andExpect(status().isNoContent())
-                    .andExpect(jsonPath("$.success").value(true))
-                    .andExpect(jsonPath("$.status").value(HttpStatus.NO_CONTENT.value()));
-        }
-
-        @Test
-        void 내가_업로드하지_않은_이미지를_삭제할_경우_예외가_발생한다() throws Exception {
-            // given
-            UploadFailedFileDeleteRequest request =
-                    new UploadFailedFileDeleteRequest(List.of("testPresignedUrl"));
-            willThrow(new CustomException(ImageErrorCode.PRESIGNED_IMAGES_NOT_MINE))
-                    .given(imageService)
-                    .deleteUploadFailedFile(request);
-
-            // when & then
-            ResultActions perform =
-                    mockMvc.perform(
-                            delete("/images")
-                                    .contentType(MediaType.APPLICATION_JSON)
-                                    .content(objectMapper.writeValueAsString(request)));
-
-            perform.andExpect(status().isForbidden())
-                    .andExpect(jsonPath("$.success").value(false))
-                    .andExpect(jsonPath("$.status").value(HttpStatus.FORBIDDEN.value()))
-                    .andExpect(jsonPath("$.data.code").value("PRESIGNED_IMAGES_NOT_MINE"))
-                    .andExpect(
-                            jsonPath("$.data.message")
-                                    .value("본인이 업로드하지 않은 Presigned Image는 삭제할 수 없습니다."));
-        }
-
-        @Test
-        void Presigned_URL이_없는_경우_예외가_발생한다() throws Exception {
-            // given
-            UploadFailedFileDeleteRequest request = new UploadFailedFileDeleteRequest(List.of());
-
-            // when & then
-            ResultActions perform =
-                    mockMvc.perform(
-                            delete("/images")
-                                    .contentType(MediaType.APPLICATION_JSON)
-                                    .content(objectMapper.writeValueAsString(request)));
-
-            perform.andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.success").value(false))
-                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
-                    .andExpect(jsonPath("$.data.code").value("MethodArgumentNotValidException"))
-                    .andExpect(jsonPath("$.data.message").value("Presigned URL은 비워둘 수 없습니다."));
         }
     }
 

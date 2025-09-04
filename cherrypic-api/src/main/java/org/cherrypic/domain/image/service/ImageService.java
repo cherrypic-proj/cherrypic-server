@@ -3,11 +3,10 @@ package org.cherrypic.domain.image.service;
 import org.cherrypic.domain.image.dto.request.AlbumFileUploadRequest;
 import org.cherrypic.domain.image.dto.request.AlbumImageDeleteRequest;
 import org.cherrypic.domain.image.dto.request.ImageUploadRequest;
-import org.cherrypic.domain.image.dto.request.UploadFailedFileDeleteRequest;
 import org.cherrypic.domain.image.dto.response.AlbumImageListResponse;
 import org.cherrypic.domain.image.dto.response.EventImageListResponse;
 import org.cherrypic.domain.image.dto.response.PresignedUrlResponse;
-import org.cherrypic.domain.image.dto.response.PresignedUrlsResponse;
+import org.cherrypic.domain.image.dto.response.UploadFileListResponse;
 import org.cherrypic.global.pagination.SliceResponse;
 import org.cherrypic.global.pagination.SortDirection;
 
@@ -18,15 +17,13 @@ public interface ImageService {
 
     PresignedUrlResponse createEventCoverImageUploadUrl(ImageUploadRequest request);
 
-    PresignedUrlsResponse createAlbumFileUploadUrls(Long albumId, AlbumFileUploadRequest request);
+    UploadFileListResponse createAlbumFileUploadUrls(Long albumId, AlbumFileUploadRequest request);
 
     SliceResponse<AlbumImageListResponse> getAlbumImages(
             Long albumId, Long lastImageId, int size, SortDirection direction);
 
     SliceResponse<EventImageListResponse> getEventImages(
             Long eventId, Long lastImageId, int size, SortDirection direction);
-
-    void deleteUploadFailedFile(UploadFailedFileDeleteRequest request);
 
     void deleteAlbumImage(Long albumId, AlbumImageDeleteRequest request);
 }

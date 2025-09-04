@@ -13,11 +13,10 @@ import org.cherrypic.domain.event.repository.EventRepository;
 import org.cherrypic.domain.image.dto.request.AlbumFileUploadRequest;
 import org.cherrypic.domain.image.dto.request.AlbumImageDeleteRequest;
 import org.cherrypic.domain.image.dto.request.ImageUploadRequest;
-import org.cherrypic.domain.image.dto.request.UploadFailedFileDeleteRequest;
 import org.cherrypic.domain.image.dto.response.AlbumImageListResponse;
 import org.cherrypic.domain.image.dto.response.EventImageListResponse;
 import org.cherrypic.domain.image.dto.response.PresignedUrlResponse;
-import org.cherrypic.domain.image.dto.response.PresignedUrlsResponse;
+import org.cherrypic.domain.image.dto.response.UploadFileListResponse;
 import org.cherrypic.domain.image.enums.FileExtension;
 import org.cherrypic.domain.image.enums.ImageType;
 import org.cherrypic.domain.image.event.ImagesDeleteEvent;
@@ -103,16 +102,22 @@ public class ImageServiceImpl implements ImageService {
     }
 
     @Override
-    public PresignedUrlsResponse createAlbumFileUploadUrls(
+    public UploadFileListResponse createAlbumFileUploadUrls(
             Long albumId, AlbumFileUploadRequest request) {
         final Member currentMember = memberUtil.getCurrentMember();
         final Album album = getAlbumByIdWithLock(albumId);
 
         validateParticipantAuthority(currentMember.getId(), album.getId());
-        validateAlbumCapacity(album, request.capacity());
+
+        BigDecimal uploadCapacity =
+                request.payloads().stream()
+                        .map(AlbumFileUploadRequest.Payload::capacity)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        validateAlbumCapacity(album, uploadCapacity);
         validateDistinctHashes(request);
 
-        album.increaseCapacity(request.capacity());
+        album.increaseCapacity(uploadCapacity);
 
         List<String> presignedUrls =
                 request.payloads().stream()
@@ -141,13 +146,25 @@ public class ImageServiceImpl implements ImageService {
                                             objectUrl,
                                             req.generatedAt() != null
                                                     ? req.generatedAt()
-                                                    : LocalDateTime.now());
+                                                    : LocalDateTime.now(),
+                                            req.capacity());
                                 })
                         .toList();
 
         imageRepository.bulkInsertImages(images);
 
-        return PresignedUrlsResponse.of(presignedUrls);
+        List<Long> imageIds =
+                imageRepository.findIdsByUrlsInOrder(images.stream().map(Image::getUrl).toList());
+
+        List<UploadFileListResponse.Payload> payloads =
+                IntStream.range(0, images.size())
+                        .mapToObj(
+                                i ->
+                                        UploadFileListResponse.Payload.of(
+                                                imageIds.get(i), presignedUrls.get(i)))
+                        .toList();
+
+        return UploadFileListResponse.of(payloads);
     }
 
     @Override
@@ -178,16 +195,6 @@ public class ImageServiceImpl implements ImageService {
     }
 
     @Override
-    public void deleteUploadFailedFile(UploadFailedFileDeleteRequest request) {
-        final Member currentMember = memberUtil.getCurrentMember();
-        final List<Image> images = imageRepository.findByUrlIn(request.presignedUrls());
-
-        validatePresignedImageOwnership(currentMember, images);
-
-        imageRepository.deleteAllInBatch(images);
-    }
-
-    @Override
     public void deleteAlbumImage(Long albumId, AlbumImageDeleteRequest request) {
         final Member currentMember = memberUtil.getCurrentMember();
         final Album album = getAlbumById(albumId);
@@ -199,6 +206,12 @@ public class ImageServiceImpl implements ImageService {
         List<Image> images = imageRepository.findAllById(distinctImageIds);
 
         validateImagesInAlbum(images, album);
+
+        album.decreaseCapacity(
+                images.stream()
+                        .map(Image::getCapacityGb)
+                        .filter(Objects::nonNull)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add));
 
         eventPublisher.publishEvent(
                 ImagesDeleteEvent.of(images.stream().map(Image::getUrl).toList()));
@@ -237,21 +250,11 @@ public class ImageServiceImpl implements ImageService {
         }
     }
 
-    private void validatePresignedImageOwnership(Member member, List<Image> images) {
-        Long memberId = member.getId();
+    private void validateAlbumCapacity(Album album, BigDecimal uploadCapacity) {
 
-        boolean hasInvalidImage =
-                images.stream().anyMatch(image -> !image.getMemberId().equals(memberId));
-
-        if (hasInvalidImage) {
-            throw new CustomException(ImageErrorCode.PRESIGNED_IMAGES_NOT_MINE);
-        }
-    }
-
-    private void validateAlbumCapacity(Album album, BigDecimal additionalUpload) {
         BigDecimal maxCapacity = album.getType().getCapacityGb();
         BigDecimal current = album.getCapacityGb();
-        BigDecimal afterUpload = current.add(additionalUpload);
+        BigDecimal afterUpload = current.add(uploadCapacity);
 
         if (afterUpload.compareTo(maxCapacity) > 0) {
             throw new CustomException(AlbumErrorCode.ALBUM_CAPACITY_EXCEEDED);
