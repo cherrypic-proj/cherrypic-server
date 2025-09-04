@@ -107,12 +107,13 @@ public class ImageServiceImpl implements ImageService {
         final Member currentMember = memberUtil.getCurrentMember();
         final Album album = getAlbumByIdWithLock(albumId);
 
+        validateParticipantAuthority(currentMember.getId(), album.getId());
+
         BigDecimal uploadCapacity =
                 request.payloads().stream()
                         .map(AlbumFileUploadRequest.Payload::capacity)
                         .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        validateParticipantAuthority(currentMember.getId(), album.getId());
         validateAlbumCapacity(album, uploadCapacity);
         validateDistinctHashes(request);
 
