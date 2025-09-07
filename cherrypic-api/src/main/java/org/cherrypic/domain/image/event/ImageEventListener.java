@@ -2,8 +2,8 @@ package org.cherrypic.domain.image.event;
 
 import lombok.RequiredArgsConstructor;
 import org.cherrypic.domain.album.event.AlbumImagesDeleteEvent;
-import org.cherrypic.domain.image.enums.ImageType;
-import org.cherrypic.global.util.S3Util;
+import org.cherrypic.s3.S3Util;
+import org.cherrypic.s3.enums.ImageType;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
