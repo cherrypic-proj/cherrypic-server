@@ -3,10 +3,10 @@ package org.cherrypic.domain.image.dto.response;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 
-public record UploadFileListResponse(
-        @Schema(description = "업로드된 파일들의 정보 리스트") List<Payload> payloads) {
-    public static UploadFileListResponse of(List<Payload> payloads) {
-        return new UploadFileListResponse(payloads);
+public record ImageUploadListResponse(
+        @Schema(description = "업로드된 이미지들의 정보 리스트") List<Payload> payloads) {
+    public static ImageUploadListResponse of(List<Payload> payloads) {
+        return new ImageUploadListResponse(payloads);
     }
 
     public record Payload(

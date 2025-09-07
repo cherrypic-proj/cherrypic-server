@@ -2,8 +2,8 @@ package org.cherrypic.domain.image.dto.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
-import org.cherrypic.domain.image.enums.FileExtension;
 import org.cherrypic.global.annotation.Enum;
+import org.cherrypic.s3.enums.FileExtension;
 
 public record ImageUploadRequest(
         @Enum(message = "이미지 파일의 확장자는 비워둘 수 없으며, PNG, JPG, JPEG, WEBP, HEIC, HEIF만 지원됩니다.")

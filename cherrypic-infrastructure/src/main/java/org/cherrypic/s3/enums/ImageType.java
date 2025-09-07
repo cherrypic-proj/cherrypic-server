@@ -1,4 +1,4 @@
-package org.cherrypic.domain.image.enums;
+package org.cherrypic.s3.enums;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

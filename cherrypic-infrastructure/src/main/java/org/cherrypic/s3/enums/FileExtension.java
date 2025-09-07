@@ -1,4 +1,4 @@
-package org.cherrypic.domain.image.enums;
+package org.cherrypic.s3.enums;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import java.util.List;

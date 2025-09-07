@@ -1,4 +1,4 @@
-package org.cherrypic.global.util;
+package org.cherrypic.s3;
 
 import com.amazonaws.HttpMethod;
 import com.amazonaws.services.s3.AmazonS3;
@@ -9,10 +9,9 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
-import org.cherrypic.domain.image.enums.FileExtension;
-import org.cherrypic.domain.image.enums.ImageType;
 import org.cherrypic.helper.SpringEnvironmentHelper;
-import org.cherrypic.s3.S3Properties;
+import org.cherrypic.s3.enums.FileExtension;
+import org.cherrypic.s3.enums.ImageType;
 import org.springframework.stereotype.Component;
 
 @Component
