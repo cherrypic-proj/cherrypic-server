@@ -10,13 +10,13 @@ import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.album.repository.AlbumRepository;
 import org.cherrypic.domain.event.exception.EventErrorCode;
 import org.cherrypic.domain.event.repository.EventRepository;
-import org.cherrypic.domain.image.dto.request.AlbumFileUploadRequest;
 import org.cherrypic.domain.image.dto.request.AlbumImageDeleteRequest;
+import org.cherrypic.domain.image.dto.request.AlbumImageUploadRequest;
 import org.cherrypic.domain.image.dto.request.ImageUploadRequest;
 import org.cherrypic.domain.image.dto.response.AlbumImageListResponse;
 import org.cherrypic.domain.image.dto.response.EventImageListResponse;
 import org.cherrypic.domain.image.dto.response.PresignedUrlResponse;
-import org.cherrypic.domain.image.dto.response.UploadFileListResponse;
+import org.cherrypic.domain.image.dto.response.UploadImageListResponse;
 import org.cherrypic.domain.image.enums.FileExtension;
 import org.cherrypic.domain.image.enums.ImageType;
 import org.cherrypic.domain.image.event.ImagesDeleteEvent;
@@ -102,8 +102,8 @@ public class ImageServiceImpl implements ImageService {
     }
 
     @Override
-    public UploadFileListResponse createAlbumFileUploadUrls(
-            Long albumId, AlbumFileUploadRequest request) {
+    public UploadImageListResponse createAlbumImageUploadUrls(
+            Long albumId, AlbumImageUploadRequest request) {
         final Member currentMember = memberUtil.getCurrentMember();
         final Album album = getAlbumByIdWithLock(albumId);
 
@@ -111,7 +111,7 @@ public class ImageServiceImpl implements ImageService {
 
         BigDecimal uploadCapacity =
                 request.payloads().stream()
-                        .map(AlbumFileUploadRequest.Payload::capacity)
+                        .map(AlbumImageUploadRequest.Payload::capacity)
                         .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         validateAlbumCapacity(album, uploadCapacity);
@@ -134,7 +134,7 @@ public class ImageServiceImpl implements ImageService {
                 IntStream.range(0, request.payloads().size())
                         .mapToObj(
                                 i -> {
-                                    AlbumFileUploadRequest.Payload req = request.payloads().get(i);
+                                    AlbumImageUploadRequest.Payload req = request.payloads().get(i);
                                     String presignedUrl = presignedUrls.get(i);
 
                                     String objectUrl =
@@ -156,15 +156,15 @@ public class ImageServiceImpl implements ImageService {
         List<Long> imageIds =
                 imageRepository.findIdsByUrlsInOrder(images.stream().map(Image::getUrl).toList());
 
-        List<UploadFileListResponse.Payload> payloads =
+        List<UploadImageListResponse.Payload> payloads =
                 IntStream.range(0, images.size())
                         .mapToObj(
                                 i ->
-                                        UploadFileListResponse.Payload.of(
+                                        UploadImageListResponse.Payload.of(
                                                 imageIds.get(i), presignedUrls.get(i)))
                         .toList();
 
-        return UploadFileListResponse.of(payloads);
+        return UploadImageListResponse.of(payloads);
     }
 
     @Override
@@ -261,9 +261,11 @@ public class ImageServiceImpl implements ImageService {
         }
     }
 
-    private void validateDistinctHashes(AlbumFileUploadRequest request) {
+    private void validateDistinctHashes(AlbumImageUploadRequest request) {
         List<String> hashes =
-                request.payloads().stream().map(AlbumFileUploadRequest.Payload::md5Hashes).toList();
+                request.payloads().stream()
+                        .map(AlbumImageUploadRequest.Payload::md5Hashes)
+                        .toList();
 
         if (hashes.stream().distinct().count() != hashes.size()) {
             throw new CustomException(ImageErrorCode.DUPLICATE_HASHES);
