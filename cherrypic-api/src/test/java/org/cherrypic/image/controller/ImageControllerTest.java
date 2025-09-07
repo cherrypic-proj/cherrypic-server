@@ -17,8 +17,8 @@ import org.cherrypic.domain.image.dto.request.AlbumImageUploadRequest;
 import org.cherrypic.domain.image.dto.request.ImageUploadRequest;
 import org.cherrypic.domain.image.dto.response.AlbumImageListResponse;
 import org.cherrypic.domain.image.dto.response.EventImageListResponse;
+import org.cherrypic.domain.image.dto.response.ImageUploadListResponse;
 import org.cherrypic.domain.image.dto.response.PresignedUrlResponse;
-import org.cherrypic.domain.image.dto.response.UploadImageListResponse;
 import org.cherrypic.domain.image.exception.ImageErrorCode;
 import org.cherrypic.domain.image.service.ImageService;
 import org.cherrypic.exception.CustomException;
@@ -357,11 +357,11 @@ class ImageControllerTest {
                                             LocalDateTime.now(),
                                             BigDecimal.ONE)));
 
-            UploadImageListResponse response =
-                    new UploadImageListResponse(
+            ImageUploadListResponse response =
+                    new ImageUploadListResponse(
                             List.of(
-                                    new UploadImageListResponse.Payload(1L, "testPresignedUrl1"),
-                                    new UploadImageListResponse.Payload(2L, "testPresignedUrl2")));
+                                    new ImageUploadListResponse.Payload(1L, "testPresignedUrl1"),
+                                    new ImageUploadListResponse.Payload(2L, "testPresignedUrl2")));
 
             given(imageService.createAlbumImageUploadUrls(1L, request)).willReturn(response);
 
