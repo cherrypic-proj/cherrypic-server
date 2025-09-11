@@ -6,6 +6,7 @@ import java.util.*;
 import java.util.stream.IntStream;
 import lombok.RequiredArgsConstructor;
 import org.cherrypic.album.entity.Album;
+import org.cherrypic.album.enums.AlbumType;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.album.repository.AlbumRepository;
 import org.cherrypic.domain.event.exception.EventErrorCode;
@@ -33,6 +34,7 @@ import org.cherrypic.participant.enums.ParticipantRole;
 import org.cherrypic.s3.S3Util;
 import org.cherrypic.s3.enums.FileExtension;
 import org.cherrypic.s3.enums.ImageType;
+import org.cherrypic.subscription.enums.SubscriptionStatus;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
@@ -108,6 +110,7 @@ public class ImageServiceImpl implements ImageService {
         final Album album = getAlbumByIdWithLock(albumId);
 
         validateParticipantAuthority(currentMember.getId(), album.getId());
+        validateSubscriptionNotExpired(album);
 
         BigDecimal uploadCapacity =
                 request.payloads().stream()
@@ -284,6 +287,14 @@ public class ImageServiceImpl implements ImageService {
 
         if (containsNotInAlbum) {
             throw new CustomException(AlbumErrorCode.IMAGES_NOT_IN_ALBUM);
+        }
+    }
+
+    private void validateSubscriptionNotExpired(Album album) {
+        if (album.getType() == AlbumType.BASIC) return;
+
+        if (album.getSubscription().getStatus() == SubscriptionStatus.EXPIRED) {
+            throw new CustomException(AlbumErrorCode.EXPIRED_SUBSCRIPTION);
         }
     }
 }

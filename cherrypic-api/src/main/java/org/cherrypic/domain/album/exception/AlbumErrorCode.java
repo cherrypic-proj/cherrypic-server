@@ -26,6 +26,8 @@ public enum AlbumErrorCode implements BaseErrorCode {
     OTHER_PARTICIPANTS_EXIST(400, "다른 참가자가 남아 있어 앨범을 삭제할 수 없습니다."),
     SUBSCRIPTION_ACTIVE(400, "구독 중인 앨범은 삭제할 수 없습니다."),
 
+    EXPIRED_SUBSCRIPTION(403, "만료된 앨범에서는 요청을 처리할 수 없습니다."),
+
     HOST_LEAVE_NOT_ALLOWED(403, "방장은 앨범을 나갈 수 없습니다."),
     HOST_SELF_KICK_NOT_ALLOWED(400, "방장은 자기 자신을 강퇴할 수 없습니다."),
 

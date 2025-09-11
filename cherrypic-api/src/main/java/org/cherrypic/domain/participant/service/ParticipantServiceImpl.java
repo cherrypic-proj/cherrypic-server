@@ -82,7 +82,10 @@ public class ParticipantServiceImpl implements ParticipantService {
         final Participant target = getParticipantById(participantId);
 
         validateAlbumHost(requester);
+
+        validateSubscriptionNotExpired(album);
         validatePermissionControlAvailable(album);
+
         validateSelfRoleChange(requester, target);
         validateParticipantBelongsToAlbum(target, album);
 
@@ -204,6 +207,14 @@ public class ParticipantServiceImpl implements ParticipantService {
     private void validateNotSameRole(Participant target, ParticipantRole role) {
         if (target.getRole() == role) {
             throw new CustomException(ParticipantErrorCode.ROLE_ALREADY_ASSIGNED);
+        }
+    }
+
+    private void validateSubscriptionNotExpired(Album album) {
+        if (album.getType() == AlbumType.BASIC) return;
+
+        if (album.getSubscription().getStatus() == SubscriptionStatus.EXPIRED) {
+            throw new CustomException(AlbumErrorCode.EXPIRED_SUBSCRIPTION);
         }
     }
 }

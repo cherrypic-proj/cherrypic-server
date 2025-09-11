@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import org.cherrypic.album.entity.Album;
+import org.cherrypic.album.enums.AlbumType;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.album.repository.AlbumRepository;
 import org.cherrypic.domain.event.dto.request.EventCreateRequest;
@@ -30,6 +31,7 @@ import org.cherrypic.image.entity.Image;
 import org.cherrypic.member.entity.Member;
 import org.cherrypic.participant.entity.Participant;
 import org.cherrypic.participant.enums.ParticipantRole;
+import org.cherrypic.subscription.enums.SubscriptionStatus;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Slice;
@@ -59,6 +61,7 @@ public class EventServiceImpl implements EventService {
         final Album album = getAlbumById(request.albumId());
 
         validateParticipantAuthority(currentMember, album);
+        validateSubscriptionNotExpired(album);
 
         Event event = Event.createEvent(album, request.title(), request.coverUrl());
         eventRepository.save(event);
@@ -72,6 +75,7 @@ public class EventServiceImpl implements EventService {
         final Event event = getEventById(eventId);
 
         validateParticipantAuthority(currentMember, event.getAlbum());
+        validateSubscriptionNotExpired(event.getAlbum());
 
         if (event.getCoverUrl() != null && !event.getCoverUrl().equals(request.coverUrl())) {
             eventPublisher.publishEvent(ImageDeleteEvent.of(event.getCoverUrl()));
@@ -123,6 +127,8 @@ public class EventServiceImpl implements EventService {
                 request.imageIds().stream().filter(Objects::nonNull).distinct().toList();
 
         validateParticipantAuthority(currentMember, event.getAlbum());
+        validateSubscriptionNotExpired(event.getAlbum());
+
         validateAllImageExistence(distinctImageIds);
         validateAllImageAlbum(distinctImageIds, eventId);
 
@@ -237,5 +243,13 @@ public class EventServiceImpl implements EventService {
             t = t.getCause();
         }
         return null;
+    }
+
+    private void validateSubscriptionNotExpired(Album album) {
+        if (album.getType() == AlbumType.BASIC) return;
+
+        if (album.getSubscription().getStatus() == SubscriptionStatus.EXPIRED) {
+            throw new CustomException(AlbumErrorCode.EXPIRED_SUBSCRIPTION);
+        }
     }
 }

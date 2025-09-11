@@ -21,6 +21,7 @@ import org.cherrypic.participant.enums.ParticipantRole;
 import org.cherrypic.payment.entity.Payment;
 import org.cherrypic.payment.enums.PaymentPurpose;
 import org.cherrypic.subscription.entity.Subscription;
+import org.cherrypic.subscription.enums.SubscriptionStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,6 +43,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         final Album album = getAlbumById(albumId);
 
         validateAlbumHost(currentMember.getId(), album.getId());
+        validateSubscriptionNotExpired(album);
         validateSubscriptionSupported(album);
 
         final Subscription subscription = getSubscriptionByAlbumId(album.getId());
@@ -56,6 +58,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         final Album album = getAlbumById(albumId);
 
         validateAlbumHost(currentMember.getId(), album.getId());
+        validateSubscriptionNotExpired(album);
         validateSubscriptionSupported(album);
 
         final Payment payment = getPaidPaymentById(request.paymentId());
@@ -128,6 +131,14 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     private void validatePaymentMemberMismatch(Payment payment, Member member) {
         if (!payment.getMember().getId().equals(member.getId())) {
             throw new CustomException(PaymentErrorCode.PAYMENT_MEMBER_MISMATCH);
+        }
+    }
+
+    private void validateSubscriptionNotExpired(Album album) {
+        if (album.getType() == AlbumType.BASIC) return;
+
+        if (album.getSubscription().getStatus() == SubscriptionStatus.EXPIRED) {
+            throw new CustomException(AlbumErrorCode.EXPIRED_SUBSCRIPTION);
         }
     }
 }
