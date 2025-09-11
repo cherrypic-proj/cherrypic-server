@@ -29,6 +29,12 @@ public class ImageEventListener {
 
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void handleTempAlbumImagesDeleteEvent(TempAlbumImagesDeleteEvent event) {
+        s3Util.deleteAllByUrls(event.tempImageUrls());
+    }
+
+    @Async
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleImageDeleteEvent(ImageDeleteEvent event) {
         s3Util.deleteByUrl(event.imageUrl());
     }

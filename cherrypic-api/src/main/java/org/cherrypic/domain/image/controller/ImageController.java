@@ -5,13 +5,8 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.cherrypic.domain.image.dto.request.AlbumImageDeleteRequest;
-import org.cherrypic.domain.image.dto.request.AlbumImageUploadRequest;
-import org.cherrypic.domain.image.dto.request.ImageUploadRequest;
-import org.cherrypic.domain.image.dto.response.AlbumImageListResponse;
-import org.cherrypic.domain.image.dto.response.EventImageListResponse;
-import org.cherrypic.domain.image.dto.response.ImageUploadListResponse;
-import org.cherrypic.domain.image.dto.response.PresignedUrlResponse;
+import org.cherrypic.domain.image.dto.request.*;
+import org.cherrypic.domain.image.dto.response.*;
 import org.cherrypic.domain.image.service.ImageService;
 import org.cherrypic.global.annotation.PageSize;
 import org.cherrypic.global.pagination.SliceResponse;
@@ -97,6 +92,25 @@ public class ImageController {
     public ResponseEntity<Void> albumImageDelete(
             @PathVariable Long albumId, @Valid @RequestBody AlbumImageDeleteRequest request) {
         imageService.deleteAlbumImage(albumId, request);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("temp-album/{tempAlbumId}/images")
+    @Operation(
+            summary = "임시 앨범 이미지 업로드 Presigned URL들 생성",
+            description = "임시 앨범 이미지 업로드를 위한 Presigned URL들을 생성합니다.")
+    public TempAlbumImageUploadListResponse tempAlbumImageUploadUrlsCreate(
+            @PathVariable Long tempAlbumId,
+            @Valid @RequestBody TempAlbumImageUploadRequest request) {
+        return imageService.createTempAlbumImageUploadUrls(tempAlbumId, request);
+    }
+
+    @DeleteMapping("temp-album/{tempAlbumId}/images")
+    @Operation(summary = "임시 앨범 이미지 삭제", description = "임시 앨범의 이미지를 삭제합니다.")
+    public ResponseEntity<Void> tempAlbumImageDelete(
+            @PathVariable Long tempAlbumId,
+            @Valid @RequestBody TempAlbumImageDeleteRequest request) {
+        imageService.deleteTempAlbumImage(tempAlbumId, request);
         return ResponseEntity.noContent().build();
     }
 }

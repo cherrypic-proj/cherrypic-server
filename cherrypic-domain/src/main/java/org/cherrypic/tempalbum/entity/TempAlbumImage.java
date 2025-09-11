@@ -2,6 +2,7 @@ package org.cherrypic.tempalbum.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
+import java.math.BigDecimal;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -23,13 +24,21 @@ public class TempAlbumImage extends BaseTimeEntity {
 
     @NotNull private String url;
 
+    @NotNull private BigDecimal capacityGb;
+
     @Builder(access = AccessLevel.PRIVATE)
-    private TempAlbumImage(TempAlbum tempAlbum, String url) {
+    private TempAlbumImage(TempAlbum tempAlbum, String url, BigDecimal capacityGb) {
         this.tempAlbum = tempAlbum;
         this.url = url;
+        this.capacityGb = capacityGb;
     }
 
-    public static TempAlbumImage createTempAlbumImage(TempAlbum tempAlbum, String url) {
-        return TempAlbumImage.builder().tempAlbum(tempAlbum).url(url).build();
+    public static TempAlbumImage createTempAlbumImage(
+            TempAlbum tempAlbum, String url, BigDecimal capacityGb) {
+        return TempAlbumImage.builder()
+                .tempAlbum(tempAlbum)
+                .url(url)
+                .capacityGb(capacityGb)
+                .build();
     }
 }

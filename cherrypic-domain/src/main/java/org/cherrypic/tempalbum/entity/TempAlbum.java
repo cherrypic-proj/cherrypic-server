@@ -11,8 +11,10 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.cherrypic.common.model.BaseTimeEntity;
+import org.cherrypic.exception.CustomException;
 import org.cherrypic.member.entity.Member;
 import org.cherrypic.tempalbum.enums.TempAlbumType;
+import org.cherrypic.tempalbum.exception.TempAlbumDomainErrorCode;
 
 @Getter
 @Entity
@@ -64,5 +66,21 @@ public class TempAlbum extends BaseTimeEntity {
                 .type(TempAlbumType.DEFAULT)
                 .expiredAt(LocalDate.now().plusDays(TempAlbumType.DEFAULT.getDaysToLive()))
                 .build();
+    }
+
+    public void increaseCapacity(BigDecimal decimal) {
+        if (this.capacityGb.add(decimal).compareTo(BigDecimal.valueOf(9999.99)) > 0) {
+            throw new CustomException(
+                    TempAlbumDomainErrorCode.TEMP_ALBUM_CAPACITY_INCREASE_OVER_LIMIT);
+        }
+        this.capacityGb = capacityGb.add(decimal);
+    }
+
+    public void decreaseCapacity(BigDecimal decimal) {
+        if (this.capacityGb.subtract(decimal).compareTo(BigDecimal.ZERO) < 0) {
+            throw new CustomException(
+                    TempAlbumDomainErrorCode.TEMP_ALBUM_CAPACITY_DECREASE_UNDER_ZERO);
+        }
+        this.capacityGb = capacityGb.subtract(decimal);
     }
 }
