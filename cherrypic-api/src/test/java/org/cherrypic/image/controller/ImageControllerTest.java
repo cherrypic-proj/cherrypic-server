@@ -12,15 +12,11 @@ import java.util.List;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.event.exception.EventErrorCode;
 import org.cherrypic.domain.image.controller.ImageController;
-import org.cherrypic.domain.image.dto.request.AlbumImageDeleteRequest;
-import org.cherrypic.domain.image.dto.request.AlbumImageUploadRequest;
-import org.cherrypic.domain.image.dto.request.ImageUploadRequest;
-import org.cherrypic.domain.image.dto.response.AlbumImageListResponse;
-import org.cherrypic.domain.image.dto.response.EventImageListResponse;
-import org.cherrypic.domain.image.dto.response.ImageUploadListResponse;
-import org.cherrypic.domain.image.dto.response.PresignedUrlResponse;
+import org.cherrypic.domain.image.dto.request.*;
+import org.cherrypic.domain.image.dto.response.*;
 import org.cherrypic.domain.image.exception.ImageErrorCode;
 import org.cherrypic.domain.image.service.ImageService;
+import org.cherrypic.domain.tempalbum.exception.TempAlbumErrorCode;
 import org.cherrypic.exception.CustomException;
 import org.cherrypic.global.pagination.SliceResponse;
 import org.cherrypic.global.pagination.SortDirection;
@@ -1192,6 +1188,385 @@ class ImageControllerTest {
                     .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
                     .andExpect(jsonPath("$.data.code").value("MethodArgumentNotValidException"))
                     .andExpect(jsonPath("$.data.message").value("삭제하고자 하는 이미지 ID들은 비워둘 수 없습니다."));
+        }
+    }
+
+    @Nested
+    class 임시_앨범_이미지_업로드_Presigned_URL을_생성_요청_시 {
+
+        @Test
+        void 유효한_요청이면_임시_앨범_이미지_업로드_Presigned_URL들을_반환한다() throws Exception {
+            // given
+            TempAlbumImageUploadRequest request =
+                    new TempAlbumImageUploadRequest(
+                            List.of(
+                                    new TempAlbumImageUploadRequest.Payload(
+                                            FileExtension.JPEG,
+                                            "testMd5Hash1",
+                                            new BigDecimal("0.3")),
+                                    new TempAlbumImageUploadRequest.Payload(
+                                            FileExtension.JPEG,
+                                            "testMd5Hash2",
+                                            new BigDecimal("0.3"))));
+
+            TempAlbumImageUploadListResponse response =
+                    new TempAlbumImageUploadListResponse(
+                            List.of(
+                                    new TempAlbumImageUploadListResponse.Payload(
+                                            1L, "testPresignedUrl1"),
+                                    new TempAlbumImageUploadListResponse.Payload(
+                                            2L, "testPresignedUrl2")));
+
+            given(imageService.createTempAlbumImageUploadUrls(1L, request)).willReturn(response);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/temp-albums/1/images")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
+                    .andExpect(jsonPath("$.data.payloads").isNotEmpty());
+        }
+
+        @Test
+        void 임시_앨범이_존재하지_않는_경우_예외가_발생한다() throws Exception {
+            // given
+            TempAlbumImageUploadRequest request =
+                    new TempAlbumImageUploadRequest(
+                            List.of(
+                                    new TempAlbumImageUploadRequest.Payload(
+                                            FileExtension.JPEG,
+                                            "testMd5Hash1",
+                                            new BigDecimal("0.3")),
+                                    new TempAlbumImageUploadRequest.Payload(
+                                            FileExtension.JPEG,
+                                            "testMd5Hash2",
+                                            new BigDecimal("0.3"))));
+
+            given(imageService.createTempAlbumImageUploadUrls(1L, request))
+                    .willThrow(new CustomException(TempAlbumErrorCode.TEMP_ALBUM_NOT_FOUND));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/temp-albums/1/images")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.NOT_FOUND.value()))
+                    .andExpect(jsonPath("$.data.code").value("TEMP_ALBUM_NOT_FOUND"))
+                    .andExpect(jsonPath("$.data.message").value("임시 앨범이 존재하지 않습니다."));
+        }
+
+        @Test
+        void 임시_앨범_소유자가_아닌_사용자가_앨범_이미지_업로드_URL을_요청하면_예외가_발생한다() throws Exception {
+            // given
+            TempAlbumImageUploadRequest request =
+                    new TempAlbumImageUploadRequest(
+                            List.of(
+                                    new TempAlbumImageUploadRequest.Payload(
+                                            FileExtension.JPEG,
+                                            "testMd5Hash1",
+                                            new BigDecimal("0.3")),
+                                    new TempAlbumImageUploadRequest.Payload(
+                                            FileExtension.JPEG,
+                                            "testMd5Hash2",
+                                            new BigDecimal("0.3"))));
+
+            given(imageService.createTempAlbumImageUploadUrls(1L, request))
+                    .willThrow(new CustomException(TempAlbumErrorCode.NOT_TEMP_ALBUM_OWNER));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/temp-albums/1/images")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.FORBIDDEN.value()))
+                    .andExpect(jsonPath("$.data.code").value("NOT_TEMP_ALBUM_OWNER"))
+                    .andExpect(jsonPath("$.data.message").value("임시 앨범 소유자가 아닌 경우 권한이 없습니다."));
+        }
+
+        @Test
+        void 임시_앨범의_남은_용량을_초과해서_요청하면_예외가_발생한다() throws Exception {
+            // given
+            TempAlbumImageUploadRequest request =
+                    new TempAlbumImageUploadRequest(
+                            List.of(
+                                    new TempAlbumImageUploadRequest.Payload(
+                                            FileExtension.JPEG, "testMd5Hash1", BigDecimal.TEN),
+                                    new TempAlbumImageUploadRequest.Payload(
+                                            FileExtension.JPEG, "testMd5Hash2", BigDecimal.TEN)));
+
+            given(imageService.createTempAlbumImageUploadUrls(1L, request))
+                    .willThrow(
+                            new CustomException(TempAlbumErrorCode.TEMP_ALBUM_CAPACITY_EXCEEDED));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/temp-albums/1/images")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("TEMP_ALBUM_CAPACITY_EXCEEDED"))
+                    .andExpect(jsonPath("$.data.message").value("임시 앨범의 용량을 초과했습니다."));
+        }
+
+        @Test
+        void MD5_해시에_중복된_값이_존재하면_예외가_발생한다() throws Exception {
+            // given
+            TempAlbumImageUploadRequest request =
+                    new TempAlbumImageUploadRequest(
+                            List.of(
+                                    new TempAlbumImageUploadRequest.Payload(
+                                            FileExtension.JPEG,
+                                            "testMd5Hash1",
+                                            new BigDecimal("0.3")),
+                                    new TempAlbumImageUploadRequest.Payload(
+                                            FileExtension.JPEG,
+                                            "testMd5Hash2",
+                                            new BigDecimal("0.3"))));
+
+            given(imageService.createTempAlbumImageUploadUrls(1L, request))
+                    .willThrow(new CustomException(ImageErrorCode.DUPLICATE_HASHES));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/temp-albums/1/images")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("DUPLICATE_HASHES"))
+                    .andExpect(jsonPath("$.data.message").value("중복되는 md5 해시값이 존재합니다."));
+        }
+
+        @ParameterizedTest
+        @NullSource
+        @EmptySource
+        @ValueSource(strings = {"JPEG1", "PDF", "TXT"})
+        void 파일_확장자가_null_또는_지원하지_않는_형식이면_예외가_발생한다(String extension) throws Exception {
+            // given
+            TempAlbumImageUploadRequest request =
+                    new TempAlbumImageUploadRequest(
+                            List.of(
+                                    new TempAlbumImageUploadRequest.Payload(
+                                            FileExtension.from(extension),
+                                            "testMd5Hash1",
+                                            BigDecimal.ONE)));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/temp-albums/1/images")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("MethodArgumentNotValidException"))
+                    .andExpect(
+                            jsonPath("$.data.message")
+                                    .value(
+                                            "파일의 확장자는 비워둘 수 없으며, 이미지(PNG, JPG, JPEG, WEBP, HEIC, HEIF)와 동영상(MP4, WEBM, MOV, MKV, HEVC)만 지원됩니다."));
+        }
+
+        @Test
+        void 이미지_용량을_비워두면_예외가_발생한다() throws Exception {
+            // given
+            TempAlbumImageUploadRequest request =
+                    new TempAlbumImageUploadRequest(
+                            List.of(
+                                    new TempAlbumImageUploadRequest.Payload(
+                                            FileExtension.JPEG, "testMd5Hash", null)));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/temp-albums/1/images")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("MethodArgumentNotValidException"))
+                    .andExpect(jsonPath("$.data.message").value("파일의 용량은 비워둘 수 없습니다."));
+        }
+
+        @ParameterizedTest
+        @NullSource
+        @EmptySource
+        @ValueSource(strings = {" "})
+        void MD5_해시가_null_또는_공백이면_예외가_발생한다(String md5Hash) throws Exception {
+            // given
+            TempAlbumImageUploadRequest request =
+                    new TempAlbumImageUploadRequest(
+                            List.of(
+                                    new TempAlbumImageUploadRequest.Payload(
+                                            FileExtension.JPEG, md5Hash, BigDecimal.ONE)));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/temp-albums/1/images")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("MethodArgumentNotValidException"))
+                    .andExpect(jsonPath("$.data.message").value("MD5 해시값은 비워둘 수 없습니다."));
+        }
+
+        @Test
+        void 업로드_요청_정보를_비워두면_예외가_발생한다() throws Exception {
+            // given
+            TempAlbumImageUploadRequest request = new TempAlbumImageUploadRequest(List.of());
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/temp-albums/1/images")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("MethodArgumentNotValidException"))
+                    .andExpect(jsonPath("$.data.message").value("업로드할 피일들의 정보는 비워둘 수 없습니다."));
+        }
+    }
+
+    @Nested
+    class 임시_앨범_이미지_삭제_요청_시 {
+
+        @Test
+        void 유효한_요청이면_임시_앨범의_이미지를_삭제하고_NO_CONTENT를_반환한다() throws Exception {
+            // given
+            TempAlbumImageDeleteRequest request = new TempAlbumImageDeleteRequest(List.of(1L, 2L));
+
+            willDoNothing().given(imageService).deleteTempAlbumImage(1L, request);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            delete("/temp-albums/1/images")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isNoContent())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.NO_CONTENT.value()));
+        }
+
+        @Test
+        void 임시_앨범이_존재하지_않을_경우_예외가_발생한다() throws Exception {
+            // given
+            TempAlbumImageDeleteRequest request = new TempAlbumImageDeleteRequest(List.of(1L, 2L));
+
+            willThrow(new CustomException(TempAlbumErrorCode.TEMP_ALBUM_NOT_FOUND))
+                    .given(imageService)
+                    .deleteTempAlbumImage(1L, request);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            delete("/temp-albums/1/images")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.NOT_FOUND.value()))
+                    .andExpect(jsonPath("$.data.code").value("TEMP_ALBUM_NOT_FOUND"))
+                    .andExpect(jsonPath("$.data.message").value("임시 앨범이 존재하지 않습니다."));
+        }
+
+        @Test
+        void 임시_앨범의_소유자가_아닌_사용자가_앨범_이미지를_삭제하면_예외가_발생한다() throws Exception {
+            // given
+            TempAlbumImageDeleteRequest request = new TempAlbumImageDeleteRequest(List.of(1L, 2L));
+
+            willThrow(new CustomException(TempAlbumErrorCode.NOT_TEMP_ALBUM_OWNER))
+                    .given(imageService)
+                    .deleteTempAlbumImage(1L, request);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            delete("/temp-albums/1/images")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.FORBIDDEN.value()))
+                    .andExpect(jsonPath("$.data.code").value("NOT_TEMP_ALBUM_OWNER"))
+                    .andExpect(jsonPath("$.data.message").value("임시 앨범 소유자가 아닌 경우 권한이 없습니다."));
+        }
+
+        @Test
+        void 임시_앨범에_속하지_않은_이미지가_포함되어_있으면_예외가_발생한다() throws Exception {
+            // given
+            TempAlbumImageDeleteRequest request = new TempAlbumImageDeleteRequest(List.of(1L, 2L));
+
+            willThrow(new CustomException(TempAlbumErrorCode.IMAGES_NOT_IN_TEMP_ALBUM))
+                    .given(imageService)
+                    .deleteTempAlbumImage(1L, request);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            delete("/temp-albums/1/images")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("IMAGES_NOT_IN_TEMP_ALBUM"))
+                    .andExpect(jsonPath("$.data.message").value("임시 앨범에 속해 있지 않은 이미지가 포함되어 있습니다."));
+        }
+
+        @Test
+        void 삭제하고자_하는_임시_앨범의_이미지_ID들을_비워두면_예외가_발생한다() throws Exception {
+            // given
+            TempAlbumImageDeleteRequest request = new TempAlbumImageDeleteRequest(List.of());
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            delete("/temp-albums/1/images")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("MethodArgumentNotValidException"))
+                    .andExpect(
+                            jsonPath("$.data.message")
+                                    .value("삭제하고자 하는 임시 앨범 이미지 ID들은 비워둘 수 없습니다."));
         }
     }
 }

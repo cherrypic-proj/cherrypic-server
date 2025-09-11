@@ -95,7 +95,7 @@ public class ImageController {
         return ResponseEntity.noContent().build();
     }
 
-    @PostMapping("temp-album/{tempAlbumId}/images")
+    @PostMapping("temp-albums/{tempAlbumId}/images")
     @Operation(
             summary = "임시 앨범 이미지 업로드 Presigned URL들 생성",
             description = "임시 앨범 이미지 업로드를 위한 Presigned URL들을 생성합니다.")
@@ -105,7 +105,7 @@ public class ImageController {
         return imageService.createTempAlbumImageUploadUrls(tempAlbumId, request);
     }
 
-    @DeleteMapping("temp-album/{tempAlbumId}/images")
+    @DeleteMapping("temp-albums/{tempAlbumId}/images")
     @Operation(summary = "임시 앨범 이미지 삭제", description = "임시 앨범의 이미지를 삭제합니다.")
     public ResponseEntity<Void> tempAlbumImageDelete(
             @PathVariable Long tempAlbumId,
