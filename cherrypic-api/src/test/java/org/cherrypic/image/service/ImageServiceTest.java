@@ -1006,7 +1006,7 @@ class ImageServiceTest extends IntegrationTest {
             // when & then
             assertThatThrownBy(() -> imageService.createTempAlbumImageUploadUrls(1L, request))
                     .isInstanceOf(CustomException.class)
-                    .hasMessage(ImageErrorCode.DUPLICATE_HASHES.getMessage());
+                    .hasMessage(TempAlbumErrorCode.DUPLICATE_HASHES.getMessage());
         }
     }
 
