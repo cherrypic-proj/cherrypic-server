@@ -538,6 +538,9 @@ class AlbumServiceTest extends IntegrationTest {
                             participant4,
                             participant5,
                             participant6));
+
+            subscriptionRepository.save(
+                    Subscription.createSubscription(member1, album1, LocalDateTime.now()));
         }
 
         @Test

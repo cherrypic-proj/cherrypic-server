@@ -29,6 +29,7 @@ import org.cherrypic.domain.payment.dto.response.PaymentUnlinkedResponse;
 import org.cherrypic.domain.payment.exception.PaymentErrorCode;
 import org.cherrypic.domain.payment.repository.PaymentRepository;
 import org.cherrypic.domain.payment.service.PaymentService;
+import org.cherrypic.domain.subscription.repository.SubscriptionRepository;
 import org.cherrypic.exception.CustomException;
 import org.cherrypic.global.pagination.SliceResponse;
 import org.cherrypic.global.pagination.SortDirection;
@@ -40,6 +41,7 @@ import org.cherrypic.participant.enums.ParticipantRole;
 import org.cherrypic.payment.entity.Payment;
 import org.cherrypic.payment.enums.PaymentPurpose;
 import org.cherrypic.payment.enums.PaymentStatus;
+import org.cherrypic.subscription.entity.Subscription;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -58,6 +60,7 @@ public class PaymentServiceTest extends IntegrationTest {
     @Autowired private MemberRepository memberRepository;
     @Autowired private AlbumRepository albumRepository;
     @Autowired private ParticipantRepository participantRepository;
+    @Autowired private SubscriptionRepository subscriptionRepository;
 
     @MockitoBean private MemberUtil memberUtil;
 
@@ -94,6 +97,12 @@ public class PaymentServiceTest extends IntegrationTest {
             Participant participant3 =
                     Participant.createParticipant(member, basicAlbum2, ParticipantRole.STANDARD);
             participantRepository.saveAll(List.of(participant1, participant2, participant3));
+
+            Subscription subscription1 =
+                    Subscription.createSubscription(member, proAlbum, LocalDateTime.now());
+            Subscription subscription2 =
+                    Subscription.createSubscription(member, premiumAlbum, LocalDateTime.now());
+            subscriptionRepository.saveAll(List.of(subscription1, subscription2));
         }
 
         @Nested
