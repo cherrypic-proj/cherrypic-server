@@ -210,10 +210,10 @@ class SubscriptionServiceTest extends IntegrationTest {
                             participant5,
                             participant6));
 
-            // 15일 전에 시작되어 현재는 해지된 구독
+            // 9월 1일에 시작되어 현재는 해지된 구독
             Subscription subscription1 =
                     Subscription.createSubscription(
-                            member1, album1, LocalDateTime.now().minusDays(15));
+                            member1, album1, LocalDateTime.of(2025, 9, 1, 0, 0));
             subscription1.cancel();
 
             // 구독 중
