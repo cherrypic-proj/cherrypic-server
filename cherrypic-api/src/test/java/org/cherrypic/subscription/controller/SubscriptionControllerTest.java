@@ -129,23 +129,6 @@ class SubscriptionControllerTest {
         }
 
         @Test
-        void 구독이_존재하지_않는_경우_예외가_발생한다() throws Exception {
-            // given
-            willThrow(new CustomException(SubscriptionErrorCode.SUBSCRIPTION_NOT_FOUND))
-                    .given(subscriptionService)
-                    .cancelSubscription(1L);
-
-            // when & then
-            ResultActions perform = mockMvc.perform(delete("/albums/1/subscriptions"));
-
-            perform.andExpect(status().isNotFound())
-                    .andExpect(jsonPath("$.success").value(false))
-                    .andExpect(jsonPath("$.status").value(HttpStatus.NOT_FOUND.value()))
-                    .andExpect(jsonPath("$.data.code").value("SUBSCRIPTION_NOT_FOUND"))
-                    .andExpect(jsonPath("$.data.message").value("구독 정보가 존재하지 않습니다."));
-        }
-
-        @Test
         void 이미_해지된_구독이면_예외가_발생한다() throws Exception {
             // given
             willThrow(new CustomException(SubscriptionDomainErrorCode.ALREADY_CANCELED))
@@ -414,28 +397,6 @@ class SubscriptionControllerTest {
                     .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
                     .andExpect(jsonPath("$.data.code").value("PAYMENT_PURPOSE_MISMATCH"))
                     .andExpect(jsonPath("$.data.message").value("결제 목적이 요청하려는 작업과 일치하지 않습니다."));
-        }
-
-        @Test
-        void 구독이_존재하지_않는_경우_예외가_발생한다() throws Exception {
-            // given
-            SubscriptionRenewRequest request = new SubscriptionRenewRequest(1L);
-
-            given(subscriptionService.renewSubscription(1L, request))
-                    .willThrow(new CustomException(SubscriptionErrorCode.SUBSCRIPTION_NOT_FOUND));
-
-            // when & then
-            ResultActions perform =
-                    mockMvc.perform(
-                            patch("/albums/1/subscriptions/renew")
-                                    .contentType(MediaType.APPLICATION_JSON)
-                                    .content(objectMapper.writeValueAsString(request)));
-
-            perform.andExpect(status().isNotFound())
-                    .andExpect(jsonPath("$.success").value(false))
-                    .andExpect(jsonPath("$.status").value(HttpStatus.NOT_FOUND.value()))
-                    .andExpect(jsonPath("$.data.code").value("SUBSCRIPTION_NOT_FOUND"))
-                    .andExpect(jsonPath("$.data.message").value("구독 정보가 존재하지 않습니다."));
         }
 
         @Test

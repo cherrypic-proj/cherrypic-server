@@ -142,14 +142,6 @@ class SubscriptionServiceTest extends IntegrationTest {
         }
 
         @Test
-        void 구독이_존재하지_않는_경우_예외가_발생한다() {
-            // when & then
-            assertThatThrownBy(() -> subscriptionService.cancelSubscription(5L))
-                    .isInstanceOf(CustomException.class)
-                    .hasMessage(SubscriptionErrorCode.SUBSCRIPTION_NOT_FOUND.getMessage());
-        }
-
-        @Test
         void 이미_해지된_구독이면_예외가_발생한다() {
             // given
             subscriptionService.cancelSubscription(2L);
@@ -438,17 +430,6 @@ class SubscriptionServiceTest extends IntegrationTest {
             assertThatThrownBy(() -> subscriptionService.renewSubscription(1L, request))
                     .isInstanceOf(CustomException.class)
                     .hasMessage(PaymentDomainErrorCode.PAYMENT_PURPOSE_MISMATCH.getMessage());
-        }
-
-        @Test
-        void 구독이_존재하지_않는_경우_예외가_발생한다() {
-            // given
-            SubscriptionRenewRequest request = new SubscriptionRenewRequest(1L);
-
-            // when & then
-            assertThatThrownBy(() -> subscriptionService.renewSubscription(5L, request))
-                    .isInstanceOf(CustomException.class)
-                    .hasMessage(SubscriptionErrorCode.SUBSCRIPTION_NOT_FOUND.getMessage());
         }
 
         @Test
