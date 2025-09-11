@@ -22,8 +22,8 @@ public class TempAlbumImageRepositoryImpl implements TempAlbumImageRepositoryCus
     @Override
     public void bulkInsertTempAlbumImages(List<TempAlbumImage> images) {
         String sql =
-                "INSERT INTO temp_album_image (temp_album_id, url, created_at, updated_at) "
-                        + "VALUES (?, ?, NOW(), NOW())";
+                "INSERT INTO temp_album_image (temp_album_id, url, capacity_gb, created_at, updated_at) "
+                        + "VALUES (?, ?, ?, NOW(), NOW())";
 
         jdbcTemplate.batchUpdate(
                 sql,
@@ -32,6 +32,7 @@ public class TempAlbumImageRepositoryImpl implements TempAlbumImageRepositoryCus
                 (ps, image) -> {
                     ps.setLong(1, image.getTempAlbum().getId());
                     ps.setString(2, image.getUrl());
+                    ps.setBigDecimal(3, image.getCapacityGb());
                 });
     }
 
