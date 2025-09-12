@@ -59,6 +59,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.event.ApplicationEvents;
 import org.springframework.test.context.event.RecordApplicationEvents;
+import org.springframework.test.util.ReflectionTestUtils;
 
 @RecordApplicationEvents
 class AlbumServiceTest extends IntegrationTest {
@@ -404,13 +405,21 @@ class AlbumServiceTest extends IntegrationTest {
             Album album1 = Album.createAlbum("testAlbum1", "testURL1", AlbumType.BASIC, false);
             Album album2 = Album.createAlbum("testAlbum2", "testURL2", AlbumType.BASIC, false);
             Album album3 = Album.createAlbum("testAlbum3", "testURL3", AlbumType.BASIC, false);
-            albumRepository.saveAll(List.of(album1, album2, album3));
+            Album album4 = Album.createAlbum("testAlbum4", "testURL4", AlbumType.PRO, false);
+            albumRepository.saveAll(List.of(album1, album2, album3, album4));
 
             Participant participant1 =
                     Participant.createParticipant(member, album1, ParticipantRole.HOST);
             Participant participant2 =
                     Participant.createParticipant(member, album2, ParticipantRole.LIMITED);
-            participantRepository.saveAll(List.of(participant1, participant2));
+            Participant participant3 =
+                    Participant.createParticipant(member, album4, ParticipantRole.HOST);
+            participantRepository.saveAll(List.of(participant1, participant2, participant3));
+
+            Subscription subscription =
+                    Subscription.createSubscription(member, album4, LocalDateTime.now());
+            ReflectionTestUtils.setField(subscription, "status", SubscriptionStatus.EXPIRED);
+            subscriptionRepository.save(subscription);
         }
 
         @Test
@@ -482,6 +491,17 @@ class AlbumServiceTest extends IntegrationTest {
                     .isInstanceOf(CustomException.class)
                     .hasMessage(AlbumErrorCode.NOT_ALBUM_HOST.getMessage());
         }
+
+        @Test
+        void 구독이_만료된_앨범인_경우_예외가_발생한다() {
+            // given
+            AlbumUpdateRequest request = new AlbumUpdateRequest("testTitle", "testCoverUrl");
+
+            // when & then
+            assertThatThrownBy(() -> albumService.updateAlbum(4L, request))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(AlbumErrorCode.EXPIRED_SUBSCRIPTION.getMessage());
+        }
     }
 
     @Nested
@@ -515,8 +535,9 @@ class AlbumServiceTest extends IntegrationTest {
             Album album1 = Album.createAlbum("testAlbum1", "testURL1", AlbumType.PRO, true);
             Album album2 = Album.createAlbum("testAlbum2", "testURL2", AlbumType.BASIC, false);
             Album album3 = Album.createAlbum("testAlbum3", "testURL3", AlbumType.BASIC, false);
-            Album album4 = Album.createAlbum("testAlbum3", "testURL3", AlbumType.BASIC, false);
-            albumRepository.saveAll(List.of(album1, album2, album3, album4));
+            Album album4 = Album.createAlbum("testAlbum4", "testURL4", AlbumType.BASIC, false);
+            Album album5 = Album.createAlbum("testAlbum5", "testURL5", AlbumType.PRO, true);
+            albumRepository.saveAll(List.of(album1, album2, album3, album4, album5));
 
             Participant participant1 =
                     Participant.createParticipant(member1, album1, ParticipantRole.HOST);
@@ -530,6 +551,8 @@ class AlbumServiceTest extends IntegrationTest {
                     Participant.createParticipant(member3, album1, ParticipantRole.STANDARD);
             Participant participant6 =
                     Participant.createParticipant(member3, album1, ParticipantRole.LIMITED);
+            Participant participant7 =
+                    Participant.createParticipant(member1, album5, ParticipantRole.HOST);
             participantRepository.saveAll(
                     List.of(
                             participant1,
@@ -537,10 +560,15 @@ class AlbumServiceTest extends IntegrationTest {
                             participant3,
                             participant4,
                             participant5,
-                            participant6));
+                            participant6,
+                            participant7));
 
-            subscriptionRepository.save(
-                    Subscription.createSubscription(member1, album1, LocalDateTime.now()));
+            Subscription subscription1 =
+                    Subscription.createSubscription(member1, album1, LocalDateTime.now());
+            Subscription subscription2 =
+                    Subscription.createSubscription(member1, album5, LocalDateTime.now());
+            ReflectionTestUtils.setField(subscription2, "status", SubscriptionStatus.EXPIRED);
+            subscriptionRepository.saveAll(List.of(subscription1, subscription2));
         }
 
         @Test
@@ -595,6 +623,14 @@ class AlbumServiceTest extends IntegrationTest {
         }
 
         @Test
+        void 구독이_만료된_앨범인_경우_예외가_발생한다() {
+            // when & then
+            assertThatThrownBy(() -> albumService.togglePermission(5L))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(AlbumErrorCode.EXPIRED_SUBSCRIPTION.getMessage());
+        }
+
+        @Test
         void BASIC_유형인_경우_예외가_발생한다() {
             // when & then
             assertThatThrownBy(() -> albumService.togglePermission(3L))
@@ -625,13 +661,21 @@ class AlbumServiceTest extends IntegrationTest {
 
             Album album1 = Album.createAlbum("testAlbum1", "testURL1", AlbumType.BASIC, false);
             Album album2 = Album.createAlbum("testAlbum2", "testURL2", AlbumType.BASIC, false);
-            albumRepository.saveAll(List.of(album1, album2));
+            Album album3 = Album.createAlbum("testAlbum3", "testURL3", AlbumType.PRO, false);
+            albumRepository.saveAll(List.of(album1, album2, album3));
 
             Participant participant1 =
                     Participant.createParticipant(member1, album1, ParticipantRole.HOST);
             Participant participant2 =
                     Participant.createParticipant(member2, album2, ParticipantRole.STANDARD);
-            participantRepository.saveAll(List.of(participant1, participant2));
+            Participant participant3 =
+                    Participant.createParticipant(member1, album3, ParticipantRole.HOST);
+            participantRepository.saveAll(List.of(participant1, participant2, participant3));
+
+            Subscription subscription =
+                    Subscription.createSubscription(member1, album3, LocalDateTime.now());
+            ReflectionTestUtils.setField(subscription, "status", SubscriptionStatus.EXPIRED);
+            subscriptionRepository.save(subscription);
         }
 
         @AfterEach
@@ -714,6 +758,14 @@ class AlbumServiceTest extends IntegrationTest {
                     .isInstanceOf(CustomException.class)
                     .hasMessage(AlbumErrorCode.NOT_ALBUM_HOST.getMessage());
         }
+
+        @Test
+        void 구독이_만료된_앨범인_경우_예외가_발생한다() {
+            // when & then
+            assertThatThrownBy(() -> albumService.createInvitationLink(3L))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(AlbumErrorCode.EXPIRED_SUBSCRIPTION.getMessage());
+        }
     }
 
     @Nested
@@ -732,11 +784,14 @@ class AlbumServiceTest extends IntegrationTest {
             Album album1 = Album.createAlbum("testAlbum1", "testURL1", AlbumType.BASIC, false);
             Album album2 = Album.createAlbum("testAlbum2", "testURL2", AlbumType.BASIC, false);
             Album album3 = Album.createAlbum("testAlbum3", "testURL3", AlbumType.BASIC, false);
-            albumRepository.saveAll(List.of(album1, album2, album3));
+            Album album4 = Album.createAlbum("testAlbum4", "testURL4", AlbumType.PRO, false);
+            albumRepository.saveAll(List.of(album1, album2, album3, album4));
 
-            Participant participant =
+            Participant participant1 =
                     Participant.createParticipant(member, album3, ParticipantRole.HOST);
-            participantRepository.save(participant);
+            Participant participant2 =
+                    Participant.createParticipant(member, album4, ParticipantRole.HOST);
+            participantRepository.saveAll(List.of(participant1, participant2));
 
             InvitationCode invitationCode1 =
                     InvitationCode.builder()
@@ -750,7 +805,19 @@ class AlbumServiceTest extends IntegrationTest {
                             .code("testInvitationCode2")
                             .ttl(Duration.ofMinutes(30).getSeconds())
                             .build();
-            invitationCodeRepository.saveAll(List.of(invitationCode1, invitationCode2));
+            InvitationCode invitationCode3 =
+                    InvitationCode.builder()
+                            .albumId(4L)
+                            .code("testInvitationCode3")
+                            .ttl(Duration.ofMinutes(30).getSeconds())
+                            .build();
+            invitationCodeRepository.saveAll(
+                    List.of(invitationCode1, invitationCode2, invitationCode3));
+
+            Subscription subscription =
+                    Subscription.createSubscription(member, album4, LocalDateTime.now());
+            ReflectionTestUtils.setField(subscription, "status", SubscriptionStatus.EXPIRED);
+            subscriptionRepository.save(subscription);
         }
 
         @AfterEach
@@ -794,6 +861,14 @@ class AlbumServiceTest extends IntegrationTest {
             assertThatThrownBy(() -> albumService.joinAlbum(1L, "expiredInvitationCode"))
                     .isInstanceOf(CustomException.class)
                     .hasMessage(AlbumErrorCode.INVITATION_CODE_MISMATCH.getMessage());
+        }
+
+        @Test
+        void 구독이_만료된_앨범인_경우_예외가_발생한다() {
+            // when & then
+            assertThatThrownBy(() -> albumService.joinAlbum(4L, "testInvitationCode3"))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(AlbumErrorCode.EXPIRED_SUBSCRIPTION.getMessage());
         }
 
         @Test

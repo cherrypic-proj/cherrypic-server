@@ -107,6 +107,23 @@ class SubscriptionControllerTest {
         }
 
         @Test
+        void 구독이_만료된_앨범인_경우_예외가_발생한다() throws Exception {
+            // given
+            willThrow(new CustomException(AlbumErrorCode.EXPIRED_SUBSCRIPTION))
+                    .given(subscriptionService)
+                    .cancelSubscription(1L);
+
+            // when & then
+            ResultActions perform = mockMvc.perform(delete("/albums/1/subscriptions"));
+
+            perform.andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.FORBIDDEN.value()))
+                    .andExpect(jsonPath("$.data.code").value("EXPIRED_SUBSCRIPTION"))
+                    .andExpect(jsonPath("$.data.message").value("만료된 앨범에서는 요청을 처리할 수 없습니다."));
+        }
+
+        @Test
         void BASIC_유형인_경우_예외가_발생한다() throws Exception {
             // given
             willThrow(
@@ -259,6 +276,28 @@ class SubscriptionControllerTest {
                     .andExpect(jsonPath("$.status").value(HttpStatus.FORBIDDEN.value()))
                     .andExpect(jsonPath("$.data.code").value("NOT_ALBUM_HOST"))
                     .andExpect(jsonPath("$.data.message").value("방장이 아닌 경우 권한이 없습니다."));
+        }
+
+        @Test
+        void 구독이_만료된_앨범인_경우_예외가_발생한다() throws Exception {
+            // given
+            SubscriptionRenewRequest request = new SubscriptionRenewRequest(1L);
+
+            given(subscriptionService.renewSubscription(1L, request))
+                    .willThrow(new CustomException(AlbumErrorCode.EXPIRED_SUBSCRIPTION));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            patch("/albums/1/subscriptions/renew")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.FORBIDDEN.value()))
+                    .andExpect(jsonPath("$.data.code").value("EXPIRED_SUBSCRIPTION"))
+                    .andExpect(jsonPath("$.data.message").value("만료된 앨범에서는 요청을 처리할 수 없습니다."));
         }
 
         @Test

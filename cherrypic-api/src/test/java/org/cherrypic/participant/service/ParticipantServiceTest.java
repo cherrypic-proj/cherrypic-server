@@ -30,9 +30,11 @@ import org.cherrypic.notification.enums.NotificationType;
 import org.cherrypic.participant.entity.Participant;
 import org.cherrypic.participant.enums.ParticipantRole;
 import org.cherrypic.subscription.entity.Subscription;
+import org.cherrypic.subscription.enums.SubscriptionStatus;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.util.ReflectionTestUtils;
 
 class ParticipantServiceTest extends IntegrationTest {
 
@@ -312,7 +314,8 @@ class ParticipantServiceTest extends IntegrationTest {
             Album album3 = Album.createAlbum("testAlbum3", "testURL3", AlbumType.PRO, true);
             Album album4 = Album.createAlbum("testAlbum4", "testURL4", AlbumType.PRO, true);
             Album album5 = Album.createAlbum("testAlbum5", "testURL5", AlbumType.BASIC, false);
-            albumRepository.saveAll(List.of(album1, album2, album3, album4, album5));
+            Album album6 = Album.createAlbum("testAlbum6", "testURL6", AlbumType.PRO, false);
+            albumRepository.saveAll(List.of(album1, album2, album3, album4, album5, album6));
 
             Participant participant1 =
                     Participant.createParticipant(member1, album1, ParticipantRole.HOST);
@@ -330,6 +333,8 @@ class ParticipantServiceTest extends IntegrationTest {
                     Participant.createParticipant(member1, album5, ParticipantRole.HOST);
             Participant participant8 =
                     Participant.createParticipant(member2, album5, ParticipantRole.STANDARD);
+            Participant participant9 =
+                    Participant.createParticipant(member1, album6, ParticipantRole.HOST);
             participantRepository.saveAll(
                     List.of(
                             participant1,
@@ -339,7 +344,8 @@ class ParticipantServiceTest extends IntegrationTest {
                             participant5,
                             participant6,
                             participant7,
-                            participant8));
+                            participant8,
+                            participant9));
 
             // 15일 전에 시작되어 현재는 해지된 구독
             Subscription subscription1 =
@@ -350,7 +356,11 @@ class ParticipantServiceTest extends IntegrationTest {
             Subscription subscription2 =
                     Subscription.createSubscription(
                             member1, album4, LocalDateTime.now().minusDays(15));
-            subscriptionRepository.saveAll(List.of(subscription1, subscription2));
+            // 만료된 구독
+            Subscription subscription3 =
+                    Subscription.createSubscription(member1, album6, LocalDateTime.now());
+            ReflectionTestUtils.setField(subscription3, "status", SubscriptionStatus.EXPIRED);
+            subscriptionRepository.saveAll(List.of(subscription1, subscription2, subscription3));
         }
 
         @Test
@@ -418,6 +428,18 @@ class ParticipantServiceTest extends IntegrationTest {
             assertThatThrownBy(() -> participantService.updateParticipantRole(3L, 3L, request))
                     .isInstanceOf(CustomException.class)
                     .hasMessage(AlbumErrorCode.NOT_ALBUM_HOST.getMessage());
+        }
+
+        @Test
+        void 구독이_만료된_앨범인_경우_예외가_발생한다() {
+            // given
+            ParticipantRoleUpdateRequest request =
+                    new ParticipantRoleUpdateRequest(ParticipantRole.LIMITED);
+
+            // when & then
+            assertThatThrownBy(() -> participantService.updateParticipantRole(6L, 4L, request))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(AlbumErrorCode.EXPIRED_SUBSCRIPTION.getMessage());
         }
 
         @Test

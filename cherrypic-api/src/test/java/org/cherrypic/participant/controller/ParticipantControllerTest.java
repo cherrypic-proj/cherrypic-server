@@ -324,6 +324,30 @@ class ParticipantControllerTest {
         }
 
         @Test
+        void 구독이_만료된_앨범인_경우_예외가_발생한다() throws Exception {
+            // given
+            ParticipantRoleUpdateRequest request =
+                    new ParticipantRoleUpdateRequest(ParticipantRole.LIMITED);
+
+            willThrow(new CustomException(AlbumErrorCode.EXPIRED_SUBSCRIPTION))
+                    .given(participantService)
+                    .updateParticipantRole(1L, 1L, request);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            patch("/albums/1/participants/1/role")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.FORBIDDEN.value()))
+                    .andExpect(jsonPath("$.data.code").value("EXPIRED_SUBSCRIPTION"))
+                    .andExpect(jsonPath("$.data.message").value("만료된 앨범에서는 요청을 처리할 수 없습니다."));
+        }
+
+        @Test
         void 앨범_방장이_자기_자신의_권한을_변경하려는_경우_예외가_발생한다() throws Exception {
             // given
             ParticipantRoleUpdateRequest request =

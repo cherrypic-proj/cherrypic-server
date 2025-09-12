@@ -28,6 +28,7 @@ import org.cherrypic.domain.image.repository.ImageRepository;
 import org.cherrypic.domain.image.service.ImageService;
 import org.cherrypic.domain.member.repository.MemberRepository;
 import org.cherrypic.domain.participant.repository.ParticipantRepository;
+import org.cherrypic.domain.subscription.repository.SubscriptionRepository;
 import org.cherrypic.event.entity.Event;
 import org.cherrypic.event.entity.EventImage;
 import org.cherrypic.exception.CustomException;
@@ -42,6 +43,8 @@ import org.cherrypic.participant.enums.ParticipantRole;
 import org.cherrypic.s3.S3Util;
 import org.cherrypic.s3.enums.FileExtension;
 import org.cherrypic.s3.enums.ImageType;
+import org.cherrypic.subscription.entity.Subscription;
+import org.cherrypic.subscription.enums.SubscriptionStatus;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -50,6 +53,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.event.ApplicationEvents;
 import org.springframework.test.context.event.RecordApplicationEvents;
+import org.springframework.test.util.ReflectionTestUtils;
 
 @RecordApplicationEvents
 class ImageServiceTest extends IntegrationTest {
@@ -65,6 +69,7 @@ class ImageServiceTest extends IntegrationTest {
     @Autowired private AlbumRepository albumRepository;
     @Autowired private MemberRepository memberRepository;
     @Autowired private EventImageRepository eventImageRepository;
+    @Autowired private SubscriptionRepository subscriptionRepository;
 
     @Nested
     class 프로필용_Presigned_URL을_생성할_때 {
@@ -273,13 +278,21 @@ class ImageServiceTest extends IntegrationTest {
             album1.increaseCapacity(BigDecimal.ONE);
             Album album2 = Album.createAlbum("testTitle2", "testCoverUrl2", AlbumType.BASIC, false);
             Album album3 = Album.createAlbum("testTitle3", "testCoverUrl3", AlbumType.BASIC, false);
-            albumRepository.saveAll(List.of(album1, album2, album3));
+            Album album4 = Album.createAlbum("testTitle4", "testCoverUrl4", AlbumType.PRO, false);
+            albumRepository.saveAll(List.of(album1, album2, album3, album4));
 
             Participant participant1 =
                     Participant.createParticipant(member, album1, ParticipantRole.HOST);
             Participant participant2 =
                     Participant.createParticipant(member, album2, ParticipantRole.LIMITED);
-            participantRepository.saveAll(List.of(participant1, participant2));
+            Participant participant3 =
+                    Participant.createParticipant(member, album4, ParticipantRole.HOST);
+            participantRepository.saveAll(List.of(participant1, participant2, participant3));
+
+            Subscription subscription =
+                    Subscription.createSubscription(member, album4, LocalDateTime.now());
+            ReflectionTestUtils.setField(subscription, "status", SubscriptionStatus.EXPIRED);
+            subscriptionRepository.save(subscription);
         }
 
         @Test
@@ -426,6 +439,29 @@ class ImageServiceTest extends IntegrationTest {
             assertThatThrownBy(() -> imageService.createAlbumImageUploadUrls(2L, request))
                     .isInstanceOf(CustomException.class)
                     .hasMessage(AlbumErrorCode.LIMITED_AUTHORITY.getMessage());
+        }
+
+        @Test
+        void 구독이_만료된_앨범인_경우_예외가_발생한다() {
+            // given
+            AlbumImageUploadRequest request =
+                    new AlbumImageUploadRequest(
+                            List.of(
+                                    new AlbumImageUploadRequest.Payload(
+                                            FileExtension.JPEG,
+                                            "testMd5Hash1",
+                                            LocalDateTime.now(),
+                                            BigDecimal.ZERO),
+                                    new AlbumImageUploadRequest.Payload(
+                                            FileExtension.JPEG,
+                                            "testMd5Hash2",
+                                            LocalDateTime.now(),
+                                            BigDecimal.ZERO)));
+
+            // when & then
+            assertThatThrownBy(() -> imageService.createAlbumImageUploadUrls(4L, request))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(AlbumErrorCode.EXPIRED_SUBSCRIPTION.getMessage());
         }
 
         @Test

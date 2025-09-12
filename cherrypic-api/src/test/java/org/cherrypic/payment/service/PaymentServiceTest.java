@@ -42,6 +42,7 @@ import org.cherrypic.payment.entity.Payment;
 import org.cherrypic.payment.enums.PaymentPurpose;
 import org.cherrypic.payment.enums.PaymentStatus;
 import org.cherrypic.subscription.entity.Subscription;
+import org.cherrypic.subscription.enums.SubscriptionStatus;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -49,6 +50,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.util.ReflectionTestUtils;
 import retrofit2.HttpException;
 import retrofit2.Response;
 
@@ -88,7 +90,10 @@ public class PaymentServiceTest extends IntegrationTest {
                     Album.createAlbum("testTitle3", "testCoverUrl3", AlbumType.BASIC, false);
             Album basicAlbum2 =
                     Album.createAlbum("testTitle4", "testCoverUrl4", AlbumType.BASIC, false);
-            albumRepository.saveAll(List.of(proAlbum, premiumAlbum, basicAlbum1, basicAlbum2));
+            Album expiredAlbum =
+                    Album.createAlbum("testTitle5", "testCoverUrl5", AlbumType.PRO, false);
+            albumRepository.saveAll(
+                    List.of(proAlbum, premiumAlbum, basicAlbum1, basicAlbum2, expiredAlbum));
 
             Participant participant1 =
                     Participant.createParticipant(member, proAlbum, ParticipantRole.HOST);
@@ -96,13 +101,19 @@ public class PaymentServiceTest extends IntegrationTest {
                     Participant.createParticipant(member, premiumAlbum, ParticipantRole.HOST);
             Participant participant3 =
                     Participant.createParticipant(member, basicAlbum2, ParticipantRole.STANDARD);
-            participantRepository.saveAll(List.of(participant1, participant2, participant3));
+            Participant participant4 =
+                    Participant.createParticipant(member, expiredAlbum, ParticipantRole.HOST);
+            participantRepository.saveAll(
+                    List.of(participant1, participant2, participant3, participant4));
 
             Subscription subscription1 =
                     Subscription.createSubscription(member, proAlbum, LocalDateTime.now());
             Subscription subscription2 =
                     Subscription.createSubscription(member, premiumAlbum, LocalDateTime.now());
-            subscriptionRepository.saveAll(List.of(subscription1, subscription2));
+            Subscription subscription3 =
+                    Subscription.createSubscription(member, expiredAlbum, LocalDateTime.now());
+            ReflectionTestUtils.setField(subscription3, "status", SubscriptionStatus.EXPIRED);
+            subscriptionRepository.saveAll(List.of(subscription1, subscription2, subscription3));
         }
 
         @Nested
@@ -205,6 +216,17 @@ public class PaymentServiceTest extends IntegrationTest {
                         .isInstanceOf(CustomException.class)
                         .hasMessage(AlbumErrorCode.NOT_ALBUM_HOST.getMessage());
             }
+
+            @Test
+            void 구독이_만료된_앨범인_경우_예외가_발생한다() {
+                // given
+                PaymentReadyRequest request = new PaymentReadyRequest(AlbumType.PRO, 5L);
+
+                // when & then
+                assertThatThrownBy(() -> paymentService.preparePayment(request))
+                        .isInstanceOf(CustomException.class)
+                        .hasMessage(AlbumErrorCode.EXPIRED_SUBSCRIPTION.getMessage());
+            }
         }
 
         @Nested
@@ -277,6 +299,17 @@ public class PaymentServiceTest extends IntegrationTest {
                 assertThatThrownBy(() -> paymentService.preparePayment(request))
                         .isInstanceOf(CustomException.class)
                         .hasMessage(AlbumErrorCode.NOT_ALBUM_HOST.getMessage());
+            }
+
+            @Test
+            void 구독이_만료된_앨범인_경우_예외가_발생한다() {
+                // given
+                PaymentReadyRequest request = new PaymentReadyRequest(AlbumType.PRO, 5L);
+
+                // when & then
+                assertThatThrownBy(() -> paymentService.preparePayment(request))
+                        .isInstanceOf(CustomException.class)
+                        .hasMessage(AlbumErrorCode.EXPIRED_SUBSCRIPTION.getMessage());
             }
         }
 
