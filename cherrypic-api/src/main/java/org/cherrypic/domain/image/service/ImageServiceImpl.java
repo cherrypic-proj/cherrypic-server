@@ -229,7 +229,7 @@ public class ImageServiceImpl implements ImageService {
     public TempAlbumImageUploadListResponse createTempAlbumImageUploadUrls(
             Long tempAlbumId, TempAlbumImageUploadRequest request) {
         final Member currentMember = memberUtil.getCurrentMember();
-        final TempAlbum tempAlbum = getTempAlbumId(tempAlbumId);
+        final TempAlbum tempAlbum = getTempAlbumById(tempAlbumId);
 
         validateTempAlbumOwner(tempAlbum, currentMember);
 
@@ -291,7 +291,7 @@ public class ImageServiceImpl implements ImageService {
     @Transactional
     public void deleteTempAlbumImage(Long tempAlbumId, TempAlbumImageDeleteRequest request) {
         final Member currentMember = memberUtil.getCurrentMember();
-        final TempAlbum tempAlbum = getTempAlbumId(tempAlbumId);
+        final TempAlbum tempAlbum = getTempAlbumById(tempAlbumId);
 
         validateTempAlbumOwner(tempAlbum, currentMember);
 
@@ -339,7 +339,7 @@ public class ImageServiceImpl implements ImageService {
                 .orElseThrow(() -> new CustomException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT));
     }
 
-    private TempAlbum getTempAlbumId(Long tempAlbumId) {
+    private TempAlbum getTempAlbumById(Long tempAlbumId) {
         return tempAlbumRepository
                 .findById(tempAlbumId)
                 .orElseThrow(() -> new CustomException(TempAlbumErrorCode.TEMP_ALBUM_NOT_FOUND));
