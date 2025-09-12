@@ -2,6 +2,7 @@ package org.cherrypic.domain.image.repository;
 
 import static org.cherrypic.event.entity.QEventImage.eventImage;
 import static org.cherrypic.image.entity.QImage.image;
+import static org.cherrypic.tempalbum.entity.QTempAlbumImage.tempAlbumImage;
 
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
@@ -14,6 +15,7 @@ import org.cherrypic.domain.image.dto.response.AlbumImageListResponse;
 import org.cherrypic.domain.image.dto.response.EventImageListResponse;
 import org.cherrypic.global.pagination.SortDirection;
 import org.cherrypic.image.entity.Image;
+import org.cherrypic.tempalbum.entity.TempAlbumImage;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.SliceImpl;
@@ -99,7 +101,45 @@ public class ImageRepositoryImpl implements ImageRepositoryCustom {
     }
 
     @Override
-    public List<Long> findIdsByUrlsInOrder(List<String> urls) {
+    public void bulkInsertTempAlbumImages(List<TempAlbumImage> images) {
+        String sql =
+                "INSERT INTO temp_album_image (temp_album_id, url, capacity_gb, created_at, updated_at) "
+                        + "VALUES (?, ?, ?, NOW(), NOW())";
+
+        jdbcTemplate.batchUpdate(
+                sql,
+                images,
+                100,
+                (ps, image) -> {
+                    ps.setLong(1, image.getTempAlbum().getId());
+                    ps.setString(2, image.getUrl());
+                    ps.setBigDecimal(3, image.getCapacityGb());
+                });
+    }
+
+    @Override
+    public List<Long> findTempImageIdsByUrlsInOrder(List<String> urls) {
+        if (urls == null || urls.isEmpty()) {
+            return List.of();
+        }
+
+        var cases = new CaseBuilder().when(tempAlbumImage.url.eq(urls.get(0))).then(0);
+
+        for (int i = 1; i < urls.size(); i++) {
+            cases = cases.when(tempAlbumImage.url.eq(urls.get(i))).then(i);
+        }
+        NumberExpression<Integer> orderExpr = cases.otherwise(999_999);
+
+        return queryFactory
+                .select(tempAlbumImage.id)
+                .from(tempAlbumImage)
+                .where(tempAlbumImage.url.in(urls))
+                .orderBy(orderExpr.asc())
+                .fetch();
+    }
+
+    @Override
+    public List<Long> findImageIdsByUrlsInOrder(List<String> urls) {
         if (urls == null || urls.isEmpty()) {
             return List.of();
         }

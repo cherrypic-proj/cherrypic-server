@@ -160,7 +160,8 @@ public class ImageServiceImpl implements ImageService {
         imageRepository.bulkInsertImages(images);
 
         List<Long> imageIds =
-                imageRepository.findIdsByUrlsInOrder(images.stream().map(Image::getUrl).toList());
+                imageRepository.findImageIdsByUrlsInOrder(
+                        images.stream().map(Image::getUrl).toList());
 
         List<ImageUploadListResponse.Payload> payloads =
                 IntStream.range(0, images.size())
@@ -270,10 +271,10 @@ public class ImageServiceImpl implements ImageService {
                                 })
                         .toList();
 
-        tempAlbumImageRepository.bulkInsertTempAlbumImages(tempAlbumImages);
+        imageRepository.bulkInsertTempAlbumImages(tempAlbumImages);
 
         List<Long> tempAlbumImageIds =
-                tempAlbumImageRepository.findIdsByUrlsInOrder(
+                imageRepository.findTempImageIdsByUrlsInOrder(
                         tempAlbumImages.stream().map(TempAlbumImage::getUrl).toList());
 
         List<TempAlbumImageUploadListResponse.Payload> payloads =

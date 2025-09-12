@@ -5,6 +5,7 @@ import org.cherrypic.domain.image.dto.response.AlbumImageListResponse;
 import org.cherrypic.domain.image.dto.response.EventImageListResponse;
 import org.cherrypic.global.pagination.SortDirection;
 import org.cherrypic.image.entity.Image;
+import org.cherrypic.tempalbum.entity.TempAlbumImage;
 import org.springframework.data.domain.Slice;
 
 public interface ImageRepositoryCustom {
@@ -18,5 +19,9 @@ public interface ImageRepositoryCustom {
 
     void bulkInsertImages(List<Image> images);
 
-    List<Long> findIdsByUrlsInOrder(List<String> urls);
+    void bulkInsertTempAlbumImages(List<TempAlbumImage> images);
+
+    List<Long> findImageIdsByUrlsInOrder(List<String> urls);
+
+    List<Long> findTempImageIdsByUrlsInOrder(List<String> urls);
 }
