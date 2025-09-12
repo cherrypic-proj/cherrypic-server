@@ -732,7 +732,7 @@ class AlbumServiceTest extends IntegrationTest {
             given(memberUtil.getCurrentMember()).willReturn(memberRepository.findById(2L).get());
 
             // when & then
-            assertThatThrownBy(() -> albumService.createInvitationLink(3L))
+            assertThatThrownBy(() -> albumService.createInvitationLink(999L))
                     .isInstanceOf(CustomException.class)
                     .hasMessage(AlbumErrorCode.ALBUM_NOT_FOUND.getMessage());
         }
