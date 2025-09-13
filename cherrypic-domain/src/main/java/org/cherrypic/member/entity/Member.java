@@ -36,7 +36,7 @@ public class Member extends BaseTimeEntity {
     @Enumerated(EnumType.STRING)
     private MemberStatus status;
 
-    @NotNull private Boolean appAlarm = Boolean.FALSE;
+    @NotNull private Boolean serviceAgree;
 
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Payment> payments = new ArrayList<>();
@@ -56,12 +56,14 @@ public class Member extends BaseTimeEntity {
             String nickname,
             String profileImageUrl,
             MemberRole role,
-            MemberStatus status) {
+            MemberStatus status,
+            Boolean serviceAgree) {
         this.oauthInfo = oauthInfo;
         this.nickname = nickname;
         this.profileImageUrl = profileImageUrl;
         this.role = role;
         this.status = status;
+        this.serviceAgree = serviceAgree;
     }
 
     public static Member createMember(
@@ -72,6 +74,7 @@ public class Member extends BaseTimeEntity {
                 .profileImageUrl(profileImageUrl)
                 .role(MemberRole.USER)
                 .status(MemberStatus.NORMAL)
+                .serviceAgree(Boolean.FALSE)
                 .build();
     }
 
