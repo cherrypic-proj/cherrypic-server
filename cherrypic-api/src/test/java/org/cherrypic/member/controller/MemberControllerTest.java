@@ -9,8 +9,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.cherrypic.domain.member.controller.MemberController;
 import org.cherrypic.domain.member.dto.request.FcmTokenSaveRequest;
 import org.cherrypic.domain.member.dto.request.MemberProfileUpdateRequest;
+import org.cherrypic.domain.member.dto.response.MarketingAgreeToggleResponse;
 import org.cherrypic.domain.member.dto.response.MemberInfoResponse;
 import org.cherrypic.domain.member.dto.response.MemberProfileUpdateResponse;
+import org.cherrypic.domain.member.dto.response.ServiceAlarmAgreeToggleResponse;
 import org.cherrypic.domain.member.service.MemberService;
 import org.cherrypic.member.enums.MemberRole;
 import org.cherrypic.member.enums.MemberStatus;
@@ -204,6 +206,47 @@ class MemberControllerTest {
                     .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
                     .andExpect(jsonPath("$.data.code").value("MethodArgumentNotValidException"))
                     .andExpect(jsonPath("$.data.message").value("FCM Token은 비워둘 수 없습니다."));
+        }
+    }
+
+    @Nested
+    class 서비스_알림_수신_동의_상태_변경_요청_시 {
+
+        @Test
+        void 유효한_요청이면_서비스_알림_수신_동의_상태를_변경하고_반환한다() throws Exception {
+            // given
+            ServiceAlarmAgreeToggleResponse response =
+                    new ServiceAlarmAgreeToggleResponse(Boolean.TRUE);
+
+            given(memberService.toggleServiceAlarmAgree()).willReturn(response);
+
+            // when & then
+            ResultActions perform = mockMvc.perform(patch("/members/me/service-alarm"));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.status").value(200))
+                    .andExpect(jsonPath("$.data.serviceAlarmAgree").value("true"));
+        }
+    }
+
+    @Nested
+    class 마케팅_수신_동의_상태_변경_요청_시 {
+
+        @Test
+        void 유효한_요청이면_마케팅_수신_동의_상태를_변경하고_반환한다() throws Exception {
+            // given
+            MarketingAgreeToggleResponse response = new MarketingAgreeToggleResponse(Boolean.TRUE);
+
+            given(memberService.toggleMarketingAgree()).willReturn(response);
+
+            // when & then
+            ResultActions perform = mockMvc.perform(patch("/members/me/marketing"));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.status").value(200))
+                    .andExpect(jsonPath("$.data.marketingAgree").value("true"));
         }
     }
 }
