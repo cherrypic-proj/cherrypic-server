@@ -87,4 +87,12 @@ public class Member extends BaseTimeEntity {
         this.nickname = nickname;
         this.profileImageUrl = profileImageUrl;
     }
+
+    public void toggleServiceAlarmAgree() {
+        serviceAlarmAgree = !serviceAlarmAgree;
+    }
+
+    public void toggleMarketingAgree() {
+        marketingAgree = !marketingAgree;
+    }
 }
