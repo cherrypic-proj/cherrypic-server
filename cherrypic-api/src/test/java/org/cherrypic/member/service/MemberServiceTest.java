@@ -73,14 +73,18 @@ class MemberServiceTest extends IntegrationTest {
                             "nickname",
                             "profileImageUrl",
                             "role",
-                            "status")
+                            "status",
+                            "serviceAlarmAgree",
+                            "marketingAgree")
                     .containsExactly(
                             1L,
                             "testOauthProvider",
                             "testNickname",
                             "testProfileImageUrl",
                             MemberRole.USER,
-                            MemberStatus.NORMAL);
+                            MemberStatus.NORMAL,
+                            Boolean.FALSE,
+                            Boolean.FALSE);
         }
     }
 

@@ -16,7 +16,9 @@ public record MemberInfoResponse(
                                 "http://k.kakaocdn.net/dn/ceTrU6/btsL0V0mhKO/DGqAZKAK/img_110x110.jpg")
                 String profileImageUrl,
         @Schema(description = "회원 상태", example = "NORMAL") MemberStatus status,
-        @Schema(description = "회원 역할", example = "ROLE_USER") MemberRole role) {
+        @Schema(description = "회원 역할", example = "ROLE_USER") MemberRole role,
+        @Schema(description = "서비스 알림 수신 동의 여부", example = "false") Boolean serviceAlarmAgree,
+        @Schema(description = "마케팅 수신 동의 여부", example = "false") Boolean marketingAgree) {
     public static MemberInfoResponse from(Member member) {
         return new MemberInfoResponse(
                 member.getId(),
@@ -24,6 +26,8 @@ public record MemberInfoResponse(
                 member.getNickname(),
                 member.getProfileImageUrl(),
                 member.getStatus(),
-                member.getRole());
+                member.getRole(),
+                member.getServiceAlarmAgree(),
+                member.getMarketingAgree());
     }
 }

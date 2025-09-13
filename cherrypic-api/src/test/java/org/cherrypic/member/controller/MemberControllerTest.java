@@ -51,7 +51,9 @@ class MemberControllerTest {
                             "testNickname",
                             "testProfileImageUrl",
                             MemberStatus.NORMAL,
-                            MemberRole.USER);
+                            MemberRole.USER,
+                            Boolean.FALSE,
+                            Boolean.FALSE);
 
             given(memberService.getMemberInfo()).willReturn(response);
 
@@ -66,7 +68,9 @@ class MemberControllerTest {
                     .andExpect(jsonPath("$.data.nickname").value("testNickname"))
                     .andExpect(jsonPath("$.data.profileImageUrl").value("testProfileImageUrl"))
                     .andExpect(jsonPath("$.data.status").value("NORMAL"))
-                    .andExpect(jsonPath("$.data.role").value("USER"));
+                    .andExpect(jsonPath("$.data.role").value("USER"))
+                    .andExpect(jsonPath("$.data.serviceAlarmAgree").value("false"))
+                    .andExpect(jsonPath("$.data.marketingAgree").value("false"));
         }
     }
 
