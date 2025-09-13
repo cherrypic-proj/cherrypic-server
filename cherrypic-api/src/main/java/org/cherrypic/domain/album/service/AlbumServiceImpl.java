@@ -97,6 +97,7 @@ public class AlbumServiceImpl implements AlbumService {
         final Album album = getAlbumById(albumId);
 
         validateAlbumHost(currentMember.getId(), album.getId());
+        validateSubscriptionNotExpired(album);
 
         if (album.getCoverUrl() != null && !album.getCoverUrl().equals(request.coverUrl())) {
             eventPublisher.publishEvent(ImageDeleteEvent.of(album.getCoverUrl()));
@@ -114,6 +115,7 @@ public class AlbumServiceImpl implements AlbumService {
 
         validateAlbumHost(currentMember.getId(), album.getId());
         validatePermissionControl(album.getType(), true);
+        validateSubscriptionNotExpired(album);
 
         album.togglePermissionControl();
 
@@ -130,6 +132,7 @@ public class AlbumServiceImpl implements AlbumService {
         final Album album = getAlbumById(albumId);
 
         validateAlbumHost(currentMember.getId(), album.getId());
+        validateSubscriptionNotExpired(album);
 
         InvitationCode invitationCode =
                 invitationCodeRepository
@@ -159,6 +162,7 @@ public class AlbumServiceImpl implements AlbumService {
                                         new CustomException(
                                                 AlbumErrorCode.INVITATION_CODE_NOT_FOUND));
 
+        validateSubscriptionNotExpired(album);
         validateAlbumRejoin(currentMember, album);
         validateInvitationCode(currentInvitationCode, code);
         validateMaxParticipantLimit(album);
@@ -329,6 +333,14 @@ public class AlbumServiceImpl implements AlbumService {
 
         if (album.getSubscription().getStatus() == SubscriptionStatus.ACTIVE) {
             throw new CustomException(AlbumErrorCode.SUBSCRIPTION_ACTIVE);
+        }
+    }
+
+    private void validateSubscriptionNotExpired(Album album) {
+        if (album.getType() == AlbumType.BASIC) return;
+
+        if (album.getSubscription().getStatus() == SubscriptionStatus.EXPIRED) {
+            throw new CustomException(AlbumErrorCode.EXPIRED_SUBSCRIPTION);
         }
     }
 }

@@ -32,6 +32,7 @@ import org.cherrypic.participant.enums.ParticipantRole;
 import org.cherrypic.payment.entity.Payment;
 import org.cherrypic.payment.enums.PaymentPurpose;
 import org.cherrypic.payment.enums.PaymentStatus;
+import org.cherrypic.subscription.enums.SubscriptionStatus;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -156,7 +157,9 @@ public class PaymentServiceImpl implements PaymentService {
         }
 
         final Album album = getAlbumById(albumId);
+
         validateAlbumHost(memberId, album.getId());
+        validateSubscriptionNotExpired(album);
 
         AlbumType currentType = album.getType();
 
@@ -194,6 +197,14 @@ public class PaymentServiceImpl implements PaymentService {
     private void validatePaidAlbumType(AlbumType type) {
         if (type == AlbumType.BASIC) {
             throw new CustomException(PaymentErrorCode.UNSUPPORTED_PAYMENT);
+        }
+    }
+
+    private void validateSubscriptionNotExpired(Album album) {
+        if (album.getType() == AlbumType.BASIC) return;
+
+        if (album.getSubscription().getStatus() == SubscriptionStatus.EXPIRED) {
+            throw new CustomException(AlbumErrorCode.EXPIRED_SUBSCRIPTION);
         }
     }
 }

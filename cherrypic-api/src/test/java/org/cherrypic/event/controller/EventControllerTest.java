@@ -179,6 +179,28 @@ public class EventControllerTest {
                     .andExpect(jsonPath("$.data.code").value("LIMITED_AUTHORITY"))
                     .andExpect(jsonPath("$.data.message").value("앨범에 대한 생성/수정 권한이 없습니다."));
         }
+
+        @Test
+        void 구독이_만료된_앨범인_경우_예외가_발생한다() throws Exception {
+            // given
+            EventCreateRequest request = new EventCreateRequest(1L, "testTitle", "testCoverUrl");
+
+            given(eventService.createEvent(request))
+                    .willThrow(new CustomException(AlbumErrorCode.EXPIRED_SUBSCRIPTION));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/events")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.FORBIDDEN.value()))
+                    .andExpect(jsonPath("$.data.code").value("EXPIRED_SUBSCRIPTION"))
+                    .andExpect(jsonPath("$.data.message").value("만료된 앨범에서는 요청을 처리할 수 없습니다."));
+        }
     }
 
     @Nested
@@ -277,15 +299,16 @@ public class EventControllerTest {
         @Test
         void 요청자가_앨범_참가자가_아닌_경우_예외가_발생한다() throws Exception {
             // given
-            EventCreateRequest request = new EventCreateRequest(1L, "testTitle", "testCoverUrl");
+            EventUpdateRequest request =
+                    new EventUpdateRequest("testUpdatedTitle", "testUpdatedCoverUrl");
 
-            given(eventService.createEvent(request))
+            given(eventService.updateEvent(1L, request))
                     .willThrow(new CustomException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT));
 
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            post("/events")
+                            patch("/events/1")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -299,15 +322,16 @@ public class EventControllerTest {
         @Test
         void 요청자가_LIMITED_권한을_가지는_경우_예외가_발생한다() throws Exception {
             // given
-            EventCreateRequest request = new EventCreateRequest(1L, "testTitle", "testCoverUrl");
+            EventUpdateRequest request =
+                    new EventUpdateRequest("testUpdatedTitle", "testUpdatedCoverUrl");
 
-            given(eventService.createEvent(request))
+            given(eventService.updateEvent(1L, request))
                     .willThrow(new CustomException(AlbumErrorCode.LIMITED_AUTHORITY));
 
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            post("/events")
+                            patch("/events/1")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -318,80 +342,99 @@ public class EventControllerTest {
                     .andExpect(jsonPath("$.data.message").value("앨범에 대한 생성/수정 권한이 없습니다."));
         }
 
-        @Nested
-        class 이벤트_삭제_요청_시 {
+        @Test
+        void 구독이_만료된_앨범인_경우_예외가_발생한다() throws Exception {
+            // given
+            EventUpdateRequest request =
+                    new EventUpdateRequest("testUpdatedTitle", "testUpdatedCoverUrl");
 
-            @Test
-            void 유효한_요청이면_이벤트를_삭제하고_NO_CONTENT_로_반환한다() throws Exception {
-                // given
-                willDoNothing().given(eventService).deleteEvent(1L);
+            given(eventService.updateEvent(1L, request))
+                    .willThrow(new CustomException(AlbumErrorCode.EXPIRED_SUBSCRIPTION));
 
-                // when & then
-                ResultActions perform =
-                        mockMvc.perform(
-                                delete("/events/1").contentType(MediaType.APPLICATION_JSON));
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            patch("/events/1")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
 
-                perform.andExpect(status().isNoContent())
-                        .andExpect(jsonPath("$.success").value(true))
-                        .andExpect(jsonPath("$.status").value(HttpStatus.NO_CONTENT.value()));
-            }
+            perform.andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.FORBIDDEN.value()))
+                    .andExpect(jsonPath("$.data.code").value("EXPIRED_SUBSCRIPTION"))
+                    .andExpect(jsonPath("$.data.message").value("만료된 앨범에서는 요청을 처리할 수 없습니다."));
+        }
+    }
 
-            @Test
-            void 이벤트가_존재하지_않는_경우_예외가_발생한다() throws Exception {
-                // given
-                willThrow(new CustomException(EventErrorCode.EVENT_NOT_FOUND))
-                        .given(eventService)
-                        .deleteEvent(1L);
+    @Nested
+    class 이벤트_삭제_요청_시 {
 
-                // when & then
-                ResultActions perform =
-                        mockMvc.perform(
-                                delete("/events/1").contentType(MediaType.APPLICATION_JSON));
+        @Test
+        void 유효한_요청이면_이벤트를_삭제하고_NO_CONTENT_로_반환한다() throws Exception {
+            // given
+            willDoNothing().given(eventService).deleteEvent(1L);
 
-                perform.andExpect(status().isNotFound())
-                        .andExpect(jsonPath("$.success").value(false))
-                        .andExpect(jsonPath("$.status").value(HttpStatus.NOT_FOUND.value()))
-                        .andExpect(jsonPath("$.data.code").value("EVENT_NOT_FOUND"))
-                        .andExpect(jsonPath("$.data.message").value("존재하지 않는 이벤트입니다."));
-            }
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(delete("/events/1").contentType(MediaType.APPLICATION_JSON));
 
-            @Test
-            void 요청자가_앨범_참가자가_아닌_경우_예외가_발생한다() throws Exception {
-                // given
-                willThrow(new CustomException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT))
-                        .given(eventService)
-                        .deleteEvent(1L);
+            perform.andExpect(status().isNoContent())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.NO_CONTENT.value()));
+        }
 
-                // when & then
-                ResultActions perform =
-                        mockMvc.perform(
-                                delete("/events/1").contentType(MediaType.APPLICATION_JSON));
+        @Test
+        void 이벤트가_존재하지_않는_경우_예외가_발생한다() throws Exception {
+            // given
+            willThrow(new CustomException(EventErrorCode.EVENT_NOT_FOUND))
+                    .given(eventService)
+                    .deleteEvent(1L);
 
-                perform.andExpect(status().isForbidden())
-                        .andExpect(jsonPath("$.success").value(false))
-                        .andExpect(jsonPath("$.status").value(HttpStatus.FORBIDDEN.value()))
-                        .andExpect(jsonPath("$.data.code").value("NOT_ALBUM_PARTICIPANT"))
-                        .andExpect(jsonPath("$.data.message").value("앨범에 속하지 않은 사용자입니다."));
-            }
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(delete("/events/1").contentType(MediaType.APPLICATION_JSON));
 
-            @Test
-            void 요청자가_LIMITED_권한을_가지는_경우_예외가_발생한다() throws Exception {
-                // given
-                willThrow(new CustomException(AlbumErrorCode.LIMITED_AUTHORITY))
-                        .given(eventService)
-                        .deleteEvent(1L);
+            perform.andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.NOT_FOUND.value()))
+                    .andExpect(jsonPath("$.data.code").value("EVENT_NOT_FOUND"))
+                    .andExpect(jsonPath("$.data.message").value("존재하지 않는 이벤트입니다."));
+        }
 
-                // when & then
-                ResultActions perform =
-                        mockMvc.perform(
-                                delete("/events/1").contentType(MediaType.APPLICATION_JSON));
+        @Test
+        void 요청자가_앨범_참가자가_아닌_경우_예외가_발생한다() throws Exception {
+            // given
+            willThrow(new CustomException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT))
+                    .given(eventService)
+                    .deleteEvent(1L);
 
-                perform.andExpect(status().isForbidden())
-                        .andExpect(jsonPath("$.success").value(false))
-                        .andExpect(jsonPath("$.status").value(HttpStatus.FORBIDDEN.value()))
-                        .andExpect(jsonPath("$.data.code").value("LIMITED_AUTHORITY"))
-                        .andExpect(jsonPath("$.data.message").value("앨범에 대한 생성/수정 권한이 없습니다."));
-            }
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(delete("/events/1").contentType(MediaType.APPLICATION_JSON));
+
+            perform.andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.FORBIDDEN.value()))
+                    .andExpect(jsonPath("$.data.code").value("NOT_ALBUM_PARTICIPANT"))
+                    .andExpect(jsonPath("$.data.message").value("앨범에 속하지 않은 사용자입니다."));
+        }
+
+        @Test
+        void 요청자가_LIMITED_권한을_가지는_경우_예외가_발생한다() throws Exception {
+            // given
+            willThrow(new CustomException(AlbumErrorCode.LIMITED_AUTHORITY))
+                    .given(eventService)
+                    .deleteEvent(1L);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(delete("/events/1").contentType(MediaType.APPLICATION_JSON));
+
+            perform.andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.FORBIDDEN.value()))
+                    .andExpect(jsonPath("$.data.code").value("LIMITED_AUTHORITY"))
+                    .andExpect(jsonPath("$.data.message").value("앨범에 대한 생성/수정 권한이 없습니다."));
         }
     }
 
@@ -669,6 +712,29 @@ public class EventControllerTest {
                     .andExpect(jsonPath("$.status").value(HttpStatus.FORBIDDEN.value()))
                     .andExpect(jsonPath("$.data.code").value("LIMITED_AUTHORITY"))
                     .andExpect(jsonPath("$.data.message").value("앨범에 대한 생성/수정 권한이 없습니다."));
+        }
+
+        @Test
+        void 구독이_만료된_앨범인_경우_예외가_발생한다() throws Exception {
+            // given
+            EventImageAddRequest request = new EventImageAddRequest(List.of(1L));
+
+            willThrow(new CustomException(AlbumErrorCode.EXPIRED_SUBSCRIPTION))
+                    .given(eventService)
+                    .addImages(1L, request);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/events/1/images")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.FORBIDDEN.value()))
+                    .andExpect(jsonPath("$.data.code").value("EXPIRED_SUBSCRIPTION"))
+                    .andExpect(jsonPath("$.data.message").value("만료된 앨범에서는 요청을 처리할 수 없습니다."));
         }
 
         @Test

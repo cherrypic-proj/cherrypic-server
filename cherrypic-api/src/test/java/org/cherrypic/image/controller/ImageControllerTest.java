@@ -481,6 +481,41 @@ class ImageControllerTest {
         }
 
         @Test
+        void 구독이_만료된_앨범인_경우_예외가_발생한다() throws Exception {
+            // given
+            AlbumImageUploadRequest request =
+                    new AlbumImageUploadRequest(
+                            List.of(
+                                    new AlbumImageUploadRequest.Payload(
+                                            FileExtension.JPEG,
+                                            "testMd5Hash1",
+                                            LocalDateTime.now(),
+                                            BigDecimal.ONE),
+                                    new AlbumImageUploadRequest.Payload(
+                                            FileExtension.JPEG,
+                                            "testMd5Hash2",
+                                            LocalDateTime.now(),
+                                            BigDecimal.ONE)));
+
+            given(imageService.createAlbumImageUploadUrls(1L, request))
+                    .willThrow(new CustomException(AlbumErrorCode.EXPIRED_SUBSCRIPTION));
+
+            // when & then
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/albums/1/images")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.FORBIDDEN.value()))
+                    .andExpect(jsonPath("$.data.code").value("EXPIRED_SUBSCRIPTION"))
+                    .andExpect(jsonPath("$.data.message").value("만료된 앨범에서는 요청을 처리할 수 없습니다."));
+        }
+
+        @Test
         void 앨범의_남은_용량을_초과해서_요청하면_예외가_발생한다() throws Exception {
             // given
             AlbumImageUploadRequest request =

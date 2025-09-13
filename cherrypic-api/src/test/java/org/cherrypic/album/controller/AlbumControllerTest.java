@@ -514,6 +514,28 @@ class AlbumControllerTest {
                     .andExpect(jsonPath("$.data.message").value("방장이 아닌 경우 권한이 없습니다."));
         }
 
+        @Test
+        void 구독이_만료된_앨범인_경우_예외가_발생한다() throws Exception {
+            // given
+            AlbumUpdateRequest request = new AlbumUpdateRequest("testTitle", "testCoverUrl");
+
+            given(albumService.updateAlbum(1L, request))
+                    .willThrow(new CustomException(AlbumErrorCode.EXPIRED_SUBSCRIPTION));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            patch("/albums/1")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.FORBIDDEN.value()))
+                    .andExpect(jsonPath("$.data.code").value("EXPIRED_SUBSCRIPTION"))
+                    .andExpect(jsonPath("$.data.message").value("만료된 앨범에서는 요청을 처리할 수 없습니다."));
+        }
+
         @ParameterizedTest
         @NullSource
         @EmptySource
@@ -624,6 +646,22 @@ class AlbumControllerTest {
         }
 
         @Test
+        void 구독이_만료된_앨범인_경우_예외가_발생한다() throws Exception {
+            // given
+            given(albumService.togglePermission(1L))
+                    .willThrow(new CustomException(AlbumErrorCode.EXPIRED_SUBSCRIPTION));
+
+            // when & then
+            ResultActions perform = mockMvc.perform(patch("/albums/1/permission"));
+
+            perform.andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.FORBIDDEN.value()))
+                    .andExpect(jsonPath("$.data.code").value("EXPIRED_SUBSCRIPTION"))
+                    .andExpect(jsonPath("$.data.message").value("만료된 앨범에서는 요청을 처리할 수 없습니다."));
+        }
+
+        @Test
         void BASIC_유형인_경우_예외가_발생한다() throws Exception {
             // given
             given(albumService.togglePermission(1L))
@@ -720,16 +758,29 @@ class AlbumControllerTest {
                     .willThrow(new CustomException(AlbumErrorCode.NOT_ALBUM_HOST));
 
             // when & then
-            ResultActions perform =
-                    mockMvc.perform(
-                            post("/albums/1/invitation-link")
-                                    .contentType(MediaType.APPLICATION_JSON));
+            ResultActions perform = mockMvc.perform(post("/albums/1/invitation-link"));
 
             perform.andExpect(status().isForbidden())
                     .andExpect(jsonPath("$.success").value(false))
                     .andExpect(jsonPath("$.status").value(HttpStatus.FORBIDDEN.value()))
                     .andExpect(jsonPath("$.data.code").value("NOT_ALBUM_HOST"))
                     .andExpect(jsonPath("$.data.message").value("방장이 아닌 경우 권한이 없습니다."));
+        }
+
+        @Test
+        void 구독이_만료된_앨범인_경우_예외가_발생한다() throws Exception {
+            // given
+            given(albumService.createInvitationLink(1L))
+                    .willThrow(new CustomException(AlbumErrorCode.EXPIRED_SUBSCRIPTION));
+
+            // when & then
+            ResultActions perform = mockMvc.perform(post("/albums/1/invitation-link"));
+
+            perform.andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.FORBIDDEN.value()))
+                    .andExpect(jsonPath("$.data.code").value("EXPIRED_SUBSCRIPTION"))
+                    .andExpect(jsonPath("$.data.message").value("만료된 앨범에서는 요청을 처리할 수 없습니다."));
         }
     }
 
@@ -806,6 +857,23 @@ class AlbumControllerTest {
                     .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
                     .andExpect(jsonPath("$.data.code").value("ALREADY_PARTICIPATED"))
                     .andExpect(jsonPath("$.data.message").value("이미 참가한 앨범입니다."));
+        }
+
+        @Test
+        void 구독이_만료된_앨범인_경우_예외가_발생한다() throws Exception {
+            // given
+            given(albumService.joinAlbum(1L, "expiredInvitationCode"))
+                    .willThrow(new CustomException(AlbumErrorCode.EXPIRED_SUBSCRIPTION));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(post("/albums/1/join").param("code", "expiredInvitationCode"));
+
+            perform.andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.FORBIDDEN.value()))
+                    .andExpect(jsonPath("$.data.code").value("EXPIRED_SUBSCRIPTION"))
+                    .andExpect(jsonPath("$.data.message").value("만료된 앨범에서는 요청을 처리할 수 없습니다."));
         }
 
         @Test

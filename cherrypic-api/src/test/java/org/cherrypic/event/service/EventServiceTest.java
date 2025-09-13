@@ -30,6 +30,7 @@ import org.cherrypic.domain.image.repository.EventImageRepository;
 import org.cherrypic.domain.image.repository.ImageRepository;
 import org.cherrypic.domain.member.repository.MemberRepository;
 import org.cherrypic.domain.participant.repository.ParticipantRepository;
+import org.cherrypic.domain.subscription.repository.SubscriptionRepository;
 import org.cherrypic.event.entity.Event;
 import org.cherrypic.event.entity.EventImage;
 import org.cherrypic.exception.CustomException;
@@ -42,6 +43,8 @@ import org.cherrypic.member.entity.Member;
 import org.cherrypic.member.entity.OauthInfo;
 import org.cherrypic.participant.entity.Participant;
 import org.cherrypic.participant.enums.ParticipantRole;
+import org.cherrypic.subscription.entity.Subscription;
+import org.cherrypic.subscription.enums.SubscriptionStatus;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -52,6 +55,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.context.event.ApplicationEvents;
 import org.springframework.test.context.event.RecordApplicationEvents;
+import org.springframework.test.util.ReflectionTestUtils;
 
 @RecordApplicationEvents
 public class EventServiceTest extends IntegrationTest {
@@ -65,6 +69,7 @@ public class EventServiceTest extends IntegrationTest {
     @Autowired private MemberRepository memberRepository;
     @Autowired private ParticipantRepository participantRepository;
     @Autowired private ImageRepository imageRepository;
+    @Autowired private SubscriptionRepository subscriptionRepository;
     @MockitoSpyBean private EventImageRepository eventImageRepository;
     @Autowired private EntityManager em;
 
@@ -90,13 +95,21 @@ public class EventServiceTest extends IntegrationTest {
 
             Album album1 = Album.createAlbum("testAlbum1", "testURL1", AlbumType.BASIC, false);
             Album album2 = Album.createAlbum("testAlbum2", "testURL2", AlbumType.BASIC, false);
-            albumRepository.saveAll(List.of(album1, album2));
+            Album album3 = Album.createAlbum("testAlbum3", "testURL3", AlbumType.PRO, false);
+            albumRepository.saveAll(List.of(album1, album2, album3));
 
             Participant participant1 =
                     Participant.createParticipant(member1, album1, ParticipantRole.HOST);
             Participant participant2 =
                     Participant.createParticipant(member2, album1, ParticipantRole.LIMITED);
-            participantRepository.saveAll(List.of(participant1, participant2));
+            Participant participant3 =
+                    Participant.createParticipant(member1, album3, ParticipantRole.HOST);
+            participantRepository.saveAll(List.of(participant1, participant2, participant3));
+
+            Subscription subscription =
+                    Subscription.createSubscription(member1, album3, LocalDateTime.now());
+            ReflectionTestUtils.setField(subscription, "status", SubscriptionStatus.EXPIRED);
+            subscriptionRepository.save(subscription);
         }
 
         @Test
@@ -138,6 +151,17 @@ public class EventServiceTest extends IntegrationTest {
                     .isInstanceOf(CustomException.class)
                     .hasMessage(AlbumErrorCode.LIMITED_AUTHORITY.getMessage());
         }
+
+        @Test
+        void 구독이_만료된_앨범인_경우_예외가_발생한다() {
+            // given
+            EventCreateRequest request = new EventCreateRequest(3L, "testEvent", "tesCoverUrl");
+
+            // when & then
+            assertThatThrownBy(() -> eventService.createEvent(request))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(AlbumErrorCode.EXPIRED_SUBSCRIPTION.getMessage());
+        }
     }
 
     @Nested
@@ -165,7 +189,8 @@ public class EventServiceTest extends IntegrationTest {
 
             Album album1 = Album.createAlbum("testAlbum1", "testURL1", AlbumType.BASIC, false);
             Album album2 = Album.createAlbum("testAlbum2", "testURL2", AlbumType.BASIC, false);
-            albumRepository.saveAll(List.of(album1, album2));
+            Album album3 = Album.createAlbum("testAlbum3", "testURL3", AlbumType.PRO, false);
+            albumRepository.saveAll(List.of(album1, album2, album3));
 
             Participant participant1 =
                     Participant.createParticipant(member1, album1, ParticipantRole.HOST);
@@ -173,11 +198,20 @@ public class EventServiceTest extends IntegrationTest {
                     Participant.createParticipant(member2, album1, ParticipantRole.LIMITED);
             Participant participant3 =
                     Participant.createParticipant(member3, album2, ParticipantRole.HOST);
-            participantRepository.saveAll(List.of(participant1, participant2, participant3));
+            Participant participant4 =
+                    Participant.createParticipant(member1, album3, ParticipantRole.HOST);
+            participantRepository.saveAll(
+                    List.of(participant1, participant2, participant3, participant4));
+
+            Subscription subscription =
+                    Subscription.createSubscription(member1, album3, LocalDateTime.now());
+            ReflectionTestUtils.setField(subscription, "status", SubscriptionStatus.EXPIRED);
+            subscriptionRepository.save(subscription);
 
             Event event1 = Event.createEvent(album1, "testEvent1", "testEventCoverUrl1");
-            Event event2 = Event.createEvent(album2, "testEvent1", "testEventCoverUrl1");
-            eventRepository.saveAll(List.of(event1, event2));
+            Event event2 = Event.createEvent(album2, "testEvent2", "testEventCoverUrl2");
+            Event event3 = Event.createEvent(album3, "testEvent3", "testEventCoverUrl3");
+            eventRepository.saveAll(List.of(event1, event2, event3));
         }
 
         @Test
@@ -248,6 +282,18 @@ public class EventServiceTest extends IntegrationTest {
             assertThatThrownBy(() -> eventService.updateEvent(1L, request))
                     .isInstanceOf(CustomException.class)
                     .hasMessage(AlbumErrorCode.LIMITED_AUTHORITY.getMessage());
+        }
+
+        @Test
+        void 구독이_만료된_앨범인_경우_예외가_발생한다() {
+            // given
+            EventUpdateRequest request =
+                    new EventUpdateRequest("changedTestEventTitle", "changedTestEventCoverUrl");
+
+            // when & then
+            assertThatThrownBy(() -> eventService.updateEvent(3L, request))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(AlbumErrorCode.EXPIRED_SUBSCRIPTION.getMessage());
         }
     }
 
@@ -469,18 +515,27 @@ public class EventServiceTest extends IntegrationTest {
             Album album1 = Album.createAlbum("testTitle1", "testCoverUrl1", AlbumType.BASIC, false);
             Album album2 = Album.createAlbum("testTitle2", "testCoverUrl2", AlbumType.BASIC, false);
             Album album3 = Album.createAlbum("testTitle3", "testCoverUrl3", AlbumType.BASIC, false);
-            albumRepository.saveAll(List.of(album1, album2, album3));
+            Album album4 = Album.createAlbum("testTitle4", "testCoverUrl4", AlbumType.PRO, false);
+            albumRepository.saveAll(List.of(album1, album2, album3, album4));
 
             Participant participant1 =
                     Participant.createParticipant(member, album1, ParticipantRole.HOST);
             Participant participant2 =
                     Participant.createParticipant(member, album2, ParticipantRole.LIMITED);
-            participantRepository.saveAll(List.of(participant1, participant2));
+            Participant participant3 =
+                    Participant.createParticipant(member, album4, ParticipantRole.HOST);
+            participantRepository.saveAll(List.of(participant1, participant2, participant3));
+
+            Subscription subscription =
+                    Subscription.createSubscription(member, album4, LocalDateTime.now());
+            ReflectionTestUtils.setField(subscription, "status", SubscriptionStatus.EXPIRED);
+            subscriptionRepository.save(subscription);
 
             Event event1 = Event.createEvent(album1, "testTitle1", "testCoverUrl1");
             Event event2 = Event.createEvent(album2, "testTitle2", "testCoverUrl2");
             Event event3 = Event.createEvent(album3, "testTitle3", "testCoverUrl3");
-            eventRepository.saveAll(List.of(event1, event2, event3));
+            Event event4 = Event.createEvent(album4, "testTitle4", "testCoverUrl4");
+            eventRepository.saveAll(List.of(event1, event2, event3, event4));
 
             Image image1 =
                     Image.createImage(album1, 1L, "testUrl", LocalDateTime.now(), BigDecimal.ZERO);
@@ -555,6 +610,17 @@ public class EventServiceTest extends IntegrationTest {
             assertThatThrownBy(() -> eventService.addImages(2L, request))
                     .isInstanceOf(CustomException.class)
                     .hasMessage(AlbumErrorCode.LIMITED_AUTHORITY.getMessage());
+        }
+
+        @Test
+        void 구독이_만료된_앨범인_경우_예외가_발생한다() {
+            // given
+            EventImageAddRequest request = new EventImageAddRequest(List.of(3L));
+
+            // when & then
+            assertThatThrownBy(() -> eventService.addImages(4L, request))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(AlbumErrorCode.EXPIRED_SUBSCRIPTION.getMessage());
         }
 
         @Test

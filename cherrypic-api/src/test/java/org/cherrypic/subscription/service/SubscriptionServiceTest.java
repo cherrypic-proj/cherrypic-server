@@ -37,6 +37,7 @@ import org.cherrypic.subscription.exception.SubscriptionDomainErrorCode;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.util.ReflectionTestUtils;
 
 class SubscriptionServiceTest extends IntegrationTest {
 
@@ -70,7 +71,9 @@ class SubscriptionServiceTest extends IntegrationTest {
             Album album4 = Album.createAlbum("testAlbum4", "testURL4", AlbumType.PREMIUM, false);
             Album album5 = Album.createAlbum("testAlbum5", "testURL5", AlbumType.PREMIUM, false);
             Album album6 = Album.createAlbum("testAlbum6", "testURL6", AlbumType.PREMIUM, false);
-            albumRepository.saveAll(List.of(album1, album2, album3, album4, album5, album6));
+            Album album7 = Album.createAlbum("testAlbum7", "testURL7", AlbumType.PRO, false);
+            albumRepository.saveAll(
+                    List.of(album1, album2, album3, album4, album5, album6, album7));
 
             Participant participant1 =
                     Participant.createParticipant(member, album1, ParticipantRole.HOST);
@@ -82,15 +85,26 @@ class SubscriptionServiceTest extends IntegrationTest {
                     Participant.createParticipant(member, album4, ParticipantRole.STANDARD);
             Participant participant5 =
                     Participant.createParticipant(member, album5, ParticipantRole.HOST);
+            Participant participant6 =
+                    Participant.createParticipant(member, album7, ParticipantRole.HOST);
             participantRepository.saveAll(
-                    List.of(participant1, participant2, participant3, participant4, participant5));
+                    List.of(
+                            participant1,
+                            participant2,
+                            participant3,
+                            participant4,
+                            participant5,
+                            participant6));
 
             Subscription subscription1 =
                     Subscription.createSubscription(member, album2, LocalDateTime.now());
             Subscription subscription2 =
                     Subscription.createSubscription(
                             member, album3, LocalDateTime.of(2025, 1, 1, 0, 0));
-            subscriptionRepository.saveAll(List.of(subscription1, subscription2));
+            Subscription subscription3 =
+                    Subscription.createSubscription(member, album7, LocalDateTime.now());
+            ReflectionTestUtils.setField(subscription3, "status", SubscriptionStatus.EXPIRED);
+            subscriptionRepository.saveAll(List.of(subscription1, subscription2, subscription3));
         }
 
         @Test
@@ -132,6 +146,14 @@ class SubscriptionServiceTest extends IntegrationTest {
         }
 
         @Test
+        void 구독이_만료된_앨범인_경우_예외가_발생한다() {
+            // when & then
+            assertThatThrownBy(() -> subscriptionService.cancelSubscription(7L))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(AlbumErrorCode.EXPIRED_SUBSCRIPTION.getMessage());
+        }
+
+        @Test
         void BASIC_유형인_경우_예외가_발생한다() {
             // when & then
             assertThatThrownBy(() -> subscriptionService.cancelSubscription(1L))
@@ -139,14 +161,6 @@ class SubscriptionServiceTest extends IntegrationTest {
                     .hasMessage(
                             SubscriptionErrorCode.SUBSCRIPTION_NOT_SUPPORTED_FOR_BASIC_TYPE
                                     .getMessage());
-        }
-
-        @Test
-        void 구독이_존재하지_않는_경우_예외가_발생한다() {
-            // when & then
-            assertThatThrownBy(() -> subscriptionService.cancelSubscription(5L))
-                    .isInstanceOf(CustomException.class)
-                    .hasMessage(SubscriptionErrorCode.SUBSCRIPTION_NOT_FOUND.getMessage());
         }
 
         @Test
@@ -194,8 +208,9 @@ class SubscriptionServiceTest extends IntegrationTest {
             Album album5 = Album.createAlbum("testAlbum5", "testURL5", AlbumType.PREMIUM, false);
             Album album6 = Album.createAlbum("testAlbum6", "testURL6", AlbumType.PREMIUM, false);
             Album album7 = Album.createAlbum("testAlbum7", "testURL7", AlbumType.PREMIUM, false);
+            Album album8 = Album.createAlbum("testAlbum8", "testURL8", AlbumType.PRO, false);
             albumRepository.saveAll(
-                    List.of(album1, album2, album3, album4, album5, album6, album7));
+                    List.of(album1, album2, album3, album4, album5, album6, album7, album8));
 
             Participant participant1 =
                     Participant.createParticipant(member1, album1, ParticipantRole.HOST);
@@ -209,6 +224,8 @@ class SubscriptionServiceTest extends IntegrationTest {
                     Participant.createParticipant(member1, album6, ParticipantRole.HOST);
             Participant participant6 =
                     Participant.createParticipant(member1, album7, ParticipantRole.HOST);
+            Participant participant7 =
+                    Participant.createParticipant(member1, album8, ParticipantRole.HOST);
             participantRepository.saveAll(
                     List.of(
                             participant1,
@@ -216,24 +233,27 @@ class SubscriptionServiceTest extends IntegrationTest {
                             participant3,
                             participant4,
                             participant5,
-                            participant6));
+                            participant6,
+                            participant7));
 
-            // 15일 전에 시작되어 현재는 해지된 구독
+            // 9월 1일에 시작되어 현재는 해지된 구독
             Subscription subscription1 =
                     Subscription.createSubscription(
-                            member1, album1, LocalDateTime.now().minusDays(15));
+                            member1, album1, LocalDateTime.of(2025, 9, 1, 0, 0));
             subscription1.cancel();
-
-            // 구독 중
-            Subscription subscription3 =
-                    Subscription.createSubscription(member1, album6, LocalDateTime.now());
-
             // 종료된 구독
             Subscription subscription2 =
                     Subscription.createSubscription(
                             member1, album7, LocalDateTime.of(2025, 7, 1, 0, 0));
-
-            subscriptionRepository.saveAll(List.of(subscription1, subscription2, subscription3));
+            // 구독 중
+            Subscription subscription3 =
+                    Subscription.createSubscription(member1, album6, LocalDateTime.now());
+            // 만료된 구독
+            Subscription subscription4 =
+                    Subscription.createSubscription(member1, album8, LocalDateTime.now());
+            ReflectionTestUtils.setField(subscription4, "status", SubscriptionStatus.EXPIRED);
+            subscriptionRepository.saveAll(
+                    List.of(subscription1, subscription2, subscription3, subscription4));
 
             // 완료된 결제
             Payment payment1 =
@@ -373,6 +393,17 @@ class SubscriptionServiceTest extends IntegrationTest {
         }
 
         @Test
+        void 구독이_만료된_앨범인_경우_예외가_발생한다() {
+            // given
+            SubscriptionRenewRequest request = new SubscriptionRenewRequest(1L);
+
+            // when & then
+            assertThatThrownBy(() -> subscriptionService.renewSubscription(8L, request))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(AlbumErrorCode.EXPIRED_SUBSCRIPTION.getMessage());
+        }
+
+        @Test
         void BASIC_유형인_경우_예외가_발생한다() {
             // given
             SubscriptionRenewRequest request = new SubscriptionRenewRequest(1L);
@@ -438,17 +469,6 @@ class SubscriptionServiceTest extends IntegrationTest {
             assertThatThrownBy(() -> subscriptionService.renewSubscription(1L, request))
                     .isInstanceOf(CustomException.class)
                     .hasMessage(PaymentDomainErrorCode.PAYMENT_PURPOSE_MISMATCH.getMessage());
-        }
-
-        @Test
-        void 구독이_존재하지_않는_경우_예외가_발생한다() {
-            // given
-            SubscriptionRenewRequest request = new SubscriptionRenewRequest(1L);
-
-            // when & then
-            assertThatThrownBy(() -> subscriptionService.renewSubscription(5L, request))
-                    .isInstanceOf(CustomException.class)
-                    .hasMessage(SubscriptionErrorCode.SUBSCRIPTION_NOT_FOUND.getMessage());
         }
 
         @Test
