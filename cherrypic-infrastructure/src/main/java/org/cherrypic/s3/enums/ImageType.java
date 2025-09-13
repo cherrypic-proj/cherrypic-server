@@ -10,7 +10,7 @@ public enum ImageType {
     ALBUM_COVER("album-cover", "앨범 커버"),
     ALBUM_IMAGE("album-image", "앨범 사진"),
     EVENT_COVER("event-cover", "이벤트 커버"),
-    ;
+    TEMP_ALBUM_IMAGE("temp-album-image", "임시 앨범 사진");
 
     private final String type;
     private final String description;

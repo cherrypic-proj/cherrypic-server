@@ -11,17 +11,16 @@ import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.album.repository.AlbumRepository;
 import org.cherrypic.domain.event.exception.EventErrorCode;
 import org.cherrypic.domain.event.repository.EventRepository;
-import org.cherrypic.domain.image.dto.request.AlbumImageDeleteRequest;
-import org.cherrypic.domain.image.dto.request.AlbumImageUploadRequest;
-import org.cherrypic.domain.image.dto.request.ImageUploadRequest;
-import org.cherrypic.domain.image.dto.response.AlbumImageListResponse;
-import org.cherrypic.domain.image.dto.response.EventImageListResponse;
-import org.cherrypic.domain.image.dto.response.ImageUploadListResponse;
-import org.cherrypic.domain.image.dto.response.PresignedUrlResponse;
+import org.cherrypic.domain.image.dto.request.*;
+import org.cherrypic.domain.image.dto.response.*;
 import org.cherrypic.domain.image.event.ImagesDeleteEvent;
 import org.cherrypic.domain.image.exception.ImageErrorCode;
 import org.cherrypic.domain.image.repository.ImageRepository;
 import org.cherrypic.domain.participant.repository.ParticipantRepository;
+import org.cherrypic.domain.tempalbum.event.TempAlbumImagesDeleteEvent;
+import org.cherrypic.domain.tempalbum.exception.TempAlbumErrorCode;
+import org.cherrypic.domain.tempalbum.repository.TempAlbumImageRepository;
+import org.cherrypic.domain.tempalbum.repository.TempAlbumRepository;
 import org.cherrypic.event.entity.Event;
 import org.cherrypic.exception.CustomException;
 import org.cherrypic.global.pagination.SliceResponse;
@@ -35,6 +34,8 @@ import org.cherrypic.s3.S3Util;
 import org.cherrypic.s3.enums.FileExtension;
 import org.cherrypic.s3.enums.ImageType;
 import org.cherrypic.subscription.enums.SubscriptionStatus;
+import org.cherrypic.tempalbum.entity.TempAlbum;
+import org.cherrypic.tempalbum.entity.TempAlbumImage;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
@@ -52,6 +53,8 @@ public class ImageServiceImpl implements ImageService {
     private final ImageRepository imageRepository;
     private final EventRepository eventRepository;
     private final ParticipantRepository participantRepository;
+    private final TempAlbumRepository tempAlbumRepository;
+    private final TempAlbumImageRepository tempAlbumImageRepository;
 
     private final ApplicationEventPublisher eventPublisher;
 
@@ -157,7 +160,8 @@ public class ImageServiceImpl implements ImageService {
         imageRepository.bulkInsertImages(images);
 
         List<Long> imageIds =
-                imageRepository.findIdsByUrlsInOrder(images.stream().map(Image::getUrl).toList());
+                imageRepository.findImageIdsByUrlsInOrder(
+                        images.stream().map(Image::getUrl).toList());
 
         List<ImageUploadListResponse.Payload> payloads =
                 IntStream.range(0, images.size())
@@ -221,6 +225,97 @@ public class ImageServiceImpl implements ImageService {
         imageRepository.deleteAllInBatch(images);
     }
 
+    @Override
+    @Transactional
+    public TempAlbumImageUploadListResponse createTempAlbumImageUploadUrls(
+            Long tempAlbumId, TempAlbumImageUploadRequest request) {
+        final Member currentMember = memberUtil.getCurrentMember();
+        final TempAlbum tempAlbum = getTempAlbumById(tempAlbumId);
+
+        validateTempAlbumOwner(tempAlbum, currentMember);
+
+        BigDecimal uploadCapacity =
+                request.payloads().stream()
+                        .map(TempAlbumImageUploadRequest.Payload::capacity)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        validateTempAlbumCapacity(tempAlbum, uploadCapacity);
+        validateDistinctHashes(request);
+
+        tempAlbum.increaseCapacity(uploadCapacity);
+
+        List<String> presignedUrls =
+                request.payloads().stream()
+                        .map(
+                                req ->
+                                        s3Util.createPresignedUrl(
+                                                ImageType.TEMP_ALBUM_IMAGE,
+                                                tempAlbum.getId(),
+                                                req.fileExtension(),
+                                                req.md5Hashes()))
+                        .toList();
+
+        List<TempAlbumImage> tempAlbumImages =
+                IntStream.range(0, request.payloads().size())
+                        .mapToObj(
+                                i -> {
+                                    TempAlbumImageUploadRequest.Payload req =
+                                            request.payloads().get(i);
+                                    String presignedUrl = presignedUrls.get(i);
+
+                                    String objectUrl =
+                                            presignedUrl.substring(0, presignedUrl.indexOf("?"));
+
+                                    return TempAlbumImage.createTempAlbumImage(
+                                            tempAlbum, objectUrl, req.capacity());
+                                })
+                        .toList();
+
+        imageRepository.bulkInsertTempAlbumImages(tempAlbumImages);
+
+        List<Long> tempAlbumImageIds =
+                imageRepository.findTempImageIdsByUrlsInOrder(
+                        tempAlbumImages.stream().map(TempAlbumImage::getUrl).toList());
+
+        List<TempAlbumImageUploadListResponse.Payload> payloads =
+                IntStream.range(0, tempAlbumImageIds.size())
+                        .mapToObj(
+                                i ->
+                                        TempAlbumImageUploadListResponse.Payload.of(
+                                                tempAlbumImageIds.get(i), presignedUrls.get(i)))
+                        .toList();
+
+        return TempAlbumImageUploadListResponse.of(payloads);
+    }
+
+    @Override
+    @Transactional
+    public void deleteTempAlbumImage(Long tempAlbumId, TempAlbumImageDeleteRequest request) {
+        final Member currentMember = memberUtil.getCurrentMember();
+        final TempAlbum tempAlbum = getTempAlbumById(tempAlbumId);
+
+        validateTempAlbumOwner(tempAlbum, currentMember);
+
+        List<Long> distinctTempAlbumImageIds =
+                request.tempAlbumImageIds().stream().filter(Objects::nonNull).distinct().toList();
+
+        List<TempAlbumImage> tempAlbumImages =
+                tempAlbumImageRepository.findAllById(distinctTempAlbumImageIds);
+
+        validateTempAlbumImagesInTempAlbum(tempAlbumImages, tempAlbum);
+
+        tempAlbum.decreaseCapacity(
+                tempAlbumImages.stream()
+                        .map(TempAlbumImage::getCapacityGb)
+                        .filter(Objects::nonNull)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add));
+
+        eventPublisher.publishEvent(
+                TempAlbumImagesDeleteEvent.of(
+                        tempAlbumImages.stream().map(TempAlbumImage::getUrl).toList()));
+        tempAlbumImageRepository.deleteAllInBatch(tempAlbumImages);
+    }
+
     private Album getAlbumById(Long albumId) {
         return albumRepository
                 .findById(albumId)
@@ -245,11 +340,23 @@ public class ImageServiceImpl implements ImageService {
                 .orElseThrow(() -> new CustomException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT));
     }
 
+    private TempAlbum getTempAlbumById(Long tempAlbumId) {
+        return tempAlbumRepository
+                .findById(tempAlbumId)
+                .orElseThrow(() -> new CustomException(TempAlbumErrorCode.TEMP_ALBUM_NOT_FOUND));
+    }
+
     private void validateParticipantAuthority(Long memberId, Long albumId) {
         Participant participant = getParticipantByMemberIdAndAlbumId(memberId, albumId);
 
         if (participant.getRole().equals(ParticipantRole.LIMITED)) {
             throw new CustomException(AlbumErrorCode.LIMITED_AUTHORITY);
+        }
+    }
+
+    private void validateTempAlbumOwner(TempAlbum tempAlbum, Member member) {
+        if (!Objects.equals(tempAlbum.getMember().getId(), member.getId())) {
+            throw new CustomException(TempAlbumErrorCode.NOT_TEMP_ALBUM_OWNER);
         }
     }
 
@@ -264,10 +371,32 @@ public class ImageServiceImpl implements ImageService {
         }
     }
 
+    private void validateTempAlbumCapacity(TempAlbum tempAlbum, BigDecimal uploadCapacity) {
+
+        BigDecimal maxCapacity = tempAlbum.getType().getCapacityGb();
+        BigDecimal current = tempAlbum.getCapacityGb();
+        BigDecimal afterUpload = current.add(uploadCapacity);
+
+        if (afterUpload.compareTo(maxCapacity) > 0) {
+            throw new CustomException(TempAlbumErrorCode.TEMP_ALBUM_CAPACITY_EXCEEDED);
+        }
+    }
+
     private void validateDistinctHashes(AlbumImageUploadRequest request) {
         List<String> hashes =
                 request.payloads().stream()
                         .map(AlbumImageUploadRequest.Payload::md5Hashes)
+                        .toList();
+
+        if (hashes.stream().distinct().count() != hashes.size()) {
+            throw new CustomException(ImageErrorCode.DUPLICATE_HASHES);
+        }
+    }
+
+    private void validateDistinctHashes(TempAlbumImageUploadRequest request) {
+        List<String> hashes =
+                request.payloads().stream()
+                        .map(TempAlbumImageUploadRequest.Payload::md5Hashes)
                         .toList();
 
         if (hashes.stream().distinct().count() != hashes.size()) {
@@ -287,6 +416,17 @@ public class ImageServiceImpl implements ImageService {
 
         if (containsNotInAlbum) {
             throw new CustomException(AlbumErrorCode.IMAGES_NOT_IN_ALBUM);
+        }
+    }
+
+    private void validateTempAlbumImagesInTempAlbum(
+            List<TempAlbumImage> tempAlbumImages, TempAlbum tempAlbum) {
+        boolean containsNotInTempAlbum =
+                tempAlbumImages.stream()
+                        .anyMatch(ei -> !ei.getTempAlbum().getId().equals(tempAlbum.getId()));
+
+        if (containsNotInTempAlbum) {
+            throw new CustomException(TempAlbumErrorCode.IMAGES_NOT_IN_TEMP_ALBUM);
         }
     }
 

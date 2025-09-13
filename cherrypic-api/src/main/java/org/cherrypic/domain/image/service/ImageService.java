@@ -1,12 +1,7 @@
 package org.cherrypic.domain.image.service;
 
-import org.cherrypic.domain.image.dto.request.AlbumImageDeleteRequest;
-import org.cherrypic.domain.image.dto.request.AlbumImageUploadRequest;
-import org.cherrypic.domain.image.dto.request.ImageUploadRequest;
-import org.cherrypic.domain.image.dto.response.AlbumImageListResponse;
-import org.cherrypic.domain.image.dto.response.EventImageListResponse;
-import org.cherrypic.domain.image.dto.response.ImageUploadListResponse;
-import org.cherrypic.domain.image.dto.response.PresignedUrlResponse;
+import org.cherrypic.domain.image.dto.request.*;
+import org.cherrypic.domain.image.dto.response.*;
 import org.cherrypic.global.pagination.SliceResponse;
 import org.cherrypic.global.pagination.SortDirection;
 
@@ -27,4 +22,9 @@ public interface ImageService {
             Long eventId, Long lastImageId, int size, SortDirection direction);
 
     void deleteAlbumImage(Long albumId, AlbumImageDeleteRequest request);
+
+    TempAlbumImageUploadListResponse createTempAlbumImageUploadUrls(
+            Long tempAlbumId, TempAlbumImageUploadRequest request);
+
+    void deleteTempAlbumImage(Long tempAlbumId, TempAlbumImageDeleteRequest request);
 }

@@ -14,13 +14,8 @@ import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.album.repository.AlbumRepository;
 import org.cherrypic.domain.event.exception.EventErrorCode;
 import org.cherrypic.domain.event.repository.EventRepository;
-import org.cherrypic.domain.image.dto.request.AlbumImageDeleteRequest;
-import org.cherrypic.domain.image.dto.request.AlbumImageUploadRequest;
-import org.cherrypic.domain.image.dto.request.ImageUploadRequest;
-import org.cherrypic.domain.image.dto.response.AlbumImageListResponse;
-import org.cherrypic.domain.image.dto.response.EventImageListResponse;
-import org.cherrypic.domain.image.dto.response.ImageUploadListResponse;
-import org.cherrypic.domain.image.dto.response.PresignedUrlResponse;
+import org.cherrypic.domain.image.dto.request.*;
+import org.cherrypic.domain.image.dto.response.*;
 import org.cherrypic.domain.image.event.ImagesDeleteEvent;
 import org.cherrypic.domain.image.exception.ImageErrorCode;
 import org.cherrypic.domain.image.repository.EventImageRepository;
@@ -29,6 +24,10 @@ import org.cherrypic.domain.image.service.ImageService;
 import org.cherrypic.domain.member.repository.MemberRepository;
 import org.cherrypic.domain.participant.repository.ParticipantRepository;
 import org.cherrypic.domain.subscription.repository.SubscriptionRepository;
+import org.cherrypic.domain.tempalbum.event.TempAlbumImagesDeleteEvent;
+import org.cherrypic.domain.tempalbum.exception.TempAlbumErrorCode;
+import org.cherrypic.domain.tempalbum.repository.TempAlbumImageRepository;
+import org.cherrypic.domain.tempalbum.repository.TempAlbumRepository;
 import org.cherrypic.event.entity.Event;
 import org.cherrypic.event.entity.EventImage;
 import org.cherrypic.exception.CustomException;
@@ -45,6 +44,8 @@ import org.cherrypic.s3.enums.FileExtension;
 import org.cherrypic.s3.enums.ImageType;
 import org.cherrypic.subscription.entity.Subscription;
 import org.cherrypic.subscription.enums.SubscriptionStatus;
+import org.cherrypic.tempalbum.entity.TempAlbum;
+import org.cherrypic.tempalbum.entity.TempAlbumImage;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -69,6 +70,8 @@ class ImageServiceTest extends IntegrationTest {
     @Autowired private AlbumRepository albumRepository;
     @Autowired private MemberRepository memberRepository;
     @Autowired private EventImageRepository eventImageRepository;
+    @Autowired private TempAlbumRepository tempAlbumRepository;
+    @Autowired private TempAlbumImageRepository tempAlbumImageRepository;
     @Autowired private SubscriptionRepository subscriptionRepository;
 
     @Nested
@@ -837,6 +840,272 @@ class ImageServiceTest extends IntegrationTest {
             assertThatThrownBy(() -> imageService.deleteAlbumImage(1L, request))
                     .isInstanceOf(CustomException.class)
                     .hasMessage(AlbumErrorCode.IMAGES_NOT_IN_ALBUM.getMessage());
+        }
+    }
+
+    @Nested
+    class 임시_앨범_이미지_업로드_Presigned_URL들을_생성할_때 {
+
+        @BeforeEach
+        void setUp() {
+            Member member1 =
+                    Member.createMember(
+                            OauthInfo.createOauthInfo("testOauthId", "testOauthProvider"),
+                            "testNickname1",
+                            "testProfileImageUrl1");
+            Member member2 =
+                    Member.createMember(
+                            OauthInfo.createOauthInfo("testOauthId", "testOauthProvider"),
+                            "testNickname2",
+                            "testProfileImageUrl2");
+            memberRepository.saveAll(List.of(member1, member2));
+            given(memberUtil.getCurrentMember()).willReturn(member1);
+
+            TempAlbum tempAlbum1 = TempAlbum.createTempAlbum(member1, "testTitle1");
+            TempAlbum tempAlbum2 = TempAlbum.createTempAlbum(member2, "testTitle2");
+
+            tempAlbumRepository.saveAll(List.of(tempAlbum1, tempAlbum2));
+        }
+
+        @Test
+        void 유효한_요청이면_임시_앨범_이미지를_저장하고_Presigned_URL들을_반환한다() {
+            // given
+            TempAlbumImageUploadRequest request =
+                    new TempAlbumImageUploadRequest(
+                            List.of(
+                                    new TempAlbumImageUploadRequest.Payload(
+                                            FileExtension.JPEG,
+                                            "testMd5Hash1",
+                                            new BigDecimal("0.3")),
+                                    new TempAlbumImageUploadRequest.Payload(
+                                            FileExtension.JPEG,
+                                            "testMd5Hash2",
+                                            new BigDecimal("0.3"))));
+            given(
+                            s3Util.createPresignedUrl(
+                                    eq(ImageType.TEMP_ALBUM_IMAGE),
+                                    eq(1L),
+                                    eq(FileExtension.JPEG),
+                                    anyString()))
+                    .willReturn(
+                            "https://my-bucket.s3.ap-northeast-2.amazonaws.com/local/temp-album-image/1/550e8400-e29b-41d4-a716-446655440000.jpeg"
+                                    + "?X-Amz-Algorithm=AWS4-HMAC-SHA256"
+                                    + "&X-Amz-Date=20250824T130000Z"
+                                    + "&X-Amz-SignedHeaders=host"
+                                    + "&X-Amz-Expires=60"
+                                    + "&X-Amz-Credential=AKIAIOSFODNN7EXAMPLE/20250824/ap-northeast-2/s3/aws4_request"
+                                    + "&X-Amz-Signature=0123456789abcdef..."
+                                    + "&x-amz-acl=public-read"
+                                    + "&Content-MD5=testMd5Hash1",
+                            "https://my-bucket.s3.ap-northeast-2.amazonaws.com/local/temp-album-image/1/660e8400-e29b-41d4-a716-446655440000.jpeg"
+                                    + "?X-Amz-Algorithm=AWS4-HMAC-SHA256"
+                                    + "&X-Amz-Date=20250824T130000Z"
+                                    + "&X-Amz-SignedHeaders=host"
+                                    + "&X-Amz-Expires=60"
+                                    + "&X-Amz-Credential=AKIAIOSFODNN7EXAMPLE/20250824/ap-northeast-2/s3/aws4_request"
+                                    + "&X-Amz-Signature=abcdef0123456789..."
+                                    + "&x-amz-acl=public-read"
+                                    + "&Content-MD5=testMd5Hash2");
+
+            // when
+            TempAlbumImageUploadListResponse response =
+                    imageService.createTempAlbumImageUploadUrls(1L, request);
+
+            // then
+            assertThat(response.payloads())
+                    .hasSize(2)
+                    .satisfiesExactly(
+                            payload1 -> {
+                                assertThat(payload1.tempAlbumImageId()).isEqualTo(1L);
+                                assertThat(payload1.presignedUrl())
+                                        .containsPattern(
+                                                ".*/local/temp-album-image/1/[\\w\\-]+\\.(jpg|jpeg)\\?.+");
+                            },
+                            payload2 -> {
+                                assertThat(payload2.tempAlbumImageId()).isEqualTo(2L);
+                                assertThat(payload2.presignedUrl())
+                                        .containsPattern(
+                                                ".*/local/temp-album-image/1/[\\w\\-]+\\.(jpg|jpeg)\\?.+");
+                            });
+
+            List<TempAlbumImage> tempAlbumImages = tempAlbumImageRepository.findAll();
+            assertThat(tempAlbumImages)
+                    .hasSize(2)
+                    .allSatisfy(
+                            tempAlbumImage -> {
+                                assertThat(tempAlbumImage.getTempAlbum().getId()).isEqualTo(1L);
+                                assertThat(tempAlbumImage.getUrl())
+                                        .containsPattern(
+                                                String.format(
+                                                        "/%s/%s/%d/[\\w\\-]+\\.(jpg|jpeg)",
+                                                        "local", "temp-album-image", 1));
+                            });
+        }
+
+        @Test
+        void 임시_앨범이_존재하지_않는_경우_예외가_발생한다() {
+            // given
+            TempAlbumImageUploadRequest request =
+                    new TempAlbumImageUploadRequest(
+                            List.of(
+                                    new TempAlbumImageUploadRequest.Payload(
+                                            FileExtension.JPEG, "testMd5Hash1", BigDecimal.ZERO),
+                                    new TempAlbumImageUploadRequest.Payload(
+                                            FileExtension.JPEG, "testMd5Hash2", BigDecimal.ZERO)));
+
+            // when & then
+            assertThatThrownBy(() -> imageService.createTempAlbumImageUploadUrls(999L, request))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(TempAlbumErrorCode.TEMP_ALBUM_NOT_FOUND.getMessage());
+        }
+
+        @Test
+        void 임시_앨범의_소유자가_아닌_사람이_이미지_업로드를_시도하면_예외가_발생한다() {
+            // given
+            TempAlbumImageUploadRequest request =
+                    new TempAlbumImageUploadRequest(
+                            List.of(
+                                    new TempAlbumImageUploadRequest.Payload(
+                                            FileExtension.JPEG, "testMd5Hash1", BigDecimal.ZERO),
+                                    new TempAlbumImageUploadRequest.Payload(
+                                            FileExtension.JPEG, "testMd5Hash2", BigDecimal.ZERO)));
+
+            // when & then
+            assertThatThrownBy(() -> imageService.createTempAlbumImageUploadUrls(2L, request))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(TempAlbumErrorCode.NOT_TEMP_ALBUM_OWNER.getMessage());
+        }
+
+        @Test
+        void 임시_앨범의_남은_용량을_초과해서_요청하면_예외가_발생한다() {
+            // given
+            TempAlbumImageUploadRequest request =
+                    new TempAlbumImageUploadRequest(
+                            List.of(
+                                    new TempAlbumImageUploadRequest.Payload(
+                                            FileExtension.JPEG, "testMd5Hash1", BigDecimal.TEN),
+                                    new TempAlbumImageUploadRequest.Payload(
+                                            FileExtension.JPEG, "testMd5Hash2", BigDecimal.TEN)));
+
+            // when & then
+            assertThatThrownBy(() -> imageService.createTempAlbumImageUploadUrls(1L, request))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(TempAlbumErrorCode.TEMP_ALBUM_CAPACITY_EXCEEDED.getMessage());
+        }
+
+        @Test
+        void 해시값에_중복이_존재하면_예외가_발생한다() {
+            // given
+            TempAlbumImageUploadRequest request =
+                    new TempAlbumImageUploadRequest(
+                            List.of(
+                                    new TempAlbumImageUploadRequest.Payload(
+                                            FileExtension.JPEG, "testMd5Hash1", BigDecimal.ZERO),
+                                    new TempAlbumImageUploadRequest.Payload(
+                                            FileExtension.JPEG, "testMd5Hash1", BigDecimal.ZERO)));
+            // when & then
+            assertThatThrownBy(() -> imageService.createTempAlbumImageUploadUrls(1L, request))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(TempAlbumErrorCode.DUPLICATE_HASHES.getMessage());
+        }
+    }
+
+    @Nested
+    class 임시_앨범_이미지를_삭제할_때 {
+
+        @BeforeEach
+        void setUp() {
+            Member member1 =
+                    Member.createMember(
+                            OauthInfo.createOauthInfo("testOauthId", "testOauthProvider"),
+                            "testNickname1",
+                            "testProfileImageUrl1");
+            Member member2 =
+                    Member.createMember(
+                            OauthInfo.createOauthInfo("testOauthId", "testOauthProvider"),
+                            "testNickname2",
+                            "testProfileImageUrl2");
+            memberRepository.saveAll(List.of(member1, member2));
+            given(memberUtil.getCurrentMember()).willReturn(member1);
+
+            TempAlbum tempAlbum1 = TempAlbum.createTempAlbum(member1, "testTitle1");
+            tempAlbum1.increaseCapacity(BigDecimal.valueOf(0.6));
+            TempAlbum tempAlbum2 = TempAlbum.createTempAlbum(member2, "testTitle2");
+            tempAlbumRepository.saveAll(List.of(tempAlbum1, tempAlbum2));
+
+            TempAlbumImage tempAlbumImage1 =
+                    TempAlbumImage.createTempAlbumImage(
+                            tempAlbum1, "testUrl1", BigDecimal.valueOf(0.2));
+            TempAlbumImage tempAlbumImage2 =
+                    TempAlbumImage.createTempAlbumImage(
+                            tempAlbum2, "testUrl2", BigDecimal.valueOf(0.2));
+            tempAlbumImageRepository.saveAll(List.of(tempAlbumImage1, tempAlbumImage2));
+        }
+
+        @Test
+        void 유효한_요청이면_임시_앨범_이미지를_삭제하고_임시_앨범_용량을_내린다() {
+            // given
+            TempAlbumImageDeleteRequest request = new TempAlbumImageDeleteRequest(List.of(1L));
+
+            // when
+            imageService.deleteTempAlbumImage(1L, request);
+
+            // then
+            Assertions.assertAll(
+                    () -> assertThat(tempAlbumImageRepository.findById(1L)).isEmpty(),
+                    () ->
+                            assertThat(
+                                            tempAlbumRepository
+                                                    .findById(1L)
+                                                    .orElseThrow()
+                                                    .getCapacityGb())
+                                    .isEqualTo(new BigDecimal("0.40")));
+        }
+
+        @Test
+        void 임시_앨범_이미지를_삭제하는_경우_S3에서_이미지를_삭제하는_이벤트를_발행한다() {
+            // given
+            TempAlbumImageDeleteRequest request = new TempAlbumImageDeleteRequest(List.of(1L));
+
+            // when
+            imageService.deleteTempAlbumImage(1L, request);
+
+            // then
+            var events = applicationEvents.stream(TempAlbumImagesDeleteEvent.class).toList();
+            assertThat(events.getFirst().tempImageUrls()).containsExactlyInAnyOrder("testUrl1");
+        }
+
+        @Test
+        void 임시_앨범이_존재하지_않을_경우_예외가_발생한다() {
+            // given
+            TempAlbumImageDeleteRequest request = new TempAlbumImageDeleteRequest(List.of(1L));
+
+            // when & then
+            assertThatThrownBy(() -> imageService.deleteTempAlbumImage(999L, request))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(TempAlbumErrorCode.TEMP_ALBUM_NOT_FOUND.getMessage());
+        }
+
+        @Test
+        void 임시_앨범_소유자가_아닌_사용자가_임시_앨범_이미지를_삭제하면_예외가_발생한다() {
+            // given
+            TempAlbumImageDeleteRequest request = new TempAlbumImageDeleteRequest(List.of(2L));
+
+            // when & then
+            assertThatThrownBy(() -> imageService.deleteTempAlbumImage(2L, request))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(TempAlbumErrorCode.NOT_TEMP_ALBUM_OWNER.getMessage());
+        }
+
+        @Test
+        void 임시_앨범에_속하지_않은_이미지가_포함되어_있으면_예외가_발생한다() {
+            // given
+            TempAlbumImageDeleteRequest request = new TempAlbumImageDeleteRequest(List.of(2L));
+
+            // when & then
+            assertThatThrownBy(() -> imageService.deleteTempAlbumImage(1L, request))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(TempAlbumErrorCode.IMAGES_NOT_IN_TEMP_ALBUM.getMessage());
         }
     }
 }
