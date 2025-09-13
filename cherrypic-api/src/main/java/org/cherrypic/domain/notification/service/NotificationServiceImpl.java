@@ -2,7 +2,6 @@ package org.cherrypic.domain.notification.service;
 
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.cherrypic.domain.album.repository.AlbumRepository;
 import org.cherrypic.domain.member.repository.MemberRepository;
 import org.cherrypic.domain.notification.repository.NotificationRepository;
 import org.springframework.stereotype.Service;
@@ -21,7 +20,6 @@ public class NotificationServiceImpl implements NotificationService {
     private final FcmTokenService fcmTokenService;
 
     private final MemberRepository memberRepository;
-    private final AlbumRepository albumRepository;
     private final NotificationRepository notificationRepository;
 
     @Override
@@ -36,7 +34,9 @@ public class NotificationServiceImpl implements NotificationService {
         notificationRepository.bulkInsertAlbumDeleteNotifications(
                 albumId, senderId, PUSH_ALBUM_DELETE_TITLE, content);
 
-        List<String> tokens = fcmTokenService.getFcmTokens(receiverIds);
+        List<Long> serviceAlarmAgreedIds = memberRepository.findServiceAlarmAgreedIds(receiverIds);
+
+        List<String> tokens = fcmTokenService.getFcmTokens(serviceAlarmAgreedIds);
         if (tokens.isEmpty()) {
             return;
         }
