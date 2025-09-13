@@ -6,7 +6,7 @@ CREATE TABLE member (
                         profile_image_url VARCHAR(255),
                         role VARCHAR(255)  NOT NULL CHECK(role IN ('ADMIN','USER')),
                         status VARCHAR(255) NOT NULL CHECK(status IN ('NORMAL','DELETED','FORBIDDEN')),
-                        service_agree BOOLEAN NOT NULL,
+                        service_alarm_agree BOOLEAN NOT NULL,
                         marketing_agree BOOLEAN NOT NULL,
                         created_at DATETIME(6) NOT NULL,
                         updated_at DATETIME(6) NOT NULL

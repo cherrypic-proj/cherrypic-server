@@ -36,7 +36,7 @@ public class Member extends BaseTimeEntity {
     @Enumerated(EnumType.STRING)
     private MemberStatus status;
 
-    @NotNull private Boolean serviceAgree;
+    @NotNull private Boolean serviceAlarmAgree;
 
     @NotNull private Boolean marketingAgree;
 
@@ -59,14 +59,14 @@ public class Member extends BaseTimeEntity {
             String profileImageUrl,
             MemberRole role,
             MemberStatus status,
-            Boolean serviceAgree,
+            Boolean serviceAlarmAgree,
             Boolean marketingAgree) {
         this.oauthInfo = oauthInfo;
         this.nickname = nickname;
         this.profileImageUrl = profileImageUrl;
         this.role = role;
         this.status = status;
-        this.serviceAgree = serviceAgree;
+        this.serviceAlarmAgree = serviceAlarmAgree;
         this.marketingAgree = marketingAgree;
     }
 
@@ -78,7 +78,7 @@ public class Member extends BaseTimeEntity {
                 .profileImageUrl(profileImageUrl)
                 .role(MemberRole.USER)
                 .status(MemberStatus.NORMAL)
-                .serviceAgree(Boolean.FALSE)
+                .serviceAlarmAgree(Boolean.FALSE)
                 .marketingAgree(Boolean.FALSE)
                 .build();
     }
