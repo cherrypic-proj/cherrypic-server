@@ -65,7 +65,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
         validatePaymentMemberMismatch(payment, currentMember);
 
-        payment.updatePayment(PaymentPurpose.RENEWAL, album);
+        payment.assignToAlbum(PaymentPurpose.RENEWAL, album);
 
         final Subscription subscription = getSubscriptionByAlbumId(album.getId());
 

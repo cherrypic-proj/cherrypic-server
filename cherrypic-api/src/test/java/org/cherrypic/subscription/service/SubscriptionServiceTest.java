@@ -293,7 +293,7 @@ class SubscriptionServiceTest extends IntegrationTest {
                             PaymentPurpose.CREATION,
                             AlbumType.PRO);
             payment4.complete("testImpUid", "testPgProvider", LocalDateTime.now());
-            payment4.updatePayment(PaymentPurpose.CREATION, album1);
+            payment4.assignToAlbum(PaymentPurpose.CREATION, album1);
 
             // 구독 업그레이드 목적으로 쓰인 결제
             Payment payment5 =

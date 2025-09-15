@@ -96,7 +96,7 @@ public class Payment extends BaseTimeEntity {
         this.paidAt = paidAt;
     }
 
-    public void updatePayment(PaymentPurpose purpose, Album album) {
+    public void assignToAlbum(PaymentPurpose purpose, Album album) {
         if (this.status != PaymentStatus.PAID) {
             throw new CustomException(PaymentDomainErrorCode.NOT_PAID);
         }

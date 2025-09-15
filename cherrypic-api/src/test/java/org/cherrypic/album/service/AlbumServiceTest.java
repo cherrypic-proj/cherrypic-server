@@ -221,7 +221,7 @@ class AlbumServiceTest extends IntegrationTest {
                                 PaymentPurpose.CREATION,
                                 AlbumType.PRO);
                 payment3.complete("testImpUid", "testPgProvider", LocalDateTime.now());
-                payment3.updatePayment(PaymentPurpose.CREATION, album);
+                payment3.assignToAlbum(PaymentPurpose.CREATION, album);
                 // 구독 갱신 목적으로 쓰인 결제
                 Payment payment4 =
                         Payment.createPayment(

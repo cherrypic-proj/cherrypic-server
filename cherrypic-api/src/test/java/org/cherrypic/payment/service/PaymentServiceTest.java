@@ -574,7 +574,7 @@ public class PaymentServiceTest extends IntegrationTest {
                             PaymentPurpose.CREATION,
                             AlbumType.PRO);
             payment1.complete("testImpUid1", "kakaopay", LocalDateTime.of(2025, 8, 1, 20, 0));
-            payment1.updatePayment(PaymentPurpose.CREATION, album1);
+            payment1.assignToAlbum(PaymentPurpose.CREATION, album1);
             Payment payment2 =
                     Payment.createPayment(
                             member1,
@@ -583,7 +583,7 @@ public class PaymentServiceTest extends IntegrationTest {
                             PaymentPurpose.RENEWAL,
                             AlbumType.PRO);
             payment2.complete("testImpUid2", "kakaopay", LocalDateTime.of(2025, 9, 1, 20, 0));
-            payment2.updatePayment(PaymentPurpose.RENEWAL, album1);
+            payment2.assignToAlbum(PaymentPurpose.RENEWAL, album1);
             paymentRepository.saveAll(List.of(payment1, payment2));
         }
 
