@@ -1,7 +1,7 @@
 package org.cherrypic.payment.controller;
 
 import static org.hamcrest.Matchers.nullValue;
-import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -24,6 +24,7 @@ import org.cherrypic.exception.CustomException;
 import org.cherrypic.global.pagination.SliceResponse;
 import org.cherrypic.global.pagination.SortDirection;
 import org.cherrypic.payment.enums.PaymentPurpose;
+import org.cherrypic.payment.exception.PaymentDomainErrorCode;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -552,6 +553,110 @@ class PaymentControllerTest {
 
             // when & then
             ResultActions perform = mockMvc.perform(post("/payments/verify/imp_1234"));
+
+            perform.andExpect(status().isServiceUnavailable())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.SERVICE_UNAVAILABLE.value()))
+                    .andExpect(jsonPath("$.data.code").value("IAMPORT_API_UNAVAILABLE"))
+                    .andExpect(
+                            jsonPath("$.data.message")
+                                    .value("결제 대행 시스템(Iamport)과의 통신에 실패했습니다. 잠시 후 다시 시도해주세요."));
+        }
+    }
+
+    @Nested
+    class 결제_취소_요청_시 {
+
+        @Test
+        void 유효한_요청이면_결제를_취소하고_NO_CONTENT_로_반환한다() throws Exception {
+            // given
+            willDoNothing().given(paymentService).cancelPayment("imp_1234");
+
+            // when & then
+            ResultActions perform = mockMvc.perform(post("/payments/cancel/imp_9999"));
+
+            perform.andExpect(status().isNoContent())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.NO_CONTENT.value()));
+        }
+
+        @Test
+        void impUid가_아임포트에_존재하지_않으면_예외가_발생한다() throws Exception {
+            // given
+            willThrow(new CustomException(PaymentErrorCode.PAYMENT_NOT_FOUND))
+                    .given(paymentService)
+                    .cancelPayment("imp_9999");
+
+            // when & then
+            ResultActions perform = mockMvc.perform(post("/payments/cancel/imp_9999"));
+
+            perform.andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.NOT_FOUND.value()))
+                    .andExpect(jsonPath("$.data.code").value("PAYMENT_NOT_FOUND"))
+                    .andExpect(jsonPath("$.data.message").value("결제 정보가 존재하지 않습니다."));
+        }
+
+        @Test
+        void impUid에_해당하는_결제가_DB에_없으면_예외가_발생한다() throws Exception {
+            // given
+            willThrow(new CustomException(PaymentErrorCode.PAYMENT_NOT_FOUND))
+                    .given(paymentService)
+                    .cancelPayment("imp_9999");
+
+            // when & then
+            ResultActions perform = mockMvc.perform(post("/payments/cancel/imp_9999"));
+
+            perform.andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.NOT_FOUND.value()))
+                    .andExpect(jsonPath("$.data.code").value("PAYMENT_NOT_FOUND"))
+                    .andExpect(jsonPath("$.data.message").value("결제 정보가 존재하지 않습니다."));
+        }
+
+        @Test
+        void 이미_취소된_결제라면_예외가_발생한다() throws Exception {
+            // given
+            willThrow(new CustomException(PaymentDomainErrorCode.ALREADY_CANCELED))
+                    .given(paymentService)
+                    .cancelPayment("imp_9999");
+
+            // when & then
+            ResultActions perform = mockMvc.perform(post("/payments/cancel/imp_9999"));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("ALREADY_CANCELED"))
+                    .andExpect(jsonPath("$.data.message").value("해당 결제는 이미 취소되었습니다."));
+        }
+
+        @Test
+        void 완료되지_않은_결제라면_예외가_발생한다() throws Exception {
+            // given
+            willThrow(new CustomException(PaymentDomainErrorCode.ONLY_PAID_PAYMENT_CANCELABLE))
+                    .given(paymentService)
+                    .cancelPayment("imp_9999");
+
+            // when & then
+            ResultActions perform = mockMvc.perform(post("/payments/cancel/imp_9999"));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("ONLY_PAID_PAYMENT_CANCELABLE"))
+                    .andExpect(jsonPath("$.data.message").value("결제 취소는 완료된 결제만 가능합니다."));
+        }
+
+        @Test
+        void Iamport_API_통신_장애가_발생하면_예외가_발생한다() throws Exception {
+            // given
+            willThrow(new CustomException(PaymentErrorCode.IAMPORT_API_UNAVAILABLE))
+                    .given(paymentService)
+                    .cancelPayment("imp_9999");
+
+            // when & then
+            ResultActions perform = mockMvc.perform(post("/payments/cancel/imp_9999"));
 
             perform.andExpect(status().isServiceUnavailable())
                     .andExpect(jsonPath("$.success").value(false))
