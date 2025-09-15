@@ -231,7 +231,18 @@ class AlbumServiceTest extends IntegrationTest {
                                 PaymentPurpose.RENEWAL,
                                 AlbumType.PRO);
                 payment4.complete("testImpUid", "testPgProvider", LocalDateTime.now());
-                paymentRepository.saveAll(List.of(payment1, payment2, payment3, payment4));
+                // 취소된 결제
+                Payment payment5 =
+                        Payment.createPayment(
+                                member1,
+                                "testMerchantUid",
+                                5900,
+                                PaymentPurpose.CREATION,
+                                AlbumType.PRO);
+                payment5.complete("testImpUid", "testPgProvider", LocalDateTime.now());
+                payment5.cancel(LocalDateTime.now());
+                paymentRepository.saveAll(
+                        List.of(payment1, payment2, payment3, payment4, payment5));
             }
 
             @Test
@@ -344,7 +355,20 @@ class AlbumServiceTest extends IntegrationTest {
             }
 
             @Test
-            void 결제상태가_PAID가_아니면_예외가_발생한다() {
+            void 이미_취소된_결제라면_예외가_발생한다() {
+                // given
+                AlbumCreateRequest request =
+                        new AlbumCreateRequest(
+                                "testTitle", "testCoverUrl", AlbumType.PRO, 5L, false);
+
+                // when & then
+                assertThatThrownBy(() -> albumService.createAlbum(request))
+                        .isInstanceOf(CustomException.class)
+                        .hasMessage(PaymentDomainErrorCode.ALREADY_CANCELED.getMessage());
+            }
+
+            @Test
+            void 완료되지_않은_결제라면_예외가_발생한다() {
                 // given
                 AlbumCreateRequest request =
                         new AlbumCreateRequest(

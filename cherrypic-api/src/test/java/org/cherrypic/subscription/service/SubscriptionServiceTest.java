@@ -305,7 +305,19 @@ class SubscriptionServiceTest extends IntegrationTest {
                             AlbumType.PREMIUM);
             payment5.complete("testImpUid", "testPgProvider", LocalDateTime.now());
 
-            paymentRepository.saveAll(List.of(payment1, payment2, payment3, payment4, payment5));
+            // 취소된 결제
+            Payment payment6 =
+                    Payment.createPayment(
+                            member1,
+                            "testMerchantUid",
+                            5900,
+                            PaymentPurpose.RENEWAL,
+                            AlbumType.PRO);
+            payment6.complete("testImpUid", "testPgProvider", LocalDateTime.now());
+            payment6.cancel(LocalDateTime.now());
+
+            paymentRepository.saveAll(
+                    List.of(payment1, payment2, payment3, payment4, payment5, payment6));
         }
 
         @Test
@@ -432,7 +444,18 @@ class SubscriptionServiceTest extends IntegrationTest {
         }
 
         @Test
-        void 결제상태가_PAID가_아니면_예외가_발생한다() {
+        void 이미_취소된_결제라면_예외가_발생한다() {
+            // given
+            SubscriptionRenewRequest request = new SubscriptionRenewRequest(6L);
+
+            // when & then
+            assertThatThrownBy(() -> subscriptionService.renewSubscription(1L, request))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(PaymentDomainErrorCode.ALREADY_CANCELED.getMessage());
+        }
+
+        @Test
+        void 완료되지_않은_결제라면_예외가_발생한다() {
             // given
             SubscriptionRenewRequest request = new SubscriptionRenewRequest(3L);
 
