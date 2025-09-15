@@ -96,6 +96,18 @@ public class Payment extends BaseTimeEntity {
         this.paidAt = paidAt;
     }
 
+    public void cancel(LocalDateTime canceledAt) {
+        if (this.status == PaymentStatus.CANCELED) {
+            throw new CustomException(PaymentDomainErrorCode.ALREADY_CANCELED);
+        }
+        if (this.status != PaymentStatus.PAID) {
+            throw new CustomException(PaymentDomainErrorCode.ONLY_PAID_PAYMENT_CANCELABLE);
+        }
+
+        this.status = PaymentStatus.CANCELED;
+        this.canceledAt = canceledAt;
+    }
+
     public void assignToAlbum(PaymentPurpose purpose, Album album) {
         if (this.status != PaymentStatus.PAID) {
             throw new CustomException(PaymentDomainErrorCode.NOT_PAID);

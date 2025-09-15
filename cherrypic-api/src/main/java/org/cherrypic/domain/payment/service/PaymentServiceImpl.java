@@ -2,6 +2,7 @@ package org.cherrypic.domain.payment.service;
 
 import com.siot.IamportRestClient.IamportClient;
 import com.siot.IamportRestClient.exception.IamportResponseException;
+import com.siot.IamportRestClient.request.CancelData;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -111,6 +112,31 @@ public class PaymentServiceImpl implements PaymentService {
             payment.complete(impUid, pgProvider, paidAt);
 
             return PaymentVerificationResponse.from(payment);
+
+        } catch (IamportResponseException e) {
+            throw new CustomException(PaymentErrorCode.PAYMENT_NOT_FOUND);
+        } catch (IOException e) {
+            throw new CustomException(PaymentErrorCode.IAMPORT_API_UNAVAILABLE);
+        }
+    }
+
+    @Override
+    public void cancelPayment(String impUid) {
+        try {
+            var iamportPayment = iamportClient.paymentByImpUid(impUid).getResponse();
+
+            Payment payment =
+                    paymentRepository
+                            .findByImpUid(impUid)
+                            .orElseThrow(
+                                    () -> new CustomException(PaymentErrorCode.PAYMENT_NOT_FOUND));
+
+            payment.cancel(LocalDateTime.now());
+
+            CancelData cancelData =
+                    new CancelData(iamportPayment.getImpUid(), true, iamportPayment.getAmount());
+
+            iamportClient.cancelPaymentByImpUid(cancelData);
 
         } catch (IamportResponseException e) {
             throw new CustomException(PaymentErrorCode.PAYMENT_NOT_FOUND);
