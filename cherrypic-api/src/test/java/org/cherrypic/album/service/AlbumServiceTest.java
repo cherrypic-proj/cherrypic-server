@@ -202,11 +202,8 @@ class AlbumServiceTest extends IntegrationTest {
                                 5900,
                                 PaymentPurpose.CREATION,
                                 AlbumType.PRO);
-                payment1.updatePayment(
-                        "testImpUid",
-                        "testPgProvider",
-                        PaymentStatus.PAID,
-                        LocalDateTime.of(2025, 8, 1, 13, 0));
+                payment1.complete(
+                        "testImpUid", "testPgProvider", LocalDateTime.of(2025, 8, 1, 13, 0));
                 // 검증되지 않은 결제
                 Payment payment2 =
                         Payment.createPayment(
@@ -223,8 +220,7 @@ class AlbumServiceTest extends IntegrationTest {
                                 5900,
                                 PaymentPurpose.CREATION,
                                 AlbumType.PRO);
-                payment3.updatePayment(
-                        "testImpUid", "testPgProvider", PaymentStatus.PAID, LocalDateTime.now());
+                payment3.complete("testImpUid", "testPgProvider", LocalDateTime.now());
                 payment3.updatePayment(PaymentPurpose.CREATION, album);
                 // 구독 갱신 목적으로 쓰인 결제
                 Payment payment4 =
@@ -234,8 +230,7 @@ class AlbumServiceTest extends IntegrationTest {
                                 5900,
                                 PaymentPurpose.RENEWAL,
                                 AlbumType.PRO);
-                payment4.updatePayment(
-                        "testImpUid", "testPgProvider", PaymentStatus.PAID, LocalDateTime.now());
+                payment4.complete("testImpUid", "testPgProvider", LocalDateTime.now());
                 paymentRepository.saveAll(List.of(payment1, payment2, payment3, payment4));
             }
 

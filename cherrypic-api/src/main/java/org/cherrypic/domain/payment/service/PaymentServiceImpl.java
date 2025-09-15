@@ -108,7 +108,7 @@ public class PaymentServiceImpl implements PaymentService {
                 throw new CustomException(PaymentErrorCode.NOT_PAID);
             }
 
-            payment.updatePayment(impUid, pgProvider, PaymentStatus.PAID, paidAt);
+            payment.complete(impUid, pgProvider, paidAt);
 
             return PaymentVerificationResponse.from(payment);
 

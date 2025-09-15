@@ -332,8 +332,7 @@ public class PaymentServiceTest extends IntegrationTest {
             Payment payment =
                     Payment.createPayment(
                             member, "testMerchantUid", 5900, PaymentPurpose.RENEWAL, AlbumType.PRO);
-            payment.updatePayment(
-                    "testImpUid", "kakaopay", PaymentStatus.PAID, LocalDateTime.now());
+            payment.complete("testImpUid", "kakaopay", LocalDateTime.now());
             paymentRepository.save(payment);
 
             PaymentReadyRequest request = new PaymentReadyRequest(AlbumType.PRO, null);
@@ -501,11 +500,7 @@ public class PaymentServiceTest extends IntegrationTest {
                             5900,
                             PaymentPurpose.CREATION,
                             AlbumType.PRO);
-            payment.updatePayment(
-                    "testImpUid",
-                    "kakaopay",
-                    PaymentStatus.PAID,
-                    LocalDateTime.of(2025, 8, 31, 20, 0));
+            payment.complete("testImpUid", "kakaopay", LocalDateTime.of(2025, 8, 31, 20, 0));
             paymentRepository.save(payment);
 
             PaymentUnlinkedResponse response = paymentService.getUnlinkedPayment();
@@ -578,11 +573,7 @@ public class PaymentServiceTest extends IntegrationTest {
                             5900,
                             PaymentPurpose.CREATION,
                             AlbumType.PRO);
-            payment1.updatePayment(
-                    "testImpUid1",
-                    "kakaopay",
-                    PaymentStatus.PAID,
-                    LocalDateTime.of(2025, 8, 1, 20, 0));
+            payment1.complete("testImpUid1", "kakaopay", LocalDateTime.of(2025, 8, 1, 20, 0));
             payment1.updatePayment(PaymentPurpose.CREATION, album1);
             Payment payment2 =
                     Payment.createPayment(
@@ -591,11 +582,7 @@ public class PaymentServiceTest extends IntegrationTest {
                             12900,
                             PaymentPurpose.RENEWAL,
                             AlbumType.PRO);
-            payment2.updatePayment(
-                    "testImpUid2",
-                    "kakaopay",
-                    PaymentStatus.PAID,
-                    LocalDateTime.of(2025, 9, 1, 20, 0));
+            payment2.complete("testImpUid2", "kakaopay", LocalDateTime.of(2025, 9, 1, 20, 0));
             payment2.updatePayment(PaymentPurpose.RENEWAL, album1);
             paymentRepository.saveAll(List.of(payment1, payment2));
         }

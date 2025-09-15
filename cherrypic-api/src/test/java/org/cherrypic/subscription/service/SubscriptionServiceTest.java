@@ -263,11 +263,7 @@ class SubscriptionServiceTest extends IntegrationTest {
                             5900,
                             PaymentPurpose.RENEWAL,
                             AlbumType.PRO);
-            payment1.updatePayment(
-                    "testImpUid",
-                    "testPgProvider",
-                    PaymentStatus.PAID,
-                    LocalDateTime.now().minusDays(15));
+            payment1.complete("testImpUid", "testPgProvider", LocalDateTime.now().minusDays(15));
 
             // 완료된 다른 회원의 결제
             Payment payment2 =
@@ -277,8 +273,7 @@ class SubscriptionServiceTest extends IntegrationTest {
                             5900,
                             PaymentPurpose.RENEWAL,
                             AlbumType.PRO);
-            payment2.updatePayment(
-                    "testImpUid", "testPgProvider", PaymentStatus.PAID, LocalDateTime.now());
+            payment2.complete("testImpUid", "testPgProvider", LocalDateTime.now());
 
             // 완료되지 않은 결제
             Payment payment3 =
@@ -297,8 +292,7 @@ class SubscriptionServiceTest extends IntegrationTest {
                             5900,
                             PaymentPurpose.CREATION,
                             AlbumType.PRO);
-            payment4.updatePayment(
-                    "testImpUid", "testPgProvider", PaymentStatus.PAID, LocalDateTime.now());
+            payment4.complete("testImpUid", "testPgProvider", LocalDateTime.now());
             payment4.updatePayment(PaymentPurpose.CREATION, album1);
 
             // 구독 업그레이드 목적으로 쓰인 결제
@@ -309,8 +303,7 @@ class SubscriptionServiceTest extends IntegrationTest {
                             12900,
                             PaymentPurpose.UPGRADE,
                             AlbumType.PREMIUM);
-            payment5.updatePayment(
-                    "testImpUid", "testPgProvider", PaymentStatus.PAID, LocalDateTime.now());
+            payment5.complete("testImpUid", "testPgProvider", LocalDateTime.now());
 
             paymentRepository.saveAll(List.of(payment1, payment2, payment3, payment4, payment5));
         }
