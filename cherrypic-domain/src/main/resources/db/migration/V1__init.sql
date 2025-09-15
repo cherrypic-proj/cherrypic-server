@@ -36,6 +36,7 @@ CREATE TABLE payment (
                          purpose VARCHAR(20) NOT NULL CHECK (purpose IN ('CREATION','RENEWAL','UPGRADE')),
                          album_type VARCHAR(20) CHECK (album_type IN ('BASIC','PRO','PREMIUM')),
                          paid_at DATETIME,
+                         canceled_at DATETIME,
                          created_at DATETIME(6) NOT NULL,
                          updated_at DATETIME(6) NOT NULL,
                          CONSTRAINT fk_payment_member FOREIGN KEY (member_id) REFERENCES member (id),

@@ -55,6 +55,8 @@ public class Payment extends BaseTimeEntity {
 
     private LocalDateTime paidAt;
 
+    private LocalDateTime canceledAt;
+
     @Builder(access = AccessLevel.PRIVATE)
     private Payment(
             Member member,
