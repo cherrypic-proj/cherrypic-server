@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
 import okhttp3.MediaType;
@@ -41,6 +42,7 @@ import org.cherrypic.participant.enums.ParticipantRole;
 import org.cherrypic.payment.entity.Payment;
 import org.cherrypic.payment.enums.PaymentPurpose;
 import org.cherrypic.payment.enums.PaymentStatus;
+import org.cherrypic.payment.exception.PaymentDomainErrorCode;
 import org.cherrypic.subscription.entity.Subscription;
 import org.cherrypic.subscription.enums.SubscriptionStatus;
 import org.junit.jupiter.api.Assertions;
@@ -332,8 +334,7 @@ public class PaymentServiceTest extends IntegrationTest {
             Payment payment =
                     Payment.createPayment(
                             member, "testMerchantUid", 5900, PaymentPurpose.RENEWAL, AlbumType.PRO);
-            payment.updatePayment(
-                    "testImpUid", "kakaopay", PaymentStatus.PAID, LocalDateTime.now());
+            payment.complete("testImpUid", "kakaopay", LocalDateTime.now());
             paymentRepository.save(payment);
 
             PaymentReadyRequest request = new PaymentReadyRequest(AlbumType.PRO, null);
@@ -475,6 +476,160 @@ public class PaymentServiceTest extends IntegrationTest {
     }
 
     @Nested
+    class 결제를_취소할_때 {
+
+        @BeforeEach
+        void setUp() {
+            Member member =
+                    Member.createMember(
+                            OauthInfo.createOauthInfo("testOauthId", "testOauthProvider"),
+                            "testNickname",
+                            "testProfileImageUrl");
+            memberRepository.save(member);
+            given(memberUtil.getCurrentMember()).willReturn(member);
+
+            // 완료된 결제
+            Payment payment1 =
+                    Payment.createPayment(
+                            member,
+                            "testMerchantUid",
+                            5900,
+                            PaymentPurpose.CREATION,
+                            AlbumType.PRO);
+            payment1.complete("imp_1234", "kakaopay", LocalDateTime.of(2025, 8, 1, 13, 0));
+            // 취소된 결제
+            Payment payment2 =
+                    Payment.createPayment(
+                            member,
+                            "testMerchantUid",
+                            5900,
+                            PaymentPurpose.CREATION,
+                            AlbumType.PRO);
+            payment2.complete("imp_4321", "kakaopay", LocalDateTime.of(2025, 8, 1, 13, 0));
+            payment2.cancel(LocalDateTime.now());
+            // 완료되지 않은 결제
+            Payment payment3 =
+                    Payment.createPayment(
+                            member,
+                            "testMerchantUid",
+                            5900,
+                            PaymentPurpose.CREATION,
+                            AlbumType.PRO);
+            ReflectionTestUtils.setField(payment3, "impUid", "imp_5555");
+            ReflectionTestUtils.setField(payment3, "status", PaymentStatus.READY);
+            paymentRepository.saveAll(List.of(payment1, payment2, payment3));
+        }
+
+        @Test
+        void 유효한_요청이면_결제를_취소한다() throws IamportResponseException, IOException {
+            // given
+            stubIamportPayment();
+
+            // when
+            paymentService.cancelPayment("imp_1234");
+
+            // then
+            Payment payment = paymentRepository.findById(1L).orElseThrow();
+            Assertions.assertAll(
+                    () ->
+                            assertThat(payment)
+                                    .extracting("id", "impUid", "amount", "status", "paidAt")
+                                    .containsExactly(
+                                            1L,
+                                            "imp_1234",
+                                            5900,
+                                            PaymentStatus.CANCELED,
+                                            LocalDateTime.of(2025, 8, 1, 13, 0)),
+                    () ->
+                            assertThat(payment.getCanceledAt().truncatedTo(ChronoUnit.MINUTES))
+                                    .isEqualTo(
+                                            LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES)));
+        }
+
+        @Test
+        void impUid가_아임포트에_존재하지_않으면_예외가_발생한다() throws IamportResponseException, IOException {
+            // given
+            HttpException httpException =
+                    new HttpException(
+                            Response.error(
+                                    404,
+                                    ResponseBody.create(
+                                            MediaType.parse("application/json"),
+                                            "{\"message\":\"not found\"}")));
+
+            given(iamportClient.paymentByImpUid("imp_9999"))
+                    .willThrow(new IamportResponseException("not found", httpException));
+
+            // when & then
+            assertThatThrownBy(() -> paymentService.cancelPayment("imp_9999"))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(PaymentErrorCode.PAYMENT_NOT_FOUND.getMessage());
+        }
+
+        @Test
+        void impUid에_해당하는_결제가_DB에_없으면_예외가_발생한다() throws IamportResponseException, IOException {
+            // given
+            stubIamportPayment();
+
+            // when & then
+            assertThatThrownBy(() -> paymentService.cancelPayment("imp_9999"))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(PaymentErrorCode.PAYMENT_NOT_FOUND.getMessage());
+        }
+
+        @Test
+        void 이미_취소된_결제라면_예외가_발생한다() throws IamportResponseException, IOException {
+            // given
+            stubIamportPayment();
+
+            // when & then
+            assertThatThrownBy(() -> paymentService.cancelPayment("imp_4321"))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(PaymentDomainErrorCode.ALREADY_CANCELED.getMessage());
+        }
+
+        @Test
+        void 완료되지_않은_결제라면_예외가_발생한다() throws IamportResponseException, IOException {
+            // given
+            stubIamportPayment();
+
+            // when & then
+            assertThatThrownBy(() -> paymentService.cancelPayment("imp_5555"))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(PaymentDomainErrorCode.ONLY_PAID_PAYMENT_CANCELABLE.getMessage());
+        }
+
+        @Test
+        void Iamport_API_통신_장애가_발생하면_예외가_발생한다() throws IamportResponseException, IOException {
+            // given
+            given(iamportClient.paymentByImpUid("imp_1234"))
+                    .willThrow(new IOException("network error"));
+
+            // when & then
+            assertThatThrownBy(() -> paymentService.verifyPayment("imp_1234"))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(PaymentErrorCode.IAMPORT_API_UNAVAILABLE.getMessage());
+        }
+
+        private void stubIamportPayment() throws IOException, IamportResponseException {
+            given(iamportClient.paymentByImpUid(anyString())).willReturn(iamportResponse);
+            given(iamportResponse.getResponse()).willReturn(iamportPayment);
+
+            given(iamportPayment.getImpUid()).willReturn("imp_1234");
+            given(iamportPayment.getMerchantUid()).willReturn("testMerchantUid");
+            given(iamportPayment.getPgProvider()).willReturn("kakaopay");
+            given(iamportPayment.getAmount()).willReturn(BigDecimal.valueOf(5900));
+            given(iamportPayment.getStatus()).willReturn("PAID");
+            given(iamportPayment.getPaidAt())
+                    .willReturn(
+                            Date.from(
+                                    LocalDateTime.of(2025, 8, 1, 13, 0)
+                                            .atZone(ZoneId.systemDefault())
+                                            .toInstant()));
+        }
+    }
+
+    @Nested
     class 앨범과_연결되지_않은_완료된_결제_내역을_조회할_때 {
 
         @BeforeEach
@@ -501,11 +656,7 @@ public class PaymentServiceTest extends IntegrationTest {
                             5900,
                             PaymentPurpose.CREATION,
                             AlbumType.PRO);
-            payment.updatePayment(
-                    "testImpUid",
-                    "kakaopay",
-                    PaymentStatus.PAID,
-                    LocalDateTime.of(2025, 8, 31, 20, 0));
+            payment.complete("testImpUid", "kakaopay", LocalDateTime.of(2025, 8, 31, 20, 0));
             paymentRepository.save(payment);
 
             PaymentUnlinkedResponse response = paymentService.getUnlinkedPayment();
@@ -578,12 +729,8 @@ public class PaymentServiceTest extends IntegrationTest {
                             5900,
                             PaymentPurpose.CREATION,
                             AlbumType.PRO);
-            payment1.updatePayment(
-                    "testImpUid1",
-                    "kakaopay",
-                    PaymentStatus.PAID,
-                    LocalDateTime.of(2025, 8, 1, 20, 0));
-            payment1.updatePayment(PaymentPurpose.CREATION, album1);
+            payment1.complete("testImpUid1", "kakaopay", LocalDateTime.of(2025, 8, 1, 20, 0));
+            payment1.assignToAlbum(PaymentPurpose.CREATION, album1);
             Payment payment2 =
                     Payment.createPayment(
                             member1,
@@ -591,12 +738,8 @@ public class PaymentServiceTest extends IntegrationTest {
                             12900,
                             PaymentPurpose.RENEWAL,
                             AlbumType.PRO);
-            payment2.updatePayment(
-                    "testImpUid2",
-                    "kakaopay",
-                    PaymentStatus.PAID,
-                    LocalDateTime.of(2025, 9, 1, 20, 0));
-            payment2.updatePayment(PaymentPurpose.RENEWAL, album1);
+            payment2.complete("testImpUid2", "kakaopay", LocalDateTime.of(2025, 9, 1, 20, 0));
+            payment2.assignToAlbum(PaymentPurpose.RENEWAL, album1);
             paymentRepository.saveAll(List.of(payment1, payment2));
         }
 

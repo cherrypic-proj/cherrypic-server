@@ -13,6 +13,8 @@ public interface PaymentService {
 
     PaymentVerificationResponse verifyPayment(String impUid);
 
+    void cancelPayment(String impUid);
+
     PaymentUnlinkedResponse getUnlinkedPayment();
 
     SliceResponse<PaymentListResponse> getAlbumPayments(

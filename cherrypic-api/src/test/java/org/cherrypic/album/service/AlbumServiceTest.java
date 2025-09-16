@@ -202,11 +202,8 @@ class AlbumServiceTest extends IntegrationTest {
                                 5900,
                                 PaymentPurpose.CREATION,
                                 AlbumType.PRO);
-                payment1.updatePayment(
-                        "testImpUid",
-                        "testPgProvider",
-                        PaymentStatus.PAID,
-                        LocalDateTime.of(2025, 8, 1, 13, 0));
+                payment1.complete(
+                        "testImpUid", "testPgProvider", LocalDateTime.of(2025, 8, 1, 13, 0));
                 // 검증되지 않은 결제
                 Payment payment2 =
                         Payment.createPayment(
@@ -223,9 +220,8 @@ class AlbumServiceTest extends IntegrationTest {
                                 5900,
                                 PaymentPurpose.CREATION,
                                 AlbumType.PRO);
-                payment3.updatePayment(
-                        "testImpUid", "testPgProvider", PaymentStatus.PAID, LocalDateTime.now());
-                payment3.updatePayment(PaymentPurpose.CREATION, album);
+                payment3.complete("testImpUid", "testPgProvider", LocalDateTime.now());
+                payment3.assignToAlbum(PaymentPurpose.CREATION, album);
                 // 구독 갱신 목적으로 쓰인 결제
                 Payment payment4 =
                         Payment.createPayment(
@@ -234,9 +230,19 @@ class AlbumServiceTest extends IntegrationTest {
                                 5900,
                                 PaymentPurpose.RENEWAL,
                                 AlbumType.PRO);
-                payment4.updatePayment(
-                        "testImpUid", "testPgProvider", PaymentStatus.PAID, LocalDateTime.now());
-                paymentRepository.saveAll(List.of(payment1, payment2, payment3, payment4));
+                payment4.complete("testImpUid", "testPgProvider", LocalDateTime.now());
+                // 취소된 결제
+                Payment payment5 =
+                        Payment.createPayment(
+                                member1,
+                                "testMerchantUid",
+                                5900,
+                                PaymentPurpose.CREATION,
+                                AlbumType.PRO);
+                payment5.complete("testImpUid", "testPgProvider", LocalDateTime.now());
+                payment5.cancel(LocalDateTime.now());
+                paymentRepository.saveAll(
+                        List.of(payment1, payment2, payment3, payment4, payment5));
             }
 
             @Test
@@ -349,7 +355,20 @@ class AlbumServiceTest extends IntegrationTest {
             }
 
             @Test
-            void 결제상태가_PAID가_아니면_예외가_발생한다() {
+            void 이미_취소된_결제라면_예외가_발생한다() {
+                // given
+                AlbumCreateRequest request =
+                        new AlbumCreateRequest(
+                                "testTitle", "testCoverUrl", AlbumType.PRO, 5L, false);
+
+                // when & then
+                assertThatThrownBy(() -> albumService.createAlbum(request))
+                        .isInstanceOf(CustomException.class)
+                        .hasMessage(PaymentDomainErrorCode.ALREADY_CANCELED.getMessage());
+            }
+
+            @Test
+            void 완료되지_않은_결제라면_예외가_발생한다() {
                 // given
                 AlbumCreateRequest request =
                         new AlbumCreateRequest(

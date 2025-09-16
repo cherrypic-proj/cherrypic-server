@@ -14,6 +14,7 @@ import org.cherrypic.domain.payment.service.PaymentService;
 import org.cherrypic.global.annotation.PageSize;
 import org.cherrypic.global.pagination.SliceResponse;
 import org.cherrypic.global.pagination.SortDirection;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -40,6 +41,13 @@ public class PaymentController {
             description = "impUid에 해당하는 결제 정보를 아임포트에서 조회하고, 결제 금액과 상태를 검증합니다.")
     public PaymentVerificationResponse paymentVerify(@PathVariable String impUid) {
         return paymentService.verifyPayment(impUid);
+    }
+
+    @PostMapping("/cancel/{impUid}")
+    @Operation(summary = "impUid 기반 결제 취소", description = "impUid에 해당하는 결제를 전체 환불 처리합니다.")
+    public ResponseEntity<Void> paymentCancel(@PathVariable String impUid) {
+        paymentService.cancelPayment(impUid);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/unlinked")

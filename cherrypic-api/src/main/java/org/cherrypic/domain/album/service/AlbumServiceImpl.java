@@ -80,7 +80,7 @@ public class AlbumServiceImpl implements AlbumService {
 
             validatePaymentMemberMismatch(payment, currentMember);
 
-            payment.updatePayment(PaymentPurpose.CREATION, album);
+            payment.assignToAlbum(PaymentPurpose.CREATION, album);
 
             subscriptionRepository.save(
                     Subscription.createSubscription(currentMember, album, payment.getPaidAt()));

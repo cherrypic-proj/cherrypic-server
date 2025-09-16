@@ -55,6 +55,8 @@ public class Payment extends BaseTimeEntity {
 
     private LocalDateTime paidAt;
 
+    private LocalDateTime canceledAt;
+
     @Builder(access = AccessLevel.PRIVATE)
     private Payment(
             Member member,
@@ -87,15 +89,29 @@ public class Payment extends BaseTimeEntity {
                 .build();
     }
 
-    public void updatePayment(
-            String impUid, String pgProvider, PaymentStatus status, LocalDateTime paidAt) {
+    public void complete(String impUid, String pgProvider, LocalDateTime paidAt) {
         this.impUid = impUid;
         this.pgProvider = pgProvider;
-        this.status = status;
+        this.status = PaymentStatus.PAID;
         this.paidAt = paidAt;
     }
 
-    public void updatePayment(PaymentPurpose purpose, Album album) {
+    public void cancel(LocalDateTime canceledAt) {
+        if (this.status == PaymentStatus.CANCELED) {
+            throw new CustomException(PaymentDomainErrorCode.ALREADY_CANCELED);
+        }
+        if (this.status != PaymentStatus.PAID) {
+            throw new CustomException(PaymentDomainErrorCode.ONLY_PAID_PAYMENT_CANCELABLE);
+        }
+
+        this.status = PaymentStatus.CANCELED;
+        this.canceledAt = canceledAt;
+    }
+
+    public void assignToAlbum(PaymentPurpose purpose, Album album) {
+        if (this.status == PaymentStatus.CANCELED) {
+            throw new CustomException(PaymentDomainErrorCode.ALREADY_CANCELED);
+        }
         if (this.status != PaymentStatus.PAID) {
             throw new CustomException(PaymentDomainErrorCode.NOT_PAID);
         }

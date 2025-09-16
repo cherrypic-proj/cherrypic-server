@@ -372,7 +372,29 @@ class SubscriptionControllerTest {
         }
 
         @Test
-        void 결제상태가_PAID가_아니면_예외가_발생한다() throws Exception {
+        void 이미_취소된_결제라면_예외가_발생한다() throws Exception {
+            // given
+            SubscriptionRenewRequest request = new SubscriptionRenewRequest(1L);
+
+            given(subscriptionService.renewSubscription(1L, request))
+                    .willThrow(new CustomException(PaymentDomainErrorCode.ALREADY_CANCELED));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            patch("/albums/1/subscriptions/renew")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("ALREADY_CANCELED"))
+                    .andExpect(jsonPath("$.data.message").value("해당 결제는 이미 취소되었습니다."));
+        }
+
+        @Test
+        void 완료되지_않은_결제라면_예외가_발생한다() throws Exception {
             // given
             SubscriptionRenewRequest request = new SubscriptionRenewRequest(1L);
 
