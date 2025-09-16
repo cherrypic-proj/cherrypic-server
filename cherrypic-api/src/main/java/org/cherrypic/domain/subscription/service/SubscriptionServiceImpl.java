@@ -1,5 +1,6 @@
 package org.cherrypic.domain.subscription.service;
 
+import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import org.cherrypic.album.entity.Album;
 import org.cherrypic.album.enums.AlbumType;
@@ -8,6 +9,7 @@ import org.cherrypic.domain.album.repository.AlbumRepository;
 import org.cherrypic.domain.participant.repository.ParticipantRepository;
 import org.cherrypic.domain.payment.exception.PaymentErrorCode;
 import org.cherrypic.domain.payment.repository.PaymentRepository;
+import org.cherrypic.domain.payment.repository.RefundTaskRepository;
 import org.cherrypic.domain.subscription.dto.request.SubscriptionRenewRequest;
 import org.cherrypic.domain.subscription.dto.response.SubscriptionInfoResponse;
 import org.cherrypic.domain.subscription.dto.response.SubscriptionRenewResponse;
@@ -36,6 +38,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     private final AlbumRepository albumRepository;
     private final ParticipantRepository participantRepository;
     private final PaymentRepository paymentRepository;
+    private final RefundTaskRepository refundTaskRepository;
 
     @Override
     public void cancelSubscription(Long albumId) {
@@ -66,6 +69,10 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         validatePaymentMemberMismatch(payment, currentMember);
 
         payment.assignToAlbum(PaymentPurpose.RENEWAL, album);
+
+        refundTaskRepository
+                .findByPaymentId(payment.getId())
+                .ifPresent(task -> task.skip(LocalDateTime.now()));
 
         final Subscription subscription = getSubscriptionByAlbumId(album.getId());
 

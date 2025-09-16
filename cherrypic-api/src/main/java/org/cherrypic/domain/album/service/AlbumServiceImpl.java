@@ -1,5 +1,6 @@
 package org.cherrypic.domain.album.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.cherrypic.album.entity.Album;
@@ -19,6 +20,7 @@ import org.cherrypic.domain.image.event.ImagesDeleteEvent;
 import org.cherrypic.domain.participant.repository.ParticipantRepository;
 import org.cherrypic.domain.payment.exception.PaymentErrorCode;
 import org.cherrypic.domain.payment.repository.PaymentRepository;
+import org.cherrypic.domain.payment.repository.RefundTaskRepository;
 import org.cherrypic.domain.subscription.repository.SubscriptionRepository;
 import org.cherrypic.event.entity.Event;
 import org.cherrypic.exception.CustomException;
@@ -47,6 +49,7 @@ public class AlbumServiceImpl implements AlbumService {
 
     private final AlbumRepository albumRepository;
     private final PaymentRepository paymentRepository;
+    private final RefundTaskRepository refundTaskRepository;
     private final ParticipantRepository participantRepository;
     private final SubscriptionRepository subscriptionRepository;
     private final InvitationCodeRepository invitationCodeRepository;
@@ -81,6 +84,10 @@ public class AlbumServiceImpl implements AlbumService {
             validatePaymentMemberMismatch(payment, currentMember);
 
             payment.assignToAlbum(PaymentPurpose.CREATION, album);
+
+            refundTaskRepository
+                    .findByPaymentId(payment.getId())
+                    .ifPresent(task -> task.skip(LocalDateTime.now()));
 
             subscriptionRepository.save(
                     Subscription.createSubscription(currentMember, album, payment.getPaidAt()));

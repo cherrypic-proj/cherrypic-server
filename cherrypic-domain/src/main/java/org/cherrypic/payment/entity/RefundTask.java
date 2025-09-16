@@ -50,4 +50,9 @@ public class RefundTask extends BaseTimeEntity {
         this.status = RefundTaskStatus.COMPLETED;
         this.executedAt = executedAt;
     }
+
+    public void skip(LocalDateTime executedAt) {
+        this.status = RefundTaskStatus.SKIPPED;
+        this.executedAt = executedAt;
+    }
 }
