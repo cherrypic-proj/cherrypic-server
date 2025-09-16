@@ -5,5 +5,6 @@ CREATE TABLE refund_task (
                          scheduled_at DATETIME,
                          executed_at DATETIME,
                          created_at DATETIME(6) NOT NULL,
-                         updated_at DATETIME(6) NOT NULL
+                         updated_at DATETIME(6) NOT NULL,
+                         CONSTRAINT fk_refund_task_payment FOREIGN KEY (payment_id) REFERENCES payment (id)
 );
