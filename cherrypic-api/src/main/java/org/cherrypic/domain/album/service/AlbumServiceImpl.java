@@ -75,8 +75,9 @@ public class AlbumServiceImpl implements AlbumService {
         Participant participant =
                 Participant.createParticipant(currentMember, album, ParticipantRole.HOST);
         participant.assignFavorites();
-
         album.addParticipant(participant);
+
+        albumRepository.save(album);
 
         if (request.type() != AlbumType.BASIC) {
             final Payment payment = getPaymentByIdWithLock(request.paymentId());
@@ -92,8 +93,6 @@ public class AlbumServiceImpl implements AlbumService {
             subscriptionRepository.save(
                     Subscription.createSubscription(currentMember, album, payment.getPaidAt()));
         }
-
-        albumRepository.save(album);
 
         return AlbumCreateResponse.from(album);
     }
