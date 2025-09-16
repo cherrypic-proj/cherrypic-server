@@ -46,6 +46,7 @@ public class PaymentServiceImpl implements PaymentService {
 
     private final MemberUtil memberUtil;
     private final IamportClient iamportClient;
+    private final PaymentAutoRefundService paymentAutoRefundService;
 
     private final PaymentRepository paymentRepository;
     private final AlbumRepository albumRepository;
@@ -110,6 +111,7 @@ public class PaymentServiceImpl implements PaymentService {
             }
 
             payment.complete(impUid, pgProvider, paidAt);
+            paymentAutoRefundService.scheduleAutoRefund(payment);
 
             return PaymentVerificationResponse.from(payment);
 
