@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.cherrypic.domain.payment.repository.PaymentRepository;
+import org.cherrypic.domain.payment.repository.RefundTaskRepository;
 import org.cherrypic.payment.entity.Payment;
 import org.cherrypic.payment.enums.PaymentStatus;
 import org.springframework.scheduling.TaskScheduler;
@@ -23,6 +24,7 @@ public class PaymentAutoRefundService {
 
     private final IamportClient iamportClient;
     private final PaymentRepository paymentRepository;
+    private final RefundTaskRepository refundTaskRepository;
 
     public void scheduleAutoRefund(Payment payment) {
         if (payment.getStatus() != PaymentStatus.PAID) {
@@ -52,6 +54,15 @@ public class PaymentAutoRefundService {
 
                                                 p.cancel(LocalDateTime.now());
                                                 paymentRepository.save(p);
+
+                                                refundTaskRepository
+                                                        .findByPaymentId(p.getId())
+                                                        .ifPresent(
+                                                                task -> {
+                                                                    task.complete(
+                                                                            LocalDateTime.now());
+                                                                    refundTaskRepository.save(task);
+                                                                });
 
                                                 log.info(
                                                         "Refund succeeded: paymentId={}, canceledAt={}, thread={}",

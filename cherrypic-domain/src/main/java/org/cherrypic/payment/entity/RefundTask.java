@@ -43,4 +43,9 @@ public class RefundTask extends BaseTimeEntity {
                 .status(RefundTaskStatus.PENDING)
                 .build();
     }
+
+    public void complete(LocalDateTime executedAt) {
+        this.status = RefundTaskStatus.COMPLETED;
+        this.executedAt = executedAt;
+    }
 }
