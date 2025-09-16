@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.cherrypic.payment.enums.RefundTaskStatus;
@@ -26,4 +27,19 @@ public class RefundTask {
     @NotNull private LocalDateTime scheduledAt;
 
     private LocalDateTime executedAt;
+
+    @Builder(access = AccessLevel.PRIVATE)
+    private RefundTask(Long paymentId, LocalDateTime scheduledAt, RefundTaskStatus status) {
+        this.paymentId = paymentId;
+        this.scheduledAt = scheduledAt;
+        this.status = status;
+    }
+
+    public static RefundTask createRefundTask(Long paymentId, LocalDateTime scheduledAt) {
+        return RefundTask.builder()
+                .paymentId(paymentId)
+                .scheduledAt(scheduledAt)
+                .status(RefundTaskStatus.PENDING)
+                .build();
+    }
 }
