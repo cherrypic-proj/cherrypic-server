@@ -39,7 +39,7 @@ public class PaymentAutoRefundService {
         Runnable autoRefundTask =
                 () ->
                         paymentRepository
-                                .findById(payment.getId())
+                                .findByIdWithPessimisticLock(payment.getId())
                                 .filter(p -> p.getStatus() == PaymentStatus.PAID)
                                 .filter(p -> p.getAlbum() == null)
                                 .ifPresent(

@@ -79,7 +79,7 @@ public class AlbumServiceImpl implements AlbumService {
         album.addParticipant(participant);
 
         if (request.type() != AlbumType.BASIC) {
-            final Payment payment = getPaidPaymentById(request.paymentId());
+            final Payment payment = getPaymentByIdWithLock(request.paymentId());
 
             validatePaymentMemberMismatch(payment, currentMember);
 
@@ -285,9 +285,9 @@ public class AlbumServiceImpl implements AlbumService {
         }
     }
 
-    private Payment getPaidPaymentById(Long paymentId) {
+    private Payment getPaymentByIdWithLock(Long paymentId) {
         return paymentRepository
-                .findById(paymentId)
+                .findByIdWithPessimisticLock(paymentId)
                 .orElseThrow(() -> new CustomException(PaymentErrorCode.PAYMENT_NOT_FOUND));
     }
 

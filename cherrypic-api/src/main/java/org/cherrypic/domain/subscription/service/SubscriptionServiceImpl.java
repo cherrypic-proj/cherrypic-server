@@ -64,7 +64,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         validateSubscriptionNotExpired(album);
         validateSubscriptionSupported(album);
 
-        final Payment payment = getPaidPaymentById(request.paymentId());
+        final Payment payment = getPaymentByIdWithLock(request.paymentId());
 
         validatePaymentMemberMismatch(payment, currentMember);
 
@@ -129,9 +129,9 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                         () -> new CustomException(SubscriptionErrorCode.SUBSCRIPTION_NOT_FOUND));
     }
 
-    private Payment getPaidPaymentById(Long paymentId) {
+    private Payment getPaymentByIdWithLock(Long paymentId) {
         return paymentRepository
-                .findById(paymentId)
+                .findByIdWithPessimisticLock(paymentId)
                 .orElseThrow(() -> new CustomException(PaymentErrorCode.PAYMENT_NOT_FOUND));
     }
 
