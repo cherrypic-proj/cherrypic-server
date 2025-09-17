@@ -9,7 +9,7 @@ import org.cherrypic.domain.album.repository.AlbumRepository;
 import org.cherrypic.domain.participant.repository.ParticipantRepository;
 import org.cherrypic.domain.payment.exception.PaymentErrorCode;
 import org.cherrypic.domain.payment.repository.PaymentRepository;
-import org.cherrypic.domain.payment.repository.RefundTaskRepository;
+import org.cherrypic.domain.refundtask.repository.RefundTaskRepository;
 import org.cherrypic.domain.subscription.dto.request.SubscriptionRenewRequest;
 import org.cherrypic.domain.subscription.dto.response.SubscriptionInfoResponse;
 import org.cherrypic.domain.subscription.dto.response.SubscriptionRenewResponse;

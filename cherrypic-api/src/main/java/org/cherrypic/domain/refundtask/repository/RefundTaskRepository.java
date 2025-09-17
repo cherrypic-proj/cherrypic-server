@@ -1,9 +1,9 @@
-package org.cherrypic.domain.payment.repository;
+package org.cherrypic.domain.refundtask.repository;
 
 import java.util.List;
 import java.util.Optional;
-import org.cherrypic.payment.entity.RefundTask;
-import org.cherrypic.payment.enums.RefundTaskStatus;
+import org.cherrypic.refundtask.entity.RefundTask;
+import org.cherrypic.refundtask.enums.RefundTaskStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface RefundTaskRepository extends JpaRepository<RefundTask, Long> {

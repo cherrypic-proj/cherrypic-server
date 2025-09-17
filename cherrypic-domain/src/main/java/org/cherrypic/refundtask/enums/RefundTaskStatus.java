@@ -1,4 +1,4 @@
-package org.cherrypic.payment.enums;
+package org.cherrypic.refundtask.enums;
 
 public enum RefundTaskStatus {
     PENDING,

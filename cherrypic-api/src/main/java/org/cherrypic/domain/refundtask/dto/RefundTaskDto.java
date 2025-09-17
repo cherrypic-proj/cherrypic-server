@@ -1,7 +1,7 @@
-package org.cherrypic.domain.payment.dto;
+package org.cherrypic.domain.refundtask.dto;
 
 import java.time.LocalDateTime;
-import org.cherrypic.payment.entity.RefundTask;
+import org.cherrypic.refundtask.entity.RefundTask;
 
 public record RefundTaskDto(Long paymentId, LocalDateTime scheduledAt) {
     public static RefundTaskDto from(RefundTask refundTask) {

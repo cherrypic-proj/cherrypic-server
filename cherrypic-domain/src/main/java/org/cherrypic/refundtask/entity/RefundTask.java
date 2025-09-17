@@ -1,4 +1,4 @@
-package org.cherrypic.payment.entity;
+package org.cherrypic.refundtask.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -8,7 +8,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.cherrypic.common.model.BaseTimeEntity;
-import org.cherrypic.payment.enums.RefundTaskStatus;
+import org.cherrypic.refundtask.enums.RefundTaskStatus;
 
 @Getter
 @Entity

@@ -1,4 +1,4 @@
-package org.cherrypic.domain.payment.service;
+package org.cherrypic.domain.refundtask.service;
 
 import com.siot.IamportRestClient.IamportClient;
 import com.siot.IamportRestClient.request.CancelData;
@@ -7,12 +7,12 @@ import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.cherrypic.domain.payment.dto.RefundTaskDto;
 import org.cherrypic.domain.payment.repository.PaymentRepository;
-import org.cherrypic.domain.payment.repository.RefundTaskRepository;
-import org.cherrypic.payment.entity.RefundTask;
+import org.cherrypic.domain.refundtask.dto.RefundTaskDto;
+import org.cherrypic.domain.refundtask.repository.RefundTaskRepository;
 import org.cherrypic.payment.enums.PaymentStatus;
-import org.cherrypic.payment.enums.RefundTaskStatus;
+import org.cherrypic.refundtask.entity.RefundTask;
+import org.cherrypic.refundtask.enums.RefundTaskStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,7 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Transactional
-public class PaymentAutoRefundService {
+public class RefundTaskService {
 
     private final IamportClient iamportClient;
     private final PaymentRepository paymentRepository;
@@ -40,7 +40,7 @@ public class PaymentAutoRefundService {
                 .toList();
     }
 
-    public void refund(Long paymentId) {
+    public void refundPayment(Long paymentId) {
         paymentRepository
                 .findByIdWithPessimisticLock(paymentId)
                 .filter(p -> p.getStatus() == PaymentStatus.PAID)
