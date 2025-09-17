@@ -16,6 +16,7 @@ import org.cherrypic.album.enums.AlbumType;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.album.repository.AlbumRepository;
 import org.cherrypic.domain.participant.repository.ParticipantRepository;
+import org.cherrypic.domain.payment.dto.event.PaymentVerifyEvent;
 import org.cherrypic.domain.payment.dto.request.PaymentReadyRequest;
 import org.cherrypic.domain.payment.dto.response.PaymentListResponse;
 import org.cherrypic.domain.payment.dto.response.PaymentReadyResponse;
@@ -23,7 +24,6 @@ import org.cherrypic.domain.payment.dto.response.PaymentUnlinkedResponse;
 import org.cherrypic.domain.payment.dto.response.PaymentVerificationResponse;
 import org.cherrypic.domain.payment.exception.PaymentErrorCode;
 import org.cherrypic.domain.payment.repository.PaymentRepository;
-import org.cherrypic.domain.payment.repository.RefundTaskRepository;
 import org.cherrypic.exception.CustomException;
 import org.cherrypic.global.pagination.SliceResponse;
 import org.cherrypic.global.pagination.SortDirection;
@@ -32,10 +32,10 @@ import org.cherrypic.member.entity.Member;
 import org.cherrypic.participant.entity.Participant;
 import org.cherrypic.participant.enums.ParticipantRole;
 import org.cherrypic.payment.entity.Payment;
-import org.cherrypic.payment.entity.RefundTask;
 import org.cherrypic.payment.enums.PaymentPurpose;
 import org.cherrypic.payment.enums.PaymentStatus;
 import org.cherrypic.subscription.enums.SubscriptionStatus;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -48,12 +48,12 @@ public class PaymentServiceImpl implements PaymentService {
 
     private final MemberUtil memberUtil;
     private final IamportClient iamportClient;
-    private final PaymentAutoRefundService paymentAutoRefundService;
 
     private final PaymentRepository paymentRepository;
-    private final RefundTaskRepository refundTaskRepository;
     private final AlbumRepository albumRepository;
     private final ParticipantRepository participantRepository;
+
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     public PaymentReadyResponse preparePayment(PaymentReadyRequest request) {
@@ -115,10 +115,8 @@ public class PaymentServiceImpl implements PaymentService {
 
             payment.complete(impUid, pgProvider, paidAt);
 
-            refundTaskRepository.save(
-                    RefundTask.createRefundTask(
-                            payment.getId(), LocalDateTime.now().plusMinutes(10)));
-            paymentAutoRefundService.scheduleAutoRefund(payment.getId());
+            eventPublisher.publishEvent(
+                    PaymentVerifyEvent.of(payment.getId(), payment.getPaidAt()));
 
             return PaymentVerificationResponse.from(payment);
 
