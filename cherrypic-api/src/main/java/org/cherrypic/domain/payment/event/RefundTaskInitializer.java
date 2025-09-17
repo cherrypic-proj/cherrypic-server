@@ -23,10 +23,7 @@ public class RefundTaskInitializer {
         List<RefundTask> pendingTasks =
                 refundTaskRepository.findAllByStatus(RefundTaskStatus.PENDING);
 
-        pendingTasks.forEach(this::scheduleTask);
-    }
-
-    private void scheduleTask(RefundTask task) {
-        paymentAutoRefundService.scheduleAutoRefund(task.getPayment());
+        pendingTasks.forEach(
+                task -> paymentAutoRefundService.scheduleAutoRefund(task.getPaymentId()));
     }
 }

@@ -116,8 +116,9 @@ public class PaymentServiceImpl implements PaymentService {
             payment.complete(impUid, pgProvider, paidAt);
 
             refundTaskRepository.save(
-                    RefundTask.createRefundTask(payment, LocalDateTime.now().plusMinutes(10)));
-            paymentAutoRefundService.scheduleAutoRefund(payment);
+                    RefundTask.createRefundTask(
+                            payment.getId(), LocalDateTime.now().plusMinutes(10)));
+            paymentAutoRefundService.scheduleAutoRefund(payment.getId());
 
             return PaymentVerificationResponse.from(payment);
 

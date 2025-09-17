@@ -26,8 +26,10 @@ public class PaymentAutoRefundService {
     private final PaymentRepository paymentRepository;
     private final RefundTaskRepository refundTaskRepository;
 
-    public void scheduleAutoRefund(Payment payment) {
-        if (payment.getStatus() != PaymentStatus.PAID) {
+    public void scheduleAutoRefund(Long paymentId) {
+        Payment payment = paymentRepository.findById(paymentId).orElse(null);
+
+        if (payment == null || payment.getStatus() != PaymentStatus.PAID) {
             return;
         }
 

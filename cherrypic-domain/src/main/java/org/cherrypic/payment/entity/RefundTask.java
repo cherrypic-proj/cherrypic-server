@@ -19,9 +19,7 @@ public class RefundTask extends BaseTimeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "payment_id", unique = true)
-    private Payment payment;
+    @NotNull private Long paymentId;
 
     @NotNull
     @Enumerated(EnumType.STRING)
@@ -32,15 +30,15 @@ public class RefundTask extends BaseTimeEntity {
     private LocalDateTime executedAt;
 
     @Builder(access = AccessLevel.PRIVATE)
-    private RefundTask(Payment payment, LocalDateTime scheduledAt, RefundTaskStatus status) {
-        this.payment = payment;
+    private RefundTask(Long paymentId, LocalDateTime scheduledAt, RefundTaskStatus status) {
+        this.paymentId = paymentId;
         this.scheduledAt = scheduledAt;
         this.status = status;
     }
 
-    public static RefundTask createRefundTask(Payment payment, LocalDateTime scheduledAt) {
+    public static RefundTask createRefundTask(Long paymentId, LocalDateTime scheduledAt) {
         return RefundTask.builder()
-                .payment(payment)
+                .paymentId(paymentId)
                 .scheduledAt(scheduledAt)
                 .status(RefundTaskStatus.PENDING)
                 .build();
