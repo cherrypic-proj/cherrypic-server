@@ -10,6 +10,7 @@ import org.cherrypic.domain.refundtask.service.RefundTaskService;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.TaskScheduler;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
@@ -27,6 +28,7 @@ public class RefundScheduleEventListener {
         pendingTasks.forEach(this::addSchedule);
     }
 
+    @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void addRefundTaskSchedule(PaymentVerifyEvent event) {
         RefundTaskDto refundTask =
