@@ -16,6 +16,7 @@ import org.cherrypic.domain.member.repository.MemberRepository;
 import org.cherrypic.domain.participant.repository.ParticipantRepository;
 import org.cherrypic.domain.payment.exception.PaymentErrorCode;
 import org.cherrypic.domain.payment.repository.PaymentRepository;
+import org.cherrypic.domain.refundtask.repository.RefundTaskRepository;
 import org.cherrypic.domain.subscription.dto.request.SubscriptionRenewRequest;
 import org.cherrypic.domain.subscription.exception.SubscriptionErrorCode;
 import org.cherrypic.domain.subscription.repository.SubscriptionRepository;
@@ -31,6 +32,8 @@ import org.cherrypic.payment.entity.Payment;
 import org.cherrypic.payment.enums.PaymentPurpose;
 import org.cherrypic.payment.enums.PaymentStatus;
 import org.cherrypic.payment.exception.PaymentDomainErrorCode;
+import org.cherrypic.refundtask.entity.RefundTask;
+import org.cherrypic.refundtask.enums.RefundTaskStatus;
 import org.cherrypic.subscription.entity.Subscription;
 import org.cherrypic.subscription.enums.SubscriptionStatus;
 import org.cherrypic.subscription.exception.SubscriptionDomainErrorCode;
@@ -49,6 +52,7 @@ class SubscriptionServiceTest extends IntegrationTest {
     @Autowired private MemberRepository memberRepository;
     @Autowired private ParticipantRepository participantRepository;
     @Autowired private PaymentRepository paymentRepository;
+    @Autowired private RefundTaskRepository refundTaskRepository;
 
     @MockitoBean private MemberUtil memberUtil;
 
@@ -318,10 +322,13 @@ class SubscriptionServiceTest extends IntegrationTest {
 
             paymentRepository.saveAll(
                     List.of(payment1, payment2, payment3, payment4, payment5, payment6));
+
+            refundTaskRepository.save(
+                    RefundTask.createRefundTask(1L, LocalDateTime.now().plusMinutes(10)));
         }
 
         @Test
-        void 유효한_요청이면_구독을_갱신하고_결제에_앨범을_연결한다() {
+        void 유효한_요청이면_구독을_갱신하고_결제에_앨범이_연결된다() {
             // given
             Subscription canceledSubscription = subscriptionRepository.findById(1L).get();
             LocalDateTime previousEndAt =
@@ -362,6 +369,25 @@ class SubscriptionServiceTest extends IntegrationTest {
                                                     .getNextBillingAt()
                                                     .truncatedTo(ChronoUnit.MINUTES))
                                     .isEqualTo(previousEndAt.plusMonths(1).minusDays(3)));
+        }
+
+        @Test
+        void 결제에_앨범이_연결되면_환불_예약_작업이_SKIP된다() {
+            // given
+            Subscription canceledSubscription = subscriptionRepository.findById(1L).get();
+            LocalDateTime previousEndAt =
+                    canceledSubscription.getEndAt().truncatedTo(ChronoUnit.MINUTES);
+
+            SubscriptionRenewRequest request = new SubscriptionRenewRequest(1L);
+
+            // when
+            subscriptionService.renewSubscription(1L, request);
+
+            // then
+            RefundTask refundTask = refundTaskRepository.findByPaymentId(1L).get();
+            assertThat(refundTask)
+                    .extracting("id", "paymentId", "status")
+                    .containsExactly(1L, 1L, RefundTaskStatus.SKIPPED);
         }
 
         @Test

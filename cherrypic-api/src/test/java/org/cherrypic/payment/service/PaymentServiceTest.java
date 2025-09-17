@@ -24,6 +24,7 @@ import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.album.repository.AlbumRepository;
 import org.cherrypic.domain.member.repository.MemberRepository;
 import org.cherrypic.domain.participant.repository.ParticipantRepository;
+import org.cherrypic.domain.payment.dto.event.RefundTaskScheduleEvent;
 import org.cherrypic.domain.payment.dto.request.PaymentReadyRequest;
 import org.cherrypic.domain.payment.dto.response.PaymentListResponse;
 import org.cherrypic.domain.payment.dto.response.PaymentUnlinkedResponse;
@@ -52,12 +53,16 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.event.ApplicationEvents;
+import org.springframework.test.context.event.RecordApplicationEvents;
 import org.springframework.test.util.ReflectionTestUtils;
 import retrofit2.HttpException;
 import retrofit2.Response;
 
+@RecordApplicationEvents
 public class PaymentServiceTest extends IntegrationTest {
 
+    @Autowired private ApplicationEvents applicationEvents;
     @Autowired private PaymentService paymentService;
 
     @Autowired private PaymentRepository paymentRepository;
@@ -390,6 +395,21 @@ public class PaymentServiceTest extends IntegrationTest {
                             5900,
                             PaymentStatus.PAID,
                             LocalDateTime.of(2025, 8, 1, 13, 0));
+        }
+
+        @Test
+        void 유효한_결제라면_환불_작업_예약_이벤트를_발행한다() throws IamportResponseException, IOException {
+            // given
+            stubIamportPayment(MERCHANT_UID_EXISTING, BigDecimal.valueOf(5900), "PAID");
+
+            // when
+            paymentService.verifyPayment("imp_1234");
+
+            // then
+            var events = applicationEvents.stream(RefundTaskScheduleEvent.class).toList();
+            assertThat(events).hasSize(1);
+            assertThat(events.getFirst().paymentId()).isEqualTo(1L);
+            assertThat(events.getFirst().paidAt()).isEqualTo(LocalDateTime.of(2025, 8, 1, 13, 0));
         }
 
         @Test

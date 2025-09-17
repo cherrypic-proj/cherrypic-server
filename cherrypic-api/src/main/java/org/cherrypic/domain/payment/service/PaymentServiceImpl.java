@@ -16,6 +16,7 @@ import org.cherrypic.album.enums.AlbumType;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.album.repository.AlbumRepository;
 import org.cherrypic.domain.participant.repository.ParticipantRepository;
+import org.cherrypic.domain.payment.dto.event.RefundTaskScheduleEvent;
 import org.cherrypic.domain.payment.dto.request.PaymentReadyRequest;
 import org.cherrypic.domain.payment.dto.response.PaymentListResponse;
 import org.cherrypic.domain.payment.dto.response.PaymentReadyResponse;
@@ -34,6 +35,7 @@ import org.cherrypic.payment.entity.Payment;
 import org.cherrypic.payment.enums.PaymentPurpose;
 import org.cherrypic.payment.enums.PaymentStatus;
 import org.cherrypic.subscription.enums.SubscriptionStatus;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -50,6 +52,8 @@ public class PaymentServiceImpl implements PaymentService {
     private final PaymentRepository paymentRepository;
     private final AlbumRepository albumRepository;
     private final ParticipantRepository participantRepository;
+
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     public PaymentReadyResponse preparePayment(PaymentReadyRequest request) {
@@ -110,6 +114,9 @@ public class PaymentServiceImpl implements PaymentService {
             }
 
             payment.complete(impUid, pgProvider, paidAt);
+
+            eventPublisher.publishEvent(
+                    RefundTaskScheduleEvent.of(payment.getId(), payment.getPaidAt()));
 
             return PaymentVerificationResponse.from(payment);
 
