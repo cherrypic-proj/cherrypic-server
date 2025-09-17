@@ -355,6 +355,7 @@ class ImageControllerTest {
 
             ImageUploadListResponse response =
                     new ImageUploadListResponse(
+                            false,
                             List.of(
                                     new ImageUploadListResponse.Payload(1L, "testPresignedUrl1"),
                                     new ImageUploadListResponse.Payload(2L, "testPresignedUrl2")));

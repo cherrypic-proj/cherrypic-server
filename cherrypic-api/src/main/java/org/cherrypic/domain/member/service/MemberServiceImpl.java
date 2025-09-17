@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.cherrypic.domain.image.event.ImageDeleteEvent;
 import org.cherrypic.domain.member.dto.request.FcmTokenSaveRequest;
 import org.cherrypic.domain.member.dto.request.MemberProfileUpdateRequest;
+import org.cherrypic.domain.member.dto.response.LocalImageDeletionToggleResponse;
 import org.cherrypic.domain.member.dto.response.MemberInfoResponse;
 import org.cherrypic.domain.member.dto.response.MemberProfileUpdateResponse;
 import org.cherrypic.domain.notification.service.FcmTokenService;
@@ -49,5 +50,13 @@ public class MemberServiceImpl implements MemberService {
     public void saveFcmToken(FcmTokenSaveRequest request) {
         final Member currentMember = memberUtil.getCurrentMember();
         fcmTokenService.saveFcmToken(currentMember.getId(), request.fcmToken());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public LocalImageDeletionToggleResponse toggleLocalImageDeletion() {
+        final Member currentMember = memberUtil.getCurrentMember();
+        currentMember.toggleLocalImageDeletion();
+        return LocalImageDeletionToggleResponse.from(currentMember);
     }
 }

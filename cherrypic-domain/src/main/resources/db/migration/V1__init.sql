@@ -7,6 +7,7 @@ CREATE TABLE member (
                         role VARCHAR(255)  NOT NULL CHECK(role IN ('ADMIN','USER')),
                         status VARCHAR(255) NOT NULL CHECK(status IN ('NORMAL','DELETED','FORBIDDEN')),
                         app_alarm BOOLEAN NOT NULL,
+                        local_image_deletion BOOLEAN NOT NULL,
                         created_at DATETIME(6) NOT NULL,
                         updated_at DATETIME(6) NOT NULL
 );

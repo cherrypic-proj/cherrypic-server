@@ -6,6 +6,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.cherrypic.domain.member.dto.request.FcmTokenSaveRequest;
 import org.cherrypic.domain.member.dto.request.MemberProfileUpdateRequest;
+import org.cherrypic.domain.member.dto.response.LocalImageDeletionToggleResponse;
 import org.cherrypic.domain.member.dto.response.MemberInfoResponse;
 import org.cherrypic.domain.member.dto.response.MemberProfileUpdateResponse;
 import org.cherrypic.domain.member.service.MemberService;
@@ -31,6 +32,12 @@ public class MemberController {
     public MemberProfileUpdateResponse memberProfileUpdate(
             @Valid @RequestBody MemberProfileUpdateRequest request) {
         return memberService.updateProfile(request);
+    }
+
+    @PatchMapping("/me/local-image-deletion")
+    @Operation(summary = "로컬 이미지 삭제 토글 상태 변경", description = "로컬 이미지 삭제 토글 상태를 변경합니다.")
+    public LocalImageDeletionToggleResponse localImageDeletionToggle() {
+        return memberService.toggleLocalImageDeletion();
     }
 
     @PostMapping("/fcm-tokens")

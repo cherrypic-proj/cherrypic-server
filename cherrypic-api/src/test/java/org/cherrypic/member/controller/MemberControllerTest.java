@@ -51,7 +51,8 @@ class MemberControllerTest {
                             "testNickname",
                             "testProfileImageUrl",
                             MemberStatus.NORMAL,
-                            MemberRole.USER);
+                            MemberRole.USER,
+                            false);
 
             given(memberService.getMemberInfo()).willReturn(response);
 

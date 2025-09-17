@@ -38,6 +38,8 @@ public class Member extends BaseTimeEntity {
 
     @NotNull private Boolean appAlarm = Boolean.FALSE;
 
+    @NotNull private Boolean localImageDeletion = Boolean.FALSE;
+
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Payment> payments = new ArrayList<>();
 
@@ -78,5 +80,9 @@ public class Member extends BaseTimeEntity {
     public void updateMember(String nickname, String profileImageUrl) {
         this.nickname = nickname;
         this.profileImageUrl = profileImageUrl;
+    }
+
+    public void toggleLocalImageDeletion() {
+        this.localImageDeletion = !this.localImageDeletion;
     }
 }
