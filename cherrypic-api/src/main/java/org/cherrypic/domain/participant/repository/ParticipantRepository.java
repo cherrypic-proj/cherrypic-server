@@ -10,7 +10,10 @@ import org.springframework.data.repository.query.Param;
 
 public interface ParticipantRepository
         extends JpaRepository<Participant, Long>, ParticipantRepositoryCustom {
-    Optional<Participant> findByMemberIdAndAlbumId(Long memberId, Long albumId);
+
+    @Query("select p from Participant p where p.member.id = :memberId and p.album.id = :albumId")
+    Optional<Participant> findByMemberIdAndAlbumId(
+            @Param("memberId") Long memberId, @Param("albumId") Long albumId);
 
     @Modifying(clearAutomatically = true)
     @Query(
