@@ -7,6 +7,7 @@ import org.cherrypic.album.entity.Album;
 import org.cherrypic.album.enums.AlbumType;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.album.repository.AlbumRepository;
+import org.cherrypic.domain.favorites.repository.FavoritesRepository;
 import org.cherrypic.domain.notification.repository.NotificationRepository;
 import org.cherrypic.domain.participant.dto.request.ParticipantRoleUpdateRequest;
 import org.cherrypic.domain.participant.dto.response.ParticipantListResponse;
@@ -33,6 +34,7 @@ public class ParticipantServiceImpl implements ParticipantService {
 
     private final ParticipantRepository participantRepository;
     private final AlbumRepository albumRepository;
+    private final FavoritesRepository favoritesRepository;
     private final NotificationRepository notificationRepository;
 
     @Override
@@ -46,6 +48,7 @@ public class ParticipantServiceImpl implements ParticipantService {
         validateNotAlbumHost(participant);
 
         try {
+            favoritesRepository.deleteByParticipantId(participant.getId());
             participantRepository.delete(participant);
             notificationRepository.deleteByReceiverIdAndAlbumId(currentMember.getId(), albumId);
         } catch (ObjectOptimisticLockingFailureException ignored) {
@@ -65,6 +68,7 @@ public class ParticipantServiceImpl implements ParticipantService {
         validateParticipantBelongsToAlbum(target, album);
 
         try {
+            favoritesRepository.deleteByParticipantId(target.getId());
             participantRepository.delete(target);
             notificationRepository.deleteByReceiverIdAndAlbumId(
                     target.getMember().getId(), album.getId());
