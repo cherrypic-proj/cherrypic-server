@@ -15,6 +15,7 @@ import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.album.repository.AlbumRepository;
 import org.cherrypic.domain.album.repository.InvitationCodeRepository;
 import org.cherrypic.domain.event.repository.EventRepository;
+import org.cherrypic.domain.favorites.repository.FavoritesRepository;
 import org.cherrypic.domain.image.event.ImageDeleteEvent;
 import org.cherrypic.domain.image.event.ImagesDeleteEvent;
 import org.cherrypic.domain.image.repository.ImageRepository;
@@ -25,6 +26,7 @@ import org.cherrypic.domain.refundtask.repository.RefundTaskRepository;
 import org.cherrypic.domain.subscription.repository.SubscriptionRepository;
 import org.cherrypic.event.entity.Event;
 import org.cherrypic.exception.CustomException;
+import org.cherrypic.favorites.entity.Favorites;
 import org.cherrypic.global.pagination.SliceResponse;
 import org.cherrypic.global.pagination.SortDirection;
 import org.cherrypic.global.util.MemberUtil;
@@ -52,6 +54,7 @@ public class AlbumServiceImpl implements AlbumService {
     private final PaymentRepository paymentRepository;
     private final RefundTaskRepository refundTaskRepository;
     private final ParticipantRepository participantRepository;
+    private final FavoritesRepository favoritesRepository;
     private final SubscriptionRepository subscriptionRepository;
     private final InvitationCodeRepository invitationCodeRepository;
     private final EventRepository eventRepository;
@@ -76,10 +79,10 @@ public class AlbumServiceImpl implements AlbumService {
 
         Participant participant =
                 Participant.createParticipant(currentMember, album, ParticipantRole.HOST);
-        participant.assignFavorites();
         album.addParticipant(participant);
-
         albumRepository.save(album);
+
+        favoritesRepository.save(Favorites.createFavorites(participant));
 
         if (request.type() != AlbumType.BASIC) {
             final Payment payment = getPaymentByIdWithLock(request.paymentId());
@@ -177,8 +180,9 @@ public class AlbumServiceImpl implements AlbumService {
 
         Participant participant =
                 Participant.createParticipant(currentMember, album, ParticipantRole.STANDARD);
-        participant.assignFavorites();
         participantRepository.save(participant);
+
+        favoritesRepository.save(Favorites.createFavorites(participant));
 
         return AlbumJoinResponse.from(participant);
     }

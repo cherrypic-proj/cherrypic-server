@@ -5,6 +5,8 @@ import org.cherrypic.album.entity.Album;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.album.repository.AlbumRepository;
 import org.cherrypic.domain.favorites.dto.response.FavoritesMarkToggleResponse;
+import org.cherrypic.domain.favorites.exception.FavoritesErrorCode;
+import org.cherrypic.domain.favorites.repository.FavoritesRepository;
 import org.cherrypic.domain.participant.repository.ParticipantRepository;
 import org.cherrypic.exception.CustomException;
 import org.cherrypic.favorites.entity.Favorites;
@@ -23,6 +25,7 @@ public class FavoritesServiceImpl implements FavoritesService {
 
     private final AlbumRepository albumRepository;
     private final ParticipantRepository participantRepository;
+    private final FavoritesRepository favoritesRepository;
 
     @Override
     public FavoritesMarkToggleResponse toggleMark(Long albumId) {
@@ -30,8 +33,8 @@ public class FavoritesServiceImpl implements FavoritesService {
         final Album album = getAlbumById(albumId);
         final Participant participant =
                 getParticipantByMemberIdAndAlbumId(currentMember.getId(), album.getId());
+        final Favorites favorites = getFavoritesByParticipantId(participant.getId());
 
-        Favorites favorites = participant.getFavorites();
         favorites.toggleMarked();
 
         return FavoritesMarkToggleResponse.from(favorites);
@@ -47,5 +50,11 @@ public class FavoritesServiceImpl implements FavoritesService {
         return participantRepository
                 .findByMemberIdAndAlbumId(memberId, albumId)
                 .orElseThrow(() -> new CustomException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT));
+    }
+
+    private Favorites getFavoritesByParticipantId(Long participantId) {
+        return favoritesRepository
+                .findByParticipantId(participantId)
+                .orElseThrow(() -> new CustomException(FavoritesErrorCode.FAVORITES_NOT_FOUND));
     }
 }
