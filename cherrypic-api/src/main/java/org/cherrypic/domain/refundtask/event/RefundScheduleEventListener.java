@@ -4,7 +4,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.cherrypic.domain.payment.dto.event.PaymentVerifyEvent;
+import org.cherrypic.domain.payment.dto.event.RefundTaskScheduleEvent;
 import org.cherrypic.domain.refundtask.dto.RefundTaskDto;
 import org.cherrypic.domain.refundtask.service.RefundTaskService;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -30,7 +30,7 @@ public class RefundScheduleEventListener {
 
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    public void addRefundTaskSchedule(PaymentVerifyEvent event) {
+    public void addRefundTaskSchedule(RefundTaskScheduleEvent event) {
         RefundTaskDto refundTask =
                 refundTaskService.createRefundTask(event.paymentId(), event.paidAt());
         addSchedule(refundTask);

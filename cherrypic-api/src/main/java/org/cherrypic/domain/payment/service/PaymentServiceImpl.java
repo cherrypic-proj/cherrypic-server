@@ -16,7 +16,7 @@ import org.cherrypic.album.enums.AlbumType;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.album.repository.AlbumRepository;
 import org.cherrypic.domain.participant.repository.ParticipantRepository;
-import org.cherrypic.domain.payment.dto.event.PaymentVerifyEvent;
+import org.cherrypic.domain.payment.dto.event.RefundTaskScheduleEvent;
 import org.cherrypic.domain.payment.dto.request.PaymentReadyRequest;
 import org.cherrypic.domain.payment.dto.response.PaymentListResponse;
 import org.cherrypic.domain.payment.dto.response.PaymentReadyResponse;
@@ -116,7 +116,7 @@ public class PaymentServiceImpl implements PaymentService {
             payment.complete(impUid, pgProvider, paidAt);
 
             eventPublisher.publishEvent(
-                    PaymentVerifyEvent.of(payment.getId(), payment.getPaidAt()));
+                    RefundTaskScheduleEvent.of(payment.getId(), payment.getPaidAt()));
 
             return PaymentVerificationResponse.from(payment);
 
