@@ -35,6 +35,7 @@ import org.cherrypic.domain.member.repository.MemberRepository;
 import org.cherrypic.domain.participant.repository.ParticipantRepository;
 import org.cherrypic.domain.payment.exception.PaymentErrorCode;
 import org.cherrypic.domain.payment.repository.PaymentRepository;
+import org.cherrypic.domain.refundtask.repository.RefundTaskRepository;
 import org.cherrypic.domain.subscription.repository.SubscriptionRepository;
 import org.cherrypic.event.entity.Event;
 import org.cherrypic.exception.CustomException;
@@ -52,6 +53,8 @@ import org.cherrypic.payment.entity.Payment;
 import org.cherrypic.payment.enums.PaymentPurpose;
 import org.cherrypic.payment.enums.PaymentStatus;
 import org.cherrypic.payment.exception.PaymentDomainErrorCode;
+import org.cherrypic.refundtask.entity.RefundTask;
+import org.cherrypic.refundtask.enums.RefundTaskStatus;
 import org.cherrypic.subscription.entity.Subscription;
 import org.cherrypic.subscription.enums.SubscriptionStatus;
 import org.junit.jupiter.api.*;
@@ -72,6 +75,7 @@ class AlbumServiceTest extends IntegrationTest {
     @Autowired private AlbumRepository albumRepository;
     @Autowired private MemberRepository memberRepository;
     @Autowired private PaymentRepository paymentRepository;
+    @Autowired private RefundTaskRepository refundTaskRepository;
     @Autowired private SubscriptionRepository subscriptionRepository;
     @Autowired private ParticipantRepository participantRepository;
     @Autowired private FavoritesRepository favoritesRepository;
@@ -243,6 +247,9 @@ class AlbumServiceTest extends IntegrationTest {
                 payment5.cancel(LocalDateTime.now());
                 paymentRepository.saveAll(
                         List.of(payment1, payment2, payment3, payment4, payment5));
+
+                refundTaskRepository.save(
+                        RefundTask.createRefundTask(1L, LocalDateTime.now().plusMinutes(10)));
             }
 
             @Test
@@ -310,6 +317,23 @@ class AlbumServiceTest extends IntegrationTest {
                                                 LocalDateTime.of(2025, 8, 1, 13, 0),
                                                 LocalDateTime.of(2025, 9, 1, 13, 0),
                                                 LocalDateTime.of(2025, 8, 29, 13, 0)));
+            }
+
+            @Test
+            void 결제에_앨범이_연결되면_환불_예약_작업이_SKIP된다() {
+                // given
+                AlbumCreateRequest request =
+                        new AlbumCreateRequest(
+                                "testTitle", "testCoverUrl", AlbumType.PRO, 1L, true);
+
+                // when
+                albumService.createAlbum(request);
+
+                // then
+                RefundTask refundTask = refundTaskRepository.findByPaymentId(1L).get();
+                assertThat(refundTask)
+                        .extracting("id", "paymentId", "status")
+                        .containsExactly(1L, 1L, RefundTaskStatus.SKIPPED);
             }
 
             @Test
