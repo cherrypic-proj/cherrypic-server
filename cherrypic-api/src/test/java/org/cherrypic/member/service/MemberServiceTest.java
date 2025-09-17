@@ -73,14 +73,16 @@ class MemberServiceTest extends IntegrationTest {
                             "nickname",
                             "profileImageUrl",
                             "role",
-                            "status")
+                            "status",
+                            "localImageDeletion")
                     .containsExactly(
                             1L,
                             "testOauthProvider",
                             "testNickname",
                             "testProfileImageUrl",
                             MemberRole.USER,
-                            MemberStatus.NORMAL);
+                            MemberStatus.NORMAL,
+                            false);
         }
     }
 
@@ -153,6 +155,20 @@ class MemberServiceTest extends IntegrationTest {
             assertThat(redisTemplate.opsForSet().members("fcmToken:1"))
                     .contains("testFcmToken1", "testFcmToken2");
             assertThat(redisTemplate.opsForSet().size(("fcmToken:1"))).isEqualTo(2);
+        }
+    }
+
+    @Nested
+    class 로컬_사진_삭제_토글을_변경할_때 {
+
+        @Test
+        void 유효한_요청이면_토글을_변경한다() {
+            // when
+            memberService.toggleLocalImageDeletion();
+
+            // then
+            Member member = memberRepository.findById(1L).orElseThrow();
+            assertThat(member.getLocalImageDeletion()).isTrue();
         }
     }
 }

@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.cherrypic.domain.member.controller.MemberController;
 import org.cherrypic.domain.member.dto.request.FcmTokenSaveRequest;
 import org.cherrypic.domain.member.dto.request.MemberProfileUpdateRequest;
+import org.cherrypic.domain.member.dto.response.LocalImageDeletionToggleResponse;
 import org.cherrypic.domain.member.dto.response.MemberInfoResponse;
 import org.cherrypic.domain.member.dto.response.MemberProfileUpdateResponse;
 import org.cherrypic.domain.member.service.MemberService;
@@ -67,7 +68,8 @@ class MemberControllerTest {
                     .andExpect(jsonPath("$.data.nickname").value("testNickname"))
                     .andExpect(jsonPath("$.data.profileImageUrl").value("testProfileImageUrl"))
                     .andExpect(jsonPath("$.data.status").value("NORMAL"))
-                    .andExpect(jsonPath("$.data.role").value("USER"));
+                    .andExpect(jsonPath("$.data.role").value("USER"))
+                    .andExpect(jsonPath("$.data.localImageDeletion").value(false));
         }
     }
 
@@ -201,6 +203,29 @@ class MemberControllerTest {
                     .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
                     .andExpect(jsonPath("$.data.code").value("MethodArgumentNotValidException"))
                     .andExpect(jsonPath("$.data.message").value("FCM Token은 비워둘 수 없습니다."));
+        }
+    }
+
+    @Nested
+    class 로컬_사진_삭제_토글을_변경_요청_시 {
+
+        @Test
+        void 유요한_요청이면_토글_상태를_변경한다() throws Exception {
+            // given
+            LocalImageDeletionToggleResponse response = new LocalImageDeletionToggleResponse(true);
+
+            given(memberService.toggleLocalImageDeletion()).willReturn(response);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            patch("/members/me/local-image-deletion")
+                                    .contentType(MediaType.APPLICATION_JSON));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.status").value(200))
+                    .andExpect(jsonPath("$.data.localImageDeletion").value(true));
         }
     }
 }

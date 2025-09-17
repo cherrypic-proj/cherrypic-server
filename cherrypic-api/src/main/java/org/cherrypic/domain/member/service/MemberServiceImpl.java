@@ -53,7 +53,6 @@ public class MemberServiceImpl implements MemberService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public LocalImageDeletionToggleResponse toggleLocalImageDeletion() {
         final Member currentMember = memberUtil.getCurrentMember();
         currentMember.toggleLocalImageDeletion();
