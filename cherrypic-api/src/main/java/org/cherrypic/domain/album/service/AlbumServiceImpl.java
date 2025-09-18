@@ -16,6 +16,7 @@ import org.cherrypic.domain.album.repository.InvitationCodeRepository;
 import org.cherrypic.domain.event.repository.EventRepository;
 import org.cherrypic.domain.image.event.ImageDeleteEvent;
 import org.cherrypic.domain.image.event.ImagesDeleteEvent;
+import org.cherrypic.domain.image.repository.ImageRepository;
 import org.cherrypic.domain.participant.repository.ParticipantRepository;
 import org.cherrypic.domain.payment.exception.PaymentErrorCode;
 import org.cherrypic.domain.payment.repository.PaymentRepository;
@@ -51,6 +52,7 @@ public class AlbumServiceImpl implements AlbumService {
     private final SubscriptionRepository subscriptionRepository;
     private final InvitationCodeRepository invitationCodeRepository;
     private final EventRepository eventRepository;
+    private final ImageRepository imageRepository;
 
     private final ApplicationEventPublisher eventPublisher;
 
@@ -222,7 +224,10 @@ public class AlbumServiceImpl implements AlbumService {
         eventPublisher.publishEvent(
                 ImagesDeleteEvent.of(events.stream().map(Event::getCoverUrl).toList()));
 
-        eventPublisher.publishEvent(AlbumImagesDeleteEvent.of(album.getId()));
+        if (imageRepository.existsByAlbumId(album.getId())) {
+            eventPublisher.publishEvent(AlbumImagesDeleteEvent.of(album.getId()));
+        }
+
         if (album.getCoverUrl() != null) {
             eventPublisher.publishEvent(ImageDeleteEvent.of(album.getCoverUrl()));
         }
