@@ -159,10 +159,10 @@ class MemberServiceTest extends IntegrationTest {
     }
 
     @Nested
-    class 로컬_사진_삭제_토글을_변경할_때 {
+    class 로컬_사진_삭제_권한_변경을_요청할_때 {
 
         @Test
-        void 유효한_요청이면_토글을_변경한다() {
+        void 유효한_요청이면_로컬_이미지_삭제_권한을_변경한다() {
             // when
             memberService.toggleLocalImageDeletion();
 

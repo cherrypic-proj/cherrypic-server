@@ -207,10 +207,10 @@ class MemberControllerTest {
     }
 
     @Nested
-    class 로컬_사진_삭제_토글을_변경_요청_시 {
+    class 로컬_사진_삭제_권한_변경_요청_시 {
 
         @Test
-        void 유요한_요청이면_토글_상태를_변경한다() throws Exception {
+        void 유효한_요청이면_로컬_이미지_삭제_권한을_변경한다() throws Exception {
             // given
             LocalImageDeletionToggleResponse response = new LocalImageDeletionToggleResponse(true);
 

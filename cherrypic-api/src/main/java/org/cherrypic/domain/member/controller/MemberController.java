@@ -35,7 +35,7 @@ public class MemberController {
     }
 
     @PatchMapping("/me/local-image-deletion")
-    @Operation(summary = "로컬 이미지 삭제 토글 상태 변경", description = "로컬 이미지 삭제 토글 상태를 변경합니다.")
+    @Operation(summary = "로컬 이미지 삭제 권한 변경", description = "로컬 이미지 삭제 권한 허용 여부 상태를 변경합니다.")
     public LocalImageDeletionToggleResponse localImageDeletionToggle() {
         return memberService.toggleLocalImageDeletion();
     }
