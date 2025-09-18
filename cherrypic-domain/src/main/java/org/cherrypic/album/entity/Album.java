@@ -40,7 +40,7 @@ public class Album extends BaseTimeEntity {
 
     @NotNull private BigDecimal capacityGb;
 
-    @OneToMany(mappedBy = "album", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "album", cascade = CascadeType.PERSIST)
     private List<Participant> participants = new ArrayList<>();
 
     @OneToMany(mappedBy = "album", cascade = CascadeType.ALL, orphanRemoval = true)
