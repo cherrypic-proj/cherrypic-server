@@ -9,5 +9,7 @@ public interface ImageRepository extends JpaRepository<Image, Long>, ImageReposi
 
     long countByIdIn(List<Long> ids);
 
+    boolean existsByAlbumId(Long albumId);
+
     long countByIdInAndAlbumId(List<Long> imageIds, Long albumId);
 }

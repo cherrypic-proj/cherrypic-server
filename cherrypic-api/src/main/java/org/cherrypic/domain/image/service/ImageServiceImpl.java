@@ -171,7 +171,7 @@ public class ImageServiceImpl implements ImageService {
                                                 imageIds.get(i), presignedUrls.get(i)))
                         .toList();
 
-        return ImageUploadListResponse.of(payloads);
+        return ImageUploadListResponse.of(payloads, currentMember.getLocalImageDeletion());
     }
 
     @Override

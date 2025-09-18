@@ -359,6 +359,7 @@ class ImageServiceTest extends IntegrationTest {
                                         .containsPattern(
                                                 ".*/local/album-image/1/[\\w\\-]+\\.(jpg|jpeg)\\?.+");
                             });
+            assertThat(response.localImageDeletion()).isFalse();
 
             List<Image> images = imageRepository.findAll();
             assertThat(images)
