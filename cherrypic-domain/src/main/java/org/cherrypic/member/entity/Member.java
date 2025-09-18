@@ -38,7 +38,7 @@ public class Member extends BaseTimeEntity {
 
     @NotNull private Boolean appAlarm = Boolean.FALSE;
 
-    @NotNull private Boolean localImageDeletion = Boolean.FALSE;
+    @NotNull private Boolean localImageDeletion;
 
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Payment> payments = new ArrayList<>();
@@ -58,12 +58,14 @@ public class Member extends BaseTimeEntity {
             String nickname,
             String profileImageUrl,
             MemberRole role,
-            MemberStatus status) {
+            MemberStatus status,
+            Boolean localImageDeletion) {
         this.oauthInfo = oauthInfo;
         this.nickname = nickname;
         this.profileImageUrl = profileImageUrl;
         this.role = role;
         this.status = status;
+        this.localImageDeletion = localImageDeletion;
     }
 
     public static Member createMember(
@@ -74,6 +76,7 @@ public class Member extends BaseTimeEntity {
                 .profileImageUrl(profileImageUrl)
                 .role(MemberRole.USER)
                 .status(MemberStatus.NORMAL)
+                .localImageDeletion(Boolean.FALSE)
                 .build();
     }
 
@@ -83,6 +86,6 @@ public class Member extends BaseTimeEntity {
     }
 
     public void toggleLocalImageDeletion() {
-        this.localImageDeletion = !this.localImageDeletion;
+        localImageDeletion = !localImageDeletion;
     }
 }
