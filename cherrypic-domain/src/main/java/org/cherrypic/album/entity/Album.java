@@ -12,7 +12,6 @@ import lombok.NoArgsConstructor;
 import org.cherrypic.album.enums.AlbumType;
 import org.cherrypic.album.exception.AlbumDomainErrorCode;
 import org.cherrypic.common.model.BaseTimeEntity;
-import org.cherrypic.event.entity.Event;
 import org.cherrypic.exception.CustomException;
 import org.cherrypic.image.entity.Image;
 import org.cherrypic.notification.entity.Notification;
@@ -45,9 +44,6 @@ public class Album extends BaseTimeEntity {
 
     @OneToMany(mappedBy = "album", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Image> images = new ArrayList<>();
-
-    @OneToMany(mappedBy = "album", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Event> events = new ArrayList<>();
 
     @OneToMany(mappedBy = "album", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Payment> payments = new ArrayList<>();
