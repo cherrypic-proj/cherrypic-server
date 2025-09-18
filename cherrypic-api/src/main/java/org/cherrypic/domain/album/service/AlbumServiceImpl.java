@@ -245,6 +245,7 @@ public class AlbumServiceImpl implements AlbumService {
 
         final List<Participant> participants = album.getParticipants();
         favoritesRepository.deleteAllByParticipants(participants);
+        participantRepository.deleteAllByAlbumId(albumId);
 
         albumRepository.delete(album);
     }
