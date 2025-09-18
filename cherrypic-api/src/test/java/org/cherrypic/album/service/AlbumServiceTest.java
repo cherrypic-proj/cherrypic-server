@@ -1169,6 +1169,7 @@ class AlbumServiceTest extends IntegrationTest {
         @Test
         void 앨범이_없는_경우_빈_리스트를_조회한다() {
             // given
+            favoritesRepository.deleteAll();
             albumRepository.deleteAll();
 
             // when
