@@ -6,8 +6,10 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.cherrypic.domain.member.dto.request.FcmTokenSaveRequest;
 import org.cherrypic.domain.member.dto.request.MemberProfileUpdateRequest;
+import org.cherrypic.domain.member.dto.response.MarketingAgreeToggleResponse;
 import org.cherrypic.domain.member.dto.response.MemberInfoResponse;
 import org.cherrypic.domain.member.dto.response.MemberProfileUpdateResponse;
+import org.cherrypic.domain.member.dto.response.ServiceAlarmAgreeToggleResponse;
 import org.cherrypic.domain.member.service.MemberService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -41,5 +43,17 @@ public class MemberController {
             @Valid @RequestBody FcmTokenSaveRequest request) {
         memberService.saveFcmToken(request);
         return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/me/service-alarm")
+    @Operation(summary = "서비스 알림 수신 동의 상태 변경", description = "앱 내 주요 서비스 관련 알림 수신 여부를 변경합니다.")
+    public ServiceAlarmAgreeToggleResponse serviceAlarmAgreeToggle() {
+        return memberService.toggleServiceAlarmAgree();
+    }
+
+    @PatchMapping("/me/marketing")
+    @Operation(summary = "마케팅 수신 동의 상태 변경", description = "회원의 마케팅 수신 여부를 변경합니다.")
+    public MarketingAgreeToggleResponse marketingAgreeToggle() {
+        return memberService.toggleMarketingAgree();
     }
 }

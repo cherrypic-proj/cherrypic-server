@@ -36,7 +36,9 @@ public class Member extends BaseTimeEntity {
     @Enumerated(EnumType.STRING)
     private MemberStatus status;
 
-    @NotNull private Boolean appAlarm = Boolean.FALSE;
+    @NotNull private Boolean serviceAlarmAgree;
+
+    @NotNull private Boolean marketingAgree;
 
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Payment> payments = new ArrayList<>();
@@ -56,12 +58,16 @@ public class Member extends BaseTimeEntity {
             String nickname,
             String profileImageUrl,
             MemberRole role,
-            MemberStatus status) {
+            MemberStatus status,
+            Boolean serviceAlarmAgree,
+            Boolean marketingAgree) {
         this.oauthInfo = oauthInfo;
         this.nickname = nickname;
         this.profileImageUrl = profileImageUrl;
         this.role = role;
         this.status = status;
+        this.serviceAlarmAgree = serviceAlarmAgree;
+        this.marketingAgree = marketingAgree;
     }
 
     public static Member createMember(
@@ -72,11 +78,21 @@ public class Member extends BaseTimeEntity {
                 .profileImageUrl(profileImageUrl)
                 .role(MemberRole.USER)
                 .status(MemberStatus.NORMAL)
+                .serviceAlarmAgree(Boolean.FALSE)
+                .marketingAgree(Boolean.FALSE)
                 .build();
     }
 
     public void updateMember(String nickname, String profileImageUrl) {
         this.nickname = nickname;
         this.profileImageUrl = profileImageUrl;
+    }
+
+    public void toggleServiceAlarmAgree() {
+        serviceAlarmAgree = !serviceAlarmAgree;
+    }
+
+    public void toggleMarketingAgree() {
+        marketingAgree = !marketingAgree;
     }
 }

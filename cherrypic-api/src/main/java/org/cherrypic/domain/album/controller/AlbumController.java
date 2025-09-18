@@ -43,7 +43,7 @@ public class AlbumController {
     }
 
     @PatchMapping("/{albumId}/permission")
-    @Operation(summary = "앨범 권한 부여 토글 상태 변경", description = "앨범의 권한 부여 토글 상태를 변경합니다.")
+    @Operation(summary = "앨범 권한 부여 상태 변경", description = "앨범의 권한 부여 허용 여부를 변경합니다.")
     public PermissionToggleResponse permissionToggle(@PathVariable Long albumId) {
         return albumService.togglePermission(albumId);
     }

@@ -73,14 +73,18 @@ class MemberServiceTest extends IntegrationTest {
                             "nickname",
                             "profileImageUrl",
                             "role",
-                            "status")
+                            "status",
+                            "serviceAlarmAgree",
+                            "marketingAgree")
                     .containsExactly(
                             1L,
                             "testOauthProvider",
                             "testNickname",
                             "testProfileImageUrl",
                             MemberRole.USER,
-                            MemberStatus.NORMAL);
+                            MemberStatus.NORMAL,
+                            Boolean.FALSE,
+                            Boolean.FALSE);
         }
     }
 
@@ -153,6 +157,34 @@ class MemberServiceTest extends IntegrationTest {
             assertThat(redisTemplate.opsForSet().members("fcmToken:1"))
                     .contains("testFcmToken1", "testFcmToken2");
             assertThat(redisTemplate.opsForSet().size(("fcmToken:1"))).isEqualTo(2);
+        }
+    }
+
+    @Nested
+    class 서비스_알림_수신_동의_상태를_변경할_때 {
+
+        @Test
+        void 유효한_요청이면_서비스_알림_수신_동의_상태를_변경한다() {
+            // when
+            memberService.toggleServiceAlarmAgree();
+
+            // then
+            Member member = memberRepository.findById(1L).get();
+            assertThat(member.getServiceAlarmAgree()).isTrue();
+        }
+    }
+
+    @Nested
+    class 마케팅_수신_동의_상태를_변경할_때 {
+
+        @Test
+        void 유효한_요청이면_마케팅_수신_동의_상태를_변경한다() {
+            // when
+            memberService.toggleMarketingAgree();
+
+            // then
+            Member member = memberRepository.findById(1L).get();
+            assertThat(member.getMarketingAgree()).isTrue();
         }
     }
 }

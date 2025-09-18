@@ -603,7 +603,7 @@ class AlbumControllerTest {
     }
 
     @Nested
-    class 앨범_권한_부여_토글_상태_변경_요청_시 {
+    class 멤버별_권한_부여_상태_변경_요청_시 {
 
         @Test
         void 유효한_요청이면_권한_부여_토글_상태를_반환한다() throws Exception {

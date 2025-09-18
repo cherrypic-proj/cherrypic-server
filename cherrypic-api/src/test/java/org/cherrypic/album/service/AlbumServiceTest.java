@@ -548,7 +548,7 @@ class AlbumServiceTest extends IntegrationTest {
     }
 
     @Nested
-    class 앨범_권한_부여_토글_상태를_변경_할_때 {
+    class 멤버별_권한_부여_상태를_변경할_때 {
 
         @BeforeEach
         void setUp() {
@@ -615,7 +615,7 @@ class AlbumServiceTest extends IntegrationTest {
         }
 
         @Test
-        void 유효한_요청이면_앨범의_권한_부여_상태가_변경되고_LIMITED_참가자_권한이_STANDARD로_수정된다() {
+        void 유효한_요청이면_멤버별_권한_부여_상태를_변경하고_LIMITED_참가자들의_권한을_STANDARD로_변경한다() {
             // when
             albumService.togglePermission(1L);
 
