@@ -20,6 +20,7 @@ import org.cherrypic.domain.image.event.ImageDeleteEvent;
 import org.cherrypic.domain.image.event.ImagesDeleteEvent;
 import org.cherrypic.domain.image.repository.EventImageRepository;
 import org.cherrypic.domain.image.repository.ImageRepository;
+import org.cherrypic.domain.notification.repository.NotificationRepository;
 import org.cherrypic.domain.participant.repository.ParticipantRepository;
 import org.cherrypic.domain.payment.exception.PaymentErrorCode;
 import org.cherrypic.domain.payment.repository.PaymentRepository;
@@ -62,6 +63,7 @@ public class AlbumServiceImpl implements AlbumService {
     private final EventRepository eventRepository;
     private final ImageRepository imageRepository;
     private final EventImageRepository eventImageRepository;
+    private final NotificationRepository notificationRepository;
 
     private final ApplicationEventPublisher eventPublisher;
 
@@ -253,6 +255,8 @@ public class AlbumServiceImpl implements AlbumService {
         eventRepository.deleteAllByAlbumId(album.getId());
 
         imageRepository.deleteAllByAlbumId(album.getId());
+
+        notificationRepository.deleteAllByAlbumId(album.getId());
 
         albumRepository.delete(album);
     }

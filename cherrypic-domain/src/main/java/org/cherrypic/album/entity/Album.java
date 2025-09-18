@@ -13,7 +13,6 @@ import org.cherrypic.album.enums.AlbumType;
 import org.cherrypic.album.exception.AlbumDomainErrorCode;
 import org.cherrypic.common.model.BaseTimeEntity;
 import org.cherrypic.exception.CustomException;
-import org.cherrypic.notification.entity.Notification;
 import org.cherrypic.participant.entity.Participant;
 
 @Getter
@@ -39,9 +38,6 @@ public class Album extends BaseTimeEntity {
 
     @OneToMany(mappedBy = "album", cascade = CascadeType.PERSIST)
     private List<Participant> participants = new ArrayList<>();
-
-    @OneToMany(mappedBy = "album", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Notification> notifications = new ArrayList<>();
 
     @Builder(access = AccessLevel.PRIVATE)
     private Album(
