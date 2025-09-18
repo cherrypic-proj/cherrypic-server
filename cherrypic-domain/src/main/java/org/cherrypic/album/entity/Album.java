@@ -18,7 +18,6 @@ import org.cherrypic.image.entity.Image;
 import org.cherrypic.notification.entity.Notification;
 import org.cherrypic.participant.entity.Participant;
 import org.cherrypic.payment.entity.Payment;
-import org.cherrypic.subscription.entity.Subscription;
 
 @Getter
 @Entity
@@ -52,9 +51,6 @@ public class Album extends BaseTimeEntity {
 
     @OneToMany(mappedBy = "album", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Payment> payments = new ArrayList<>();
-
-    @OneToOne(mappedBy = "album", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Subscription subscription;
 
     @OneToMany(mappedBy = "album", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Notification> notifications = new ArrayList<>();

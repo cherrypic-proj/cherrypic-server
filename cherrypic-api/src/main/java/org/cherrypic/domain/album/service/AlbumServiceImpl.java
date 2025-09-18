@@ -23,6 +23,7 @@ import org.cherrypic.domain.participant.repository.ParticipantRepository;
 import org.cherrypic.domain.payment.exception.PaymentErrorCode;
 import org.cherrypic.domain.payment.repository.PaymentRepository;
 import org.cherrypic.domain.refundtask.repository.RefundTaskRepository;
+import org.cherrypic.domain.subscription.exception.SubscriptionErrorCode;
 import org.cherrypic.domain.subscription.repository.SubscriptionRepository;
 import org.cherrypic.event.entity.Event;
 import org.cherrypic.exception.CustomException;
@@ -266,6 +267,13 @@ public class AlbumServiceImpl implements AlbumService {
                 .orElseThrow(() -> new CustomException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT));
     }
 
+    private Subscription getSubscriptionByAlbumId(Long albumId) {
+        return subscriptionRepository
+                .findByAlbumId(albumId)
+                .orElseThrow(
+                        () -> new CustomException(SubscriptionErrorCode.SUBSCRIPTION_NOT_FOUND));
+    }
+
     private Participant getAlbumHostByAlbumId(Long albumId) {
         return participantRepository
                 .findHostByAlbumId(albumId)
@@ -349,7 +357,8 @@ public class AlbumServiceImpl implements AlbumService {
     private void validateSubscriptionInactive(Album album) {
         if (album.getType() == AlbumType.BASIC) return;
 
-        if (album.getSubscription().getStatus() == SubscriptionStatus.ACTIVE) {
+        Subscription subscription = getSubscriptionByAlbumId(album.getId());
+        if (subscription.getStatus() == SubscriptionStatus.ACTIVE) {
             throw new CustomException(AlbumErrorCode.SUBSCRIPTION_ACTIVE);
         }
     }
@@ -357,7 +366,8 @@ public class AlbumServiceImpl implements AlbumService {
     private void validateSubscriptionNotExpired(Album album) {
         if (album.getType() == AlbumType.BASIC) return;
 
-        if (album.getSubscription().getStatus() == SubscriptionStatus.EXPIRED) {
+        Subscription subscription = getSubscriptionByAlbumId(album.getId());
+        if (subscription.getStatus() == SubscriptionStatus.EXPIRED) {
             throw new CustomException(AlbumErrorCode.EXPIRED_SUBSCRIPTION);
         }
     }

@@ -13,12 +13,15 @@ import org.cherrypic.domain.participant.dto.request.ParticipantRoleUpdateRequest
 import org.cherrypic.domain.participant.dto.response.ParticipantListResponse;
 import org.cherrypic.domain.participant.exception.ParticipantErrorCode;
 import org.cherrypic.domain.participant.repository.ParticipantRepository;
+import org.cherrypic.domain.subscription.exception.SubscriptionErrorCode;
+import org.cherrypic.domain.subscription.repository.SubscriptionRepository;
 import org.cherrypic.exception.CustomException;
 import org.cherrypic.global.pagination.SliceResponse;
 import org.cherrypic.global.util.MemberUtil;
 import org.cherrypic.member.entity.Member;
 import org.cherrypic.participant.entity.Participant;
 import org.cherrypic.participant.enums.ParticipantRole;
+import org.cherrypic.subscription.entity.Subscription;
 import org.cherrypic.subscription.enums.SubscriptionStatus;
 import org.springframework.data.domain.Slice;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
@@ -34,6 +37,7 @@ public class ParticipantServiceImpl implements ParticipantService {
 
     private final ParticipantRepository participantRepository;
     private final AlbumRepository albumRepository;
+    private final SubscriptionRepository subscriptionRepository;
     private final FavoritesRepository favoritesRepository;
     private final NotificationRepository notificationRepository;
 
@@ -164,6 +168,13 @@ public class ParticipantServiceImpl implements ParticipantService {
                 .orElseThrow(() -> new CustomException(ParticipantErrorCode.PARTICIPANT_NOT_FOUND));
     }
 
+    private Subscription getSubscriptionByAlbumId(Long albumId) {
+        return subscriptionRepository
+                .findByAlbumId(albumId)
+                .orElseThrow(
+                        () -> new CustomException(SubscriptionErrorCode.SUBSCRIPTION_NOT_FOUND));
+    }
+
     private void validateNotAlbumHost(Participant participant) {
         if (participant.getRole() == ParticipantRole.HOST) {
             throw new CustomException(AlbumErrorCode.HOST_LEAVE_NOT_ALLOWED);
@@ -203,7 +214,8 @@ public class ParticipantServiceImpl implements ParticipantService {
     private void validateSubscriptionInactive(Album album) {
         if (album.getType() == AlbumType.BASIC) return;
 
-        if (album.getSubscription().getStatus() == SubscriptionStatus.ACTIVE) {
+        Subscription subscription = getSubscriptionByAlbumId(album.getId());
+        if (subscription.getStatus() == SubscriptionStatus.ACTIVE) {
             throw new CustomException(AlbumErrorCode.SUBSCRIPTION_ACTIVE_HOST_TRANSFER_NOT_ALLOWED);
         }
     }
@@ -217,7 +229,8 @@ public class ParticipantServiceImpl implements ParticipantService {
     private void validateSubscriptionNotExpired(Album album) {
         if (album.getType() == AlbumType.BASIC) return;
 
-        if (album.getSubscription().getStatus() == SubscriptionStatus.EXPIRED) {
+        Subscription subscription = getSubscriptionByAlbumId(album.getId());
+        if (subscription.getStatus() == SubscriptionStatus.EXPIRED) {
             throw new CustomException(AlbumErrorCode.EXPIRED_SUBSCRIPTION);
         }
     }

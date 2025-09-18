@@ -345,11 +345,10 @@ class SubscriptionServiceTest extends IntegrationTest {
                             () -> {
                                 Album loadedAlbum = albumRepository.findById(1L).get();
                                 loadedAlbum.getPayments().get(0);
-                                loadedAlbum.getSubscription();
                                 return loadedAlbum;
                             });
             Payment payment = album.getPayments().get(0);
-            Subscription subscription = album.getSubscription();
+            Subscription subscription = subscriptionRepository.findByAlbumId(1L).get();
 
             Assertions.assertAll(
                     () ->
@@ -375,8 +374,6 @@ class SubscriptionServiceTest extends IntegrationTest {
         void 결제에_앨범이_연결되면_환불_예약_작업이_SKIP된다() {
             // given
             Subscription canceledSubscription = subscriptionRepository.findById(1L).get();
-            LocalDateTime previousEndAt =
-                    canceledSubscription.getEndAt().truncatedTo(ChronoUnit.MINUTES);
 
             SubscriptionRenewRequest request = new SubscriptionRenewRequest(1L);
 
@@ -584,34 +581,25 @@ class SubscriptionServiceTest extends IntegrationTest {
             subscriptionService.getSubscriptionInfo(1L);
 
             // then
-            Album album =
-                    transactionUtil.getResult(
-                            () -> {
-                                Album loadedAlbum = albumRepository.findById(1L).get();
-                                loadedAlbum.getSubscription();
-                                return loadedAlbum;
-                            });
-            Subscription subscription = album.getSubscription();
+            Subscription subscription = subscriptionRepository.findByAlbumId(1L).get();
 
-            Assertions.assertAll(
-                    () ->
-                            assertThat(subscription)
-                                    .extracting(
-                                            "id",
-                                            "member.id",
-                                            "album.id",
-                                            "status",
-                                            "startAt",
-                                            "endAt",
-                                            "nextBillingAt")
-                                    .containsExactly(
-                                            1L,
-                                            1L,
-                                            1L,
-                                            SubscriptionStatus.ACTIVE,
-                                            LocalDateTime.of(2025, 8, 4, 0, 0),
-                                            LocalDateTime.of(2025, 9, 4, 0, 0),
-                                            LocalDateTime.of(2025, 9, 1, 0, 0)));
+            assertThat(subscription)
+                    .extracting(
+                            "id",
+                            "member.id",
+                            "album.id",
+                            "status",
+                            "startAt",
+                            "endAt",
+                            "nextBillingAt")
+                    .containsExactly(
+                            1L,
+                            1L,
+                            1L,
+                            SubscriptionStatus.ACTIVE,
+                            LocalDateTime.of(2025, 8, 4, 0, 0),
+                            LocalDateTime.of(2025, 9, 4, 0, 0),
+                            LocalDateTime.of(2025, 9, 1, 0, 0));
         }
 
         @Test
