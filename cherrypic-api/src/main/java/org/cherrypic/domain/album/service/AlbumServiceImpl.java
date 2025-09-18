@@ -252,6 +252,8 @@ public class AlbumServiceImpl implements AlbumService {
         eventImageRepository.deleteAllByEvents(events);
         eventRepository.deleteAllByAlbumId(album.getId());
 
+        imageRepository.deleteAllByAlbumId(album.getId());
+
         albumRepository.delete(album);
     }
 
