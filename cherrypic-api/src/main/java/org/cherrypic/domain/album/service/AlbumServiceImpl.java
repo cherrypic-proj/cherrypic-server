@@ -243,8 +243,8 @@ public class AlbumServiceImpl implements AlbumService {
             eventPublisher.publishEvent(ImageDeleteEvent.of(album.getCoverUrl()));
         }
 
-        List<Long> participantIds = participantRepository.findIdsByAlbumId(albumId);
-        favoritesRepository.deleteByParticipantIdIn(participantIds);
+        final List<Participant> participants = album.getParticipants();
+        favoritesRepository.deleteAllByParticipants(participants);
 
         albumRepository.delete(album);
     }

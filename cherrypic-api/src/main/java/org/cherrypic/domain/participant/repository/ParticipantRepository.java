@@ -30,9 +30,6 @@ public interface ParticipantRepository
     @Query("select p from Participant p where p.album.id = :albumId and p.role = 'HOST'")
     Optional<Participant> findHostByAlbumId(@Param("albumId") Long albumId);
 
-    @Query("select p.id from Participant p where p.album.id = :albumId")
-    List<Long> findIdsByAlbumId(@Param("albumId") Long albumId);
-
     int countByAlbumId(Long albumId);
 
     long countByAlbumIdAndMemberIdNot(Long albumId, Long excludeMemberId);
