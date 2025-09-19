@@ -53,7 +53,7 @@ public class ParticipantServiceImpl implements ParticipantService {
 
         try {
             favoritesRepository.deleteByParticipantId(participant.getId());
-            participantRepository.delete(participant);
+            participantRepository.deleteById(participant.getId());
             notificationRepository.deleteByReceiverIdAndAlbumId(currentMember.getId(), albumId);
         } catch (ObjectOptimisticLockingFailureException ignored) {
         }
@@ -73,7 +73,7 @@ public class ParticipantServiceImpl implements ParticipantService {
 
         try {
             favoritesRepository.deleteByParticipantId(target.getId());
-            participantRepository.delete(target);
+            participantRepository.deleteById(target.getId());
             notificationRepository.deleteByReceiverIdAndAlbumId(
                     target.getMember().getId(), album.getId());
         } catch (ObjectOptimisticLockingFailureException ignored) {
