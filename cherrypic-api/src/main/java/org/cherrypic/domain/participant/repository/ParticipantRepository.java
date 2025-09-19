@@ -27,6 +27,10 @@ public interface ParticipantRepository
     @Query("select p from Participant p where p.album.id = :albumId and p.role = 'HOST'")
     Optional<Participant> findHostByAlbumId(Long albumId);
 
+    @Modifying(clearAutomatically = true)
+    @Query("delete from Participant p where p.id = :participantId")
+    void deleteByParticipantId(Long participantId);
+
     int countByAlbumId(Long albumId);
 
     long countByAlbumIdAndMemberIdNot(Long albumId, Long excludeMemberId);
