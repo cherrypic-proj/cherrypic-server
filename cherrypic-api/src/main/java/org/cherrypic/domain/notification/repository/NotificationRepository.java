@@ -1,5 +1,6 @@
 package org.cherrypic.domain.notification.repository;
 
+import java.util.List;
 import org.cherrypic.notification.entity.Notification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -33,4 +34,7 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     @Modifying(clearAutomatically = true)
     @Query("delete from Notification n where n.album.id = :albumId")
     void deleteAllByAlbumId(Long albumId);
+
+    @Query("select n from Notification n where n.album.id = :albumId")
+    List<Notification> findAllByAlbumId(Long albumId);
 }

@@ -268,12 +268,10 @@ class AlbumServiceTest extends IntegrationTest {
                                 () -> {
                                     Album loadedAlbum = albumRepository.findById(2L).get();
                                     loadedAlbum.getParticipants().get(0);
-                                    loadedAlbum.getPayments().get(0);
                                     return loadedAlbum;
                                 });
                 Participant participant = album.getParticipants().get(0);
-                Payment payment = album.getPayments().get(0);
-
+                Payment payment = paymentRepository.findTop1ByAlbumIdOrderByIdAsc(2L).get();
                 Subscription subscription = subscriptionRepository.findById(1L).orElseThrow();
 
                 Assertions.assertAll(
@@ -1170,6 +1168,7 @@ class AlbumServiceTest extends IntegrationTest {
         void 앨범이_없는_경우_빈_리스트를_조회한다() {
             // given
             favoritesRepository.deleteAll();
+            participantRepository.deleteAll();
             albumRepository.deleteAll();
 
             // when
