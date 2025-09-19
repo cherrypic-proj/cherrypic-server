@@ -119,11 +119,11 @@ class ParticipantServiceTest extends IntegrationTest {
                             () -> {
                                 Album loadedAlbum = albumRepository.findById(1L).get();
                                 loadedAlbum.getParticipants().size();
-                                loadedAlbum.getNotifications().size();
                                 return loadedAlbum;
                             });
             List<Participant> participants = album.getParticipants();
-            List<Notification> notifications = album.getNotifications();
+            List<Notification> notifications =
+                    notificationRepository.findAllByAlbumId(album.getId());
 
             Assertions.assertAll(
                     () ->
@@ -225,11 +225,11 @@ class ParticipantServiceTest extends IntegrationTest {
                             () -> {
                                 Album loadedAlbum = albumRepository.findById(1L).get();
                                 loadedAlbum.getParticipants().size();
-                                loadedAlbum.getNotifications().size();
                                 return loadedAlbum;
                             });
             List<Participant> participants = album.getParticipants();
-            List<Notification> notifications = album.getNotifications();
+            List<Notification> notifications =
+                    notificationRepository.findAllByAlbumId(album.getId());
 
             Assertions.assertAll(
                     () ->

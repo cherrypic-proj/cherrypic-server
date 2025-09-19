@@ -12,13 +12,8 @@ import lombok.NoArgsConstructor;
 import org.cherrypic.album.enums.AlbumType;
 import org.cherrypic.album.exception.AlbumDomainErrorCode;
 import org.cherrypic.common.model.BaseTimeEntity;
-import org.cherrypic.event.entity.Event;
 import org.cherrypic.exception.CustomException;
-import org.cherrypic.image.entity.Image;
-import org.cherrypic.notification.entity.Notification;
 import org.cherrypic.participant.entity.Participant;
-import org.cherrypic.payment.entity.Payment;
-import org.cherrypic.subscription.entity.Subscription;
 
 @Getter
 @Entity
@@ -41,23 +36,8 @@ public class Album extends BaseTimeEntity {
 
     @NotNull private BigDecimal capacityGb;
 
-    @OneToMany(mappedBy = "album", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Payment> payments = new ArrayList<>();
-
-    @OneToOne(mappedBy = "album", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Subscription subscription;
-
-    @OneToMany(mappedBy = "album", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Notification> notifications = new ArrayList<>();
-
-    @OneToMany(mappedBy = "album", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Event> events = new ArrayList<>();
-
-    @OneToMany(mappedBy = "album", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "album", cascade = CascadeType.PERSIST)
     private List<Participant> participants = new ArrayList<>();
-
-    @OneToMany(mappedBy = "album", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Image> images = new ArrayList<>();
 
     @Builder(access = AccessLevel.PRIVATE)
     private Album(

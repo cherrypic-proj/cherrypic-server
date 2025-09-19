@@ -17,6 +17,8 @@ import org.cherrypic.domain.image.event.ImagesDeleteEvent;
 import org.cherrypic.domain.image.exception.ImageErrorCode;
 import org.cherrypic.domain.image.repository.ImageRepository;
 import org.cherrypic.domain.participant.repository.ParticipantRepository;
+import org.cherrypic.domain.subscription.exception.SubscriptionErrorCode;
+import org.cherrypic.domain.subscription.repository.SubscriptionRepository;
 import org.cherrypic.domain.tempalbum.event.TempAlbumImagesDeleteEvent;
 import org.cherrypic.domain.tempalbum.exception.TempAlbumErrorCode;
 import org.cherrypic.domain.tempalbum.repository.TempAlbumImageRepository;
@@ -33,6 +35,7 @@ import org.cherrypic.participant.enums.ParticipantRole;
 import org.cherrypic.s3.S3Util;
 import org.cherrypic.s3.enums.FileExtension;
 import org.cherrypic.s3.enums.ImageType;
+import org.cherrypic.subscription.entity.Subscription;
 import org.cherrypic.subscription.enums.SubscriptionStatus;
 import org.cherrypic.tempalbum.entity.TempAlbum;
 import org.cherrypic.tempalbum.entity.TempAlbumImage;
@@ -53,6 +56,7 @@ public class ImageServiceImpl implements ImageService {
     private final ImageRepository imageRepository;
     private final EventRepository eventRepository;
     private final ParticipantRepository participantRepository;
+    private final SubscriptionRepository subscriptionRepository;
     private final TempAlbumRepository tempAlbumRepository;
     private final TempAlbumImageRepository tempAlbumImageRepository;
 
@@ -340,6 +344,13 @@ public class ImageServiceImpl implements ImageService {
                 .orElseThrow(() -> new CustomException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT));
     }
 
+    private Subscription getSubscriptionByAlbumId(Long albumId) {
+        return subscriptionRepository
+                .findByAlbumId(albumId)
+                .orElseThrow(
+                        () -> new CustomException(SubscriptionErrorCode.SUBSCRIPTION_NOT_FOUND));
+    }
+
     private TempAlbum getTempAlbumById(Long tempAlbumId) {
         return tempAlbumRepository
                 .findById(tempAlbumId)
@@ -361,7 +372,6 @@ public class ImageServiceImpl implements ImageService {
     }
 
     private void validateAlbumCapacity(Album album, BigDecimal uploadCapacity) {
-
         BigDecimal maxCapacity = album.getType().getCapacityGb();
         BigDecimal current = album.getCapacityGb();
         BigDecimal afterUpload = current.add(uploadCapacity);
@@ -372,7 +382,6 @@ public class ImageServiceImpl implements ImageService {
     }
 
     private void validateTempAlbumCapacity(TempAlbum tempAlbum, BigDecimal uploadCapacity) {
-
         BigDecimal maxCapacity = tempAlbum.getType().getCapacityGb();
         BigDecimal current = tempAlbum.getCapacityGb();
         BigDecimal afterUpload = current.add(uploadCapacity);
@@ -433,7 +442,8 @@ public class ImageServiceImpl implements ImageService {
     private void validateSubscriptionNotExpired(Album album) {
         if (album.getType() == AlbumType.BASIC) return;
 
-        if (album.getSubscription().getStatus() == SubscriptionStatus.EXPIRED) {
+        Subscription subscription = getSubscriptionByAlbumId(album.getId());
+        if (subscription.getStatus() == SubscriptionStatus.EXPIRED) {
             throw new CustomException(AlbumErrorCode.EXPIRED_SUBSCRIPTION);
         }
     }

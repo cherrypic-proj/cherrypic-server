@@ -24,6 +24,8 @@ import org.cherrypic.domain.payment.dto.response.PaymentUnlinkedResponse;
 import org.cherrypic.domain.payment.dto.response.PaymentVerificationResponse;
 import org.cherrypic.domain.payment.exception.PaymentErrorCode;
 import org.cherrypic.domain.payment.repository.PaymentRepository;
+import org.cherrypic.domain.subscription.exception.SubscriptionErrorCode;
+import org.cherrypic.domain.subscription.repository.SubscriptionRepository;
 import org.cherrypic.exception.CustomException;
 import org.cherrypic.global.pagination.SliceResponse;
 import org.cherrypic.global.pagination.SortDirection;
@@ -34,6 +36,7 @@ import org.cherrypic.participant.enums.ParticipantRole;
 import org.cherrypic.payment.entity.Payment;
 import org.cherrypic.payment.enums.PaymentPurpose;
 import org.cherrypic.payment.enums.PaymentStatus;
+import org.cherrypic.subscription.entity.Subscription;
 import org.cherrypic.subscription.enums.SubscriptionStatus;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Slice;
@@ -52,6 +55,7 @@ public class PaymentServiceImpl implements PaymentService {
     private final PaymentRepository paymentRepository;
     private final AlbumRepository albumRepository;
     private final ParticipantRepository participantRepository;
+    private final SubscriptionRepository subscriptionRepository;
 
     private final ApplicationEventPublisher eventPublisher;
 
@@ -219,6 +223,13 @@ public class PaymentServiceImpl implements PaymentService {
                 .orElseThrow(() -> new CustomException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT));
     }
 
+    private Subscription getSubscriptionByAlbumId(Long albumId) {
+        return subscriptionRepository
+                .findByAlbumId(albumId)
+                .orElseThrow(
+                        () -> new CustomException(SubscriptionErrorCode.SUBSCRIPTION_NOT_FOUND));
+    }
+
     private void validateAlbumHost(Long memberId, Long albumId) {
         Participant participant = getParticipantByMemberIdAndAlbumId(memberId, albumId);
 
@@ -236,7 +247,8 @@ public class PaymentServiceImpl implements PaymentService {
     private void validateSubscriptionNotExpired(Album album) {
         if (album.getType() == AlbumType.BASIC) return;
 
-        if (album.getSubscription().getStatus() == SubscriptionStatus.EXPIRED) {
+        Subscription subscription = getSubscriptionByAlbumId(album.getId());
+        if (subscription.getStatus() == SubscriptionStatus.EXPIRED) {
             throw new CustomException(AlbumErrorCode.EXPIRED_SUBSCRIPTION);
         }
     }

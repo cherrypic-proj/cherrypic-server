@@ -30,14 +30,17 @@ import org.cherrypic.domain.event.repository.EventRepository;
 import org.cherrypic.domain.favorites.repository.FavoritesRepository;
 import org.cherrypic.domain.image.event.ImageDeleteEvent;
 import org.cherrypic.domain.image.event.ImagesDeleteEvent;
+import org.cherrypic.domain.image.repository.EventImageRepository;
 import org.cherrypic.domain.image.repository.ImageRepository;
 import org.cherrypic.domain.member.repository.MemberRepository;
+import org.cherrypic.domain.notification.repository.NotificationRepository;
 import org.cherrypic.domain.participant.repository.ParticipantRepository;
 import org.cherrypic.domain.payment.exception.PaymentErrorCode;
 import org.cherrypic.domain.payment.repository.PaymentRepository;
 import org.cherrypic.domain.refundtask.repository.RefundTaskRepository;
 import org.cherrypic.domain.subscription.repository.SubscriptionRepository;
 import org.cherrypic.event.entity.Event;
+import org.cherrypic.event.entity.EventImage;
 import org.cherrypic.exception.CustomException;
 import org.cherrypic.favorites.entity.Favorites;
 import org.cherrypic.global.pagination.SliceResponse;
@@ -47,6 +50,8 @@ import org.cherrypic.global.util.TransactionUtil;
 import org.cherrypic.image.entity.Image;
 import org.cherrypic.member.entity.Member;
 import org.cherrypic.member.entity.OauthInfo;
+import org.cherrypic.notification.entity.Notification;
+import org.cherrypic.notification.enums.NotificationType;
 import org.cherrypic.participant.entity.Participant;
 import org.cherrypic.participant.enums.ParticipantRole;
 import org.cherrypic.payment.entity.Payment;
@@ -82,6 +87,8 @@ class AlbumServiceTest extends IntegrationTest {
     @Autowired private InvitationCodeRepository invitationCodeRepository;
     @Autowired private EventRepository eventRepository;
     @Autowired private ImageRepository imageRepository;
+    @Autowired private EventImageRepository eventImageRepository;
+    @Autowired private NotificationRepository notificationRepository;
 
     @MockitoBean private MemberUtil memberUtil;
 
@@ -268,12 +275,10 @@ class AlbumServiceTest extends IntegrationTest {
                                 () -> {
                                     Album loadedAlbum = albumRepository.findById(2L).get();
                                     loadedAlbum.getParticipants().get(0);
-                                    loadedAlbum.getPayments().get(0);
                                     return loadedAlbum;
                                 });
                 Participant participant = album.getParticipants().get(0);
-                Payment payment = album.getPayments().get(0);
-
+                Payment payment = paymentRepository.findTop1ByAlbumIdOrderByIdAsc(2L).get();
                 Subscription subscription = subscriptionRepository.findById(1L).orElseThrow();
 
                 Assertions.assertAll(
@@ -1169,6 +1174,8 @@ class AlbumServiceTest extends IntegrationTest {
         @Test
         void 앨범이_없는_경우_빈_리스트를_조회한다() {
             // given
+            favoritesRepository.deleteAll();
+            participantRepository.deleteAll();
             albumRepository.deleteAll();
 
             // when
@@ -1208,10 +1215,6 @@ class AlbumServiceTest extends IntegrationTest {
             Album album5 = Album.createAlbum("testAlbum5", "testURL5", AlbumType.PRO, false);
             albumRepository.saveAll(List.of(album1, album2, album3, album4, album5));
 
-            Image image =
-                    Image.createImage(album1, 1L, "testUrl", LocalDateTime.now(), BigDecimal.ONE);
-            imageRepository.save(image);
-
             subscriptionRepository.save(
                     Subscription.createSubscription(member1, album5, LocalDateTime.now()));
 
@@ -1228,18 +1231,40 @@ class AlbumServiceTest extends IntegrationTest {
             participantRepository.saveAll(
                     List.of(participant1, participant2, participant3, participant4, participant5));
 
-            eventRepository.save(Event.createEvent(album1, "testTitle1", "testCoverUrl1"));
+            favoritesRepository.save(Favorites.createFavorites(participant1));
+
+            Image image =
+                    Image.createImage(album1, 1L, "testUrl", LocalDateTime.now(), BigDecimal.ONE);
+            imageRepository.save(image);
+
+            Event event = Event.createEvent(album1, "testTitle1", "testCoverUrl1");
+            eventRepository.save(event);
+            eventImageRepository.save(EventImage.createEventImage(event, image));
+
+            notificationRepository.save(
+                    Notification.createNotification(
+                            member1,
+                            member2,
+                            album1,
+                            "testTitle",
+                            "testContent",
+                            NotificationType.ALBUM));
         }
 
         @Test
-        void 유효한_요청일_경우_앨범과_내부_이벤트가_모두_삭제된다() {
+        void 유효한_요청일_경우_참가자_즐겨찾기_이벤트_이미지_알림이_모두_삭제된다() {
             // when
             albumService.deleteAlbum(1L);
 
             // then
             Assertions.assertAll(
                     () -> assertThat(albumRepository.findById(1L).isPresent()).isFalse(),
-                    () -> assertThat(eventRepository.findById(1L).isPresent()).isFalse());
+                    () -> assertThat(participantRepository.findById(1L).isPresent()).isFalse(),
+                    () -> assertThat(favoritesRepository.findById(1L).isPresent()).isFalse(),
+                    () -> assertThat(eventRepository.findById(1L).isPresent()).isFalse(),
+                    () -> assertThat(eventImageRepository.findById(1L).isPresent()).isFalse(),
+                    () -> assertThat(imageRepository.findById(1L).isPresent()).isFalse(),
+                    () -> assertThat(notificationRepository.findById(1L).isPresent()).isFalse());
         }
 
         @Test

@@ -1,10 +1,10 @@
 package org.cherrypic.domain.notification.repository;
 
+import java.util.List;
 import org.cherrypic.notification.entity.Notification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
 
@@ -20,10 +20,16 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
             """,
             nativeQuery = true)
     void bulkInsertAlbumDeleteNotifications(
-            @Param("albumId") Long albumId,
-            @Param("senderId") Long senderId,
-            @Param("title") String title,
-            @Param("content") String content);
+            Long albumId, Long senderId, String title, String content);
 
+    @Modifying
+    @Query("delete from Notification n where n.receiver.id = :receiverId and n.album.id = :albumId")
     void deleteByReceiverIdAndAlbumId(Long receiverId, Long albumId);
+
+    @Modifying(clearAutomatically = true)
+    @Query("delete from Notification n where n.album.id = :albumId")
+    void deleteAllByAlbumId(Long albumId);
+
+    @Query("select n from Notification n where n.album.id = :albumId")
+    List<Notification> findAllByAlbumId(Long albumId);
 }

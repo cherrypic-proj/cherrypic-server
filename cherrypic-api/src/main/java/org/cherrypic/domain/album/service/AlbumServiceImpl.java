@@ -15,16 +15,21 @@ import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.album.repository.AlbumRepository;
 import org.cherrypic.domain.album.repository.InvitationCodeRepository;
 import org.cherrypic.domain.event.repository.EventRepository;
+import org.cherrypic.domain.favorites.repository.FavoritesRepository;
 import org.cherrypic.domain.image.event.ImageDeleteEvent;
 import org.cherrypic.domain.image.event.ImagesDeleteEvent;
+import org.cherrypic.domain.image.repository.EventImageRepository;
 import org.cherrypic.domain.image.repository.ImageRepository;
+import org.cherrypic.domain.notification.repository.NotificationRepository;
 import org.cherrypic.domain.participant.repository.ParticipantRepository;
 import org.cherrypic.domain.payment.exception.PaymentErrorCode;
 import org.cherrypic.domain.payment.repository.PaymentRepository;
 import org.cherrypic.domain.refundtask.repository.RefundTaskRepository;
+import org.cherrypic.domain.subscription.exception.SubscriptionErrorCode;
 import org.cherrypic.domain.subscription.repository.SubscriptionRepository;
 import org.cherrypic.event.entity.Event;
 import org.cherrypic.exception.CustomException;
+import org.cherrypic.favorites.entity.Favorites;
 import org.cherrypic.global.pagination.SliceResponse;
 import org.cherrypic.global.pagination.SortDirection;
 import org.cherrypic.global.util.MemberUtil;
@@ -52,10 +57,13 @@ public class AlbumServiceImpl implements AlbumService {
     private final PaymentRepository paymentRepository;
     private final RefundTaskRepository refundTaskRepository;
     private final ParticipantRepository participantRepository;
+    private final FavoritesRepository favoritesRepository;
     private final SubscriptionRepository subscriptionRepository;
     private final InvitationCodeRepository invitationCodeRepository;
     private final EventRepository eventRepository;
     private final ImageRepository imageRepository;
+    private final EventImageRepository eventImageRepository;
+    private final NotificationRepository notificationRepository;
 
     private final ApplicationEventPublisher eventPublisher;
 
@@ -76,10 +84,10 @@ public class AlbumServiceImpl implements AlbumService {
 
         Participant participant =
                 Participant.createParticipant(currentMember, album, ParticipantRole.HOST);
-        participant.assignFavorites();
         album.addParticipant(participant);
-
         albumRepository.save(album);
+
+        favoritesRepository.save(Favorites.createFavorites(participant));
 
         if (request.type() != AlbumType.BASIC) {
             final Payment payment = getPaymentByIdWithLock(request.paymentId());
@@ -177,8 +185,9 @@ public class AlbumServiceImpl implements AlbumService {
 
         Participant participant =
                 Participant.createParticipant(currentMember, album, ParticipantRole.STANDARD);
-        participant.assignFavorites();
         participantRepository.save(participant);
+
+        favoritesRepository.save(Favorites.createFavorites(participant));
 
         return AlbumJoinResponse.from(participant);
     }
@@ -238,7 +247,18 @@ public class AlbumServiceImpl implements AlbumService {
             eventPublisher.publishEvent(ImageDeleteEvent.of(album.getCoverUrl()));
         }
 
-        albumRepository.delete(album);
+        final List<Participant> participants = album.getParticipants();
+        favoritesRepository.deleteAllByParticipants(participants);
+        participantRepository.deleteAllInBatch(participants);
+
+        eventImageRepository.deleteAllByEvents(events);
+        eventRepository.deleteAllInBatch(events);
+
+        imageRepository.deleteAllByAlbumId(album.getId());
+
+        notificationRepository.deleteAllByAlbumId(album.getId());
+
+        albumRepository.deleteByAlbumId(album.getId());
     }
 
     private Album getAlbumById(Long albumId) {
@@ -257,6 +277,13 @@ public class AlbumServiceImpl implements AlbumService {
         return participantRepository
                 .findByMemberIdAndAlbumId(memberId, albumId)
                 .orElseThrow(() -> new CustomException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT));
+    }
+
+    private Subscription getSubscriptionByAlbumId(Long albumId) {
+        return subscriptionRepository
+                .findByAlbumId(albumId)
+                .orElseThrow(
+                        () -> new CustomException(SubscriptionErrorCode.SUBSCRIPTION_NOT_FOUND));
     }
 
     private Participant getAlbumHostByAlbumId(Long albumId) {
@@ -342,7 +369,8 @@ public class AlbumServiceImpl implements AlbumService {
     private void validateSubscriptionInactive(Album album) {
         if (album.getType() == AlbumType.BASIC) return;
 
-        if (album.getSubscription().getStatus() == SubscriptionStatus.ACTIVE) {
+        Subscription subscription = getSubscriptionByAlbumId(album.getId());
+        if (subscription.getStatus() == SubscriptionStatus.ACTIVE) {
             throw new CustomException(AlbumErrorCode.SUBSCRIPTION_ACTIVE);
         }
     }
@@ -350,7 +378,8 @@ public class AlbumServiceImpl implements AlbumService {
     private void validateSubscriptionNotExpired(Album album) {
         if (album.getType() == AlbumType.BASIC) return;
 
-        if (album.getSubscription().getStatus() == SubscriptionStatus.EXPIRED) {
+        Subscription subscription = getSubscriptionByAlbumId(album.getId());
+        if (subscription.getStatus() == SubscriptionStatus.EXPIRED) {
             throw new CustomException(AlbumErrorCode.EXPIRED_SUBSCRIPTION);
         }
     }

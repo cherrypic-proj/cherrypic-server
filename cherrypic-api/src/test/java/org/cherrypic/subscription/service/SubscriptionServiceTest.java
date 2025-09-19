@@ -23,7 +23,6 @@ import org.cherrypic.domain.subscription.repository.SubscriptionRepository;
 import org.cherrypic.domain.subscription.service.SubscriptionService;
 import org.cherrypic.exception.CustomException;
 import org.cherrypic.global.util.MemberUtil;
-import org.cherrypic.global.util.TransactionUtil;
 import org.cherrypic.member.entity.Member;
 import org.cherrypic.member.entity.OauthInfo;
 import org.cherrypic.participant.entity.Participant;
@@ -43,8 +42,6 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.util.ReflectionTestUtils;
 
 class SubscriptionServiceTest extends IntegrationTest {
-
-    @Autowired private TransactionUtil transactionUtil;
 
     @Autowired private SubscriptionService subscriptionService;
     @Autowired private SubscriptionRepository subscriptionRepository;
@@ -340,16 +337,8 @@ class SubscriptionServiceTest extends IntegrationTest {
             subscriptionService.renewSubscription(1L, request);
 
             // then
-            Album album =
-                    transactionUtil.getResult(
-                            () -> {
-                                Album loadedAlbum = albumRepository.findById(1L).get();
-                                loadedAlbum.getPayments().get(0);
-                                loadedAlbum.getSubscription();
-                                return loadedAlbum;
-                            });
-            Payment payment = album.getPayments().get(0);
-            Subscription subscription = album.getSubscription();
+            Payment payment = paymentRepository.findTop1ByAlbumIdOrderByIdAsc(1L).get();
+            Subscription subscription = subscriptionRepository.findByAlbumId(1L).get();
 
             Assertions.assertAll(
                     () ->
@@ -374,10 +363,6 @@ class SubscriptionServiceTest extends IntegrationTest {
         @Test
         void 결제에_앨범이_연결되면_환불_예약_작업이_SKIP된다() {
             // given
-            Subscription canceledSubscription = subscriptionRepository.findById(1L).get();
-            LocalDateTime previousEndAt =
-                    canceledSubscription.getEndAt().truncatedTo(ChronoUnit.MINUTES);
-
             SubscriptionRenewRequest request = new SubscriptionRenewRequest(1L);
 
             // when
@@ -584,34 +569,25 @@ class SubscriptionServiceTest extends IntegrationTest {
             subscriptionService.getSubscriptionInfo(1L);
 
             // then
-            Album album =
-                    transactionUtil.getResult(
-                            () -> {
-                                Album loadedAlbum = albumRepository.findById(1L).get();
-                                loadedAlbum.getSubscription();
-                                return loadedAlbum;
-                            });
-            Subscription subscription = album.getSubscription();
+            Subscription subscription = subscriptionRepository.findByAlbumId(1L).get();
 
-            Assertions.assertAll(
-                    () ->
-                            assertThat(subscription)
-                                    .extracting(
-                                            "id",
-                                            "member.id",
-                                            "album.id",
-                                            "status",
-                                            "startAt",
-                                            "endAt",
-                                            "nextBillingAt")
-                                    .containsExactly(
-                                            1L,
-                                            1L,
-                                            1L,
-                                            SubscriptionStatus.ACTIVE,
-                                            LocalDateTime.of(2025, 8, 4, 0, 0),
-                                            LocalDateTime.of(2025, 9, 4, 0, 0),
-                                            LocalDateTime.of(2025, 9, 1, 0, 0)));
+            assertThat(subscription)
+                    .extracting(
+                            "id",
+                            "member.id",
+                            "album.id",
+                            "status",
+                            "startAt",
+                            "endAt",
+                            "nextBillingAt")
+                    .containsExactly(
+                            1L,
+                            1L,
+                            1L,
+                            SubscriptionStatus.ACTIVE,
+                            LocalDateTime.of(2025, 8, 4, 0, 0),
+                            LocalDateTime.of(2025, 9, 4, 0, 0),
+                            LocalDateTime.of(2025, 9, 1, 0, 0));
         }
 
         @Test

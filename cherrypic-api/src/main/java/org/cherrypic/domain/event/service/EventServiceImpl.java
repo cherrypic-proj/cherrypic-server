@@ -21,6 +21,8 @@ import org.cherrypic.domain.image.exception.ImageErrorCode;
 import org.cherrypic.domain.image.repository.EventImageRepository;
 import org.cherrypic.domain.image.repository.ImageRepository;
 import org.cherrypic.domain.participant.repository.ParticipantRepository;
+import org.cherrypic.domain.subscription.exception.SubscriptionErrorCode;
+import org.cherrypic.domain.subscription.repository.SubscriptionRepository;
 import org.cherrypic.event.entity.Event;
 import org.cherrypic.event.entity.EventImage;
 import org.cherrypic.exception.CustomException;
@@ -31,6 +33,7 @@ import org.cherrypic.image.entity.Image;
 import org.cherrypic.member.entity.Member;
 import org.cherrypic.participant.entity.Participant;
 import org.cherrypic.participant.enums.ParticipantRole;
+import org.cherrypic.subscription.entity.Subscription;
 import org.cherrypic.subscription.enums.SubscriptionStatus;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -49,6 +52,7 @@ public class EventServiceImpl implements EventService {
 
     private final AlbumRepository albumRepository;
     private final ParticipantRepository participantRepository;
+    private final SubscriptionRepository subscriptionRepository;
     private final EventRepository eventRepository;
     private final ImageRepository imageRepository;
     private final EventImageRepository eventImageRepository;
@@ -191,6 +195,13 @@ public class EventServiceImpl implements EventService {
                 .orElseThrow(() -> new CustomException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT));
     }
 
+    private Subscription getSubscriptionByAlbumId(Long albumId) {
+        return subscriptionRepository
+                .findByAlbumId(albumId)
+                .orElseThrow(
+                        () -> new CustomException(SubscriptionErrorCode.SUBSCRIPTION_NOT_FOUND));
+    }
+
     private void validateParticipantAuthority(Member member, Album album) {
 
         Participant participant = getParticipantByMemberIdAndAlbumId(member.getId(), album.getId());
@@ -248,7 +259,8 @@ public class EventServiceImpl implements EventService {
     private void validateSubscriptionNotExpired(Album album) {
         if (album.getType() == AlbumType.BASIC) return;
 
-        if (album.getSubscription().getStatus() == SubscriptionStatus.EXPIRED) {
+        Subscription subscription = getSubscriptionByAlbumId(album.getId());
+        if (subscription.getStatus() == SubscriptionStatus.EXPIRED) {
             throw new CustomException(AlbumErrorCode.EXPIRED_SUBSCRIPTION);
         }
     }
