@@ -11,6 +11,8 @@ import org.springframework.data.jpa.repository.Query;
 public interface FavoritesRepository extends JpaRepository<Favorites, Long> {
     Optional<Favorites> findByParticipantId(Long participantId);
 
+    @Modifying(clearAutomatically = true)
+    @Query("delete from Favorites f where f.participant.id = :participantId")
     void deleteByParticipantId(Long participantId);
 
     @Modifying(clearAutomatically = true)
