@@ -43,7 +43,8 @@ public class AlbumRepositoryImpl implements AlbumRepositoryCustom {
                                 favorites.marked)
                         .from(participant)
                         .join(participant.album, album)
-                        .join(favorites.participant, participant)
+                        .leftJoin(favorites)
+                        .on(favorites.participant.eq(participant))
                         .where(
                                 participant.member.id.eq(memberId),
                                 type != null ? album.type.eq(type) : null,
