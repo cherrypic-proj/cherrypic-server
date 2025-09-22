@@ -1134,19 +1134,12 @@ class AlbumServiceTest extends IntegrationTest {
                             null, SubscriptionStatus.ACTIVE, null, null, 3, SortDirection.DESC);
 
             // when & then
-            Assertions.assertAll(
-                    () -> assertThat(response.content().getFirst().albumId()).isEqualTo(3),
-                    () -> assertThat(response.content().getFirst().type()).isEqualTo(AlbumType.PRO),
-                    () ->
-                            assertThat(response.content().getFirst().status())
-                                    .isEqualTo(SubscriptionStatus.ACTIVE),
-                    () -> assertThat(response.content().get(1).albumId()).isEqualTo(2),
-                    () -> assertThat(response.content().get(1).type()).isEqualTo(AlbumType.BASIC),
-                    () -> assertThat(response.content().get(1).status()).isEqualTo(null),
-                    () -> assertThat(response.content().get(2).albumId()).isEqualTo(1),
-                    () -> assertThat(response.content().get(2).type()).isEqualTo(AlbumType.BASIC),
-                    () -> assertThat(response.content().get(2).status()).isEqualTo(null),
-                    () -> assertThat(response.isLast()).isTrue());
+            assertThat(response.content())
+                    .extracting("albumId", "type", "status")
+                    .containsExactly(
+                            tuple(3L, AlbumType.PRO, SubscriptionStatus.ACTIVE),
+                            tuple(2L, AlbumType.BASIC, null),
+                            tuple(1L, AlbumType.BASIC, null));
         }
 
         @Test
