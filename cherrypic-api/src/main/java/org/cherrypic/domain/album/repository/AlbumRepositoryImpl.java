@@ -54,7 +54,7 @@ public class AlbumRepositoryImpl implements AlbumRepositoryCustom {
                         .where(
                                 participant.member.id.eq(memberId),
                                 type != null ? album.type.eq(type) : null,
-                                status != null ? subscription.status.eq(status) : null,
+                                statusCondition(status),
                                 keyword != null ? album.title.containsIgnoreCase(keyword) : null,
                                 lastAlbumIdCondition(lastAlbumId, direction))
                         .orderBy(direction == SortDirection.DESC ? album.id.desc() : album.id.asc())
@@ -84,6 +84,21 @@ public class AlbumRepositoryImpl implements AlbumRepositoryCustom {
         }
 
         return direction == SortDirection.DESC ? album.id.lt(albumId) : album.id.gt(albumId);
+    }
+
+    private BooleanExpression statusCondition(SubscriptionStatus status) {
+        if (status == null) {
+            return null;
+        }
+
+        if (status == SubscriptionStatus.ACTIVE) {
+            return subscription
+                    .status
+                    .eq(SubscriptionStatus.ACTIVE)
+                    .or(subscription.isNull().and(album.type.eq(AlbumType.BASIC)));
+        }
+
+        return subscription.status.eq(status);
     }
 
     private Slice<AlbumListResponse> checkLastPage(int pageSize, List<AlbumListResponse> results) {
