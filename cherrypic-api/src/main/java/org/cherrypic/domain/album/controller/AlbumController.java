@@ -13,6 +13,7 @@ import org.cherrypic.domain.album.service.AlbumService;
 import org.cherrypic.global.annotation.PageSize;
 import org.cherrypic.global.pagination.SliceResponse;
 import org.cherrypic.global.pagination.SortDirection;
+import org.cherrypic.subscription.enums.SubscriptionStatus;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -80,6 +81,9 @@ public class AlbumController {
             @Parameter(description = "앨범 유형 (BASIC, PRO, PREMIUM). 생략 시 전체 조회")
                     @RequestParam(required = false)
                     AlbumType type,
+            @Parameter(description = "구독 상태 (ACTIVE, CANCELED, EXPIRED). 생략 시 전체 조회")
+                    @RequestParam(required = false)
+                    SubscriptionStatus status,
             @Parameter(description = "검색 키워드 (앨범 제목에 포함된 단어). 생략 시 전체 조회")
                     @RequestParam(required = false)
                     String keyword,
@@ -91,7 +95,7 @@ public class AlbumController {
                     @RequestParam(defaultValue = "DESC")
                     SortDirection direction) {
         return albumService.getParticipatingAlbumsByCondition(
-                type, keyword, lastAlbumId, size, direction);
+                type, status, keyword, lastAlbumId, size, direction);
     }
 
     @DeleteMapping("/{albumId}")

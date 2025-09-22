@@ -3,12 +3,14 @@ package org.cherrypic.domain.album.repository;
 import org.cherrypic.album.enums.AlbumType;
 import org.cherrypic.domain.album.dto.response.AlbumListResponse;
 import org.cherrypic.global.pagination.SortDirection;
+import org.cherrypic.subscription.enums.SubscriptionStatus;
 import org.springframework.data.domain.Slice;
 
 public interface AlbumRepositoryCustom {
-    Slice<AlbumListResponse> findAllByMemberIdAndTypeAndKeyword(
+    Slice<AlbumListResponse> findAllByMemberIdWithCondition(
             Long memberId,
             AlbumType type,
+            SubscriptionStatus status,
             String keyword,
             Long lastAlbumId,
             int size,

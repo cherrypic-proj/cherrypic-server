@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;
 import org.cherrypic.album.enums.AlbumType;
+import org.cherrypic.subscription.enums.SubscriptionStatus;
 
 public record AlbumListResponse(
         @Schema(description = "앨범 ID", example = "1") Long albumId,
@@ -11,6 +12,7 @@ public record AlbumListResponse(
         @Schema(description = "앨범 커버 URL", example = "https://example.jpg") String coverUrl,
         @Schema(description = "앨범 유형", example = "BASIC") AlbumType type,
         @Schema(description = "앨범 구독 가격", example = "5900") Integer price,
+        @Schema(description = "구독 상태", example = "ACTIVE") SubscriptionStatus status,
         @JsonFormat(
                         shape = JsonFormat.Shape.STRING,
                         pattern = "yyyy-MM-dd",
@@ -23,9 +25,10 @@ public record AlbumListResponse(
             String title,
             String coverUrl,
             AlbumType type,
+            SubscriptionStatus status,
             LocalDateTime createdAt,
             Boolean marked) {
         return new AlbumListResponse(
-                albumId, title, coverUrl, type, type.getPrice(), createdAt, marked);
+                albumId, title, coverUrl, type, type.getPrice(), status, createdAt, marked);
     }
 }

@@ -6,6 +6,7 @@ import org.cherrypic.domain.album.dto.request.AlbumUpdateRequest;
 import org.cherrypic.domain.album.dto.response.*;
 import org.cherrypic.global.pagination.SliceResponse;
 import org.cherrypic.global.pagination.SortDirection;
+import org.cherrypic.subscription.enums.SubscriptionStatus;
 
 public interface AlbumService {
     AlbumCreateResponse createAlbum(AlbumCreateRequest request);
@@ -21,7 +22,12 @@ public interface AlbumService {
     AlbumInfoResponse getAlbum(Long albumId);
 
     SliceResponse<AlbumListResponse> getParticipatingAlbumsByCondition(
-            AlbumType type, String keyword, Long lastAlbumId, int size, SortDirection direction);
+            AlbumType type,
+            SubscriptionStatus status,
+            String keyword,
+            Long lastAlbumId,
+            int size,
+            SortDirection direction);
 
     void deleteAlbum(Long albumId);
 }
