@@ -215,12 +215,17 @@ public class AlbumServiceImpl implements AlbumService {
     @Override
     @Transactional(readOnly = true)
     public SliceResponse<AlbumListResponse> getParticipatingAlbumsByCondition(
-            AlbumType type, String keyword, Long lastAlbumId, int size, SortDirection direction) {
+            AlbumType type,
+            SubscriptionStatus status,
+            String keyword,
+            Long lastAlbumId,
+            int size,
+            SortDirection direction) {
         final Member currentMember = memberUtil.getCurrentMember();
 
         Slice<AlbumListResponse> results =
-                albumRepository.findAllByMemberIdAndTypeAndKeyword(
-                        currentMember.getId(), type, keyword, lastAlbumId, size, direction);
+                albumRepository.findAllByMemberIdWithCondition(
+                        currentMember.getId(), type, status, keyword, lastAlbumId, size, direction);
 
         return SliceResponse.from(results);
     }

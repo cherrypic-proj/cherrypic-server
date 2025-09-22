@@ -1044,7 +1044,11 @@ class AlbumServiceTest extends IntegrationTest {
             Album album1 = Album.createAlbum("testTitle1", "testCoverUrl1", AlbumType.BASIC, false);
             Album album2 = Album.createAlbum("testTitle2", "testCoverUrl2", AlbumType.BASIC, false);
             Album album3 = Album.createAlbum("testTitle3", "testCoverUrl3", AlbumType.PRO, false);
-            albumRepository.saveAll(List.of(album1, album2, album3));
+            Album album4 =
+                    Album.createAlbum("testTitle4", "testCoverUrl4", AlbumType.PREMIUM, false);
+            Album album5 =
+                    Album.createAlbum("testTitle5", "testCoverUrl5", AlbumType.PREMIUM, false);
+            albumRepository.saveAll(List.of(album1, album2, album3, album4, album5));
 
             Participant participant1 =
                     Participant.createParticipant(member, album1, ParticipantRole.HOST);
@@ -1052,12 +1056,36 @@ class AlbumServiceTest extends IntegrationTest {
                     Participant.createParticipant(member, album2, ParticipantRole.HOST);
             Participant participant3 =
                     Participant.createParticipant(member, album3, ParticipantRole.HOST);
-            participantRepository.saveAll(List.of(participant1, participant2, participant3));
+            Participant participant4 =
+                    Participant.createParticipant(member, album4, ParticipantRole.HOST);
+            Participant participant5 =
+                    Participant.createParticipant(member, album5, ParticipantRole.HOST);
+            participantRepository.saveAll(
+                    List.of(participant1, participant2, participant3, participant4, participant5));
+
+            // 15일 전에 시작되어 구독 중
+            Subscription subscription1 =
+                    Subscription.createSubscription(
+                            member, album3, LocalDateTime.now().minusDays(15));
+            // 15일 전에 시작되어 해지된 구독
+            Subscription subscription2 =
+                    Subscription.createSubscription(
+                            member, album4, LocalDateTime.now().minusDays(15));
+            subscription2.cancel();
+            // 만료된 구독
+            Subscription subscription3 =
+                    Subscription.createSubscription(
+                            member, album5, LocalDateTime.of(2025, 9, 1, 0, 0));
+            ReflectionTestUtils.setField(subscription3, "status", SubscriptionStatus.EXPIRED);
+            subscriptionRepository.saveAll(List.of(subscription1, subscription2, subscription3));
 
             Favorites favorites1 = Favorites.createFavorites(participant1);
             Favorites favorites2 = Favorites.createFavorites(participant2);
             Favorites favorites3 = Favorites.createFavorites(participant3);
-            favoritesRepository.saveAll(List.of(favorites1, favorites2, favorites3));
+            Favorites favorites4 = Favorites.createFavorites(participant4);
+            Favorites favorites5 = Favorites.createFavorites(participant5);
+            favoritesRepository.saveAll(
+                    List.of(favorites1, favorites2, favorites3, favorites4, favorites5));
         }
 
         @Test
@@ -1065,19 +1093,19 @@ class AlbumServiceTest extends IntegrationTest {
             // given
             SliceResponse<AlbumListResponse> response =
                     albumService.getParticipatingAlbumsByCondition(
-                            AlbumType.PRO, null, null, 1, SortDirection.DESC);
+                            AlbumType.PRO, null, null, null, 1, SortDirection.DESC);
 
             // when & then
             Assertions.assertAll(
-                    () -> assertThat(response.content().get(0).albumId()).isEqualTo(3),
-                    () -> assertThat(response.content().get(0).type()).isEqualTo(AlbumType.PRO),
+                    () -> assertThat(response.content().getFirst().albumId()).isEqualTo(3),
+                    () -> assertThat(response.content().getFirst().type()).isEqualTo(AlbumType.PRO),
                     () ->
-                            assertThat(response.content().get(0).price())
+                            assertThat(response.content().getFirst().price())
                                     .isEqualTo(AlbumType.PRO.getPrice()),
                     () ->
                             assertThat(
                                             response.content()
-                                                    .get(0)
+                                                    .getFirst()
                                                     .createdAt()
                                                     .truncatedTo(ChronoUnit.MINUTES))
                                     .isEqualTo(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES)),
@@ -1089,27 +1117,66 @@ class AlbumServiceTest extends IntegrationTest {
             // given
             SliceResponse<AlbumListResponse> response =
                     albumService.getParticipatingAlbumsByCondition(
-                            null, "title2", null, 1, SortDirection.DESC);
+                            null, null, "title2", null, 1, SortDirection.DESC);
 
             // when & then
             Assertions.assertAll(
-                    () -> assertThat(response.content().get(0).albumId()).isEqualTo(2),
-                    () -> assertThat(response.content().get(0).title()).isEqualTo("testTitle2"),
+                    () -> assertThat(response.content().getFirst().albumId()).isEqualTo(2),
+                    () -> assertThat(response.content().getFirst().title()).isEqualTo("testTitle2"),
                     () -> assertThat(response.isLast()).isTrue());
         }
 
         @Test
-        void PRO_유형과_앨범_이름으로_필터링하면_조건을_모두_만족하는_앨범만_조회한다() {
+        void ACTIVE_구독_상태로_필터링하면_BASIC_앨범과_구독_중인_유료_앨범만_조회한다() {
             // given
             SliceResponse<AlbumListResponse> response =
                     albumService.getParticipatingAlbumsByCondition(
-                            AlbumType.PRO, "title3", null, 1, SortDirection.DESC);
+                            null, SubscriptionStatus.ACTIVE, null, null, 3, SortDirection.DESC);
+
+            // when & then
+            assertThat(response.content())
+                    .extracting("albumId", "type", "status")
+                    .containsExactly(
+                            tuple(3L, AlbumType.PRO, SubscriptionStatus.ACTIVE),
+                            tuple(2L, AlbumType.BASIC, null),
+                            tuple(1L, AlbumType.BASIC, null));
+        }
+
+        @Test
+        void CANCELED_구독_상태로_필터링하면_해지되었지만_구독_중인_유료_앨범만_조회한다() {
+            // given
+            SliceResponse<AlbumListResponse> response =
+                    albumService.getParticipatingAlbumsByCondition(
+                            null, SubscriptionStatus.CANCELED, null, null, 3, SortDirection.DESC);
 
             // when & then
             Assertions.assertAll(
-                    () -> assertThat(response.content().get(0).albumId()).isEqualTo(3),
-                    () -> assertThat(response.content().get(0).title()).isEqualTo("testTitle3"),
-                    () -> assertThat(response.content().get(0).type()).isEqualTo(AlbumType.PRO),
+                    () -> assertThat(response.content().getFirst().albumId()).isEqualTo(4),
+                    () ->
+                            assertThat(response.content().getFirst().type())
+                                    .isEqualTo(AlbumType.PREMIUM),
+                    () ->
+                            assertThat(response.content().getFirst().status())
+                                    .isEqualTo(SubscriptionStatus.CANCELED),
+                    () -> assertThat(response.isLast()).isTrue());
+        }
+
+        @Test
+        void EXPIRED_구독_상태로_필터링하면_구독이_만료된_유료_앨범만_조회한다() {
+            // given
+            SliceResponse<AlbumListResponse> response =
+                    albumService.getParticipatingAlbumsByCondition(
+                            null, SubscriptionStatus.EXPIRED, null, null, 3, SortDirection.DESC);
+
+            // when & then
+            Assertions.assertAll(
+                    () -> assertThat(response.content().getFirst().albumId()).isEqualTo(5),
+                    () ->
+                            assertThat(response.content().getFirst().type())
+                                    .isEqualTo(AlbumType.PREMIUM),
+                    () ->
+                            assertThat(response.content().getFirst().status())
+                                    .isEqualTo(SubscriptionStatus.EXPIRED),
                     () -> assertThat(response.isLast()).isTrue());
         }
 
@@ -1118,14 +1185,14 @@ class AlbumServiceTest extends IntegrationTest {
             // when
             SliceResponse<AlbumListResponse> response =
                     albumService.getParticipatingAlbumsByCondition(
-                            null, null, null, 3, SortDirection.ASC);
+                            null, null, null, null, 5, SortDirection.ASC);
 
             // then
             Assertions.assertAll(
                     () ->
                             assertThat(response.content())
                                     .extracting("albumId")
-                                    .containsExactly(1L, 2L, 3L),
+                                    .containsExactly(1L, 2L, 3L, 4L, 5L),
                     () -> assertThat(response.isLast()).isTrue());
         }
 
@@ -1134,14 +1201,14 @@ class AlbumServiceTest extends IntegrationTest {
             // when
             SliceResponse<AlbumListResponse> response =
                     albumService.getParticipatingAlbumsByCondition(
-                            null, null, null, 3, SortDirection.DESC);
+                            null, null, null, null, 5, SortDirection.DESC);
 
             // then
             Assertions.assertAll(
                     () ->
                             assertThat(response.content())
                                     .extracting("albumId")
-                                    .containsExactly(3L, 2L, 1L),
+                                    .containsExactly(5L, 4L, 3L, 2L, 1L),
                     () -> assertThat(response.isLast()).isTrue());
         }
 
@@ -1150,11 +1217,11 @@ class AlbumServiceTest extends IntegrationTest {
             // when
             SliceResponse<AlbumListResponse> response =
                     albumService.getParticipatingAlbumsByCondition(
-                            null, null, null, 3, SortDirection.DESC);
+                            null, null, null, null, 5, SortDirection.DESC);
 
             // then
             Assertions.assertAll(
-                    () -> assertThat(response.content().size()).isEqualTo(3),
+                    () -> assertThat(response.content().size()).isEqualTo(5),
                     () -> assertThat(response.isLast()).isTrue());
         }
 
@@ -1163,7 +1230,7 @@ class AlbumServiceTest extends IntegrationTest {
             // when
             SliceResponse<AlbumListResponse> response =
                     albumService.getParticipatingAlbumsByCondition(
-                            null, null, null, 1, SortDirection.DESC);
+                            null, null, null, null, 1, SortDirection.DESC);
 
             // then
             Assertions.assertAll(
@@ -1176,12 +1243,13 @@ class AlbumServiceTest extends IntegrationTest {
             // given
             favoritesRepository.deleteAll();
             participantRepository.deleteAll();
+            subscriptionRepository.deleteAll();
             albumRepository.deleteAll();
 
             // when
             SliceResponse<AlbumListResponse> response =
                     albumService.getParticipatingAlbumsByCondition(
-                            null, null, null, 10, SortDirection.DESC);
+                            null, null, null, null, 10, SortDirection.DESC);
 
             // when & then
             Assertions.assertAll(
