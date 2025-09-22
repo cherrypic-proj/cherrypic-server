@@ -22,6 +22,7 @@ import org.cherrypic.global.pagination.SliceResponse;
 import org.cherrypic.global.pagination.SortDirection;
 import org.cherrypic.participant.enums.ParticipantRole;
 import org.cherrypic.payment.exception.PaymentDomainErrorCode;
+import org.cherrypic.subscription.enums.SubscriptionStatus;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -1034,6 +1035,7 @@ class AlbumControllerTest {
                                     "testCoverUrl2",
                                     AlbumType.PRO,
                                     AlbumType.PRO.getPrice(),
+                                    SubscriptionStatus.ACTIVE,
                                     LocalDateTime.now(),
                                     true),
                             new AlbumListResponse(
@@ -1042,12 +1044,13 @@ class AlbumControllerTest {
                                     "testCoverUrl1",
                                     AlbumType.PRO,
                                     AlbumType.PRO.getPrice(),
+                                    SubscriptionStatus.ACTIVE,
                                     LocalDateTime.now(),
                                     false));
 
             given(
                             albumService.getParticipatingAlbumsByCondition(
-                                    AlbumType.PRO, null, null, 2, SortDirection.DESC))
+                                    AlbumType.PRO, null, null, null, 2, SortDirection.DESC))
                     .willReturn(new SliceResponse<>(albums, true));
 
             // when & then
@@ -1073,6 +1076,7 @@ class AlbumControllerTest {
                                     "testCoverUrl2",
                                     AlbumType.BASIC,
                                     AlbumType.BASIC.getPrice(),
+                                    null,
                                     LocalDateTime.now(),
                                     true),
                             new AlbumListResponse(
@@ -1081,12 +1085,13 @@ class AlbumControllerTest {
                                     "testCoverUrl1",
                                     AlbumType.BASIC,
                                     AlbumType.BASIC.getPrice(),
+                                    null,
                                     LocalDateTime.now(),
                                     false));
 
             given(
                             albumService.getParticipatingAlbumsByCondition(
-                                    null, "testTitle", null, 2, SortDirection.DESC))
+                                    null, null, "testTitle", null, 2, SortDirection.DESC))
                     .willReturn(new SliceResponse<>(albums, true));
 
             // when & then
@@ -1103,7 +1108,7 @@ class AlbumControllerTest {
         }
 
         @Test
-        void PRO_유형과_앨범_이름으로_필터링하면_조건을_모두_만족하는_앨범만_응답한다() throws Exception {
+        void ACTIVE_구독_상태로_필터링하면_BASIC_앨범과_구독_중인_유료_앨범만_응답한다() throws Exception {
             // given
             List<AlbumListResponse> albums =
                     List.of(
@@ -1113,35 +1118,118 @@ class AlbumControllerTest {
                                     "testCoverUrl2",
                                     AlbumType.PRO,
                                     AlbumType.PRO.getPrice(),
+                                    SubscriptionStatus.ACTIVE,
                                     LocalDateTime.now(),
                                     true),
                             new AlbumListResponse(
                                     1L,
                                     "testTitle1",
                                     "testCoverUrl1",
-                                    AlbumType.PRO,
-                                    AlbumType.PRO.getPrice(),
+                                    AlbumType.BASIC,
+                                    AlbumType.BASIC.getPrice(),
+                                    null,
                                     LocalDateTime.now(),
                                     false));
 
             given(
                             albumService.getParticipatingAlbumsByCondition(
-                                    AlbumType.PRO, "testTitle", null, 2, SortDirection.DESC))
+                                    null,
+                                    SubscriptionStatus.ACTIVE,
+                                    null,
+                                    null,
+                                    2,
+                                    SortDirection.DESC))
                     .willReturn(new SliceResponse<>(albums, true));
 
             // when & then
             ResultActions perform =
-                    mockMvc.perform(
-                            get("/albums")
-                                    .param("type", "PRO")
-                                    .param("keyword", "testTitle")
-                                    .param("size", "2"));
+                    mockMvc.perform(get("/albums").param("status", "ACTIVE").param("size", "2"));
 
             perform.andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
-                    .andExpect(jsonPath("$.data.content[0].title").value("testTitle2"))
-                    .andExpect(jsonPath("$.data.content[1].title").value("testTitle1"))
+                    .andExpect(jsonPath("$.data.content[0].albumId").value(2))
+                    .andExpect(jsonPath("$.data.content[0].type").value("PRO"))
+                    .andExpect(jsonPath("$.data.content[0].status").value("ACTIVE"))
+                    .andExpect(jsonPath("$.data.content[1].albumId").value(1))
+                    .andExpect(jsonPath("$.data.content[1].type").value("BASIC"))
+                    .andExpect(jsonPath("$.data.content[1].status").doesNotExist())
+                    .andExpect(jsonPath("$.data.isLast").value(true));
+        }
+
+        @Test
+        void CANCELED_구독_상태로_필터링하면_해지되었지만_구독_중인_유료_앨범만_응답한다() throws Exception {
+            // given
+            List<AlbumListResponse> albums =
+                    List.of(
+                            new AlbumListResponse(
+                                    1L,
+                                    "testTitle1",
+                                    "testCoverUrl1",
+                                    AlbumType.PRO,
+                                    AlbumType.PRO.getPrice(),
+                                    SubscriptionStatus.CANCELED,
+                                    LocalDateTime.now(),
+                                    false));
+
+            given(
+                            albumService.getParticipatingAlbumsByCondition(
+                                    null,
+                                    SubscriptionStatus.CANCELED,
+                                    null,
+                                    null,
+                                    1,
+                                    SortDirection.DESC))
+                    .willReturn(new SliceResponse<>(albums, true));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(get("/albums").param("status", "CANCELED").param("size", "1"));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
+                    .andExpect(jsonPath("$.data.content[0].albumId").value(1))
+                    .andExpect(jsonPath("$.data.content[0].type").value("PRO"))
+                    .andExpect(jsonPath("$.data.content[0].status").value("CANCELED"))
+                    .andExpect(jsonPath("$.data.isLast").value(true));
+        }
+
+        @Test
+        void EXPIRED_구독_상태로_필터링하면_구독이_만료된_유료_앨범만_응답한다() throws Exception {
+            // given
+            List<AlbumListResponse> albums =
+                    List.of(
+                            new AlbumListResponse(
+                                    1L,
+                                    "testTitle1",
+                                    "testCoverUrl1",
+                                    AlbumType.PRO,
+                                    AlbumType.PRO.getPrice(),
+                                    SubscriptionStatus.EXPIRED,
+                                    LocalDateTime.now(),
+                                    false));
+
+            given(
+                            albumService.getParticipatingAlbumsByCondition(
+                                    null,
+                                    SubscriptionStatus.EXPIRED,
+                                    null,
+                                    null,
+                                    1,
+                                    SortDirection.DESC))
+                    .willReturn(new SliceResponse<>(albums, true));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(get("/albums").param("status", "EXPIRED").param("size", "1"));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
+                    .andExpect(jsonPath("$.data.content[0].albumId").value(1))
+                    .andExpect(jsonPath("$.data.content[0].type").value("PRO"))
+                    .andExpect(jsonPath("$.data.content[0].status").value("EXPIRED"))
                     .andExpect(jsonPath("$.data.isLast").value(true));
         }
 
@@ -1156,6 +1244,7 @@ class AlbumControllerTest {
                                     "testCoverUrl1",
                                     AlbumType.BASIC,
                                     AlbumType.BASIC.getPrice(),
+                                    null,
                                     LocalDateTime.now(),
                                     false),
                             new AlbumListResponse(
@@ -1164,12 +1253,13 @@ class AlbumControllerTest {
                                     "testCoverUrl2",
                                     AlbumType.PRO,
                                     AlbumType.PRO.getPrice(),
+                                    SubscriptionStatus.ACTIVE,
                                     LocalDateTime.now(),
                                     true));
 
             given(
                             albumService.getParticipatingAlbumsByCondition(
-                                    null, null, null, 2, SortDirection.ASC))
+                                    null, null, null, null, 2, SortDirection.ASC))
                     .willReturn(new SliceResponse<>(albums, true));
 
             // when & then
@@ -1195,6 +1285,7 @@ class AlbumControllerTest {
                                     "testCoverUrl2",
                                     AlbumType.PRO,
                                     AlbumType.PRO.getPrice(),
+                                    SubscriptionStatus.ACTIVE,
                                     LocalDateTime.now(),
                                     true),
                             new AlbumListResponse(
@@ -1203,12 +1294,13 @@ class AlbumControllerTest {
                                     "testCoverUrl1",
                                     AlbumType.BASIC,
                                     AlbumType.BASIC.getPrice(),
+                                    null,
                                     LocalDateTime.now(),
                                     false));
 
             given(
                             albumService.getParticipatingAlbumsByCondition(
-                                    null, null, null, 2, SortDirection.DESC))
+                                    null, null, null, null, 2, SortDirection.DESC))
                     .willReturn(new SliceResponse<>(albums, true));
 
             // when & then
@@ -1234,12 +1326,13 @@ class AlbumControllerTest {
                                     "testCoverUrl1",
                                     AlbumType.BASIC,
                                     AlbumType.BASIC.getPrice(),
+                                    null,
                                     LocalDateTime.now(),
                                     false));
 
             given(
                             albumService.getParticipatingAlbumsByCondition(
-                                    null, null, null, 1, SortDirection.DESC))
+                                    null, null, null, null, 1, SortDirection.DESC))
                     .willReturn(new SliceResponse<>(albums, true));
 
             // when & then
@@ -1264,6 +1357,7 @@ class AlbumControllerTest {
                                     "testCoverUrl2",
                                     AlbumType.PRO,
                                     AlbumType.PRO.getPrice(),
+                                    SubscriptionStatus.ACTIVE,
                                     LocalDateTime.now(),
                                     true),
                             new AlbumListResponse(
@@ -1272,12 +1366,13 @@ class AlbumControllerTest {
                                     "testCoverUrl1",
                                     AlbumType.BASIC,
                                     AlbumType.BASIC.getPrice(),
+                                    null,
                                     LocalDateTime.now(),
                                     false));
 
             given(
                             albumService.getParticipatingAlbumsByCondition(
-                                    null, null, null, 1, SortDirection.DESC))
+                                    null, null, null, null, 1, SortDirection.DESC))
                     .willReturn(new SliceResponse<>(albums, false));
 
             // when & then
@@ -1298,7 +1393,7 @@ class AlbumControllerTest {
 
             given(
                             albumService.getParticipatingAlbumsByCondition(
-                                    null, null, null, 10, SortDirection.DESC))
+                                    null, null, null, null, 10, SortDirection.DESC))
                     .willReturn(new SliceResponse<>(albums, true));
 
             // when & then
