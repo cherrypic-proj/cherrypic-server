@@ -49,7 +49,7 @@ public class S3Util {
     }
 
     private GeneratePresignedUrlRequest generatePresignedUrlRequest(
-            String bucket, String fileName, String imageFileExtension, String md5Hash) {
+            String bucket, String fileName, String imageFileExtension, String base64Md5) {
         GeneratePresignedUrlRequest generatePresignedUrlRequest =
                 new GeneratePresignedUrlRequest(bucket, fileName, HttpMethod.PUT)
                         .withKey(fileName)
@@ -59,7 +59,7 @@ public class S3Util {
         generatePresignedUrlRequest.addRequestParameter(
                 Headers.S3_CANNED_ACL, CannedAccessControlList.PublicRead.toString());
 
-        generatePresignedUrlRequest.addRequestParameter(Headers.CONTENT_MD5, md5Hash);
+        generatePresignedUrlRequest.setContentMd5(base64Md5);
 
         return generatePresignedUrlRequest;
     }
