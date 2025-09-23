@@ -115,6 +115,7 @@ public class EventServiceImpl implements EventService {
             eventPublisher.publishEvent(ImageDeleteEvent.of(event.getCoverUrl()));
         }
 
+        eventImageRepository.deleteAllByEvent(event);
         eventRepository.delete(event);
     }
 

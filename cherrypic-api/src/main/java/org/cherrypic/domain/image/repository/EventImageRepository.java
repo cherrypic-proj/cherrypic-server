@@ -11,4 +11,8 @@ public interface EventImageRepository extends JpaRepository<EventImage, Long> {
     @Modifying(clearAutomatically = true)
     @Query("delete from EventImage ei where ei.event in :events")
     void deleteAllByEvents(List<Event> events);
+
+    @Modifying(clearAutomatically = true)
+    @Query("delete from EventImage ei where ei.event = :event")
+    void deleteAllByEvent(Event event);
 }

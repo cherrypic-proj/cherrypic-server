@@ -4,8 +4,6 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -40,9 +38,6 @@ public class TempAlbum extends BaseTimeEntity {
     @NotNull private LocalDate expiredAt;
 
     private String webUrl;
-
-    @OneToMany(mappedBy = "tempAlbum", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<TempAlbumImage> tempAlbumImages = new ArrayList<>();
 
     @Builder(access = AccessLevel.PRIVATE)
     private TempAlbum(

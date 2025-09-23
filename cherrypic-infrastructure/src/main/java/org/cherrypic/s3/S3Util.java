@@ -65,6 +65,10 @@ public class S3Util {
     }
 
     public void deleteAllByUrls(List<String> urls) {
+        if (urls.isEmpty()) {
+            return;
+        }
+
         String bucket = s3Properties.bucket();
 
         List<DeleteObjectsRequest.KeyVersion> keys =

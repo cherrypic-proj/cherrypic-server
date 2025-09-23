@@ -328,15 +328,24 @@ public class EventServiceTest extends IntegrationTest {
             Event event1 = Event.createEvent(album1, "testEvent1", "testEventCoverUrl1");
             Event event2 = Event.createEvent(album2, "testEvent2", "testEventCoverUrl2");
             eventRepository.saveAll(List.of(event1, event2));
+
+            Image image =
+                    Image.createImage(album1, 1L, "testUrl", LocalDateTime.now(), BigDecimal.ZERO);
+            imageRepository.save(image);
+
+            EventImage eventImage = EventImage.createEventImage(event1, image);
+            eventImageRepository.save(eventImage);
         }
 
         @Test
-        void 유효한_요청일_경우_이벤트를_삭제한다() {
+        void 유효한_요청일_경우_이벤트와_이벤트_이미지가_모두_삭제된다() {
             // when
             eventService.deleteEvent(1L);
 
             // then
-            assertThat(eventRepository.findById(1L).isPresent()).isFalse();
+            Assertions.assertAll(
+                    () -> assertThat(eventRepository.findById(1L).isPresent()).isFalse(),
+                    () -> assertThat(eventImageRepository.findById(1L).isPresent()).isFalse());
         }
 
         @Test

@@ -2,6 +2,7 @@ package org.cherrypic.domain.album.service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import org.cherrypic.album.entity.Album;
 import org.cherrypic.album.entity.InvitationCode;
@@ -242,7 +243,8 @@ public class AlbumServiceImpl implements AlbumService {
         final List<Event> events = eventRepository.findAllByAlbumId(album.getId());
 
         eventPublisher.publishEvent(
-                ImagesDeleteEvent.of(events.stream().map(Event::getCoverUrl).toList()));
+                ImagesDeleteEvent.of(
+                        events.stream().map(Event::getCoverUrl).filter(Objects::nonNull).toList()));
 
         if (imageRepository.existsByAlbumId(album.getId())) {
             eventPublisher.publishEvent(AlbumImagesDeleteEvent.of(album.getId()));
