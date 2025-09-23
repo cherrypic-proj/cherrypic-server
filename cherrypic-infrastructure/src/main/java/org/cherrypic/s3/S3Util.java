@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.cherrypic.helper.SpringEnvironmentHelper;
 import org.cherrypic.s3.enums.FileExtension;
 import org.cherrypic.s3.enums.ImageType;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class S3Util {
 
     private final SpringEnvironmentHelper springEnvironmentHelper;
@@ -65,7 +67,8 @@ public class S3Util {
     }
 
     public void deleteAllByUrls(List<String> urls) {
-        if (urls.isEmpty()) {
+        if (urls == null || urls.isEmpty()) {
+            log.warn("deleteAllByUrls skipped: received null or empty urls");
             return;
         }
 
