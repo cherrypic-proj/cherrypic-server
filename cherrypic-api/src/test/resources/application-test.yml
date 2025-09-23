@@ -40,10 +40,3 @@ aws:
   s3:
     bucket: ${S3_BUCKET}
     endpoint: ${S3_ENDPOINT:https://s3.ap-northeast-2.amazonaws.com}
-
-logging:
-  level:
-    org.hibernate.SQL: DEBUG
-    org.hibernate.orm.jdbc.bind: TRACE   # 바인딩 파라미터까지 확인
-    org.hibernate.engine.transaction.internal: TRACE  # flush 관련 트랜잭션 로그
-    org.hibernate.event.internal: TRACE   # flush 이벤트
