@@ -1,4 +1,4 @@
-package org.cherrypic.domain.image.repository;
+package org.cherrypic.domain.event.repository;
 
 import java.util.List;
 import org.cherrypic.event.entity.Event;
