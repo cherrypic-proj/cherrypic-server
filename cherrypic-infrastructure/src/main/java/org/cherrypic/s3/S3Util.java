@@ -68,7 +68,7 @@ public class S3Util {
 
     public void deleteAllByUrls(List<String> urls) {
         if (urls == null || urls.isEmpty()) {
-            log.warn("deleteAllByUrls skipped: received null or empty urls");
+            log.info("deleteAllByUrls skipped: received null or empty urls");
             return;
         }
 
