@@ -242,9 +242,12 @@ public class AlbumServiceImpl implements AlbumService {
 
         final List<Event> events = eventRepository.findAllByAlbumId(album.getId());
 
-        eventPublisher.publishEvent(
-                ImagesDeleteEvent.of(
-                        events.stream().map(Event::getCoverUrl).filter(Objects::nonNull).toList()));
+        List<String> imageUrls =
+                events.stream().map(Event::getCoverUrl).filter(Objects::nonNull).toList();
+
+        if (!imageUrls.isEmpty()) {
+            eventPublisher.publishEvent(ImagesDeleteEvent.of(imageUrls));
+        }
 
         if (imageRepository.existsByAlbumId(album.getId())) {
             eventPublisher.publishEvent(AlbumImagesDeleteEvent.of(album.getId()));
