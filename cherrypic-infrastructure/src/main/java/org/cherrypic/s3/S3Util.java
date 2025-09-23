@@ -119,9 +119,8 @@ public class S3Util {
     }
 
     private String extractObjectKey(String url) {
-        String bucket = s3Properties.bucket();
-        int idx = url.indexOf(bucket) + bucket.length() + 1;
-        return url.substring(idx);
+        int comIndex = url.indexOf(".com/");
+        return url.substring(comIndex + 5);
     }
 
     private Date getPresignedUrlExpiration() {
