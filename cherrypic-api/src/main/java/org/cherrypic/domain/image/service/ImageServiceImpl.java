@@ -10,6 +10,7 @@ import org.cherrypic.album.enums.AlbumType;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.album.repository.AlbumRepository;
 import org.cherrypic.domain.event.exception.EventErrorCode;
+import org.cherrypic.domain.event.repository.EventImageRepository;
 import org.cherrypic.domain.event.repository.EventRepository;
 import org.cherrypic.domain.image.dto.request.*;
 import org.cherrypic.domain.image.dto.response.*;
@@ -59,6 +60,7 @@ public class ImageServiceImpl implements ImageService {
     private final SubscriptionRepository subscriptionRepository;
     private final TempAlbumRepository tempAlbumRepository;
     private final TempAlbumImageRepository tempAlbumImageRepository;
+    private final EventImageRepository eventImageRepository;
 
     private final ApplicationEventPublisher eventPublisher;
 
@@ -226,6 +228,8 @@ public class ImageServiceImpl implements ImageService {
 
         eventPublisher.publishEvent(
                 ImagesDeleteEvent.of(images.stream().map(Image::getUrl).toList()));
+
+        eventImageRepository.deleteAllByImages(images);
         imageRepository.deleteAllInBatch(images);
     }
 

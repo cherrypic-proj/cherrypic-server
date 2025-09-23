@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.cherrypic.helper.SpringEnvironmentHelper;
 import org.cherrypic.s3.enums.FileExtension;
 import org.cherrypic.s3.enums.ImageType;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class S3Util {
 
     private final SpringEnvironmentHelper springEnvironmentHelper;
@@ -49,7 +51,7 @@ public class S3Util {
     }
 
     private GeneratePresignedUrlRequest generatePresignedUrlRequest(
-            String bucket, String fileName, String imageFileExtension, String md5Hash) {
+            String bucket, String fileName, String imageFileExtension, String base64Md5) {
         GeneratePresignedUrlRequest generatePresignedUrlRequest =
                 new GeneratePresignedUrlRequest(bucket, fileName, HttpMethod.PUT)
                         .withKey(fileName)
@@ -59,12 +61,17 @@ public class S3Util {
         generatePresignedUrlRequest.addRequestParameter(
                 Headers.S3_CANNED_ACL, CannedAccessControlList.PublicRead.toString());
 
-        generatePresignedUrlRequest.addRequestParameter(Headers.CONTENT_MD5, md5Hash);
+        generatePresignedUrlRequest.setContentMd5(base64Md5);
 
         return generatePresignedUrlRequest;
     }
 
     public void deleteAllByUrls(List<String> urls) {
+        if (urls == null || urls.isEmpty()) {
+            log.info("deleteAllByUrls skipped: received null or empty urls");
+            return;
+        }
+
         String bucket = s3Properties.bucket();
 
         List<DeleteObjectsRequest.KeyVersion> keys =
@@ -115,9 +122,8 @@ public class S3Util {
     }
 
     private String extractObjectKey(String url) {
-        String bucket = s3Properties.bucket();
-        int idx = url.indexOf(bucket) + bucket.length() + 1;
-        return url.substring(idx);
+        int comIndex = url.indexOf(".com/");
+        return url.substring(comIndex + 5);
     }
 
     private Date getPresignedUrlExpiration() {

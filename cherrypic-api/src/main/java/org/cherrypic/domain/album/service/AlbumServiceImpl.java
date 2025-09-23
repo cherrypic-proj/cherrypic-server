@@ -2,6 +2,7 @@ package org.cherrypic.domain.album.service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import org.cherrypic.album.entity.Album;
 import org.cherrypic.album.entity.InvitationCode;
@@ -14,11 +15,11 @@ import org.cherrypic.domain.album.event.AlbumImagesDeleteEvent;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.album.repository.AlbumRepository;
 import org.cherrypic.domain.album.repository.InvitationCodeRepository;
+import org.cherrypic.domain.event.repository.EventImageRepository;
 import org.cherrypic.domain.event.repository.EventRepository;
 import org.cherrypic.domain.favorites.repository.FavoritesRepository;
 import org.cherrypic.domain.image.event.ImageDeleteEvent;
 import org.cherrypic.domain.image.event.ImagesDeleteEvent;
-import org.cherrypic.domain.image.repository.EventImageRepository;
 import org.cherrypic.domain.image.repository.ImageRepository;
 import org.cherrypic.domain.notification.repository.NotificationRepository;
 import org.cherrypic.domain.participant.repository.ParticipantRepository;
@@ -241,8 +242,12 @@ public class AlbumServiceImpl implements AlbumService {
 
         final List<Event> events = eventRepository.findAllByAlbumId(album.getId());
 
-        eventPublisher.publishEvent(
-                ImagesDeleteEvent.of(events.stream().map(Event::getCoverUrl).toList()));
+        List<String> imageUrls =
+                events.stream().map(Event::getCoverUrl).filter(Objects::nonNull).toList();
+
+        if (!imageUrls.isEmpty()) {
+            eventPublisher.publishEvent(ImagesDeleteEvent.of(imageUrls));
+        }
 
         if (imageRepository.existsByAlbumId(album.getId())) {
             eventPublisher.publishEvent(AlbumImagesDeleteEvent.of(album.getId()));

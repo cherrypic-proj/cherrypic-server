@@ -13,12 +13,12 @@ import org.cherrypic.album.enums.AlbumType;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
 import org.cherrypic.domain.album.repository.AlbumRepository;
 import org.cherrypic.domain.event.exception.EventErrorCode;
+import org.cherrypic.domain.event.repository.EventImageRepository;
 import org.cherrypic.domain.event.repository.EventRepository;
 import org.cherrypic.domain.image.dto.request.*;
 import org.cherrypic.domain.image.dto.response.*;
 import org.cherrypic.domain.image.event.ImagesDeleteEvent;
 import org.cherrypic.domain.image.exception.ImageErrorCode;
-import org.cherrypic.domain.image.repository.EventImageRepository;
 import org.cherrypic.domain.image.repository.ImageRepository;
 import org.cherrypic.domain.image.service.ImageService;
 import org.cherrypic.domain.member.repository.MemberRepository;
@@ -767,10 +767,16 @@ class ImageServiceTest extends IntegrationTest {
                     Image.createImage(
                             album2, 1L, "testUrl3", LocalDateTime.now(), BigDecimal.valueOf(0.2));
             imageRepository.saveAll(List.of(image1, image2, image3));
+
+            Event event = Event.createEvent(album1, "testEvent", "testUrl");
+            eventRepository.save(event);
+
+            EventImage eventImage = EventImage.createEventImage(event, image1);
+            eventImageRepository.save(eventImage);
         }
 
         @Test
-        void 유효한_요청이면_앨범_이미지를_삭제하고_앨범_용량을_내린다() {
+        void 유효한_요청이면_앨범_이미지와_이벤트_이미지를_삭제하고_앨범_용량을_내린다() {
             // given
             AlbumImageDeleteRequest request = new AlbumImageDeleteRequest(List.of(1L, 2L));
 
@@ -782,7 +788,8 @@ class ImageServiceTest extends IntegrationTest {
                     () -> assertThat(imageRepository.findAllById(List.of(1L, 2L))).isEmpty(),
                     () ->
                             assertThat(albumRepository.findById(1L).orElseThrow().getCapacityGb())
-                                    .isEqualTo(new BigDecimal("0.00")));
+                                    .isEqualTo(new BigDecimal("0.00")),
+                    () -> assertThat(eventImageRepository.findById(1L).isPresent()).isFalse());
         }
 
         @Test
