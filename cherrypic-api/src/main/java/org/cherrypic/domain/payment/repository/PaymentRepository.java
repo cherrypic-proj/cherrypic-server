@@ -5,6 +5,7 @@ import java.util.Optional;
 import org.cherrypic.payment.entity.Payment;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
 public interface PaymentRepository extends JpaRepository<Payment, Long>, PaymentRepositoryCustom {
@@ -17,4 +18,8 @@ public interface PaymentRepository extends JpaRepository<Payment, Long>, Payment
     Optional<Payment> findByIdWithPessimisticLock(Long paymentId);
 
     Optional<Payment> findTop1ByAlbumIdOrderByIdAsc(Long albumId);
+
+    @Modifying(clearAutomatically = true)
+    @Query("delete from Payment p where p.album.id = :albumId")
+    void deleteAllByAlbumId(Long albumId);
 }

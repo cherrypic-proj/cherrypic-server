@@ -1276,51 +1276,94 @@ class AlbumServiceTest extends IntegrationTest {
             memberRepository.saveAll(List.of(member1, member2));
             given(memberUtil.getCurrentMember()).willReturn(member1);
 
-            Album album1 = Album.createAlbum("testAlbum1", "testURL1", AlbumType.BASIC, false);
-            Album album2 = Album.createAlbum("testAlbum2", "testURL2", AlbumType.BASIC, false);
-            Album album3 = Album.createAlbum("testAlbum3", "testURL3", AlbumType.BASIC, false);
-            Album album4 = Album.createAlbum("testAlbum4", "testURL4", AlbumType.BASIC, false);
-            Album album5 = Album.createAlbum("testAlbum5", "testURL5", AlbumType.PRO, false);
-            albumRepository.saveAll(List.of(album1, album2, album3, album4, album5));
+            Album album1 = Album.createAlbum("testTitle1", "testCoverUrl1", AlbumType.BASIC, false);
+            Album album2 = Album.createAlbum("testTitle2", "testCoverUrl2", AlbumType.PRO, false);
+            Album album3 = Album.createAlbum("testTitle3", "testCoverUrl3", AlbumType.BASIC, false);
+            Album album4 = Album.createAlbum("testTitle4", "testCoverUrl4", AlbumType.BASIC, false);
+            Album album5 = Album.createAlbum("testTitle5", "testCoverUrl5", AlbumType.BASIC, false);
+            Album album6 = Album.createAlbum("testTitle6", "testCoverUrl6", AlbumType.PRO, false);
+            albumRepository.saveAll(List.of(album1, album2, album3, album4, album5, album6));
 
-            subscriptionRepository.save(
-                    Subscription.createSubscription(member1, album5, LocalDateTime.now()));
+            // 검증 완료된 결제
+            Payment payment1 =
+                    Payment.createPayment(
+                            member1,
+                            "testMerchantUid",
+                            5900,
+                            PaymentPurpose.CREATION,
+                            AlbumType.PRO);
+            payment1.complete("testImpUid", "testPgProvider", LocalDateTime.of(2025, 8, 1, 13, 0));
+            payment1.assignToAlbum(PaymentPurpose.CREATION, album2);
+            paymentRepository.save(payment1);
+
+            // 해지된 구독
+            Subscription subscription1 =
+                    Subscription.createSubscription(member1, album2, LocalDateTime.now());
+            subscription1.cancel();
+            Subscription subscription2 =
+                    Subscription.createSubscription(member1, album6, LocalDateTime.now());
+            subscriptionRepository.saveAll(List.of(subscription1, subscription2));
 
             Participant participant1 =
                     Participant.createParticipant(member1, album1, ParticipantRole.HOST);
             Participant participant2 =
-                    Participant.createParticipant(member1, album2, ParticipantRole.LIMITED);
+                    Participant.createParticipant(member1, album2, ParticipantRole.HOST);
             Participant participant3 =
-                    Participant.createParticipant(member1, album3, ParticipantRole.HOST);
+                    Participant.createParticipant(member1, album3, ParticipantRole.LIMITED);
             Participant participant4 =
-                    Participant.createParticipant(member2, album3, ParticipantRole.LIMITED);
+                    Participant.createParticipant(member1, album4, ParticipantRole.HOST);
             Participant participant5 =
-                    Participant.createParticipant(member1, album5, ParticipantRole.HOST);
+                    Participant.createParticipant(member2, album4, ParticipantRole.LIMITED);
+            Participant participant6 =
+                    Participant.createParticipant(member1, album6, ParticipantRole.HOST);
             participantRepository.saveAll(
-                    List.of(participant1, participant2, participant3, participant4, participant5));
+                    List.of(
+                            participant1,
+                            participant2,
+                            participant3,
+                            participant4,
+                            participant5,
+                            participant6));
 
-            favoritesRepository.save(Favorites.createFavorites(participant1));
+            Favorites favorites1 = Favorites.createFavorites(participant1);
+            Favorites favorites2 = Favorites.createFavorites(participant2);
+            favoritesRepository.saveAll(List.of(favorites1, favorites2));
 
-            Image image =
-                    Image.createImage(album1, 1L, "testUrl", LocalDateTime.now(), BigDecimal.ONE);
-            imageRepository.save(image);
+            Image image1 =
+                    Image.createImage(album1, 1L, "testUrl1", LocalDateTime.now(), BigDecimal.ONE);
+            Image image2 =
+                    Image.createImage(album2, 1L, "testUrl2", LocalDateTime.now(), BigDecimal.ONE);
+            imageRepository.saveAll(List.of(image1, image2));
 
-            Event event = Event.createEvent(album1, "testTitle1", "testCoverUrl1");
-            eventRepository.save(event);
-            eventImageRepository.save(EventImage.createEventImage(event, image));
+            Event event1 = Event.createEvent(album1, "testTitle1", "testCoverUrl1");
+            Event event2 = Event.createEvent(album2, "testTitle2", "testCoverUrl2");
+            eventRepository.saveAll(List.of(event1, event2));
 
-            notificationRepository.save(
+            EventImage eventImage1 = EventImage.createEventImage(event1, image1);
+            EventImage eventImage2 = EventImage.createEventImage(event2, image2);
+            eventImageRepository.saveAll(List.of(eventImage1, eventImage2));
+
+            Notification notification1 =
                     Notification.createNotification(
                             member1,
                             member2,
                             album1,
-                            "testTitle",
-                            "testContent",
-                            NotificationType.ALBUM));
+                            "testTitle1",
+                            "testContent1",
+                            NotificationType.ALBUM);
+            Notification notification2 =
+                    Notification.createNotification(
+                            member1,
+                            member2,
+                            album2,
+                            "testTitle2",
+                            "testContent2",
+                            NotificationType.ALBUM);
+            notificationRepository.saveAll(List.of(notification1, notification2));
         }
 
         @Test
-        void 유효한_요청일_경우_참가자_즐겨찾기_이벤트_이미지_알림이_모두_삭제된다() {
+        void 무료_앨범_삭제_시_참가자_즐겨찾기_이벤트_이미지_알림이_모두_삭제된다() {
             // when
             albumService.deleteAlbum(1L);
 
@@ -1333,6 +1376,24 @@ class AlbumServiceTest extends IntegrationTest {
                     () -> assertThat(eventImageRepository.findById(1L).isPresent()).isFalse(),
                     () -> assertThat(imageRepository.findById(1L).isPresent()).isFalse(),
                     () -> assertThat(notificationRepository.findById(1L).isPresent()).isFalse());
+        }
+
+        @Test
+        void 유료_앨범_삭제_시_참가자_즐겨찾기_이벤트_이미지_알림_구독_결제가_모두_삭제된다() {
+            // when
+            albumService.deleteAlbum(2L);
+
+            // then
+            Assertions.assertAll(
+                    () -> assertThat(albumRepository.findById(2L).isPresent()).isFalse(),
+                    () -> assertThat(participantRepository.findById(2L).isPresent()).isFalse(),
+                    () -> assertThat(favoritesRepository.findById(2L).isPresent()).isFalse(),
+                    () -> assertThat(eventRepository.findById(2L).isPresent()).isFalse(),
+                    () -> assertThat(eventImageRepository.findById(2L).isPresent()).isFalse(),
+                    () -> assertThat(imageRepository.findById(2L).isPresent()).isFalse(),
+                    () -> assertThat(notificationRepository.findById(2L).isPresent()).isFalse(),
+                    () -> assertThat(subscriptionRepository.findById(1L).isPresent()).isFalse(),
+                    () -> assertThat(paymentRepository.findById(1L).isPresent()).isFalse());
         }
 
         @Test
@@ -1354,7 +1415,7 @@ class AlbumServiceTest extends IntegrationTest {
             // then
             var events = applicationEvents.stream(ImageDeleteEvent.class).toList();
             assertThat(events).hasSize(1);
-            assertThat(events.getFirst().imageUrl()).isEqualTo("testURL1");
+            assertThat(events.getFirst().imageUrl()).isEqualTo("testCoverUrl1");
         }
 
         @Test
@@ -1379,7 +1440,7 @@ class AlbumServiceTest extends IntegrationTest {
         @Test
         void 앨범_참가자가_아닌_경우_예외가_발생한다() {
             // when & then
-            assertThatThrownBy(() -> albumService.deleteAlbum(4L))
+            assertThatThrownBy(() -> albumService.deleteAlbum(5L))
                     .isInstanceOf(CustomException.class)
                     .hasMessage(AlbumErrorCode.NOT_ALBUM_PARTICIPANT.getMessage());
         }
@@ -1387,7 +1448,7 @@ class AlbumServiceTest extends IntegrationTest {
         @Test
         void 앨범_방장이_아닌_경우_예외가_발생한다() {
             // when & then
-            assertThatThrownBy(() -> albumService.deleteAlbum(2L))
+            assertThatThrownBy(() -> albumService.deleteAlbum(3L))
                     .isInstanceOf(CustomException.class)
                     .hasMessage(AlbumErrorCode.NOT_ALBUM_HOST.getMessage());
         }
@@ -1395,20 +1456,20 @@ class AlbumServiceTest extends IntegrationTest {
         @Test
         void 다른_참가자가_남아있는_경우_이벤트가_발행되고_예외가_발생한다() {
             // when & then
-            assertThatThrownBy(() -> albumService.deleteAlbum(3L))
+            assertThatThrownBy(() -> albumService.deleteAlbum(4L))
                     .isInstanceOf(CustomException.class)
                     .hasMessage(AlbumErrorCode.OTHER_PARTICIPANTS_EXIST.getMessage());
 
             var events = applicationEvents.stream(AlbumDeleteNotificationSendEvent.class).toList();
             Assertions.assertAll(
                     () -> assertThat(events).hasSize(1),
-                    () -> assertThat(events.getFirst().albumId()).isEqualTo(3L));
+                    () -> assertThat(events.getFirst().albumId()).isEqualTo(4L));
         }
 
         @Test
         void 구독_중인_경우_예외가_발생한다() {
             // when & then
-            assertThatThrownBy(() -> albumService.deleteAlbum(5L))
+            assertThatThrownBy(() -> albumService.deleteAlbum(6L))
                     .isInstanceOf(CustomException.class)
                     .hasMessage(AlbumErrorCode.SUBSCRIPTION_ACTIVE.getMessage());
         }
