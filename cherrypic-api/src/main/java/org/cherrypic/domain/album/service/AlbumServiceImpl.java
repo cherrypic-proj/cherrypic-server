@@ -268,6 +268,9 @@ public class AlbumServiceImpl implements AlbumService {
 
         notificationRepository.deleteAllByAlbumId(album.getId());
 
+        subscriptionRepository.deleteByAlbumId(album.getId());
+        paymentRepository.deleteAllByAlbumId(album.getId());
+
         albumRepository.deleteByAlbumId(album.getId());
     }
 
