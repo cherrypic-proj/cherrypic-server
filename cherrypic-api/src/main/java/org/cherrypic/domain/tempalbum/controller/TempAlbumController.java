@@ -4,15 +4,13 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.cherrypic.domain.tempalbum.dto.TempAlbumCreateRequest;
-import org.cherrypic.domain.tempalbum.dto.TempAlbumCreateResponse;
+import org.cherrypic.domain.tempalbum.dto.request.TempAlbumCreateRequest;
+import org.cherrypic.domain.tempalbum.dto.response.TempAlbumCreateResponse;
+import org.cherrypic.domain.tempalbum.dto.response.TempAlbumListResponse;
 import org.cherrypic.domain.tempalbum.service.TempAlbumService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -28,5 +26,11 @@ public class TempAlbumController {
             @Valid @RequestBody TempAlbumCreateRequest request) {
         TempAlbumCreateResponse response = tempAlbumService.createTempAlbum(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @GetMapping
+    @Operation(summary = "임시 앨범 목록 조회", description = "회원이 가지고 있는 임시 앨범을 조회합니다.")
+    public TempAlbumListResponse tempAlbumsGet() {
+        return tempAlbumService.getTempAlbums();
     }
 }

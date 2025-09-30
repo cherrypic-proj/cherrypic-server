@@ -2,15 +2,13 @@ package org.cherrypic.tempalbum.service;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.given;
 
-import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import org.cherrypic.IntegrationTest;
 import org.cherrypic.domain.member.repository.MemberRepository;
-import org.cherrypic.domain.tempalbum.dto.TempAlbumCreateRequest;
+import org.cherrypic.domain.tempalbum.dto.request.TempAlbumCreateRequest;
 import org.cherrypic.domain.tempalbum.exception.TempAlbumErrorCode;
 import org.cherrypic.domain.tempalbum.repository.TempAlbumRepository;
 import org.cherrypic.domain.tempalbum.service.TempAlbumService;

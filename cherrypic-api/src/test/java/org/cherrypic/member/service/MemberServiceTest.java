@@ -2,6 +2,7 @@ package org.cherrypic.member.service;
 
 import static org.assertj.core.api.Assertions.*;
 
+import jakarta.persistence.EntityManager;
 import org.cherrypic.IntegrationTest;
 import org.cherrypic.RedisCleaner;
 import org.cherrypic.domain.image.event.ImageDeleteEvent;
@@ -24,6 +25,7 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.context.event.ApplicationEvents;
 import org.springframework.test.context.event.RecordApplicationEvents;
+import org.springframework.transaction.annotation.Transactional;
 
 @RecordApplicationEvents
 class MemberServiceTest extends IntegrationTest {
@@ -36,6 +38,7 @@ class MemberServiceTest extends IntegrationTest {
     @Autowired private MemberRepository memberRepository;
 
     @Autowired private ApplicationEvents applicationEvents;
+    @Autowired private EntityManager em;
 
     @BeforeEach
     void setUp() {
@@ -170,5 +173,24 @@ class MemberServiceTest extends IntegrationTest {
             Member member = memberRepository.findById(1L).orElseThrow();
             assertThat(member.getLocalImageDeletion()).isTrue();
         }
+    }
+
+    @Test
+    @Transactional
+    void 테스트해보기() {
+        // given
+        Member member =
+                Member.createMember(
+                        OauthInfo.createOauthInfo("testOauthId", "testOauthProvider"),
+                        "testNickname",
+                        "testProfileImageUrl");
+        memberRepository.save(member);
+
+        // when
+        memberRepository.deleteByNickname("testNickName");
+        em.flush();
+
+        // then
+        assertThat(memberRepository.findById(1L).isPresent()).isFalse();
     }
 }
