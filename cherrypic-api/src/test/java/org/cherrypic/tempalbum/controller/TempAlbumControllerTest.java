@@ -1,6 +1,7 @@
 package org.cherrypic.tempalbum.controller;
 
 import static org.mockito.BDDMockito.given;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -8,9 +9,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 import org.cherrypic.domain.tempalbum.controller.TempAlbumController;
-import org.cherrypic.domain.tempalbum.dto.TempAlbumCreateRequest;
-import org.cherrypic.domain.tempalbum.dto.TempAlbumCreateResponse;
+import org.cherrypic.domain.tempalbum.dto.request.TempAlbumCreateRequest;
+import org.cherrypic.domain.tempalbum.dto.response.TempAlbumCreateResponse;
+import org.cherrypic.domain.tempalbum.dto.response.TempAlbumListResponse;
 import org.cherrypic.domain.tempalbum.exception.TempAlbumErrorCode;
 import org.cherrypic.domain.tempalbum.service.TempAlbumService;
 import org.cherrypic.exception.CustomException;
@@ -111,6 +114,33 @@ class TempAlbumControllerTest {
                     .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
                     .andExpect(jsonPath("$.data.code").value("MethodArgumentNotValidException"))
                     .andExpect(jsonPath("$.data.message").value("임시 앨범 이름은 최대 20자까지 가능합니다."));
+        }
+    }
+
+    @Nested
+    class 임시_앨범_목록_조회_요청_시 {
+
+        @Test
+        void 유효한_요청이면_임시_목록을_반환한다() throws Exception {
+            // given
+            TempAlbumListResponse response =
+                    new TempAlbumListResponse(
+                            List.of(
+                                    new TempAlbumListResponse.Content(1L, "testTitle1"),
+                                    new TempAlbumListResponse.Content(2L, "testTitle1"),
+                                    new TempAlbumListResponse.Content(3L, "testTitle1")));
+
+            given(tempAlbumService.getTempAlbums()).willReturn(response);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(get("/temp-albums").contentType(MediaType.APPLICATION_JSON));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.data.content[0].tempAlbumId").value(1))
+                    .andExpect(jsonPath("$.data.content[1].tempAlbumId").value(2))
+                    .andExpect(jsonPath("$.data.content[2].tempAlbumId").value(3));
         }
     }
 }

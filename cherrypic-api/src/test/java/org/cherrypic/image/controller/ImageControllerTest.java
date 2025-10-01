@@ -357,8 +357,8 @@ class ImageControllerTest {
                     new ImageUploadListResponse(
                             false,
                             List.of(
-                                    new ImageUploadListResponse.Payload(1L, "testPresignedUrl1"),
-                                    new ImageUploadListResponse.Payload(2L, "testPresignedUrl2")));
+                                    new ImageUploadListResponse.Content(1L, "testPresignedUrl1"),
+                                    new ImageUploadListResponse.Content(2L, "testPresignedUrl2")));
 
             given(imageService.createAlbumImageUploadUrls(1L, request)).willReturn(response);
 
@@ -372,7 +372,7 @@ class ImageControllerTest {
             perform.andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
-                    .andExpect(jsonPath("$.data.payloads").isNotEmpty())
+                    .andExpect(jsonPath("$.data.content").isNotEmpty())
                     .andExpect(jsonPath("$.data.localImageDeletion").value(false));
         }
 
@@ -1214,9 +1214,9 @@ class ImageControllerTest {
             TempAlbumImageUploadListResponse response =
                     new TempAlbumImageUploadListResponse(
                             List.of(
-                                    new TempAlbumImageUploadListResponse.Payload(
+                                    new TempAlbumImageUploadListResponse.Content(
                                             1L, "testPresignedUrl1"),
-                                    new TempAlbumImageUploadListResponse.Payload(
+                                    new TempAlbumImageUploadListResponse.Content(
                                             2L, "testPresignedUrl2")));
 
             given(imageService.createTempAlbumImageUploadUrls(1L, request)).willReturn(response);
@@ -1231,7 +1231,7 @@ class ImageControllerTest {
             perform.andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
-                    .andExpect(jsonPath("$.data.payloads").isNotEmpty());
+                    .andExpect(jsonPath("$.data.content").isNotEmpty());
         }
 
         @Test
