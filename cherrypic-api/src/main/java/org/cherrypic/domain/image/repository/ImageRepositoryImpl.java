@@ -53,7 +53,7 @@ public class ImageRepositoryImpl implements ImageRepositoryCustom {
                                 eventImage.event.id.eq(eventId),
                                 lastImageIdCondition(lastImageId, direction, parameter))
                         .orderBy(getOrderByExpression(parameter, direction))
-                        .limit(size + 1)
+                        .limit((long) size + 1)
                         .fetch()
                         .stream()
                         .map(
@@ -91,7 +91,7 @@ public class ImageRepositoryImpl implements ImageRepositoryCustom {
                                 image.album.id.eq(albumId),
                                 lastImageIdCondition(lastImageId, direction, parameter))
                         .orderBy(getOrderByExpression(parameter, direction))
-                        .limit(size + 1)
+                        .limit((long) size + 1)
                         .fetch()
                         .stream()
                         .map(
@@ -195,14 +195,6 @@ public class ImageRepositoryImpl implements ImageRepositoryCustom {
                 .where(image.url.in(urls))
                 .orderBy(orderExpr.asc())
                 .fetch();
-    }
-
-    private BooleanExpression lastImageIdCondition(Long imageId, SortDirection direction) {
-        if (imageId == null) {
-            return null;
-        }
-
-        return direction == SortDirection.DESC ? image.id.lt(imageId) : image.id.gt(imageId);
     }
 
     private BooleanExpression lastImageIdCondition(
