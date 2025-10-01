@@ -9,7 +9,7 @@ public class StorageUnitConverter {
 
     public static BigDecimal mbToGb(BigDecimal mb) {
         if (mb == null) {
-            return BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
+            return BigDecimal.ZERO;
         }
         return mb.divide(MB_IN_GB, 2, RoundingMode.HALF_UP);
     }

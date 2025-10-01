@@ -64,11 +64,14 @@ public class TempAlbum extends BaseTimeEntity {
     }
 
     public void increaseCapacity(BigDecimal decimal) {
-        if (this.capacityMb.add(decimal).compareTo(BigDecimal.valueOf(9999.99)) > 0) {
+        BigDecimal newCapacity = this.capacityMb.add(decimal);
+
+        if (newCapacity.compareTo(this.type.getCapacityMb()) > 0) {
             throw new CustomException(
                     TempAlbumDomainErrorCode.TEMP_ALBUM_CAPACITY_INCREASE_OVER_LIMIT);
         }
-        this.capacityMb = capacityMb.add(decimal);
+
+        this.capacityMb = newCapacity;
     }
 
     public void decreaseCapacity(BigDecimal decimal) {
