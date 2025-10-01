@@ -2,7 +2,6 @@ package org.cherrypic.member.service;
 
 import static org.assertj.core.api.Assertions.*;
 
-import jakarta.persistence.EntityManager;
 import org.cherrypic.IntegrationTest;
 import org.cherrypic.RedisCleaner;
 import org.cherrypic.domain.image.event.ImageDeleteEvent;
@@ -37,7 +36,6 @@ class MemberServiceTest extends IntegrationTest {
     @Autowired private MemberRepository memberRepository;
 
     @Autowired private ApplicationEvents applicationEvents;
-    @Autowired private EntityManager em;
 
     @BeforeEach
     void setUp() {
