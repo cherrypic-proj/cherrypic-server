@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 import org.cherrypic.tempalbum.entity.TempAlbum;
 
-public record TempAlbumListResponse(List<Content> contents) {
+public record TempAlbumListResponse(List<Content> content) {
     @Schema(name = "TempAlbumListResponseContent")
     public record Content(
             @Schema(description = "임시 앨범 ID", example = "1") Long tempAlbumId,
