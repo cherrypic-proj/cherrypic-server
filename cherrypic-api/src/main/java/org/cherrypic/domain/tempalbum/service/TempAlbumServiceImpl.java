@@ -40,7 +40,7 @@ public class TempAlbumServiceImpl implements TempAlbumService {
     public TempAlbumListResponse getTempAlbums() {
         final Member currentMember = memberUtil.getCurrentMember();
         final List<TempAlbum> tempAlbums =
-                tempAlbumRepository.findAllByMemberIdOrderByCreatedAtDesc(currentMember.getId());
+                tempAlbumRepository.findAllByMemberIdOrderByIdDesc(currentMember.getId());
 
         return TempAlbumListResponse.from(tempAlbums);
     }
