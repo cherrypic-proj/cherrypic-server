@@ -25,6 +25,6 @@ public record TempAlbumImageUploadRequest(
                     @Schema(description = "S3 업로드시 파일의 변형을 확인하기 위한 md5 해시")
                     String md5Hashes,
             @NotNull(message = "파일의 용량은 비워둘 수 없습니다.")
-                    @Schema(description = "업로드 하는 파일의 용량(GB)", example = "0.04")
-                    BigDecimal capacity) {}
+                    @Schema(description = "업로드 하는 파일의 용량(MB), 소수점 2자리까지", example = "0.04")
+                    BigDecimal capacityMb) {}
 }

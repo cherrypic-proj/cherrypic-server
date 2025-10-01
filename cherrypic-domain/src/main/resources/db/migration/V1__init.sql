@@ -19,7 +19,7 @@ CREATE TABLE album (
                        cover_url VARCHAR(255),
                        type VARCHAR(20) NOT NULL CHECK (type IN ('BASIC','PRO','PREMIUM')),
                        permission_control BOOLEAN NOT NULL,
-                       capacity_gb DECIMAL(6,2) NOT NULL,
+                       capacity_mb DECIMAL(9,2) NOT NULL,
                        created_at DATETIME(6) NOT NULL,
                        updated_at DATETIME(6) NOT NULL
 );
@@ -96,7 +96,7 @@ CREATE TABLE image (
                        album_id BIGINT NOT NULL,
                        url VARCHAR(255) NOT NULL,
                        generated_at DATETIME,
-                       capacity_gb DECIMAL(6,2) NOT NULL,
+                       capacity_mb DECIMAL(9,2) NOT NULL,
                        created_at DATETIME(6) NOT NULL,
                        updated_at DATETIME(6) NOT NULL,
                        CONSTRAINT fk_image_album FOREIGN KEY (album_id) REFERENCES album (id)

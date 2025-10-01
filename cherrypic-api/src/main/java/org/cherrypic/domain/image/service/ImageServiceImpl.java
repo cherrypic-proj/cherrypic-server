@@ -121,15 +121,15 @@ public class ImageServiceImpl implements ImageService {
         validateParticipantAuthority(currentMember.getId(), album.getId());
         validateSubscriptionNotExpired(album);
 
-        BigDecimal uploadCapacity =
+        BigDecimal uploadCapacityMb =
                 request.payloads().stream()
-                        .map(AlbumImageUploadRequest.Payload::capacity)
+                        .map(AlbumImageUploadRequest.Payload::capacityMb)
                         .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        validateAlbumCapacity(album, uploadCapacity);
+        validateAlbumCapacity(album, uploadCapacityMb);
         validateDistinctHashes(request);
 
-        album.increaseCapacity(uploadCapacity);
+        album.increaseCapacity(uploadCapacityMb);
 
         List<String> presignedUrls =
                 request.payloads().stream()
@@ -159,7 +159,7 @@ public class ImageServiceImpl implements ImageService {
                                             req.generatedAt() != null
                                                     ? req.generatedAt()
                                                     : LocalDateTime.now(),
-                                            req.capacity());
+                                            req.capacityMb());
                                 })
                         .toList();
 
@@ -222,7 +222,7 @@ public class ImageServiceImpl implements ImageService {
 
         album.decreaseCapacity(
                 images.stream()
-                        .map(Image::getCapacityGb)
+                        .map(Image::getCapacityMb)
                         .filter(Objects::nonNull)
                         .reduce(BigDecimal.ZERO, BigDecimal::add));
 
@@ -242,15 +242,15 @@ public class ImageServiceImpl implements ImageService {
 
         validateTempAlbumOwner(tempAlbum, currentMember);
 
-        BigDecimal uploadCapacity =
+        BigDecimal uploadCapacityMb =
                 request.payloads().stream()
-                        .map(TempAlbumImageUploadRequest.Payload::capacity)
+                        .map(TempAlbumImageUploadRequest.Payload::capacityMb)
                         .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        validateTempAlbumCapacity(tempAlbum, uploadCapacity);
+        validateTempAlbumCapacity(tempAlbum, uploadCapacityMb);
         validateDistinctHashes(request);
 
-        tempAlbum.increaseCapacity(uploadCapacity);
+        tempAlbum.increaseCapacity(uploadCapacityMb);
 
         List<String> presignedUrls =
                 request.payloads().stream()
@@ -275,7 +275,7 @@ public class ImageServiceImpl implements ImageService {
                                             presignedUrl.substring(0, presignedUrl.indexOf("?"));
 
                                     return TempAlbumImage.createTempAlbumImage(
-                                            tempAlbum, objectUrl, req.capacity());
+                                            tempAlbum, objectUrl, req.capacityMb());
                                 })
                         .toList();
 
@@ -314,7 +314,7 @@ public class ImageServiceImpl implements ImageService {
 
         tempAlbum.decreaseCapacity(
                 tempAlbumImages.stream()
-                        .map(TempAlbumImage::getCapacityGb)
+                        .map(TempAlbumImage::getCapacityMb)
                         .filter(Objects::nonNull)
                         .reduce(BigDecimal.ZERO, BigDecimal::add));
 
@@ -376,8 +376,8 @@ public class ImageServiceImpl implements ImageService {
     }
 
     private void validateAlbumCapacity(Album album, BigDecimal uploadCapacity) {
-        BigDecimal maxCapacity = album.getType().getCapacityGb();
-        BigDecimal current = album.getCapacityGb();
+        BigDecimal maxCapacity = album.getType().getCapacityMb();
+        BigDecimal current = album.getCapacityMb();
         BigDecimal afterUpload = current.add(uploadCapacity);
 
         if (afterUpload.compareTo(maxCapacity) > 0) {
@@ -386,8 +386,8 @@ public class ImageServiceImpl implements ImageService {
     }
 
     private void validateTempAlbumCapacity(TempAlbum tempAlbum, BigDecimal uploadCapacity) {
-        BigDecimal maxCapacity = tempAlbum.getType().getCapacityGb();
-        BigDecimal current = tempAlbum.getCapacityGb();
+        BigDecimal maxCapacity = tempAlbum.getType().getCapacityMb();
+        BigDecimal current = tempAlbum.getCapacityMb();
         BigDecimal afterUpload = current.add(uploadCapacity);
 
         if (afterUpload.compareTo(maxCapacity) > 0) {

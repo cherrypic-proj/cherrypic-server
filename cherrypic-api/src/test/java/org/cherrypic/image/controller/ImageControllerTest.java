@@ -21,6 +21,7 @@ import org.cherrypic.exception.CustomException;
 import org.cherrypic.global.pagination.SliceResponse;
 import org.cherrypic.global.pagination.SortDirection;
 import org.cherrypic.s3.enums.FileExtension;
+import org.cherrypic.tempalbum.enums.TempAlbumType;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -1305,9 +1306,11 @@ class ImageControllerTest {
                     new TempAlbumImageUploadRequest(
                             List.of(
                                     new TempAlbumImageUploadRequest.Payload(
-                                            FileExtension.JPEG, "testMd5Hash1", BigDecimal.TEN),
+                                            FileExtension.JPEG,
+                                            "testMd5Hash1",
+                                            TempAlbumType.DEFAULT.getCapacityMb()),
                                     new TempAlbumImageUploadRequest.Payload(
-                                            FileExtension.JPEG, "testMd5Hash2", BigDecimal.TEN)));
+                                            FileExtension.JPEG, "testMd5Hash2", BigDecimal.ONE)));
 
             given(imageService.createTempAlbumImageUploadUrls(1L, request))
                     .willThrow(

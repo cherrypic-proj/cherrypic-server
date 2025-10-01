@@ -6,15 +6,16 @@ import java.util.stream.Stream;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+/** BASIC : 3GB PRO : 200GB PREMIUM : 2TB */
 @Getter
 @AllArgsConstructor
 public enum AlbumType {
-    BASIC(0, new BigDecimal("3"), 10),
-    PRO(5900, new BigDecimal("200"), 50),
-    PREMIUM(12900, new BigDecimal("2048"), Integer.MAX_VALUE);
+    BASIC(0, new BigDecimal("3072"), 10),
+    PRO(5900, new BigDecimal("204800"), 50),
+    PREMIUM(12900, new BigDecimal("2097152"), Integer.MAX_VALUE);
 
     private final int price;
-    private final BigDecimal capacityGb;
+    private final BigDecimal capacityMb;
     private final int maxParticipants;
 
     @JsonCreator

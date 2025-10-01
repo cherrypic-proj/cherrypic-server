@@ -12,18 +12,18 @@ import org.junit.jupiter.api.Test;
 class AlbumTest {
 
     @Test
-    void 용량을_4자리_GB_이상으로_늘릴_경우_예외가_발생한다() {
+    void 앨범_용량을_초과해서_늘릴_경우_예외가_발생한다() {
         // given
         Album album = Album.createAlbum("testTitle", "testCoverUrl", AlbumType.BASIC, false);
 
         // when & then
-        assertThatThrownBy(() -> album.increaseCapacity(BigDecimal.valueOf(10000)))
+        assertThatThrownBy(() -> album.increaseCapacity(BigDecimal.valueOf(3073)))
                 .isInstanceOf(CustomException.class)
                 .hasMessage(AlbumDomainErrorCode.ALBUM_CAPACITY_INCREASE_OVER_LIMIT.getMessage());
     }
 
     @Test
-    void 용량을_0GB_미만으로_줄일_경우_예외가_발생한다() {
+    void 용량을_0MB_미만으로_줄일_경우_예외가_발생한다() {
         // given
         Album album = Album.createAlbum("testTitle", "testCoverUrl", AlbumType.BASIC, false);
 

@@ -28,7 +28,7 @@ public class Image extends BaseTimeEntity {
 
     @NotNull private String url;
 
-    @NotNull private BigDecimal capacityGb;
+    @NotNull private BigDecimal capacityMb;
 
     private LocalDateTime generatedAt;
 
@@ -38,12 +38,12 @@ public class Image extends BaseTimeEntity {
             Long memberId,
             String url,
             LocalDateTime generatedAt,
-            BigDecimal capacityGb) {
+            BigDecimal capacityMb) {
         this.album = album;
         this.memberId = memberId;
         this.url = url;
         this.generatedAt = generatedAt;
-        this.capacityGb = capacityGb;
+        this.capacityMb = capacityMb;
     }
 
     public static Image createImage(
@@ -51,13 +51,13 @@ public class Image extends BaseTimeEntity {
             Long memberId,
             String url,
             LocalDateTime generatedAt,
-            BigDecimal capacityGb) {
+            BigDecimal capacityMb) {
         return Image.builder()
                 .album(album)
                 .memberId(memberId)
                 .url(url)
                 .generatedAt(generatedAt)
-                .capacityGb(capacityGb)
+                .capacityMb(capacityMb)
                 .build();
     }
 }

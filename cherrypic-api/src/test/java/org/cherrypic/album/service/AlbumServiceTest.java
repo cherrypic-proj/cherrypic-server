@@ -969,6 +969,7 @@ class AlbumServiceTest extends IntegrationTest {
             Album album1 = Album.createAlbum("testAlbum1", "testURL1", AlbumType.BASIC, false);
             Album album2 = Album.createAlbum("testAlbum2", "testURL2", AlbumType.BASIC, false);
             Album album3 = Album.createAlbum("testAlbum3", "testURL3", AlbumType.BASIC, false);
+            album1.increaseCapacity(new BigDecimal(1024));
             albumRepository.saveAll(List.of(album1, album2, album3));
 
             Participant participant1 =
@@ -989,16 +990,16 @@ class AlbumServiceTest extends IntegrationTest {
                             "title",
                             "coverUrl",
                             "type",
-                            "capacityUsed",
-                            "totalCapacity",
+                            "capacityUsedGb",
+                            "totalCapacityGb",
                             "hostName",
                             "numOfParticipants")
                     .containsExactly(
                             "testAlbum1",
                             "testURL1",
                             AlbumType.BASIC,
-                            new BigDecimal("0.00"),
-                            new BigDecimal("3"),
+                            new BigDecimal("1.00"),
+                            new BigDecimal("3.00"),
                             "testNickname",
                             1);
         }

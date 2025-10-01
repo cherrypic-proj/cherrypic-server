@@ -24,21 +24,21 @@ public class TempAlbumImage extends BaseTimeEntity {
 
     @NotNull private String url;
 
-    @NotNull private BigDecimal capacityGb;
+    @NotNull private BigDecimal capacityMb;
 
     @Builder(access = AccessLevel.PRIVATE)
-    private TempAlbumImage(TempAlbum tempAlbum, String url, BigDecimal capacityGb) {
+    private TempAlbumImage(TempAlbum tempAlbum, String url, BigDecimal capacityMb) {
         this.tempAlbum = tempAlbum;
         this.url = url;
-        this.capacityGb = capacityGb;
+        this.capacityMb = capacityMb;
     }
 
     public static TempAlbumImage createTempAlbumImage(
-            TempAlbum tempAlbum, String url, BigDecimal capacityGb) {
+            TempAlbum tempAlbum, String url, BigDecimal capacityMb) {
         return TempAlbumImage.builder()
                 .tempAlbum(tempAlbum)
                 .url(url)
-                .capacityGb(capacityGb)
+                .capacityMb(capacityMb)
                 .build();
     }
 }

@@ -34,7 +34,7 @@ public class Album extends BaseTimeEntity {
 
     @NotNull private Boolean permissionControl;
 
-    @NotNull private BigDecimal capacityGb;
+    @NotNull private BigDecimal capacityMb;
 
     @OneToMany(mappedBy = "album", cascade = CascadeType.PERSIST)
     private List<Participant> participants = new ArrayList<>();
@@ -45,12 +45,12 @@ public class Album extends BaseTimeEntity {
             String coverUrl,
             AlbumType type,
             boolean permissionControl,
-            BigDecimal capacityGb) {
+            BigDecimal capacityMb) {
         this.title = title;
         this.coverUrl = coverUrl;
         this.type = type;
         this.permissionControl = permissionControl;
-        this.capacityGb = capacityGb;
+        this.capacityMb = capacityMb;
     }
 
     public static Album createAlbum(
@@ -60,7 +60,7 @@ public class Album extends BaseTimeEntity {
                 .coverUrl(coverUrl)
                 .type(type)
                 .permissionControl(permissionControl)
-                .capacityGb(BigDecimal.ZERO)
+                .capacityMb(BigDecimal.ZERO)
                 .build();
     }
 
@@ -78,16 +78,19 @@ public class Album extends BaseTimeEntity {
     }
 
     public void increaseCapacity(BigDecimal decimal) {
-        if (this.capacityGb.add(decimal).compareTo(BigDecimal.valueOf(9999.99)) > 0) {
+        BigDecimal newCapacity = this.capacityMb.add(decimal);
+
+        if (newCapacity.compareTo(this.type.getCapacityMb()) > 0) {
             throw new CustomException(AlbumDomainErrorCode.ALBUM_CAPACITY_INCREASE_OVER_LIMIT);
         }
-        this.capacityGb = capacityGb.add(decimal);
+
+        this.capacityMb = newCapacity;
     }
 
     public void decreaseCapacity(BigDecimal decimal) {
-        if (this.capacityGb.subtract(decimal).compareTo(BigDecimal.ZERO) < 0) {
+        if (this.capacityMb.subtract(decimal).compareTo(BigDecimal.ZERO) < 0) {
             throw new CustomException(AlbumDomainErrorCode.ALBUM_CAPACITY_DECREASE_UNDER_ZERO);
         }
-        this.capacityGb = capacityGb.subtract(decimal);
+        this.capacityMb = capacityMb.subtract(decimal);
     }
 }

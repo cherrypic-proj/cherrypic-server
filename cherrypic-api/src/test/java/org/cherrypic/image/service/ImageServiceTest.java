@@ -46,6 +46,7 @@ import org.cherrypic.subscription.entity.Subscription;
 import org.cherrypic.subscription.enums.SubscriptionStatus;
 import org.cherrypic.tempalbum.entity.TempAlbum;
 import org.cherrypic.tempalbum.entity.TempAlbumImage;
+import org.cherrypic.tempalbum.enums.TempAlbumType;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -478,12 +479,12 @@ class ImageServiceTest extends IntegrationTest {
                                             FileExtension.JPEG,
                                             "testMd5Hash1",
                                             LocalDateTime.now(),
-                                            BigDecimal.TEN),
+                                            AlbumType.BASIC.getCapacityMb()),
                                     new AlbumImageUploadRequest.Payload(
                                             FileExtension.JPEG,
                                             "testMd5Hash2",
                                             LocalDateTime.now(),
-                                            BigDecimal.TEN)));
+                                            BigDecimal.ONE)));
 
             // when & then
             assertThatThrownBy(() -> imageService.createAlbumImageUploadUrls(1L, request))
@@ -787,7 +788,7 @@ class ImageServiceTest extends IntegrationTest {
             Assertions.assertAll(
                     () -> assertThat(imageRepository.findAllById(List.of(1L, 2L))).isEmpty(),
                     () ->
-                            assertThat(albumRepository.findById(1L).orElseThrow().getCapacityGb())
+                            assertThat(albumRepository.findById(1L).orElseThrow().getCapacityMb())
                                     .isEqualTo(new BigDecimal("0.00")),
                     () -> assertThat(eventImageRepository.findById(1L).isPresent()).isFalse());
         }
@@ -991,9 +992,11 @@ class ImageServiceTest extends IntegrationTest {
                     new TempAlbumImageUploadRequest(
                             List.of(
                                     new TempAlbumImageUploadRequest.Payload(
-                                            FileExtension.JPEG, "testMd5Hash1", BigDecimal.TEN),
+                                            FileExtension.JPEG,
+                                            "testMd5Hash1",
+                                            TempAlbumType.DEFAULT.getCapacityMb()),
                                     new TempAlbumImageUploadRequest.Payload(
-                                            FileExtension.JPEG, "testMd5Hash2", BigDecimal.TEN)));
+                                            FileExtension.JPEG, "testMd5Hash2", BigDecimal.ONE)));
 
             // when & then
             assertThatThrownBy(() -> imageService.createTempAlbumImageUploadUrls(1L, request))
@@ -1066,7 +1069,7 @@ class ImageServiceTest extends IntegrationTest {
                                             tempAlbumRepository
                                                     .findById(1L)
                                                     .orElseThrow()
-                                                    .getCapacityGb())
+                                                    .getCapacityMb())
                                     .isEqualTo(new BigDecimal("0.40")));
         }
 

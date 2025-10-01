@@ -3,6 +3,7 @@ package org.cherrypic.domain.tempalbum.dto.response;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import org.cherrypic.global.util.StorageUnitConverter;
 import org.cherrypic.tempalbum.entity.TempAlbum;
 import org.cherrypic.tempalbum.enums.TempAlbumType;
 
@@ -18,7 +19,7 @@ public record TempAlbumCreateResponse(
                 tempAlbum.getId(),
                 tempAlbum.getMember().getId(),
                 tempAlbum.getTitle(),
-                tempAlbum.getCapacityGb(),
+                StorageUnitConverter.mbToGb(tempAlbum.getCapacityMb()),
                 tempAlbum.getType(),
                 tempAlbum.getExpiredAt());
     }
