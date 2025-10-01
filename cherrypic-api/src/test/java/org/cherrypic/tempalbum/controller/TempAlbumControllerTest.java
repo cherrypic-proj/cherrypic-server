@@ -126,9 +126,9 @@ class TempAlbumControllerTest {
             TempAlbumListResponse response =
                     new TempAlbumListResponse(
                             List.of(
-                                    new TempAlbumListResponse.Payload(1L, "testTitle1"),
-                                    new TempAlbumListResponse.Payload(2L, "testTitle1"),
-                                    new TempAlbumListResponse.Payload(3L, "testTitle1")));
+                                    new TempAlbumListResponse.Content(1L, "testTitle1"),
+                                    new TempAlbumListResponse.Content(2L, "testTitle1"),
+                                    new TempAlbumListResponse.Content(3L, "testTitle1")));
 
             given(tempAlbumService.getTempAlbums()).willReturn(response);
 
@@ -138,9 +138,9 @@ class TempAlbumControllerTest {
 
             perform.andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
-                    .andExpect(jsonPath("$.data.payloads[0].tempAlbumId").value(1))
-                    .andExpect(jsonPath("$.data.payloads[1].tempAlbumId").value(2))
-                    .andExpect(jsonPath("$.data.payloads[2].tempAlbumId").value(3));
+                    .andExpect(jsonPath("$.data.contents[0].tempAlbumId").value(1))
+                    .andExpect(jsonPath("$.data.contents[1].tempAlbumId").value(2))
+                    .andExpect(jsonPath("$.data.contents[2].tempAlbumId").value(3));
         }
     }
 }

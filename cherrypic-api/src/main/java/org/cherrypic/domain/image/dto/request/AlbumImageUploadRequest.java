@@ -14,6 +14,7 @@ import org.cherrypic.s3.enums.FileExtension;
 public record AlbumImageUploadRequest(
         @NotEmpty(message = "업로드할 피일들의 정보는 비워둘 수 없습니다.") @Valid @Schema(description = "업로드 요청 리스트")
                 List<Payload> payloads) {
+    @Schema(name = "AlbumImageUploadRequestPayload")
     public record Payload(
             @Enum(
                             message =

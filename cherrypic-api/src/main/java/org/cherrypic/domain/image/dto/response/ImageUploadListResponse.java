@@ -10,6 +10,7 @@ public record ImageUploadListResponse(
         return new ImageUploadListResponse(localImageDeletion, payloads);
     }
 
+    @Schema(name = "ImageUploadListResponsePayload")
     public record Payload(
             @Schema(description = "생성된 이미지의 ID") Long imageId,
             @Schema(description = "생성된 Presigned Url") String presignedUrl) {

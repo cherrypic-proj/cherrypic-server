@@ -9,6 +9,7 @@ public record TempAlbumImageUploadListResponse(
         return new TempAlbumImageUploadListResponse(payloads);
     }
 
+    @Schema(name = "TempAlbumImageUploadResponsePayload")
     public record Payload(
             @Schema(description = "생성된 임시 앨범 이미지의 ID") Long tempAlbumImageId,
             @Schema(description = "생성된 Presigned Url") String presignedUrl) {
