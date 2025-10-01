@@ -33,6 +33,7 @@ import org.cherrypic.event.entity.EventImage;
 import org.cherrypic.exception.CustomException;
 import org.cherrypic.global.pagination.SliceResponse;
 import org.cherrypic.global.pagination.SortDirection;
+import org.cherrypic.global.pagination.SortParameter;
 import org.cherrypic.global.util.MemberUtil;
 import org.cherrypic.image.entity.Image;
 import org.cherrypic.member.entity.Member;
@@ -543,11 +544,26 @@ class ImageServiceTest extends IntegrationTest {
             eventRepository.save(event);
 
             Image image1 =
-                    Image.createImage(album1, 1L, "testUrl", LocalDateTime.now(), BigDecimal.ZERO);
+                    Image.createImage(
+                            album1,
+                            1L,
+                            "testUrl",
+                            LocalDateTime.of(2025, 1, 3, 0, 0),
+                            BigDecimal.ZERO);
             Image image2 =
-                    Image.createImage(album1, 1L, "testUrl2", LocalDateTime.now(), BigDecimal.ZERO);
+                    Image.createImage(
+                            album1,
+                            1L,
+                            "testUrl2",
+                            LocalDateTime.of(2025, 1, 2, 0, 0),
+                            BigDecimal.ZERO);
             Image image3 =
-                    Image.createImage(album1, 1L, "testUrl2", LocalDateTime.now(), BigDecimal.ZERO);
+                    Image.createImage(
+                            album1,
+                            1L,
+                            "testUrl2",
+                            LocalDateTime.of(2025, 1, 1, 0, 0),
+                            BigDecimal.ZERO);
             imageRepository.saveAll(List.of(image1, image2, image3));
 
             EventImage eventImage = EventImage.createEventImage(event, image1);
@@ -555,30 +571,54 @@ class ImageServiceTest extends IntegrationTest {
         }
 
         @Test
-        void 정렬_조건이_ASC이면_imageId를_오름차순으로_조회한다() {
+        void 정렬_파라미터가_UPLOAD이고_정렬_조건이_ASC이면_imageId를_오름차순으로_조회한다() {
             // when
             SliceResponse<AlbumImageListResponse> response =
-                    imageService.getAlbumImages(1L, null, 3, SortDirection.ASC);
+                    imageService.getAlbumImages(
+                            1L, null, 3, SortParameter.UPLOAD, SortDirection.ASC);
 
             // then
             assertThat(response.content()).extracting("imageId").containsExactly(1L, 2L, 3L);
         }
 
         @Test
-        void 정렬_조건이_DESC면_imageId를_내림차순으로_조회한다() {
+        void 정렬_파라미터가_GENERATE고_정렬_조건이_ASC이면_generatedAt을_오름차순으로_조회한다() {
             // when
             SliceResponse<AlbumImageListResponse> response =
-                    imageService.getAlbumImages(1L, null, 3, SortDirection.DESC);
+                    imageService.getAlbumImages(
+                            1L, null, 3, SortParameter.GENERATE, SortDirection.ASC);
 
             // then
             assertThat(response.content()).extracting("imageId").containsExactly(3L, 2L, 1L);
         }
 
         @Test
+        void 정렬_파라미터가_UPLOAD이고_정렬_조건이_DESC면_imageId를_내림차순으로_조회한다() {
+            // when
+            SliceResponse<AlbumImageListResponse> response =
+                    imageService.getAlbumImages(
+                            1L, null, 3, SortParameter.UPLOAD, SortDirection.DESC);
+
+            // then
+            assertThat(response.content()).extracting("imageId").containsExactly(3L, 2L, 1L);
+        }
+
+        @Test
+        void 정렬_파라미터가_GENERATE고_정렬_조건이_DESC면_generatedAt을_내림차순으로_조회한다() {
+            // when
+            SliceResponse<AlbumImageListResponse> response =
+                    imageService.getAlbumImages(
+                            1L, null, 3, SortParameter.GENERATE, SortDirection.DESC);
+
+            // then
+            assertThat(response.content()).extracting("imageId").containsExactly(1L, 2L, 3L);
+        }
+
+        @Test
         void imageId를_입력하면_다음_Image_부터_조회한다() {
             // when
             SliceResponse<AlbumImageListResponse> response =
-                    imageService.getAlbumImages(1L, 1L, 2, SortDirection.ASC);
+                    imageService.getAlbumImages(1L, 1L, 2, SortParameter.UPLOAD, SortDirection.ASC);
 
             // then
             assertThat(response.content()).extracting("imageId").containsExactly(2L, 3L);
@@ -588,7 +628,8 @@ class ImageServiceTest extends IntegrationTest {
         void 앨범에_이미지가_없는_경우_빈_리스트를_조회한다() {
             // when
             SliceResponse<AlbumImageListResponse> response =
-                    imageService.getAlbumImages(2L, null, 3, SortDirection.ASC);
+                    imageService.getAlbumImages(
+                            2L, null, 3, SortParameter.UPLOAD, SortDirection.ASC);
 
             // when & then
             Assertions.assertAll(
@@ -600,7 +641,8 @@ class ImageServiceTest extends IntegrationTest {
         void 마지막_페이지인_경우_isLast를_true로_반환한다() {
             // when
             SliceResponse<AlbumImageListResponse> response =
-                    imageService.getAlbumImages(1L, null, 3, SortDirection.ASC);
+                    imageService.getAlbumImages(
+                            1L, null, 3, SortParameter.UPLOAD, SortDirection.ASC);
 
             // then
             Assertions.assertAll(
@@ -611,7 +653,10 @@ class ImageServiceTest extends IntegrationTest {
         @Test
         void 앨범이_존재하지_않을_경우_예외가_발생한다() {
             // when & then
-            assertThatThrownBy(() -> imageService.getAlbumImages(999L, null, 2, SortDirection.ASC))
+            assertThatThrownBy(
+                            () ->
+                                    imageService.getAlbumImages(
+                                            999L, null, 2, SortParameter.UPLOAD, SortDirection.ASC))
                     .isInstanceOf(CustomException.class)
                     .hasMessage(AlbumErrorCode.ALBUM_NOT_FOUND.getMessage());
         }
@@ -619,7 +664,10 @@ class ImageServiceTest extends IntegrationTest {
         @Test
         void 앨범_참가자가_아닌_경우_예외가_발생한다() {
             // when & then
-            assertThatThrownBy(() -> imageService.getAlbumImages(3L, null, 2, SortDirection.ASC))
+            assertThatThrownBy(
+                            () ->
+                                    imageService.getAlbumImages(
+                                            3L, null, 2, SortParameter.UPLOAD, SortDirection.ASC))
                     .isInstanceOf(CustomException.class)
                     .hasMessage(AlbumErrorCode.NOT_ALBUM_PARTICIPANT.getMessage());
         }

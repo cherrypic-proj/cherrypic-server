@@ -11,6 +11,7 @@ import org.cherrypic.domain.image.service.ImageService;
 import org.cherrypic.global.annotation.PageSize;
 import org.cherrypic.global.pagination.SliceResponse;
 import org.cherrypic.global.pagination.SortDirection;
+import org.cherrypic.global.pagination.SortParameter;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -67,10 +68,13 @@ public class ImageController {
                     @RequestParam(required = false)
                     Long lastImageId,
             @Parameter(description = "페이지당 조회할 이미지의 수") @RequestParam @PageSize Integer size,
+            @Parameter(description = "정렬 파라미터 (UPLOAD: 업로드순, GENERATED: 촬용일순)")
+                    @RequestParam(defaultValue = "UPLOAD")
+                    SortParameter parameter,
             @Parameter(description = "정렬 방향 (ASC: 오래된순, DESC: 최신순)")
                     @RequestParam(defaultValue = "DESC")
                     SortDirection direction) {
-        return imageService.getAlbumImages(albumId, lastImageId, size, direction);
+        return imageService.getAlbumImages(albumId, lastImageId, size, parameter, direction);
     }
 
     @GetMapping("/events/{eventId}/images")

@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
@@ -20,6 +21,7 @@ import org.cherrypic.domain.tempalbum.exception.TempAlbumErrorCode;
 import org.cherrypic.exception.CustomException;
 import org.cherrypic.global.pagination.SliceResponse;
 import org.cherrypic.global.pagination.SortDirection;
+import org.cherrypic.global.pagination.SortParameter;
 import org.cherrypic.s3.enums.FileExtension;
 import org.cherrypic.tempalbum.enums.TempAlbumType;
 import org.junit.jupiter.api.Nested;
@@ -693,20 +695,25 @@ class ImageControllerTest {
     class 앨범_이미지_목록_조회_요청시 {
 
         @Test
-        void 정렬_조건이_ASC이면_imageId를_오름차순으로_응답한다() throws Exception {
+        void 정렬_파라미터가_UPLOAD이고_정렬_조건이_ASC이면_imageId를_오름차순으로_응답한다() throws Exception {
             // given
             List<AlbumImageListResponse> images =
                     List.of(
-                            new AlbumImageListResponse(1L, "testImageUrl1"),
-                            new AlbumImageListResponse(2L, "testImageUrl2"));
+                            new AlbumImageListResponse(
+                                    1L, "testImageUrl1", LocalDate.of(2025, 1, 1)),
+                            new AlbumImageListResponse(
+                                    2L, "testImageUrl2", LocalDate.of(2025, 1, 2)));
 
-            given(imageService.getAlbumImages(1L, null, 2, SortDirection.ASC))
+            given(imageService.getAlbumImages(1L, null, 2, SortParameter.UPLOAD, SortDirection.ASC))
                     .willReturn(new SliceResponse<>(images, true));
 
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            get("/albums/1/images").param("size", "2").param("direction", "ASC"));
+                            get("/albums/1/images")
+                                    .param("size", "2")
+                                    .param("parameter", "UPLOAD")
+                                    .param("direction", "ASC"));
 
             perform.andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
@@ -717,20 +724,89 @@ class ImageControllerTest {
         }
 
         @Test
-        void 정렬_조건이_DESC이면_imageId를_내림차순으로_응답한다() throws Exception {
+        void 정렬_파라미터가_GENERATE이고_정렬_조건이_ASC이면_generatedAt을_오름차순으로_응답한다() throws Exception {
             // given
             List<AlbumImageListResponse> images =
                     List.of(
-                            new AlbumImageListResponse(2L, "testImageUrl2"),
-                            new AlbumImageListResponse(1L, "testImageUrl1"));
+                            new AlbumImageListResponse(
+                                    1L, "testImageUrl1", LocalDate.of(2025, 1, 1)),
+                            new AlbumImageListResponse(
+                                    2L, "testImageUrl2", LocalDate.of(2025, 1, 2)));
 
-            given(imageService.getAlbumImages(1L, null, 2, SortDirection.DESC))
+            given(
+                            imageService.getAlbumImages(
+                                    1L, null, 2, SortParameter.GENERATE, SortDirection.ASC))
                     .willReturn(new SliceResponse<>(images, true));
 
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            get("/albums/1/images").param("size", "2").param("direction", "DESC"));
+                            get("/albums/1/images")
+                                    .param("size", "2")
+                                    .param("parameter", "GENERATE")
+                                    .param("direction", "ASC"));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
+                    .andExpect(jsonPath("$.data.content[0].imageId").value(1))
+                    .andExpect(jsonPath("$.data.content[1].imageId").value(2))
+                    .andExpect(jsonPath("$.data.isLast").value(true));
+        }
+
+        @Test
+        void 정렬_파라미터가_UPLOAD이고_정렬_조건이_DESC면_imageId를_내림차순으로_응답한다() throws Exception {
+            // given
+            List<AlbumImageListResponse> images =
+                    List.of(
+                            new AlbumImageListResponse(
+                                    2L, "testImageUrl2", LocalDate.of(2025, 1, 2)),
+                            new AlbumImageListResponse(
+                                    1L, "testImageUrl1", LocalDate.of(2025, 1, 1)));
+
+            given(
+                            imageService.getAlbumImages(
+                                    1L, null, 2, SortParameter.UPLOAD, SortDirection.DESC))
+                    .willReturn(new SliceResponse<>(images, true));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            get("/albums/1/images")
+                                    .param("size", "2")
+                                    .param("parameter", "UPLOAD")
+                                    .param("direction", "DESC"));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
+                    .andExpect(jsonPath("$.data.content[0].imageId").value(2))
+                    .andExpect(jsonPath("$.data.content[1].imageId").value(1))
+                    .andExpect(jsonPath("$.data.isLast").value(true));
+        }
+
+        @Test
+        void 정렬_파라미터가_GENERATE이고_정렬_조건이_DESC면_imageId를_내림차순으로_응답한다() throws Exception {
+            // given
+            List<AlbumImageListResponse> images =
+                    List.of(
+                            new AlbumImageListResponse(
+                                    2L, "testImageUrl2", LocalDate.of(2025, 1, 2)),
+                            new AlbumImageListResponse(
+                                    1L, "testImageUrl1", LocalDate.of(2025, 1, 1)));
+
+            given(
+                            imageService.getAlbumImages(
+                                    1L, null, 2, SortParameter.GENERATE, SortDirection.DESC))
+                    .willReturn(new SliceResponse<>(images, true));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            get("/albums/1/images")
+                                    .param("size", "2")
+                                    .param("parameter", "GENERATE")
+                                    .param("direction", "DESC"));
 
             perform.andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
@@ -744,15 +820,20 @@ class ImageControllerTest {
         void 마지막_페이지인_경우_isLast를_true로_응답한다() throws Exception {
             // given
             List<AlbumImageListResponse> images =
-                    List.of(new AlbumImageListResponse(1L, "testImageUrl1"));
+                    List.of(
+                            new AlbumImageListResponse(
+                                    1L, "testImageUrl1", LocalDate.of(2025, 1, 1)));
 
-            given(imageService.getAlbumImages(1L, null, 1, SortDirection.ASC))
+            given(imageService.getAlbumImages(1L, null, 1, SortParameter.UPLOAD, SortDirection.ASC))
                     .willReturn(new SliceResponse<>(images, true));
 
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            get("/albums/1/images").param("size", "1").param("direction", "ASC"));
+                            get("/albums/1/images")
+                                    .param("size", "1")
+                                    .param("parameter", "UPLOAD")
+                                    .param("direction", "ASC"));
 
             perform.andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
@@ -766,16 +847,21 @@ class ImageControllerTest {
             // given
             List<AlbumImageListResponse> images =
                     List.of(
-                            new AlbumImageListResponse(1L, "testImageUrl1"),
-                            new AlbumImageListResponse(2L, "testImageUrl2"));
+                            new AlbumImageListResponse(
+                                    1L, "testImageUrl1", LocalDate.of(2025, 1, 1)),
+                            new AlbumImageListResponse(
+                                    2L, "testImageUrl2", LocalDate.of(2025, 1, 2)));
 
-            given(imageService.getAlbumImages(1L, null, 1, SortDirection.ASC))
+            given(imageService.getAlbumImages(1L, null, 1, SortParameter.UPLOAD, SortDirection.ASC))
                     .willReturn(new SliceResponse<>(images, false));
 
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            get("/albums/1/images").param("size", "1").param("direction", "ASC"));
+                            get("/albums/1/images")
+                                    .param("size", "1")
+                                    .param("parameter", "UPLOAD")
+                                    .param("direction", "ASC"));
 
             perform.andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
@@ -790,13 +876,16 @@ class ImageControllerTest {
             // given
             List<AlbumImageListResponse> images = List.of();
 
-            given(imageService.getAlbumImages(1L, null, 1, SortDirection.ASC))
+            given(imageService.getAlbumImages(1L, null, 1, SortParameter.UPLOAD, SortDirection.ASC))
                     .willReturn(new SliceResponse<>(images, true));
 
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            get("/albums/1/images").param("size", "1").param("direction", "ASC"));
+                            get("/albums/1/images")
+                                    .param("size", "1")
+                                    .param("parameter", "UPLOAD")
+                                    .param("direction", "ASC"));
 
             perform.andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
@@ -808,13 +897,18 @@ class ImageControllerTest {
         @Test
         void 앨범이_존재하지_않을_경우_예외가_발생한다() throws Exception {
             // given
-            given(imageService.getAlbumImages(999L, null, 2, SortDirection.ASC))
+            given(
+                            imageService.getAlbumImages(
+                                    999L, null, 2, SortParameter.UPLOAD, SortDirection.ASC))
                     .willThrow(new CustomException(AlbumErrorCode.ALBUM_NOT_FOUND));
 
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            get("/albums/999/images").param("size", "2").param("direction", "ASC"));
+                            get("/albums/999/images")
+                                    .param("size", "2")
+                                    .param("parameter", "UPLOAD")
+                                    .param("direction", "ASC"));
 
             perform.andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.success").value(false))
@@ -826,13 +920,16 @@ class ImageControllerTest {
         @Test
         void 앨범_참가자가_아닌_경우_예외가_발생한다() throws Exception {
             // given
-            given(imageService.getAlbumImages(1L, null, 2, SortDirection.ASC))
+            given(imageService.getAlbumImages(1L, null, 2, SortParameter.UPLOAD, SortDirection.ASC))
                     .willThrow(new CustomException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT));
 
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            get("/albums/1/images").param("size", "2").param("direction", "ASC"));
+                            get("/albums/1/images")
+                                    .param("size", "2")
+                                    .param("parameter", "UPLOAD")
+                                    .param("direction", "ASC"));
 
             perform.andExpect(status().isForbidden())
                     .andExpect(jsonPath("$.success").value(false))

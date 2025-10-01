@@ -7,13 +7,16 @@ import static org.cherrypic.tempalbum.entity.QTempAlbumImage.tempAlbumImage;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.CaseBuilder;
+import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import java.time.LocalDate;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.cherrypic.domain.image.dto.response.AlbumImageListResponse;
 import org.cherrypic.domain.image.dto.response.EventImageListResponse;
 import org.cherrypic.global.pagination.SortDirection;
+import org.cherrypic.global.pagination.SortParameter;
 import org.cherrypic.image.entity.Image;
 import org.cherrypic.tempalbum.entity.TempAlbumImage;
 import org.springframework.data.domain.PageRequest;
@@ -52,20 +55,38 @@ public class ImageRepositoryImpl implements ImageRepositoryCustom {
 
     @Override
     public Slice<AlbumImageListResponse> findAllByAlbumId(
-            Long albumId, Long lastImageId, int size, SortDirection direction) {
+            Long albumId,
+            Long lastImageId,
+            int size,
+            SortParameter parameter,
+            SortDirection direction) {
 
         List<AlbumImageListResponse> results =
                 queryFactory
                         .select(
-                                Projections.constructor(
-                                        AlbumImageListResponse.class, image.id, image.url))
+                                image.id,
+                                image.url,
+                                parameter == SortParameter.UPLOAD
+                                        ? image.createdAt
+                                        : image.generatedAt)
                         .from(image)
                         .where(
                                 image.album.id.eq(albumId),
-                                lastImageIdCondition(lastImageId, direction))
-                        .orderBy(direction == SortDirection.DESC ? image.id.desc() : image.id.asc())
+                                lastImageIdCondition(lastImageId, direction, parameter))
+                        .orderBy(getOrderByExpression(parameter, direction))
                         .limit(size + 1)
-                        .fetch();
+                        .fetch()
+                        .stream()
+                        .map(
+                                tuple ->
+                                        new AlbumImageListResponse(
+                                                tuple.get(image.id),
+                                                tuple.get(image.url),
+                                                parameter == SortParameter.UPLOAD
+                                                        ? tuple.get(image.createdAt).toLocalDate()
+                                                        : tuple.get(image.generatedAt)
+                                                                .toLocalDate()))
+                        .toList();
 
         return checkLastPage(size, results);
     }
@@ -165,6 +186,45 @@ public class ImageRepositoryImpl implements ImageRepositoryCustom {
         }
 
         return direction == SortDirection.DESC ? image.id.lt(imageId) : image.id.gt(imageId);
+    }
+
+    private BooleanExpression lastImageIdCondition(
+            Long imageId, SortDirection direction, SortParameter parameter) {
+        if (imageId == null) {
+            return null;
+        }
+
+        if (parameter == SortParameter.UPLOAD) {
+            return direction == SortDirection.DESC ? image.id.lt(imageId) : image.id.gt(imageId);
+        } else { // GENERATED
+            LocalDate lastGeneratedDate = getLastGeneratedDate(imageId);
+            return direction == SortDirection.DESC
+                    ? Expressions.dateTimeTemplate(LocalDate.class, "DATE({0})", image.generatedAt)
+                            .lt(lastGeneratedDate)
+                    : Expressions.dateTimeTemplate(LocalDate.class, "DATE({0})", image.generatedAt)
+                            .gt(lastGeneratedDate);
+        }
+    }
+
+    private com.querydsl.core.types.OrderSpecifier<?> getOrderByExpression(
+            SortParameter parameter, SortDirection direction) {
+        if (parameter == SortParameter.UPLOAD) {
+            return direction == SortDirection.DESC ? image.id.desc() : image.id.asc();
+        } else { // GENERATED
+            return direction == SortDirection.DESC
+                    ? image.generatedAt.desc()
+                    : image.generatedAt.asc();
+        }
+    }
+
+    private LocalDate getLastGeneratedDate(Long imageId) {
+        return queryFactory
+                .select(
+                        Expressions.dateTimeTemplate(
+                                LocalDate.class, "DATE({0})", image.generatedAt))
+                .from(image)
+                .where(image.id.eq(imageId))
+                .fetchOne();
     }
 
     private <T> Slice<T> checkLastPage(int pageSize, List<T> results) {

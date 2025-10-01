@@ -30,7 +30,7 @@ public class Image extends BaseTimeEntity {
 
     @NotNull private BigDecimal capacityMb;
 
-    private LocalDateTime generatedAt;
+    @NotNull private LocalDateTime generatedAt;
 
     @Builder(access = AccessLevel.PRIVATE)
     private Image(
