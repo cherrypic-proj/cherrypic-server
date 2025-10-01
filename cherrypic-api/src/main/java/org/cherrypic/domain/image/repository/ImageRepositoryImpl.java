@@ -95,7 +95,7 @@ public class ImageRepositoryImpl implements ImageRepositoryCustom {
                     ps.setLong(1, image.getAlbum().getId());
                     ps.setLong(2, image.getMemberId());
                     ps.setString(3, image.getUrl());
-                    ps.setBigDecimal(4, image.getCapacityGb()); // capacity_gb 추가
+                    ps.setBigDecimal(4, image.getCapacityMb()); // capacity_gb 추가
                     ps.setObject(5, image.getGeneratedAt());
                 });
     }
@@ -113,7 +113,7 @@ public class ImageRepositoryImpl implements ImageRepositoryCustom {
                 (ps, image) -> {
                     ps.setLong(1, image.getTempAlbum().getId());
                     ps.setString(2, image.getUrl());
-                    ps.setBigDecimal(3, image.getCapacityGb());
+                    ps.setBigDecimal(3, image.getCapacityMb());
                 });
     }
 

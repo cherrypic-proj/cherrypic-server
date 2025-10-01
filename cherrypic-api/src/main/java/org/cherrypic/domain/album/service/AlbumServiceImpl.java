@@ -207,8 +207,8 @@ public class AlbumServiceImpl implements AlbumService {
                 album.getTitle(),
                 album.getCoverUrl(),
                 album.getType(),
-                album.getCapacityGb(),
-                album.getType().getCapacityGb(),
+                album.getCapacityMb(),
+                album.getType().getCapacityMb(),
                 hostName,
                 numOfParticipants);
     }

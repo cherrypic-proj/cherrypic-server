@@ -13,7 +13,7 @@ import org.junit.jupiter.api.Test;
 class TempAlbumTest {
 
     @Test
-    void 용량을_4자리_GB_이상으로_늘릴_경우_예외가_발생한다() {
+    void 용량을_7자리_MB_이상으로_늘릴_경우_예외가_발생한다() {
         // given
         Member member =
                 Member.createMember(
@@ -23,7 +23,7 @@ class TempAlbumTest {
         TempAlbum tempAlbum = TempAlbum.createTempAlbum(member, "testTitle");
 
         // when & then
-        assertThatThrownBy(() -> tempAlbum.increaseCapacity(BigDecimal.valueOf(10000)))
+        assertThatThrownBy(() -> tempAlbum.increaseCapacity(BigDecimal.valueOf(12345678)))
                 .isInstanceOf(CustomException.class)
                 .hasMessage(
                         TempAlbumDomainErrorCode.TEMP_ALBUM_CAPACITY_INCREASE_OVER_LIMIT
@@ -31,7 +31,7 @@ class TempAlbumTest {
     }
 
     @Test
-    void 용량을_0GB_미만으로_줄일_경우_예외가_발생한다() {
+    void 용량을_0MB_미만으로_줄일_경우_예외가_발생한다() {
         // given
         Member member =
                 Member.createMember(

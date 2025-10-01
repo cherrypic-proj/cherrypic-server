@@ -787,7 +787,7 @@ class ImageServiceTest extends IntegrationTest {
             Assertions.assertAll(
                     () -> assertThat(imageRepository.findAllById(List.of(1L, 2L))).isEmpty(),
                     () ->
-                            assertThat(albumRepository.findById(1L).orElseThrow().getCapacityGb())
+                            assertThat(albumRepository.findById(1L).orElseThrow().getCapacityMb())
                                     .isEqualTo(new BigDecimal("0.00")),
                     () -> assertThat(eventImageRepository.findById(1L).isPresent()).isFalse());
         }
@@ -1066,7 +1066,7 @@ class ImageServiceTest extends IntegrationTest {
                                             tempAlbumRepository
                                                     .findById(1L)
                                                     .orElseThrow()
-                                                    .getCapacityGb())
+                                                    .getCapacityMb())
                                     .isEqualTo(new BigDecimal("0.40")));
         }
 

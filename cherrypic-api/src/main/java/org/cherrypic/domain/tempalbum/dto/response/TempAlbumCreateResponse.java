@@ -18,7 +18,7 @@ public record TempAlbumCreateResponse(
                 tempAlbum.getId(),
                 tempAlbum.getMember().getId(),
                 tempAlbum.getTitle(),
-                tempAlbum.getCapacityGb(),
+                tempAlbum.getCapacityMb(),
                 tempAlbum.getType(),
                 tempAlbum.getExpiredAt());
     }
