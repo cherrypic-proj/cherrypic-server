@@ -344,7 +344,7 @@ class ImageServiceTest extends IntegrationTest {
             ImageUploadListResponse response = imageService.createAlbumImageUploadUrls(1L, request);
 
             // then
-            assertThat(response.payloads())
+            assertThat(response.content())
                     .hasSize(2)
                     .satisfiesExactly(
                             payload1 -> {
@@ -920,7 +920,7 @@ class ImageServiceTest extends IntegrationTest {
                     imageService.createTempAlbumImageUploadUrls(1L, request);
 
             // then
-            assertThat(response.payloads())
+            assertThat(response.content())
                     .hasSize(2)
                     .satisfiesExactly(
                             payload1 -> {

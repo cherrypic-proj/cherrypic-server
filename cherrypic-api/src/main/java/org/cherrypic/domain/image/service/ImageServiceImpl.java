@@ -169,15 +169,15 @@ public class ImageServiceImpl implements ImageService {
                 imageRepository.findImageIdsByUrlsInOrder(
                         images.stream().map(Image::getUrl).toList());
 
-        List<ImageUploadListResponse.Payload> payloads =
+        List<ImageUploadListResponse.Content> content =
                 IntStream.range(0, images.size())
                         .mapToObj(
                                 i ->
-                                        ImageUploadListResponse.Payload.of(
+                                        ImageUploadListResponse.Content.of(
                                                 imageIds.get(i), presignedUrls.get(i)))
                         .toList();
 
-        return ImageUploadListResponse.of(payloads, currentMember.getLocalImageDeletion());
+        return ImageUploadListResponse.of(content, currentMember.getLocalImageDeletion());
     }
 
     @Override
@@ -285,15 +285,15 @@ public class ImageServiceImpl implements ImageService {
                 imageRepository.findTempImageIdsByUrlsInOrder(
                         tempAlbumImages.stream().map(TempAlbumImage::getUrl).toList());
 
-        List<TempAlbumImageUploadListResponse.Payload> payloads =
+        List<TempAlbumImageUploadListResponse.Content> content =
                 IntStream.range(0, tempAlbumImageIds.size())
                         .mapToObj(
                                 i ->
-                                        TempAlbumImageUploadListResponse.Payload.of(
+                                        TempAlbumImageUploadListResponse.Content.of(
                                                 tempAlbumImageIds.get(i), presignedUrls.get(i)))
                         .toList();
 
-        return TempAlbumImageUploadListResponse.of(payloads);
+        return TempAlbumImageUploadListResponse.of(content);
     }
 
     @Override
