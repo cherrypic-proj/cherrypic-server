@@ -119,12 +119,12 @@ public class TempAlbumServiceTest extends IntegrationTest {
 
             // then
             Assertions.assertAll(
-                    () -> assertThat(response.contents().get(0).tempAlbumId()).isEqualTo(3L),
-                    () -> assertThat(response.contents().get(0).title()).isEqualTo("testTitle3"),
-                    () -> assertThat(response.contents().get(1).tempAlbumId()).isEqualTo(2L),
-                    () -> assertThat(response.contents().get(1).title()).isEqualTo("testTitle2"),
-                    () -> assertThat(response.contents().get(2).tempAlbumId()).isEqualTo(1L),
-                    () -> assertThat(response.contents().get(2).title()).isEqualTo("testTitle1"));
+                    () -> assertThat(response.content().get(0).tempAlbumId()).isEqualTo(3L),
+                    () -> assertThat(response.content().get(0).title()).isEqualTo("testTitle3"),
+                    () -> assertThat(response.content().get(1).tempAlbumId()).isEqualTo(2L),
+                    () -> assertThat(response.content().get(1).title()).isEqualTo("testTitle2"),
+                    () -> assertThat(response.content().get(2).tempAlbumId()).isEqualTo(1L),
+                    () -> assertThat(response.content().get(2).title()).isEqualTo("testTitle1"));
         }
     }
 }

@@ -138,9 +138,9 @@ class TempAlbumControllerTest {
 
             perform.andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
-                    .andExpect(jsonPath("$.data.contents[0].tempAlbumId").value(1))
-                    .andExpect(jsonPath("$.data.contents[1].tempAlbumId").value(2))
-                    .andExpect(jsonPath("$.data.contents[2].tempAlbumId").value(3));
+                    .andExpect(jsonPath("$.data.content[0].tempAlbumId").value(1))
+                    .andExpect(jsonPath("$.data.content[1].tempAlbumId").value(2))
+                    .andExpect(jsonPath("$.data.content[2].tempAlbumId").value(3));
         }
     }
 }
