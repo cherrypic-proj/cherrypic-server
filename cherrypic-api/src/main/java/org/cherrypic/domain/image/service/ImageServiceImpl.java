@@ -202,13 +202,17 @@ public class ImageServiceImpl implements ImageService {
     @Override
     @Transactional(readOnly = true)
     public SliceResponse<EventImageListResponse> getEventImages(
-            Long eventId, Long lastImageId, int size, SortDirection direction) {
+            Long eventId,
+            Long lastImageId,
+            int size,
+            SortParameter parameter,
+            SortDirection direction) {
         final Member currentMember = memberUtil.getCurrentMember();
         final Event event = getEventById(eventId);
         getParticipantByMemberIdAndAlbumId(currentMember.getId(), event.getAlbum().getId());
 
         Slice<EventImageListResponse> result =
-                imageRepository.findAllByEventId(eventId, lastImageId, size, direction);
+                imageRepository.findAllByEventId(eventId, lastImageId, size, parameter, direction);
         return SliceResponse.from(result);
     }
 

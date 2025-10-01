@@ -700,9 +700,19 @@ class ImageServiceTest extends IntegrationTest {
             eventRepository.saveAll(List.of(event1, event2, event3));
 
             Image image1 =
-                    Image.createImage(album1, 1L, "testUrl", LocalDateTime.now(), BigDecimal.ZERO);
+                    Image.createImage(
+                            album1,
+                            1L,
+                            "testUrl",
+                            LocalDateTime.of(2025, 1, 2, 0, 0),
+                            BigDecimal.ZERO);
             Image image2 =
-                    Image.createImage(album1, 1L, "testUrl2", LocalDateTime.now(), BigDecimal.ZERO);
+                    Image.createImage(
+                            album1,
+                            1L,
+                            "testUrl2",
+                            LocalDateTime.of(2025, 1, 1, 0, 0),
+                            BigDecimal.ZERO);
             imageRepository.saveAll(List.of(image1, image2));
 
             EventImage eventImage1 = EventImage.createEventImage(event1, image1);
@@ -711,30 +721,54 @@ class ImageServiceTest extends IntegrationTest {
         }
 
         @Test
-        void 정렬_조건이_ASC이면_eventImageId를_오름차순으로_조회한다() {
+        void 정렬_파라미터가_UPLOAD이고_정렬_조건이_ASC이면_eventImageId를_오름차순으로_조회한다() {
             // when
             SliceResponse<EventImageListResponse> response =
-                    imageService.getEventImages(1L, null, 2, SortDirection.ASC);
+                    imageService.getEventImages(
+                            1L, null, 2, SortParameter.UPLOAD, SortDirection.ASC);
 
             // then
             assertThat(response.content()).extracting("eventImageId").containsExactly(1L, 2L);
         }
 
         @Test
-        void 정렬_조건이_DESC면_eventImageId를_내림차순으로_조회한다() {
+        void 정렬_파라미터가_GENERATE이고_정렬_조건이_ASC이면_genaratedAt를_오름차순으로_조회한다() {
             // when
             SliceResponse<EventImageListResponse> response =
-                    imageService.getEventImages(1L, null, 2, SortDirection.DESC);
+                    imageService.getEventImages(
+                            1L, null, 2, SortParameter.GENERATE, SortDirection.ASC);
 
             // then
             assertThat(response.content()).extracting("eventImageId").containsExactly(2L, 1L);
         }
 
         @Test
+        void 정렬_파라미터가_UPLOAD이고_정렬_조건이_DESC면_eventImageId를_내림차순으로_조회한다() {
+            // when
+            SliceResponse<EventImageListResponse> response =
+                    imageService.getEventImages(
+                            1L, null, 2, SortParameter.UPLOAD, SortDirection.DESC);
+
+            // then
+            assertThat(response.content()).extracting("eventImageId").containsExactly(2L, 1L);
+        }
+
+        @Test
+        void 정렬_파라미터가_GENERATE이고_정렬_조건이_DESC면_generatedAt를_내림차순으로_조회한다() {
+            // when
+            SliceResponse<EventImageListResponse> response =
+                    imageService.getEventImages(
+                            1L, null, 2, SortParameter.GENERATE, SortDirection.DESC);
+
+            // then
+            assertThat(response.content()).extracting("eventImageId").containsExactly(1L, 2L);
+        }
+
+        @Test
         void imageId를_입력하면_다음_eventImage_부터_조회한다() {
             // when
             SliceResponse<EventImageListResponse> response =
-                    imageService.getEventImages(1L, 1L, 1, SortDirection.ASC);
+                    imageService.getEventImages(1L, 1L, 1, SortParameter.UPLOAD, SortDirection.ASC);
 
             // then
             assertThat(response.content()).extracting("eventImageId").containsExactly(2L);
@@ -744,7 +778,8 @@ class ImageServiceTest extends IntegrationTest {
         void 이벤트에_이미지가_없는_경우_빈_리스트를_조회한다() {
             // when
             SliceResponse<EventImageListResponse> response =
-                    imageService.getEventImages(2L, null, 2, SortDirection.ASC);
+                    imageService.getEventImages(
+                            2L, null, 2, SortParameter.UPLOAD, SortDirection.ASC);
 
             // when & then
             Assertions.assertAll(
@@ -756,7 +791,8 @@ class ImageServiceTest extends IntegrationTest {
         void 마지막_페이지인_경우_isLast를_true로_반환한다() {
             // when
             SliceResponse<EventImageListResponse> response =
-                    imageService.getEventImages(1L, null, 2, SortDirection.ASC);
+                    imageService.getEventImages(
+                            1L, null, 2, SortParameter.UPLOAD, SortDirection.ASC);
 
             // then
             Assertions.assertAll(
@@ -767,7 +803,10 @@ class ImageServiceTest extends IntegrationTest {
         @Test
         void 앨범_참가자가_아닌_경우_예외가_발생한다() {
             // when & then
-            assertThatThrownBy(() -> imageService.getEventImages(3L, null, 2, SortDirection.ASC))
+            assertThatThrownBy(
+                            () ->
+                                    imageService.getEventImages(
+                                            3L, null, 2, SortParameter.UPLOAD, SortDirection.ASC))
                     .isInstanceOf(CustomException.class)
                     .hasMessage(AlbumErrorCode.NOT_ALBUM_PARTICIPANT.getMessage());
         }
@@ -775,7 +814,10 @@ class ImageServiceTest extends IntegrationTest {
         @Test
         void 이벤트가_존재하지_않을_경우_예외가_발생한다() {
             // when & then
-            assertThatThrownBy(() -> imageService.getEventImages(999L, null, 2, SortDirection.ASC))
+            assertThatThrownBy(
+                            () ->
+                                    imageService.getEventImages(
+                                            999L, null, 2, SortParameter.UPLOAD, SortDirection.ASC))
                     .isInstanceOf(CustomException.class)
                     .hasMessage(EventErrorCode.EVENT_NOT_FOUND.getMessage());
         }

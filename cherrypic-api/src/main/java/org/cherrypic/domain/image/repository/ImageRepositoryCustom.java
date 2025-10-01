@@ -11,7 +11,11 @@ import org.springframework.data.domain.Slice;
 
 public interface ImageRepositoryCustom {
     Slice<EventImageListResponse> findAllByEventId(
-            Long eventId, Long lastImageId, int size, SortDirection direction);
+            Long eventId,
+            Long lastImageId,
+            int size,
+            SortParameter parameter,
+            SortDirection direction);
 
     Slice<AlbumImageListResponse> findAllByAlbumId(
             Long albumId,

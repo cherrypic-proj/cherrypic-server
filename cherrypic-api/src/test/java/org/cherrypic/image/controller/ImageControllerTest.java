@@ -975,20 +975,56 @@ class ImageControllerTest {
     class 이벤트_이미지_목록_조회_요청시 {
 
         @Test
-        void 정렬_조건이_ASC이면_eventImageId를_오름차순으로_응답한다() throws Exception {
+        void 정렬_파라미터가_UPLOAD이고_정렬_조건이_ASC이면_eventImageId를_오름차순으로_응답한다() throws Exception {
             // given
             List<EventImageListResponse> eventImages =
                     List.of(
-                            new EventImageListResponse(1L, "testImageUrl1"),
-                            new EventImageListResponse(2L, "testImageUrl2"));
+                            new EventImageListResponse(
+                                    1L, "testImageUrl1", LocalDate.of(2025, 1, 1)),
+                            new EventImageListResponse(
+                                    2L, "testImageUrl2", LocalDate.of(2025, 1, 2)));
 
-            given(imageService.getEventImages(1L, null, 2, SortDirection.ASC))
+            given(imageService.getEventImages(1L, null, 2, SortParameter.UPLOAD, SortDirection.ASC))
                     .willReturn(new SliceResponse<>(eventImages, true));
 
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            get("/events/1/images").param("size", "2").param("direction", "ASC"));
+                            get("/events/1/images")
+                                    .param("size", "2")
+                                    .param("parameter", "UPLOAD")
+                                    .param("direction", "ASC"));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
+                    .andExpect(jsonPath("$.data.content[0].eventImageId").value(1))
+                    .andExpect(jsonPath("$.data.content[1].eventImageId").value(2))
+                    .andExpect(jsonPath("$.data.isLast").value(true));
+        }
+
+        @Test
+        void 정렬_파라미터가_GENERATE이고_정렬_조건이_ASC이면_generatedAt을_오름차순으로_응답한다() throws Exception {
+            // given
+            List<EventImageListResponse> eventImages =
+                    List.of(
+                            new EventImageListResponse(
+                                    1L, "testImageUrl1", LocalDate.of(2025, 1, 1)),
+                            new EventImageListResponse(
+                                    2L, "testImageUrl2", LocalDate.of(2025, 1, 2)));
+
+            given(
+                            imageService.getEventImages(
+                                    1L, null, 2, SortParameter.GENERATE, SortDirection.ASC))
+                    .willReturn(new SliceResponse<>(eventImages, true));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            get("/events/1/images")
+                                    .param("size", "2")
+                                    .param("parameter", "GENERATE")
+                                    .param("direction", "ASC"));
 
             perform.andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
@@ -1000,20 +1036,58 @@ class ImageControllerTest {
         }
 
         @Test
-        void 정렬_조건이_DESC이면_eventImageId를_내림차순으로_응답한다() throws Exception {
+        void 정렬_파라미터가_UPLOAD이고_정렬_조건이_DESC면_eventImageId를_내림차순으로_응답한다() throws Exception {
             // given
             List<EventImageListResponse> eventImages =
                     List.of(
-                            new EventImageListResponse(2L, "testImageUrl2"),
-                            new EventImageListResponse(1L, "testImageUrl1"));
+                            new EventImageListResponse(
+                                    2L, "testImageUrl2", LocalDate.of(2025, 1, 2)),
+                            new EventImageListResponse(
+                                    1L, "testImageUrl1", LocalDate.of(2025, 1, 1)));
 
-            given(imageService.getEventImages(1L, null, 2, SortDirection.DESC))
+            given(
+                            imageService.getEventImages(
+                                    1L, null, 2, SortParameter.UPLOAD, SortDirection.DESC))
                     .willReturn(new SliceResponse<>(eventImages, true));
 
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            get("/events/1/images").param("size", "2").param("direction", "DESC"));
+                            get("/events/1/images")
+                                    .param("size", "2")
+                                    .param("parameter", "UPLOAD")
+                                    .param("direction", "DESC"));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
+                    .andExpect(jsonPath("$.data.content[0].eventImageId").value(2))
+                    .andExpect(jsonPath("$.data.content[1].eventImageId").value(1))
+                    .andExpect(jsonPath("$.data.isLast").value(true));
+        }
+
+        @Test
+        void 정렬_파라미터가_GENERATE이고_정렬_조건이_DESC면_generatedAt를_내림차순으로_응답한다() throws Exception {
+            // given
+            List<EventImageListResponse> eventImages =
+                    List.of(
+                            new EventImageListResponse(
+                                    2L, "testImageUrl2", LocalDate.of(2025, 1, 2)),
+                            new EventImageListResponse(
+                                    1L, "testImageUrl1", LocalDate.of(2025, 1, 1)));
+
+            given(
+                            imageService.getEventImages(
+                                    1L, null, 2, SortParameter.GENERATE, SortDirection.DESC))
+                    .willReturn(new SliceResponse<>(eventImages, true));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            get("/events/1/images")
+                                    .param("size", "2")
+                                    .param("parameter", "GENERATE")
+                                    .param("direction", "DESC"));
 
             perform.andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
@@ -1027,15 +1101,20 @@ class ImageControllerTest {
         void 마지막_페이지인_경우_isLast를_true로_응답한다() throws Exception {
             // given
             List<EventImageListResponse> eventImages =
-                    List.of(new EventImageListResponse(1L, "testImageUrl1"));
+                    List.of(
+                            new EventImageListResponse(
+                                    1L, "testImageUrl1", LocalDate.of(2025, 1, 1)));
 
-            given(imageService.getEventImages(1L, null, 1, SortDirection.ASC))
+            given(imageService.getEventImages(1L, null, 1, SortParameter.UPLOAD, SortDirection.ASC))
                     .willReturn(new SliceResponse<>(eventImages, true));
 
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            get("/events/1/images").param("size", "1").param("direction", "ASC"));
+                            get("/events/1/images")
+                                    .param("size", "1")
+                                    .param("parameter", "UPLOAD")
+                                    .param("direction", "ASC"));
 
             perform.andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
@@ -1049,16 +1128,21 @@ class ImageControllerTest {
             // given
             List<EventImageListResponse> eventImages =
                     List.of(
-                            new EventImageListResponse(1L, "testImageUrl1"),
-                            new EventImageListResponse(2L, "testImageUrl2"));
+                            new EventImageListResponse(
+                                    1L, "testImageUrl1", LocalDate.of(2025, 1, 1)),
+                            new EventImageListResponse(
+                                    2L, "testImageUrl2", LocalDate.of(2025, 1, 2)));
 
-            given(imageService.getEventImages(1L, null, 1, SortDirection.ASC))
+            given(imageService.getEventImages(1L, null, 1, SortParameter.UPLOAD, SortDirection.ASC))
                     .willReturn(new SliceResponse<>(eventImages, false));
 
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            get("/events/1/images").param("size", "1").param("direction", "ASC"));
+                            get("/events/1/images")
+                                    .param("size", "1")
+                                    .param("parameter", "UPLOAD")
+                                    .param("direction", "ASC"));
 
             perform.andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
@@ -1073,13 +1157,16 @@ class ImageControllerTest {
             // given
             List<EventImageListResponse> eventImages = List.of();
 
-            given(imageService.getEventImages(1L, null, 1, SortDirection.ASC))
+            given(imageService.getEventImages(1L, null, 1, SortParameter.UPLOAD, SortDirection.ASC))
                     .willReturn(new SliceResponse<>(eventImages, true));
 
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            get("/events/1/images").param("size", "1").param("direction", "ASC"));
+                            get("/events/1/images")
+                                    .param("size", "1")
+                                    .param("parameter", "UPLOAD")
+                                    .param("direction", "ASC"));
 
             perform.andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
@@ -1091,13 +1178,16 @@ class ImageControllerTest {
         @Test
         void 이벤트가_존재하지_않을_경우_예외가_발생한다() throws Exception {
             // given
-            given(imageService.getEventImages(1L, null, 2, SortDirection.ASC))
+            given(imageService.getEventImages(1L, null, 2, SortParameter.UPLOAD, SortDirection.ASC))
                     .willThrow(new CustomException(EventErrorCode.EVENT_NOT_FOUND));
 
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            get("/events/1/images").param("size", "2").param("direction", "ASC"));
+                            get("/events/1/images")
+                                    .param("size", "2")
+                                    .param("parameter", "UPLOAD")
+                                    .param("direction", "ASC"));
 
             perform.andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.success").value(false))
@@ -1109,13 +1199,16 @@ class ImageControllerTest {
         @Test
         void 앨범_참가자가_아닌_경우_예외가_발생한다() throws Exception {
             // given
-            given(imageService.getEventImages(1L, null, 2, SortDirection.ASC))
+            given(imageService.getEventImages(1L, null, 2, SortParameter.UPLOAD, SortDirection.ASC))
                     .willThrow(new CustomException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT));
 
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            get("/events/1/images").param("size", "2").param("direction", "ASC"));
+                            get("/events/1/images")
+                                    .param("size", "2")
+                                    .param("parameter", "UPLOAD")
+                                    .param("direction", "ASC"));
 
             perform.andExpect(status().isForbidden())
                     .andExpect(jsonPath("$.success").value(false))

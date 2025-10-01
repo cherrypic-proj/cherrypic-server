@@ -24,7 +24,11 @@ public interface ImageService {
             SortDirection direction);
 
     SliceResponse<EventImageListResponse> getEventImages(
-            Long eventId, Long lastImageId, int size, SortDirection direction);
+            Long eventId,
+            Long lastImageId,
+            int size,
+            SortParameter parameter,
+            SortDirection direction);
 
     void deleteAlbumImage(Long albumId, AlbumImageDeleteRequest request);
 

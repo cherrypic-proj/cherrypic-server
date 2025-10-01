@@ -4,7 +4,6 @@ import static org.cherrypic.event.entity.QEventImage.eventImage;
 import static org.cherrypic.image.entity.QImage.image;
 import static org.cherrypic.tempalbum.entity.QTempAlbumImage.tempAlbumImage;
 
-import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.core.types.dsl.Expressions;
@@ -34,21 +33,39 @@ public class ImageRepositoryImpl implements ImageRepositoryCustom {
 
     @Override
     public Slice<EventImageListResponse> findAllByEventId(
-            Long eventId, Long lastImageId, int size, SortDirection direction) {
+            Long eventId,
+            Long lastImageId,
+            int size,
+            SortParameter parameter,
+            SortDirection direction) {
 
         List<EventImageListResponse> results =
                 queryFactory
                         .select(
-                                Projections.constructor(
-                                        EventImageListResponse.class, eventImage.id, image.url))
+                                eventImage.id,
+                                image.url,
+                                parameter == SortParameter.UPLOAD
+                                        ? image.createdAt
+                                        : image.generatedAt)
                         .from(eventImage)
                         .join(eventImage.image, image)
                         .where(
                                 eventImage.event.id.eq(eventId),
-                                lastImageIdCondition(lastImageId, direction))
-                        .orderBy(direction == SortDirection.DESC ? image.id.desc() : image.id.asc())
+                                lastImageIdCondition(lastImageId, direction, parameter))
+                        .orderBy(getOrderByExpression(parameter, direction))
                         .limit(size + 1)
-                        .fetch();
+                        .fetch()
+                        .stream()
+                        .map(
+                                tuple ->
+                                        new EventImageListResponse(
+                                                tuple.get(eventImage.id),
+                                                tuple.get(image.url),
+                                                parameter == SortParameter.UPLOAD
+                                                        ? tuple.get(image.createdAt).toLocalDate()
+                                                        : tuple.get(image.generatedAt)
+                                                                .toLocalDate()))
+                        .toList();
 
         return checkLastPage(size, results);
     }
