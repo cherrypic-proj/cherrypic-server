@@ -84,7 +84,7 @@ public class ImageRepositoryImpl implements ImageRepositoryCustom {
     @Override
     public void bulkInsertImages(List<Image> images) {
         String sql =
-                "INSERT INTO image (album_id, member_id, url, capacity_gb, generated_at, created_at, updated_at) "
+                "INSERT INTO image (album_id, member_id, url, capacity_mb, generated_at, created_at, updated_at) "
                         + "VALUES (?, ?, ?, ?, ?, NOW(), NOW())";
 
         jdbcTemplate.batchUpdate(
@@ -95,7 +95,7 @@ public class ImageRepositoryImpl implements ImageRepositoryCustom {
                     ps.setLong(1, image.getAlbum().getId());
                     ps.setLong(2, image.getMemberId());
                     ps.setString(3, image.getUrl());
-                    ps.setBigDecimal(4, image.getCapacityMb()); // capacity_gb 추가
+                    ps.setBigDecimal(4, image.getCapacityMb());
                     ps.setObject(5, image.getGeneratedAt());
                 });
     }
@@ -103,7 +103,7 @@ public class ImageRepositoryImpl implements ImageRepositoryCustom {
     @Override
     public void bulkInsertTempAlbumImages(List<TempAlbumImage> images) {
         String sql =
-                "INSERT INTO temp_album_image (temp_album_id, url, capacity_gb, created_at, updated_at) "
+                "INSERT INTO temp_album_image (temp_album_id, url, capacity_mb, created_at, updated_at) "
                         + "VALUES (?, ?, ?, NOW(), NOW())";
 
         jdbcTemplate.batchUpdate(

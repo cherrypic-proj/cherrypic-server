@@ -949,7 +949,7 @@ class AlbumControllerTest {
                             "testUrl",
                             AlbumType.BASIC,
                             new BigDecimal("0.00"),
-                            new BigDecimal("3"),
+                            new BigDecimal("3.00"),
                             "testNickname",
                             1);
             given(albumService.getAlbum(1L)).willReturn(response);
@@ -963,8 +963,8 @@ class AlbumControllerTest {
                     .andExpect(jsonPath("$.data.title").value("testAlbum"))
                     .andExpect(jsonPath("$.data.coverUrl").value("testUrl"))
                     .andExpect(jsonPath("$.data.type").value("BASIC"))
-                    .andExpect(jsonPath("$.data.capacityUsed").value("0.00"))
-                    .andExpect(jsonPath("$.data.totalCapacity").value("3"))
+                    .andExpect(jsonPath("$.data.capacityUsedGb").value("0.00"))
+                    .andExpect(jsonPath("$.data.totalCapacityGb").value(3.00))
                     .andExpect(jsonPath("$.data.hostName").value("testNickname"))
                     .andExpect(jsonPath("$.data.numOfParticipants").value(1));
         }
