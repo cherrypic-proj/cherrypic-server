@@ -66,7 +66,8 @@ class PaymentControllerTest {
                                 3900,
                                 "album_20250723_pro_1_a5c5dd8beaa6",
                                 "상냥한 너구리",
-                                PaymentPurpose.CREATION);
+                                PaymentPurpose.CREATION,
+                                LocalDateTime.of(2025, 9, 30, 0, 0));
 
                 given(paymentService.preparePayment(request)).willReturn(response);
 
@@ -86,7 +87,8 @@ class PaymentControllerTest {
                                 jsonPath("$.data.merchantUid")
                                         .value("album_20250723_pro_1_a5c5dd8beaa6"))
                         .andExpect(jsonPath("$.data.buyerName").value("상냥한 너구리"))
-                        .andExpect(jsonPath("$.data.purpose").value("CREATION"));
+                        .andExpect(jsonPath("$.data.purpose").value("CREATION"))
+                        .andExpect(jsonPath("$.data.nextBillingAt").value("2025-09-30"));
             }
         }
 
@@ -104,7 +106,8 @@ class PaymentControllerTest {
                                 5900,
                                 "album_20250723_pro_1_a5c5dd8beaa6",
                                 "상냥한 너구리",
-                                PaymentPurpose.RENEWAL);
+                                PaymentPurpose.RENEWAL,
+                                LocalDateTime.of(2025, 9, 30, 0, 0));
 
                 given(paymentService.preparePayment(request)).willReturn(response);
 
@@ -124,7 +127,8 @@ class PaymentControllerTest {
                                 jsonPath("$.data.merchantUid")
                                         .value("album_20250723_pro_1_a5c5dd8beaa6"))
                         .andExpect(jsonPath("$.data.buyerName").value("상냥한 너구리"))
-                        .andExpect(jsonPath("$.data.purpose").value("RENEWAL"));
+                        .andExpect(jsonPath("$.data.purpose").value("RENEWAL"))
+                        .andExpect(jsonPath("$.data.nextBillingAt").value("2025-09-30"));
             }
 
             @Test
@@ -254,7 +258,8 @@ class PaymentControllerTest {
                                 12900,
                                 "album_20250723_pro_1_a5c5dd8beaa6",
                                 "상냥한 너구리",
-                                PaymentPurpose.UPGRADE);
+                                PaymentPurpose.UPGRADE,
+                                LocalDateTime.of(2025, 9, 30, 0, 0));
 
                 given(paymentService.preparePayment(request)).willReturn(response);
 
@@ -274,7 +279,8 @@ class PaymentControllerTest {
                                 jsonPath("$.data.merchantUid")
                                         .value("album_20250723_pro_1_a5c5dd8beaa6"))
                         .andExpect(jsonPath("$.data.buyerName").value("상냥한 너구리"))
-                        .andExpect(jsonPath("$.data.purpose").value("UPGRADE"));
+                        .andExpect(jsonPath("$.data.purpose").value("UPGRADE"))
+                        .andExpect(jsonPath("$.data.nextBillingAt").value("2025-09-30"));
             }
 
             @Test

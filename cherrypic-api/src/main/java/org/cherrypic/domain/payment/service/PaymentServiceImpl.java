@@ -6,6 +6,7 @@ import com.siot.IamportRestClient.request.CancelData;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.UUID;
@@ -84,7 +85,9 @@ public class PaymentServiceImpl implements PaymentService {
         Payment payment = Payment.createPayment(currentMember, merchantUid, price, purpose, type);
         paymentRepository.save(payment);
 
-        return PaymentReadyResponse.of(type, price, merchantUid, buyerName, purpose);
+        LocalDateTime nextBillingAt = calculateNextBillingAt();
+
+        return PaymentReadyResponse.of(type, price, merchantUid, buyerName, purpose, nextBillingAt);
     }
 
     @Override
@@ -209,6 +212,18 @@ public class PaymentServiceImpl implements PaymentService {
         }
 
         throw new CustomException(PaymentErrorCode.DOWNGRADE_NOT_ALLOWED);
+    }
+
+    private LocalDateTime calculateNextBillingAt() {
+        LocalDateTime now = LocalDateTime.now();
+        boolean isAtEndOfMonth = now.getDayOfMonth() >= 28;
+
+        if (isAtEndOfMonth) {
+            YearMonth nextMonth = YearMonth.from(now.plusMonths(1));
+            return nextMonth.atEndOfMonth().atTime(now.toLocalTime());
+        }
+
+        return now.plusMonths(1);
     }
 
     private Album getAlbumById(Long albumId) {
