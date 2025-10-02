@@ -27,7 +27,7 @@ sonarqube {
                 '**/*Dto*.java, **/*Request*.java, **/*Response*.java, **/*Exception*.java, **/*ErrorCode*.java, **/*Validator*.java,' +
                 '**/*FcmService*.java, **/EventImage.java, **/Notification.java, **/Favorites.java ,**/ImageEventListener.java,' +
                 '**/TempAlbum.java, **/TempAlbumImage.java, **/TempAlbumType.java, **/TempAlbumType.java, **/FileExtension.java,' +
-                '**/RefundTask.java, **/RefundTaskStatus.java, cherrypic-batch/**'
+                '**/RefundTask.java, **/RefundTaskStatus.java, cherrypic-batch/**, **/StorageUnitConverter.java'
         property 'sonar.java.coveragePlugin', 'jacoco'
     }
 }
