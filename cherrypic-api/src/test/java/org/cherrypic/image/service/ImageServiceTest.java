@@ -661,6 +661,19 @@ class ImageServiceTest extends IntegrationTest {
         }
 
         @Test
+        void 마지막_페이지가_아닌_경우_isLast를_false로_반환한다() {
+            // when
+            SliceResponse<AlbumImageListResponse> response =
+                    imageService.getAlbumImages(
+                            1L, null, 2, SortParameter.UPLOAD, SortDirection.ASC);
+
+            // then
+            Assertions.assertAll(
+                    () -> assertThat(response.content().size()).isEqualTo(2),
+                    () -> assertThat(response.isLast()).isFalse());
+        }
+
+        @Test
         void 앨범이_존재하지_않을_경우_예외가_발생한다() {
             // when & then
             assertThatThrownBy(
@@ -814,6 +827,19 @@ class ImageServiceTest extends IntegrationTest {
             Assertions.assertAll(
                     () -> assertThat(response.content().size()).isEqualTo(2),
                     () -> assertThat(response.isLast()).isTrue());
+        }
+
+        @Test
+        void 마지막_페이지가_아닌_경우_isLast를_false로_반환한다() {
+            // when
+            SliceResponse<EventImageListResponse> response =
+                    imageService.getEventImages(
+                            1L, null, 1, SortParameter.UPLOAD, SortDirection.ASC);
+
+            // then
+            Assertions.assertAll(
+                    () -> assertThat(response.content().size()).isEqualTo(1),
+                    () -> assertThat(response.isLast()).isFalse());
         }
 
         @Test
