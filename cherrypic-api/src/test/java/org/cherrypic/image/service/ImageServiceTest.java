@@ -589,7 +589,12 @@ class ImageServiceTest extends IntegrationTest {
                             1L, null, 3, SortParameter.GENERATE, SortDirection.ASC);
 
             // then
-            assertThat(response.content()).extracting("imageId").containsExactly(3L, 2L, 1L);
+            assertThat(response.content())
+                    .extracting("date")
+                    .containsExactly(
+                            LocalDateTime.of(2025, 1, 1, 0, 0),
+                            LocalDateTime.of(2025, 1, 2, 0, 0),
+                            LocalDateTime.of(2025, 1, 3, 0, 0));
         }
 
         @Test
@@ -611,7 +616,12 @@ class ImageServiceTest extends IntegrationTest {
                             1L, null, 3, SortParameter.GENERATE, SortDirection.DESC);
 
             // then
-            assertThat(response.content()).extracting("imageId").containsExactly(1L, 2L, 3L);
+            assertThat(response.content())
+                    .extracting("date")
+                    .containsExactly(
+                            LocalDateTime.of(2025, 1, 3, 0, 0),
+                            LocalDateTime.of(2025, 1, 2, 0, 0),
+                            LocalDateTime.of(2025, 1, 1, 0, 0));
         }
 
         @Test
@@ -739,7 +749,10 @@ class ImageServiceTest extends IntegrationTest {
                             1L, null, 2, SortParameter.GENERATE, SortDirection.ASC);
 
             // then
-            assertThat(response.content()).extracting("eventImageId").containsExactly(2L, 1L);
+            assertThat(response.content())
+                    .extracting("date")
+                    .containsExactly(
+                            LocalDateTime.of(2025, 1, 1, 0, 0), LocalDateTime.of(2025, 1, 2, 0, 0));
         }
 
         @Test
@@ -761,7 +774,10 @@ class ImageServiceTest extends IntegrationTest {
                             1L, null, 2, SortParameter.GENERATE, SortDirection.DESC);
 
             // then
-            assertThat(response.content()).extracting("eventImageId").containsExactly(1L, 2L);
+            assertThat(response.content())
+                    .extracting("date")
+                    .containsExactly(
+                            LocalDateTime.of(2025, 1, 2, 0, 0), LocalDateTime.of(2025, 1, 1, 0, 0));
         }
 
         @Test
