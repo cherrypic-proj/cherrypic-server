@@ -55,12 +55,7 @@ public class ImageRepositoryImpl implements ImageRepositoryCustom {
                         .join(eventImage.image, image)
                         .where(
                                 eventImage.event.id.eq(eventId),
-                                parameter == SortParameter.UPLOAD
-                                        ? lastImageIdCondition(lastImageId, direction)
-                                        : lastImageId != null
-                                                ? lastGeneratedAtCondition(
-                                                        getLastGeneratedAt(lastImageId), direction)
-                                                : null)
+                                lastCondition(lastImageId, direction, parameter))
                         .orderBy(getOrderByExpression(parameter, direction))
                         .limit((long) size + 1)
                         .fetch();
@@ -90,12 +85,7 @@ public class ImageRepositoryImpl implements ImageRepositoryCustom {
                         .from(image)
                         .where(
                                 image.album.id.eq(albumId),
-                                parameter == SortParameter.UPLOAD
-                                        ? lastImageIdCondition(lastImageId, direction)
-                                        : lastImageId != null
-                                                ? lastGeneratedAtCondition(
-                                                        getLastGeneratedAt(lastImageId), direction)
-                                                : null)
+                                lastCondition(lastImageId, direction, parameter))
                         .orderBy(getOrderByExpression(parameter, direction))
                         .limit((long) size + 1)
                         .fetch();
@@ -190,6 +180,17 @@ public class ImageRepositoryImpl implements ImageRepositoryCustom {
                 .where(image.url.in(urls))
                 .orderBy(orderExpr.asc())
                 .fetch();
+    }
+
+    private BooleanExpression lastCondition(
+            Long lastImageId, SortDirection direction, SortParameter parameter) {
+        if (parameter == SortParameter.UPLOAD) {
+            return lastImageIdCondition(lastImageId, direction);
+        } else {
+            return lastImageId != null
+                    ? lastGeneratedAtCondition(getLastGeneratedAt(lastImageId), direction)
+                    : null;
+        }
     }
 
     private BooleanExpression lastImageIdCondition(Long imageId, SortDirection direction) {
