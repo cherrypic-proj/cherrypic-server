@@ -4,12 +4,13 @@ import static org.cherrypic.event.entity.QEventImage.eventImage;
 import static org.cherrypic.image.entity.QImage.image;
 import static org.cherrypic.tempalbum.entity.QTempAlbumImage.tempAlbumImage;
 
+import com.querydsl.core.types.Expression;
+import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.CaseBuilder;
-import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.cherrypic.domain.image.dto.response.AlbumImageListResponse;
@@ -39,14 +40,17 @@ public class ImageRepositoryImpl implements ImageRepositoryCustom {
             SortParameter parameter,
             SortDirection direction) {
 
+        Expression<LocalDateTime> sortedField =
+                parameter == SortParameter.UPLOAD ? image.createdAt : image.generatedAt;
+
         List<EventImageListResponse> results =
                 queryFactory
                         .select(
-                                eventImage.id,
-                                image.url,
-                                parameter == SortParameter.UPLOAD
-                                        ? image.createdAt
-                                        : image.generatedAt)
+                                Projections.constructor(
+                                        EventImageListResponse.class,
+                                        eventImage.id,
+                                        image.url,
+                                        sortedField))
                         .from(eventImage)
                         .join(eventImage.image, image)
                         .where(
@@ -54,18 +58,7 @@ public class ImageRepositoryImpl implements ImageRepositoryCustom {
                                 lastImageIdCondition(lastImageId, direction, parameter))
                         .orderBy(getOrderByExpression(parameter, direction))
                         .limit((long) size + 1)
-                        .fetch()
-                        .stream()
-                        .map(
-                                tuple ->
-                                        new EventImageListResponse(
-                                                tuple.get(eventImage.id),
-                                                tuple.get(image.url),
-                                                parameter == SortParameter.UPLOAD
-                                                        ? tuple.get(image.createdAt).toLocalDate()
-                                                        : tuple.get(image.generatedAt)
-                                                                .toLocalDate()))
-                        .toList();
+                        .fetch();
 
         return checkLastPage(size, results);
     }
@@ -78,32 +71,24 @@ public class ImageRepositoryImpl implements ImageRepositoryCustom {
             SortParameter parameter,
             SortDirection direction) {
 
+        Expression<LocalDateTime> sortedField =
+                parameter == SortParameter.UPLOAD ? image.createdAt : image.generatedAt;
+
         List<AlbumImageListResponse> results =
                 queryFactory
                         .select(
-                                image.id,
-                                image.url,
-                                parameter == SortParameter.UPLOAD
-                                        ? image.createdAt
-                                        : image.generatedAt)
+                                Projections.constructor(
+                                        AlbumImageListResponse.class,
+                                        image.id,
+                                        image.url,
+                                        sortedField))
                         .from(image)
                         .where(
                                 image.album.id.eq(albumId),
                                 lastImageIdCondition(lastImageId, direction, parameter))
                         .orderBy(getOrderByExpression(parameter, direction))
                         .limit((long) size + 1)
-                        .fetch()
-                        .stream()
-                        .map(
-                                tuple ->
-                                        new AlbumImageListResponse(
-                                                tuple.get(image.id),
-                                                tuple.get(image.url),
-                                                parameter == SortParameter.UPLOAD
-                                                        ? tuple.get(image.createdAt).toLocalDate()
-                                                        : tuple.get(image.generatedAt)
-                                                                .toLocalDate()))
-                        .toList();
+                        .fetch();
 
         return checkLastPage(size, results);
     }
@@ -206,13 +191,20 @@ public class ImageRepositoryImpl implements ImageRepositoryCustom {
         if (parameter == SortParameter.UPLOAD) {
             return direction == SortDirection.DESC ? image.id.lt(imageId) : image.id.gt(imageId);
         } else { // GENERATED
-            LocalDate lastGeneratedDate = getLastGeneratedDate(imageId);
-            return direction == SortDirection.DESC
-                    ? Expressions.dateTimeTemplate(LocalDate.class, "DATE({0})", image.generatedAt)
-                            .lt(lastGeneratedDate)
-                    : Expressions.dateTimeTemplate(LocalDate.class, "DATE({0})", image.generatedAt)
-                            .gt(lastGeneratedDate);
+            LocalDateTime lastGeneratedAt = getLastGeneratedAt(imageId);
+            return lastGeneratedAtCondition(lastGeneratedAt, direction, parameter);
         }
+    }
+
+    private BooleanExpression lastGeneratedAtCondition(
+            LocalDateTime lastGeneratedAt, SortDirection direction, SortParameter parameter) {
+        if (lastGeneratedAt == null) {
+            return null;
+        }
+
+        return direction == SortDirection.DESC
+                ? image.generatedAt.lt(lastGeneratedAt)
+                : image.generatedAt.gt(lastGeneratedAt);
     }
 
     private com.querydsl.core.types.OrderSpecifier<?> getOrderByExpression(
@@ -226,11 +218,9 @@ public class ImageRepositoryImpl implements ImageRepositoryCustom {
         }
     }
 
-    private LocalDate getLastGeneratedDate(Long imageId) {
+    private LocalDateTime getLastGeneratedAt(Long imageId) {
         return queryFactory
-                .select(
-                        Expressions.dateTimeTemplate(
-                                LocalDate.class, "DATE({0})", image.generatedAt))
+                .select(image.generatedAt)
                 .from(image)
                 .where(image.id.eq(imageId))
                 .fetchOne();

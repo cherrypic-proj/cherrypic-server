@@ -7,7 +7,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
@@ -700,9 +699,9 @@ class ImageControllerTest {
             List<AlbumImageListResponse> images =
                     List.of(
                             new AlbumImageListResponse(
-                                    1L, "testImageUrl1", LocalDate.of(2025, 1, 1)),
+                                    1L, "testImageUrl1", LocalDateTime.of(2025, 1, 1, 0, 0)),
                             new AlbumImageListResponse(
-                                    2L, "testImageUrl2", LocalDate.of(2025, 1, 2)));
+                                    2L, "testImageUrl2", LocalDateTime.of(2025, 1, 2, 0, 0)));
 
             given(imageService.getAlbumImages(1L, null, 2, SortParameter.UPLOAD, SortDirection.ASC))
                     .willReturn(new SliceResponse<>(images, true));
@@ -729,9 +728,9 @@ class ImageControllerTest {
             List<AlbumImageListResponse> images =
                     List.of(
                             new AlbumImageListResponse(
-                                    1L, "testImageUrl1", LocalDate.of(2025, 1, 1)),
+                                    1L, "testImageUrl1", LocalDateTime.of(2025, 1, 1, 0, 0)),
                             new AlbumImageListResponse(
-                                    2L, "testImageUrl2", LocalDate.of(2025, 1, 2)));
+                                    2L, "testImageUrl2", LocalDateTime.of(2025, 1, 2, 0, 0)));
 
             given(
                             imageService.getAlbumImages(
@@ -760,9 +759,9 @@ class ImageControllerTest {
             List<AlbumImageListResponse> images =
                     List.of(
                             new AlbumImageListResponse(
-                                    2L, "testImageUrl2", LocalDate.of(2025, 1, 2)),
+                                    2L, "testImageUrl2", LocalDateTime.of(2025, 1, 2, 0, 0)),
                             new AlbumImageListResponse(
-                                    1L, "testImageUrl1", LocalDate.of(2025, 1, 1)));
+                                    1L, "testImageUrl1", LocalDateTime.of(2025, 1, 1, 0, 0)));
 
             given(
                             imageService.getAlbumImages(
@@ -791,9 +790,9 @@ class ImageControllerTest {
             List<AlbumImageListResponse> images =
                     List.of(
                             new AlbumImageListResponse(
-                                    2L, "testImageUrl2", LocalDate.of(2025, 1, 2)),
+                                    2L, "testImageUrl2", LocalDateTime.of(2025, 1, 2, 0, 0)),
                             new AlbumImageListResponse(
-                                    1L, "testImageUrl1", LocalDate.of(2025, 1, 1)));
+                                    1L, "testImageUrl1", LocalDateTime.of(2025, 1, 1, 0, 0)));
 
             given(
                             imageService.getAlbumImages(
@@ -822,7 +821,7 @@ class ImageControllerTest {
             List<AlbumImageListResponse> images =
                     List.of(
                             new AlbumImageListResponse(
-                                    1L, "testImageUrl1", LocalDate.of(2025, 1, 1)));
+                                    1L, "testImageUrl1", LocalDateTime.of(2025, 1, 1, 0, 0)));
 
             given(imageService.getAlbumImages(1L, null, 1, SortParameter.UPLOAD, SortDirection.ASC))
                     .willReturn(new SliceResponse<>(images, true));
@@ -848,9 +847,9 @@ class ImageControllerTest {
             List<AlbumImageListResponse> images =
                     List.of(
                             new AlbumImageListResponse(
-                                    1L, "testImageUrl1", LocalDate.of(2025, 1, 1)),
+                                    1L, "testImageUrl1", LocalDateTime.of(2025, 1, 1, 0, 0)),
                             new AlbumImageListResponse(
-                                    2L, "testImageUrl2", LocalDate.of(2025, 1, 2)));
+                                    2L, "testImageUrl2", LocalDateTime.of(2025, 1, 2, 0, 0)));
 
             given(imageService.getAlbumImages(1L, null, 1, SortParameter.UPLOAD, SortDirection.ASC))
                     .willReturn(new SliceResponse<>(images, false));
@@ -980,9 +979,9 @@ class ImageControllerTest {
             List<EventImageListResponse> eventImages =
                     List.of(
                             new EventImageListResponse(
-                                    1L, "testImageUrl1", LocalDate.of(2025, 1, 1)),
+                                    1L, "testImageUrl1", LocalDateTime.of(2025, 1, 1, 0, 0)),
                             new EventImageListResponse(
-                                    2L, "testImageUrl2", LocalDate.of(2025, 1, 2)));
+                                    2L, "testImageUrl2", LocalDateTime.of(2025, 1, 2, 0, 0)));
 
             given(imageService.getEventImages(1L, null, 2, SortParameter.UPLOAD, SortDirection.ASC))
                     .willReturn(new SliceResponse<>(eventImages, true));
@@ -1009,9 +1008,9 @@ class ImageControllerTest {
             List<EventImageListResponse> eventImages =
                     List.of(
                             new EventImageListResponse(
-                                    1L, "testImageUrl1", LocalDate.of(2025, 1, 1)),
+                                    1L, "testImageUrl1", LocalDateTime.of(2025, 1, 1, 0, 0)),
                             new EventImageListResponse(
-                                    2L, "testImageUrl2", LocalDate.of(2025, 1, 2)));
+                                    2L, "testImageUrl2", LocalDateTime.of(2025, 1, 2, 0, 0)));
 
             given(
                             imageService.getEventImages(
@@ -1041,9 +1040,9 @@ class ImageControllerTest {
             List<EventImageListResponse> eventImages =
                     List.of(
                             new EventImageListResponse(
-                                    2L, "testImageUrl2", LocalDate.of(2025, 1, 2)),
+                                    2L, "testImageUrl2", LocalDateTime.of(2025, 1, 2, 0, 0)),
                             new EventImageListResponse(
-                                    1L, "testImageUrl1", LocalDate.of(2025, 1, 1)));
+                                    1L, "testImageUrl1", LocalDateTime.of(2025, 1, 1, 0, 0)));
 
             given(
                             imageService.getEventImages(
@@ -1072,9 +1071,9 @@ class ImageControllerTest {
             List<EventImageListResponse> eventImages =
                     List.of(
                             new EventImageListResponse(
-                                    2L, "testImageUrl2", LocalDate.of(2025, 1, 2)),
+                                    2L, "testImageUrl2", LocalDateTime.of(2025, 1, 2, 0, 0)),
                             new EventImageListResponse(
-                                    1L, "testImageUrl1", LocalDate.of(2025, 1, 1)));
+                                    1L, "testImageUrl1", LocalDateTime.of(2025, 1, 1, 0, 0)));
 
             given(
                             imageService.getEventImages(
@@ -1103,7 +1102,7 @@ class ImageControllerTest {
             List<EventImageListResponse> eventImages =
                     List.of(
                             new EventImageListResponse(
-                                    1L, "testImageUrl1", LocalDate.of(2025, 1, 1)));
+                                    1L, "testImageUrl1", LocalDateTime.of(2025, 1, 1, 0, 0)));
 
             given(imageService.getEventImages(1L, null, 1, SortParameter.UPLOAD, SortDirection.ASC))
                     .willReturn(new SliceResponse<>(eventImages, true));
@@ -1129,9 +1128,9 @@ class ImageControllerTest {
             List<EventImageListResponse> eventImages =
                     List.of(
                             new EventImageListResponse(
-                                    1L, "testImageUrl1", LocalDate.of(2025, 1, 1)),
+                                    1L, "testImageUrl1", LocalDateTime.of(2025, 1, 1, 0, 0)),
                             new EventImageListResponse(
-                                    2L, "testImageUrl2", LocalDate.of(2025, 1, 2)));
+                                    2L, "testImageUrl2", LocalDateTime.of(2025, 1, 2, 0, 0)));
 
             given(imageService.getEventImages(1L, null, 1, SortParameter.UPLOAD, SortDirection.ASC))
                     .willReturn(new SliceResponse<>(eventImages, false));
