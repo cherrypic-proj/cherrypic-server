@@ -28,6 +28,7 @@ import org.cherrypic.event.entity.Event;
 import org.cherrypic.exception.CustomException;
 import org.cherrypic.global.pagination.SliceResponse;
 import org.cherrypic.global.pagination.SortDirection;
+import org.cherrypic.global.pagination.SortParameter;
 import org.cherrypic.global.util.MemberUtil;
 import org.cherrypic.image.entity.Image;
 import org.cherrypic.member.entity.Member;
@@ -183,27 +184,35 @@ public class ImageServiceImpl implements ImageService {
     @Override
     @Transactional(readOnly = true)
     public SliceResponse<AlbumImageListResponse> getAlbumImages(
-            Long albumId, Long lastImageId, int size, SortDirection direction) {
+            Long albumId,
+            Long lastImageId,
+            int size,
+            SortParameter parameter,
+            SortDirection direction) {
         final Member currentMember = memberUtil.getCurrentMember();
         final Album album = getAlbumById(albumId);
 
         getParticipantByMemberIdAndAlbumId(currentMember.getId(), album.getId());
 
         Slice<AlbumImageListResponse> result =
-                imageRepository.findAllByAlbumId(albumId, lastImageId, size, direction);
+                imageRepository.findAllByAlbumId(albumId, lastImageId, size, parameter, direction);
         return SliceResponse.from(result);
     }
 
     @Override
     @Transactional(readOnly = true)
     public SliceResponse<EventImageListResponse> getEventImages(
-            Long eventId, Long lastImageId, int size, SortDirection direction) {
+            Long eventId,
+            Long lastImageId,
+            int size,
+            SortParameter parameter,
+            SortDirection direction) {
         final Member currentMember = memberUtil.getCurrentMember();
         final Event event = getEventById(eventId);
         getParticipantByMemberIdAndAlbumId(currentMember.getId(), event.getAlbum().getId());
 
         Slice<EventImageListResponse> result =
-                imageRepository.findAllByEventId(eventId, lastImageId, size, direction);
+                imageRepository.findAllByEventId(eventId, lastImageId, size, parameter, direction);
         return SliceResponse.from(result);
     }
 

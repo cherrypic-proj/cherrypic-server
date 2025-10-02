@@ -95,7 +95,7 @@ CREATE TABLE image (
                        member_id BIGINT NOT NULL,
                        album_id BIGINT NOT NULL,
                        url VARCHAR(255) NOT NULL,
-                       generated_at DATETIME,
+                       generated_at DATETIME(6) NOT NULL,
                        capacity_mb DECIMAL(9,2) NOT NULL,
                        created_at DATETIME(6) NOT NULL,
                        updated_at DATETIME(6) NOT NULL,

@@ -4,16 +4,19 @@ import static org.cherrypic.event.entity.QEventImage.eventImage;
 import static org.cherrypic.image.entity.QImage.image;
 import static org.cherrypic.tempalbum.entity.QTempAlbumImage.tempAlbumImage;
 
+import com.querydsl.core.types.Expression;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.cherrypic.domain.image.dto.response.AlbumImageListResponse;
 import org.cherrypic.domain.image.dto.response.EventImageListResponse;
 import org.cherrypic.global.pagination.SortDirection;
+import org.cherrypic.global.pagination.SortParameter;
 import org.cherrypic.image.entity.Image;
 import org.cherrypic.tempalbum.entity.TempAlbumImage;
 import org.springframework.data.domain.PageRequest;
@@ -31,20 +34,30 @@ public class ImageRepositoryImpl implements ImageRepositoryCustom {
 
     @Override
     public Slice<EventImageListResponse> findAllByEventId(
-            Long eventId, Long lastImageId, int size, SortDirection direction) {
+            Long eventId,
+            Long lastImageId,
+            int size,
+            SortParameter parameter,
+            SortDirection direction) {
+
+        Expression<LocalDateTime> sortedField =
+                parameter == SortParameter.UPLOAD ? image.createdAt : image.generatedAt;
 
         List<EventImageListResponse> results =
                 queryFactory
                         .select(
                                 Projections.constructor(
-                                        EventImageListResponse.class, eventImage.id, image.url))
+                                        EventImageListResponse.class,
+                                        eventImage.id,
+                                        image.url,
+                                        sortedField))
                         .from(eventImage)
                         .join(eventImage.image, image)
                         .where(
                                 eventImage.event.id.eq(eventId),
-                                lastImageIdCondition(lastImageId, direction))
-                        .orderBy(direction == SortDirection.DESC ? image.id.desc() : image.id.asc())
-                        .limit(size + 1)
+                                lastCondition(lastImageId, direction, parameter))
+                        .orderBy(getOrderByExpression(parameter, direction))
+                        .limit((long) size + 1)
                         .fetch();
 
         return checkLastPage(size, results);
@@ -52,19 +65,29 @@ public class ImageRepositoryImpl implements ImageRepositoryCustom {
 
     @Override
     public Slice<AlbumImageListResponse> findAllByAlbumId(
-            Long albumId, Long lastImageId, int size, SortDirection direction) {
+            Long albumId,
+            Long lastImageId,
+            int size,
+            SortParameter parameter,
+            SortDirection direction) {
+
+        Expression<LocalDateTime> sortedField =
+                parameter == SortParameter.UPLOAD ? image.createdAt : image.generatedAt;
 
         List<AlbumImageListResponse> results =
                 queryFactory
                         .select(
                                 Projections.constructor(
-                                        AlbumImageListResponse.class, image.id, image.url))
+                                        AlbumImageListResponse.class,
+                                        image.id,
+                                        image.url,
+                                        sortedField))
                         .from(image)
                         .where(
                                 image.album.id.eq(albumId),
-                                lastImageIdCondition(lastImageId, direction))
-                        .orderBy(direction == SortDirection.DESC ? image.id.desc() : image.id.asc())
-                        .limit(size + 1)
+                                lastCondition(lastImageId, direction, parameter))
+                        .orderBy(getOrderByExpression(parameter, direction))
+                        .limit((long) size + 1)
                         .fetch();
 
         return checkLastPage(size, results);
@@ -159,12 +182,53 @@ public class ImageRepositoryImpl implements ImageRepositoryCustom {
                 .fetch();
     }
 
+    private BooleanExpression lastCondition(
+            Long lastImageId, SortDirection direction, SortParameter parameter) {
+        if (parameter == SortParameter.UPLOAD) {
+            return lastImageIdCondition(lastImageId, direction);
+        } else {
+            return lastImageId != null
+                    ? lastGeneratedAtCondition(getLastGeneratedAt(lastImageId), direction)
+                    : null;
+        }
+    }
+
     private BooleanExpression lastImageIdCondition(Long imageId, SortDirection direction) {
         if (imageId == null) {
             return null;
         }
 
         return direction == SortDirection.DESC ? image.id.lt(imageId) : image.id.gt(imageId);
+    }
+
+    private BooleanExpression lastGeneratedAtCondition(
+            LocalDateTime lastGeneratedAt, SortDirection direction) {
+        if (lastGeneratedAt == null) {
+            return null;
+        }
+
+        return direction == SortDirection.DESC
+                ? image.generatedAt.lt(lastGeneratedAt)
+                : image.generatedAt.gt(lastGeneratedAt);
+    }
+
+    private com.querydsl.core.types.OrderSpecifier<?> getOrderByExpression(
+            SortParameter parameter, SortDirection direction) {
+        if (parameter == SortParameter.UPLOAD) {
+            return direction == SortDirection.DESC ? image.id.desc() : image.id.asc();
+        } else { // GENERATE
+            return direction == SortDirection.DESC
+                    ? image.generatedAt.desc()
+                    : image.generatedAt.asc();
+        }
+    }
+
+    private LocalDateTime getLastGeneratedAt(Long imageId) {
+        return queryFactory
+                .select(image.generatedAt)
+                .from(image)
+                .where(image.id.eq(imageId))
+                .fetchOne();
     }
 
     private <T> Slice<T> checkLastPage(int pageSize, List<T> results) {
