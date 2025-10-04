@@ -2,6 +2,7 @@ package org.cherrypic.tempalbum.service;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.cherrypic.member.entity.QMember.member;
 import static org.mockito.BDDMockito.given;
 
 import java.math.BigDecimal;
@@ -10,6 +11,7 @@ import java.util.List;
 import org.cherrypic.IntegrationTest;
 import org.cherrypic.domain.member.repository.MemberRepository;
 import org.cherrypic.domain.tempalbum.dto.request.TempAlbumCreateRequest;
+import org.cherrypic.domain.tempalbum.dto.request.TempAlbumUpdateRequest;
 import org.cherrypic.domain.tempalbum.dto.response.TempAlbumListResponse;
 import org.cherrypic.domain.tempalbum.exception.TempAlbumErrorCode;
 import org.cherrypic.domain.tempalbum.repository.TempAlbumRepository;
@@ -125,6 +127,58 @@ public class TempAlbumServiceTest extends IntegrationTest {
                     () -> assertThat(response.content().get(1).title()).isEqualTo("testTitle2"),
                     () -> assertThat(response.content().get(2).tempAlbumId()).isEqualTo(1L),
                     () -> assertThat(response.content().get(2).title()).isEqualTo("testTitle1"));
+        }
+    }
+
+    @Nested
+    class 임시_앨범을_수정할_때 {
+
+        @BeforeEach
+        void setUp() {
+            Member member1 =
+                    Member.createMember(
+                            OauthInfo.createOauthInfo("testOauthId", "testOauthProvider"),
+                            "testNickname1",
+                            "testProfileImageUrl1");
+            Member member2 =
+                    Member.createMember(
+                            OauthInfo.createOauthInfo("testOauthId", "testOauthProvider"),
+                            "testNickname2",
+                            "testProfileImageUrl2");
+            memberRepository.saveAll(List.of(member1, member2));
+            given(memberUtil.getCurrentMember()).willReturn(member1);
+
+            TempAlbum tempAlbum1 = TempAlbum.createTempAlbum(member1, "testTitle1");
+            TempAlbum tempAlbum2 = TempAlbum.createTempAlbum(member2, "testTitle2");
+            tempAlbumRepository.saveAll(List.of(tempAlbum1, tempAlbum2));
+        }
+
+        @Test
+        void 유효한_요청이면_앨범_정보를_수정한다() {
+            // given
+            TempAlbumUpdateRequest request =
+                    new TempAlbumUpdateRequest(1L, "changedTitle", "testUrl");
+
+            // when
+            tempAlbumService.updateTempAlbum(request);
+
+            // then
+            TempAlbum tempAlbum = tempAlbumRepository.findById(1L).orElseThrow();
+            assertThat(tempAlbum)
+                    .extracting("title", "webUrl")
+                    .containsExactly("changedTitle", "testUrl");
+        }
+
+        @Test
+        void 임시_앨범_생성자가_아닌_경우_예외가_발생한다() {
+            // given
+            TempAlbumUpdateRequest request =
+                    new TempAlbumUpdateRequest(2L, "changedTitle", "testUrl");
+
+            // when & then
+            assertThatThrownBy(() -> tempAlbumService.updateTempAlbum(request))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessageContaining(TempAlbumErrorCode.NOT_TEMP_ALBUM_OWNER.getMessage());
         }
     }
 }
