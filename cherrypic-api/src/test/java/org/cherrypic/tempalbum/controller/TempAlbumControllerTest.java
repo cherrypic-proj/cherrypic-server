@@ -1,8 +1,7 @@
 package org.cherrypic.tempalbum.controller;
 
-import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.mockito.BDDMockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -12,6 +11,7 @@ import java.time.LocalDate;
 import java.util.List;
 import org.cherrypic.domain.tempalbum.controller.TempAlbumController;
 import org.cherrypic.domain.tempalbum.dto.request.TempAlbumCreateRequest;
+import org.cherrypic.domain.tempalbum.dto.request.TempAlbumUpdateRequest;
 import org.cherrypic.domain.tempalbum.dto.response.TempAlbumCreateResponse;
 import org.cherrypic.domain.tempalbum.dto.response.TempAlbumListResponse;
 import org.cherrypic.domain.tempalbum.exception.TempAlbumErrorCode;
@@ -20,6 +20,10 @@ import org.cherrypic.exception.CustomException;
 import org.cherrypic.tempalbum.enums.TempAlbumType;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EmptySource;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -141,6 +145,116 @@ class TempAlbumControllerTest {
                     .andExpect(jsonPath("$.data.content[0].tempAlbumId").value(1))
                     .andExpect(jsonPath("$.data.content[1].tempAlbumId").value(2))
                     .andExpect(jsonPath("$.data.content[2].tempAlbumId").value(3));
+        }
+    }
+
+    @Nested
+    class 임시_앨범_수정_요청_시 {
+
+        @Test
+        void 유효한_요청이면_임시_앨범을_수정한다() throws Exception {
+            // given
+            TempAlbumUpdateRequest request =
+                    new TempAlbumUpdateRequest(1L, "testTitle", "testWebUrl");
+
+            willDoNothing().given(tempAlbumService).updateTempAlbum(request);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            patch("/temp-albums")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isNoContent())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.NO_CONTENT.value()));
+        }
+
+        @Test
+        void 임시_앨범이_존재하지_않는_경우_예외가_발생한다() throws Exception {
+            // given
+            TempAlbumUpdateRequest request =
+                    new TempAlbumUpdateRequest(999L, "testTitle", "testWebUrl");
+
+            willThrow(new CustomException(TempAlbumErrorCode.TEMP_ALBUM_NOT_FOUND))
+                    .given(tempAlbumService)
+                    .updateTempAlbum(request);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            patch("/temp-albums")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.NOT_FOUND.value()));
+        }
+
+        @Test
+        void 임시_앨범_생성자가_아닌_경우_예외가_발생한다() throws Exception {
+            // given
+            TempAlbumUpdateRequest request =
+                    new TempAlbumUpdateRequest(2L, "testTitle", "testWebUrl");
+
+            willThrow(new CustomException(TempAlbumErrorCode.NOT_TEMP_ALBUM_OWNER))
+                    .given(tempAlbumService)
+                    .updateTempAlbum(request);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            patch("/temp-albums")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.FORBIDDEN.value()));
+        }
+
+        @Test
+        void 임시_앨범_ID를_비워두면_예외가_발생한다() throws Exception {
+            // given
+            TempAlbumUpdateRequest request =
+                    new TempAlbumUpdateRequest(null, "testTitle", "testUrl");
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            patch("/temp-albums")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("MethodArgumentNotValidException"))
+                    .andExpect(jsonPath("$.data.message").value("임시 앨범 ID는 비워둘 수 없습니다."));
+        }
+
+        @ParameterizedTest
+        @NullSource
+        @EmptySource
+        @ValueSource(strings = {" "})
+        void 임시_앨범_이름이_null_또는_공백이면_예외가_발생한다(String name) throws Exception {
+            // given
+            TempAlbumUpdateRequest request = new TempAlbumUpdateRequest(1L, name, "testUrl");
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            patch("/temp-albums")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("MethodArgumentNotValidException"))
+                    .andExpect(jsonPath("$.data.message").value("임시 앨범 이름은 비워둘 수 없습니다."));
         }
     }
 }

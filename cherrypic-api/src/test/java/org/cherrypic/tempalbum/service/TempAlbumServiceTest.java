@@ -170,6 +170,18 @@ public class TempAlbumServiceTest extends IntegrationTest {
         }
 
         @Test
+        void 임시_앨범이_존재하지_않는_경우_예외가_발생한다() {
+            // given
+            TempAlbumUpdateRequest request =
+                    new TempAlbumUpdateRequest(999L, "changedTitle", "testUrl");
+
+            // when & then
+            assertThatThrownBy(() -> tempAlbumService.updateTempAlbum(request))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessageContaining(TempAlbumErrorCode.TEMP_ALBUM_NOT_FOUND.getMessage());
+        }
+
+        @Test
         void 임시_앨범_생성자가_아닌_경우_예외가_발생한다() {
             // given
             TempAlbumUpdateRequest request =
