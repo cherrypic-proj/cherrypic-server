@@ -156,11 +156,10 @@ public class TempAlbumServiceTest extends IntegrationTest {
         @Test
         void 유효한_요청이면_앨범_정보를_수정한다() {
             // given
-            TempAlbumUpdateRequest request =
-                    new TempAlbumUpdateRequest(1L, "changedTitle", "testUrl");
+            TempAlbumUpdateRequest request = new TempAlbumUpdateRequest("changedTitle", "testUrl");
 
             // when
-            tempAlbumService.updateTempAlbum(request);
+            tempAlbumService.updateTempAlbum(1L, request);
 
             // then
             TempAlbum tempAlbum = tempAlbumRepository.findById(1L).orElseThrow();
@@ -172,11 +171,10 @@ public class TempAlbumServiceTest extends IntegrationTest {
         @Test
         void 임시_앨범이_존재하지_않는_경우_예외가_발생한다() {
             // given
-            TempAlbumUpdateRequest request =
-                    new TempAlbumUpdateRequest(999L, "changedTitle", "testUrl");
+            TempAlbumUpdateRequest request = new TempAlbumUpdateRequest("changedTitle", "testUrl");
 
             // when & then
-            assertThatThrownBy(() -> tempAlbumService.updateTempAlbum(request))
+            assertThatThrownBy(() -> tempAlbumService.updateTempAlbum(999L, request))
                     .isInstanceOf(CustomException.class)
                     .hasMessageContaining(TempAlbumErrorCode.TEMP_ALBUM_NOT_FOUND.getMessage());
         }
@@ -184,11 +182,10 @@ public class TempAlbumServiceTest extends IntegrationTest {
         @Test
         void 임시_앨범_생성자가_아닌_경우_예외가_발생한다() {
             // given
-            TempAlbumUpdateRequest request =
-                    new TempAlbumUpdateRequest(2L, "changedTitle", "testUrl");
+            TempAlbumUpdateRequest request = new TempAlbumUpdateRequest("changedTitle", "testUrl");
 
             // when & then
-            assertThatThrownBy(() -> tempAlbumService.updateTempAlbum(request))
+            assertThatThrownBy(() -> tempAlbumService.updateTempAlbum(2L, request))
                     .isInstanceOf(CustomException.class)
                     .hasMessageContaining(TempAlbumErrorCode.NOT_TEMP_ALBUM_OWNER.getMessage());
         }

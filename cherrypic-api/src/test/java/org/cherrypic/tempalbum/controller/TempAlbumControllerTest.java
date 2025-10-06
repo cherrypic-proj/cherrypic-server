@@ -154,15 +154,14 @@ class TempAlbumControllerTest {
         @Test
         void 유효한_요청이면_임시_앨범을_수정한다() throws Exception {
             // given
-            TempAlbumUpdateRequest request =
-                    new TempAlbumUpdateRequest(1L, "testTitle", "testWebUrl");
+            TempAlbumUpdateRequest request = new TempAlbumUpdateRequest("testTitle", "testWebUrl");
 
-            willDoNothing().given(tempAlbumService).updateTempAlbum(request);
+            willDoNothing().given(tempAlbumService).updateTempAlbum(1L, request);
 
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            patch("/temp-albums")
+                            patch("/temp-albums/1")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -174,17 +173,16 @@ class TempAlbumControllerTest {
         @Test
         void 임시_앨범이_존재하지_않는_경우_예외가_발생한다() throws Exception {
             // given
-            TempAlbumUpdateRequest request =
-                    new TempAlbumUpdateRequest(999L, "testTitle", "testWebUrl");
+            TempAlbumUpdateRequest request = new TempAlbumUpdateRequest("testTitle", "testWebUrl");
 
             willThrow(new CustomException(TempAlbumErrorCode.TEMP_ALBUM_NOT_FOUND))
                     .given(tempAlbumService)
-                    .updateTempAlbum(request);
+                    .updateTempAlbum(999L, request);
 
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            patch("/temp-albums")
+                            patch("/temp-albums/999")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -196,17 +194,16 @@ class TempAlbumControllerTest {
         @Test
         void 임시_앨범_생성자가_아닌_경우_예외가_발생한다() throws Exception {
             // given
-            TempAlbumUpdateRequest request =
-                    new TempAlbumUpdateRequest(2L, "testTitle", "testWebUrl");
+            TempAlbumUpdateRequest request = new TempAlbumUpdateRequest("testTitle", "testWebUrl");
 
             willThrow(new CustomException(TempAlbumErrorCode.NOT_TEMP_ALBUM_OWNER))
                     .given(tempAlbumService)
-                    .updateTempAlbum(request);
+                    .updateTempAlbum(2L, request);
 
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            patch("/temp-albums")
+                            patch("/temp-albums/2")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -215,38 +212,18 @@ class TempAlbumControllerTest {
                     .andExpect(jsonPath("$.status").value(HttpStatus.FORBIDDEN.value()));
         }
 
-        @Test
-        void 임시_앨범_ID를_비워두면_예외가_발생한다() throws Exception {
-            // given
-            TempAlbumUpdateRequest request =
-                    new TempAlbumUpdateRequest(null, "testTitle", "testUrl");
-
-            // when & then
-            ResultActions perform =
-                    mockMvc.perform(
-                            patch("/temp-albums")
-                                    .contentType(MediaType.APPLICATION_JSON)
-                                    .content(objectMapper.writeValueAsString(request)));
-
-            perform.andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.success").value(false))
-                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
-                    .andExpect(jsonPath("$.data.code").value("MethodArgumentNotValidException"))
-                    .andExpect(jsonPath("$.data.message").value("임시 앨범 ID는 비워둘 수 없습니다."));
-        }
-
         @ParameterizedTest
         @NullSource
         @EmptySource
         @ValueSource(strings = {" "})
         void 임시_앨범_이름이_null_또는_공백이면_예외가_발생한다(String name) throws Exception {
             // given
-            TempAlbumUpdateRequest request = new TempAlbumUpdateRequest(1L, name, "testUrl");
+            TempAlbumUpdateRequest request = new TempAlbumUpdateRequest(name, "testUrl");
 
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            patch("/temp-albums")
+                            patch("/temp-albums/1")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 

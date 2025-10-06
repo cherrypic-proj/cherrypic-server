@@ -49,9 +49,9 @@ public class TempAlbumServiceImpl implements TempAlbumService {
 
     @Override
     @Transactional
-    public void updateTempAlbum(TempAlbumUpdateRequest request) {
+    public void updateTempAlbum(Long tempAlbumId, TempAlbumUpdateRequest request) {
         final Member currentMember = memberUtil.getCurrentMember();
-        final TempAlbum tempAlbum = getTempAlbumById(request.tempAlbumId());
+        final TempAlbum tempAlbum = getTempAlbumById(tempAlbumId);
 
         validateTempAlbumOwner(tempAlbum, currentMember.getId());
 

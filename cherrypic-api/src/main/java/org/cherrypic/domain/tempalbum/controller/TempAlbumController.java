@@ -35,11 +35,11 @@ public class TempAlbumController {
         return tempAlbumService.getTempAlbums();
     }
 
-    @PatchMapping
+    @PatchMapping("/{tempAlbumId}")
     @Operation(summary = "임시 앨범 수정", description = "임시 앨범을 수정합니다.")
     public ResponseEntity<Void> tempAlbumUpdate(
-            @Valid @RequestBody TempAlbumUpdateRequest request) {
-        tempAlbumService.updateTempAlbum(request);
+            @PathVariable Long tempAlbumId, @Valid @RequestBody TempAlbumUpdateRequest request) {
+        tempAlbumService.updateTempAlbum(tempAlbumId, request);
         return ResponseEntity.noContent().build();
     }
 }

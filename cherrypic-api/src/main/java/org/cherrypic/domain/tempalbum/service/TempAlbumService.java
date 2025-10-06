@@ -11,5 +11,5 @@ public interface TempAlbumService {
 
     TempAlbumListResponse getTempAlbums();
 
-    void updateTempAlbum(TempAlbumUpdateRequest request);
+    void updateTempAlbum(Long tempAlbumId, TempAlbumUpdateRequest request);
 }
