@@ -135,7 +135,7 @@ public class EventServiceImpl implements EventService {
         validateSubscriptionNotExpired(event.getAlbum());
 
         validateAllImageExistence(distinctImageIds);
-        validateAllImageAlbum(distinctImageIds, eventId);
+        validateAllImageAlbum(distinctImageIds, event.getAlbum().getId());
 
         List<Image> images = getAllUnmappedImagesById(eventId, distinctImageIds);
         if (images.isEmpty()) return; // 사용자가 모두 해당 event에 이미 속하는 사진만 고른 경우
