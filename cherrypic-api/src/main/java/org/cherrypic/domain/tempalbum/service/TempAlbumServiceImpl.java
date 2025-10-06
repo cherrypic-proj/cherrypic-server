@@ -1,8 +1,10 @@
 package org.cherrypic.domain.tempalbum.service;
 
 import java.util.List;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import org.cherrypic.domain.tempalbum.dto.request.TempAlbumCreateRequest;
+import org.cherrypic.domain.tempalbum.dto.request.TempAlbumUpdateRequest;
 import org.cherrypic.domain.tempalbum.dto.response.TempAlbumCreateResponse;
 import org.cherrypic.domain.tempalbum.dto.response.TempAlbumListResponse;
 import org.cherrypic.domain.tempalbum.exception.TempAlbumErrorCode;
@@ -45,10 +47,33 @@ public class TempAlbumServiceImpl implements TempAlbumService {
         return TempAlbumListResponse.from(tempAlbums);
     }
 
+    @Override
+    @Transactional
+    public void updateTempAlbum(Long tempAlbumId, TempAlbumUpdateRequest request) {
+        final Member currentMember = memberUtil.getCurrentMember();
+        final TempAlbum tempAlbum = getTempAlbumById(tempAlbumId);
+
+        validateTempAlbumOwner(tempAlbum, currentMember.getId());
+
+        tempAlbum.updateTempAlbum(request.title(), request.webUrl());
+    }
+
     private void validateTempAlbumCreateLimit(Member member) {
         long count = tempAlbumRepository.countByMemberId(member.getId());
         if (count >= 5) {
             throw new CustomException(TempAlbumErrorCode.CREATE_OVER_LIMIT);
         }
+    }
+
+    private void validateTempAlbumOwner(TempAlbum tempAlbum, Long memberId) {
+        if (!Objects.equals(tempAlbum.getId(), memberId)) {
+            throw new CustomException(TempAlbumErrorCode.NOT_TEMP_ALBUM_OWNER);
+        }
+    }
+
+    private TempAlbum getTempAlbumById(Long tempAlbumId) {
+        return tempAlbumRepository
+                .findById(tempAlbumId)
+                .orElseThrow(() -> new CustomException(TempAlbumErrorCode.TEMP_ALBUM_NOT_FOUND));
     }
 }

@@ -81,4 +81,9 @@ public class TempAlbum extends BaseTimeEntity {
         }
         this.capacityMb = capacityMb.subtract(decimal);
     }
+
+    public void updateTempAlbum(String title, String webUrl) {
+        this.title = title;
+        this.webUrl = webUrl;
+    }
 }
