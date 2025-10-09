@@ -172,7 +172,7 @@ class TempAlbumControllerTest {
         }
 
         @Test
-        void 수정_도중_임시_앨범이_존재하지_않는_경우_예외가_발생한다() throws Exception {
+        void 임시_앨범이_존재하지_않는_경우_예외가_발생한다() throws Exception {
             // given
             TempAlbumUpdateRequest request = new TempAlbumUpdateRequest("testTitle", "testWebUrl");
 
@@ -195,7 +195,7 @@ class TempAlbumControllerTest {
         }
 
         @Test
-        void 수정_도중_임시_앨범_생성자가_아닌_경우_예외가_발생한다() throws Exception {
+        void 임시_앨범_생성자가_아닌_경우_예외가_발생한다() throws Exception {
             // given
             TempAlbumUpdateRequest request = new TempAlbumUpdateRequest("testTitle", "testWebUrl");
 
@@ -238,41 +238,40 @@ class TempAlbumControllerTest {
                     .andExpect(jsonPath("$.data.code").value("MethodArgumentNotValidException"))
                     .andExpect(jsonPath("$.data.message").value("임시 앨범 이름은 비워둘 수 없습니다."));
         }
+    }
 
-        @Nested
-        class 임시_앨범_개별_조회_요청_시 {
+    @Nested
+    class 임시_앨범_개별_조회_요청_시 {
 
-            @Test
-            void 유효한_요청이면_임시_앨범_정보를_반환한다() throws Exception {
-                // given
-                TempAlbumInfoResponse response =
-                        new TempAlbumInfoResponse(
-                                "testTitle",
-                                new BigDecimal(0.50),
-                                new BigDecimal(1.00),
-                                LocalDate.of(2025, 1, 1),
-                                "testWebUrl");
+        @Test
+        void 유효한_요청이면_임시_앨범_정보를_반환한다() throws Exception {
+            // given
+            TempAlbumInfoResponse response =
+                    new TempAlbumInfoResponse(
+                            "testTitle",
+                            new BigDecimal(0.50),
+                            new BigDecimal(1.00),
+                            LocalDate.of(2025, 1, 1),
+                            "testWebUrl");
 
-                given(tempAlbumService.getTempAlbum(1L)).willReturn(response);
+            given(tempAlbumService.getTempAlbum(1L)).willReturn(response);
 
-                // when & then
-                ResultActions perform =
-                        mockMvc.perform(
-                                get("/temp-albums/1").contentType(MediaType.APPLICATION_JSON));
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(get("/temp-albums/1").contentType(MediaType.APPLICATION_JSON));
 
-                perform.andExpect(status().isOk())
-                        .andExpect(jsonPath("$.success").value(true))
-                        .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
-                        .andExpect(jsonPath("$.data.title").value("testTitle"))
-                        .andExpect(jsonPath("$.data.capacityUsedGb").value(0.50))
-                        .andExpect(jsonPath("$.data.totalCapacityGb").value(1.00))
-                        .andExpect(jsonPath("$.data.expiredAt").value("2025-01-01"))
-                        .andExpect(jsonPath("$.data.webUrl").value("testWebUrl"));
-            }
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
+                    .andExpect(jsonPath("$.data.title").value("testTitle"))
+                    .andExpect(jsonPath("$.data.capacityUsedGb").value(0.50))
+                    .andExpect(jsonPath("$.data.totalCapacityGb").value(1.00))
+                    .andExpect(jsonPath("$.data.expiredAt").value("2025-01-01"))
+                    .andExpect(jsonPath("$.data.webUrl").value("testWebUrl"));
         }
 
         @Test
-        void 개별_조회_도중_임시_앨범이_존재하지_않는_경우_예외가_발생한다() throws Exception {
+        void 임시_앨범이_존재하지_않는_경우_예외가_발생한다() throws Exception {
             // given
             given(tempAlbumService.getTempAlbum(1L))
                     .willThrow(new CustomException(TempAlbumErrorCode.TEMP_ALBUM_NOT_FOUND));
@@ -289,7 +288,7 @@ class TempAlbumControllerTest {
         }
 
         @Test
-        void 개별_조회_도중_임시_앨범_생성자가_아닌_경우_예외가_발생한다() throws Exception {
+        void 임시_앨범_생성자가_아닌_경우_예외가_발생한다() throws Exception {
             // given
             given(tempAlbumService.getTempAlbum(1L))
                     .willThrow(new CustomException(TempAlbumErrorCode.NOT_TEMP_ALBUM_OWNER));
