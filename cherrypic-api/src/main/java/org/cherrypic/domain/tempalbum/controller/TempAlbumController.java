@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.cherrypic.domain.tempalbum.dto.request.TempAlbumCreateRequest;
 import org.cherrypic.domain.tempalbum.dto.request.TempAlbumUpdateRequest;
 import org.cherrypic.domain.tempalbum.dto.response.TempAlbumCreateResponse;
+import org.cherrypic.domain.tempalbum.dto.response.TempAlbumInfoResponse;
 import org.cherrypic.domain.tempalbum.dto.response.TempAlbumListResponse;
 import org.cherrypic.domain.tempalbum.service.TempAlbumService;
 import org.springframework.http.HttpStatus;
@@ -33,6 +34,12 @@ public class TempAlbumController {
     @Operation(summary = "임시 앨범 목록 조회", description = "회원이 가지고 있는 임시 앨범을 조회합니다.")
     public TempAlbumListResponse tempAlbumsGet() {
         return tempAlbumService.getTempAlbums();
+    }
+
+    @GetMapping("/{tempAlbumId}")
+    @Operation(summary = "개별 임시 앨범 조회", description = "개별 임시 앨범의 정보를 조회합니다.")
+    public TempAlbumInfoResponse tempAlbumGet(@PathVariable Long tempAlbumId) {
+        return tempAlbumService.getTempAlbum(tempAlbumId);
     }
 
     @PatchMapping("/{tempAlbumId}")

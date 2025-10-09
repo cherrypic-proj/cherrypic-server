@@ -963,7 +963,7 @@ class AlbumControllerTest {
                     .andExpect(jsonPath("$.data.title").value("testAlbum"))
                     .andExpect(jsonPath("$.data.coverUrl").value("testUrl"))
                     .andExpect(jsonPath("$.data.type").value("BASIC"))
-                    .andExpect(jsonPath("$.data.capacityUsedGb").value("0.00"))
+                    .andExpect(jsonPath("$.data.capacityUsedGb").value(0.00))
                     .andExpect(jsonPath("$.data.totalCapacityGb").value(3.00))
                     .andExpect(jsonPath("$.data.hostName").value("testNickname"))
                     .andExpect(jsonPath("$.data.numOfParticipants").value(1));

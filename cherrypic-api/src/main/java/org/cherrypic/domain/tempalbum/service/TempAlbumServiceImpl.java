@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.cherrypic.domain.tempalbum.dto.request.TempAlbumCreateRequest;
 import org.cherrypic.domain.tempalbum.dto.request.TempAlbumUpdateRequest;
 import org.cherrypic.domain.tempalbum.dto.response.TempAlbumCreateResponse;
+import org.cherrypic.domain.tempalbum.dto.response.TempAlbumInfoResponse;
 import org.cherrypic.domain.tempalbum.dto.response.TempAlbumListResponse;
 import org.cherrypic.domain.tempalbum.exception.TempAlbumErrorCode;
 import org.cherrypic.domain.tempalbum.repository.TempAlbumRepository;
@@ -56,6 +57,21 @@ public class TempAlbumServiceImpl implements TempAlbumService {
         validateTempAlbumOwner(tempAlbum, currentMember.getId());
 
         tempAlbum.updateTempAlbum(request.title(), request.webUrl());
+    }
+
+    @Override
+    public TempAlbumInfoResponse getTempAlbum(Long tempAlbumId) {
+        final Member currentMember = memberUtil.getCurrentMember();
+        final TempAlbum tempAlbum = getTempAlbumById(tempAlbumId);
+
+        validateTempAlbumOwner(tempAlbum, currentMember.getId());
+
+        return TempAlbumInfoResponse.of(
+                tempAlbum.getTitle(),
+                tempAlbum.getCapacityMb(),
+                tempAlbum.getType().getCapacityMb(),
+                tempAlbum.getExpiredAt(),
+                tempAlbum.getWebUrl());
     }
 
     private void validateTempAlbumCreateLimit(Member member) {
