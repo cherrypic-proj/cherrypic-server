@@ -224,8 +224,7 @@ public class TempAlbumServiceTest extends IntegrationTest {
 
             // then
             assertThat(response)
-                    .extracting(
-                            "title", "capacityUsedGb", "totalCapacityGb", "expiredDate", "webUrl")
+                    .extracting("title", "capacityUsedGb", "totalCapacityGb", "expiredAt", "webUrl")
                     .containsExactly(
                             "testTitle1",
                             new BigDecimal("0.50"),
