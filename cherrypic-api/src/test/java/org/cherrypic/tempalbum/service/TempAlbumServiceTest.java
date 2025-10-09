@@ -12,6 +12,7 @@ import org.cherrypic.IntegrationTest;
 import org.cherrypic.domain.member.repository.MemberRepository;
 import org.cherrypic.domain.tempalbum.dto.request.TempAlbumCreateRequest;
 import org.cherrypic.domain.tempalbum.dto.request.TempAlbumUpdateRequest;
+import org.cherrypic.domain.tempalbum.dto.response.TempAlbumInfoResponse;
 import org.cherrypic.domain.tempalbum.dto.response.TempAlbumListResponse;
 import org.cherrypic.domain.tempalbum.exception.TempAlbumErrorCode;
 import org.cherrypic.domain.tempalbum.repository.TempAlbumRepository;
@@ -188,6 +189,65 @@ public class TempAlbumServiceTest extends IntegrationTest {
             assertThatThrownBy(() -> tempAlbumService.updateTempAlbum(2L, request))
                     .isInstanceOf(CustomException.class)
                     .hasMessageContaining(TempAlbumErrorCode.NOT_TEMP_ALBUM_OWNER.getMessage());
+        }
+    }
+
+    @Nested
+    class 개별_임시_앨범을_조회할_때 {
+
+        @BeforeEach
+        void setUp() {
+            Member member1 =
+                    Member.createMember(
+                            OauthInfo.createOauthInfo("testOauthId", "testOauthProvider"),
+                            "testNickname1",
+                            "testProfileImageUrl1");
+            Member member2 =
+                    Member.createMember(
+                            OauthInfo.createOauthInfo("testOauthId", "testOauthProvider"),
+                            "testNickname2",
+                            "testProfileImageUrl2");
+            memberRepository.saveAll(List.of(member1, member2));
+            given(memberUtil.getCurrentMember()).willReturn(member1);
+
+            TempAlbum tempAlbum1 = TempAlbum.createTempAlbum(member1, "testTitle1");
+            TempAlbum tempAlbum2 = TempAlbum.createTempAlbum(member2, "testTitle2");
+
+            tempAlbum1.increaseCapacity(BigDecimal.valueOf(512));
+            tempAlbumRepository.saveAll(List.of(tempAlbum1, tempAlbum2));
+        }
+
+        @Test
+        void 유효한_요청이면_개별_임시_앨범_정보를_반환한다() {
+            // when
+            TempAlbumInfoResponse response = tempAlbumService.getTempAlbum(1L);
+
+            // then
+            assertThat(response)
+                    .extracting(
+                            "title", "capacityUsedGb", "totalCapacityGb", "expiredDate", "webUrl")
+                    .containsExactly(
+                            "testTitle1",
+                            new BigDecimal("0.50"),
+                            new BigDecimal("1.00"),
+                            LocalDate.now().plusDays(3),
+                            null);
+        }
+
+        @Test
+        void 임시_앨범이_존재하지_않는_경우_예외가_발생한다() {
+            // when & then
+            assertThatThrownBy(() -> tempAlbumService.getTempAlbum(999L))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(TempAlbumErrorCode.TEMP_ALBUM_NOT_FOUND.getMessage());
+        }
+
+        @Test
+        void 임시_앨범_생성자가_아닌_경우_예외가_발생한다() {
+            // when & then
+            assertThatThrownBy(() -> tempAlbumService.getTempAlbum(2L))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(TempAlbumErrorCode.NOT_TEMP_ALBUM_OWNER.getMessage());
         }
     }
 }
