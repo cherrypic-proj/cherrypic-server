@@ -12,19 +12,19 @@ public record TempAlbumInfoResponse(
                 @JsonFormat(shape = JsonFormat.Shape.STRING)
                 BigDecimal capacityUsedGb,
         @Schema(description = "총 용량 (GB)", example = "3") BigDecimal totalCapacityGb,
-        @Schema(description = "만료 일자", example = "2025-01-01") LocalDate expiredDate,
+        @Schema(description = "만료 일자", example = "2025-01-01") LocalDate expiredAt,
         @Schema(description = "QR용 링크", example = "https://example.com") String webUrl) {
     public static TempAlbumInfoResponse of(
             String title,
             BigDecimal capacityUsedMb,
             BigDecimal totalCapacityMb,
-            LocalDate expiredDate,
+            LocalDate expiredAt,
             String webUrl) {
         return new TempAlbumInfoResponse(
                 title,
                 StorageUnitConverter.mbToGb(capacityUsedMb),
                 StorageUnitConverter.mbToGb(totalCapacityMb),
-                expiredDate,
+                expiredAt,
                 webUrl);
     }
 }

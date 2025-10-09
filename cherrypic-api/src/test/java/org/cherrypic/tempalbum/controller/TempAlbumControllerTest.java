@@ -266,7 +266,7 @@ class TempAlbumControllerTest {
                         .andExpect(jsonPath("$.data.title").value("testTitle"))
                         .andExpect(jsonPath("$.data.capacityUsedGb").value(0.50))
                         .andExpect(jsonPath("$.data.totalCapacityGb").value(1.00))
-                        .andExpect(jsonPath("$.data.expiredDate").value("2025-01-01"))
+                        .andExpect(jsonPath("$.data.expiredAt").value("2025-01-01"))
                         .andExpect(jsonPath("$.data.webUrl").value("testWebUrl"));
             }
         }
