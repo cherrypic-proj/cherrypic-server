@@ -2,6 +2,12 @@ jar {
     enabled = false
 }
 
+repositories {
+    maven {
+        url = 'https://jitpack.io'
+    }
+}
+
 dependencies {
     implementation project(':cherrypic-domain')
     implementation project(':cherrypic-common')
