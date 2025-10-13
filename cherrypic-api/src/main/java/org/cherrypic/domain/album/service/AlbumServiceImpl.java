@@ -109,6 +109,10 @@ public class AlbumServiceImpl implements AlbumService {
                     Subscription.createSubscription(currentMember, album, payment.getPaidAt()));
         }
 
+        albumParticipationHistoryRepository.save(
+                AlbumParticipationHistory.createAlbumParticipationHistory(
+                        currentMember.getId(), album.getTitle(), ParticipationAction.JOIN));
+
         return AlbumCreateResponse.from(album);
     }
 
