@@ -14,7 +14,9 @@ import org.cherrypic.domain.tempalbum.dto.request.TempAlbumCreateRequest;
 import org.cherrypic.domain.tempalbum.dto.request.TempAlbumUpdateRequest;
 import org.cherrypic.domain.tempalbum.dto.response.TempAlbumInfoResponse;
 import org.cherrypic.domain.tempalbum.dto.response.TempAlbumListResponse;
+import org.cherrypic.domain.tempalbum.event.TempAlbumDeleteEvent;
 import org.cherrypic.domain.tempalbum.exception.TempAlbumErrorCode;
+import org.cherrypic.domain.tempalbum.repository.TempAlbumImageRepository;
 import org.cherrypic.domain.tempalbum.repository.TempAlbumRepository;
 import org.cherrypic.domain.tempalbum.service.TempAlbumService;
 import org.cherrypic.exception.CustomException;
@@ -22,6 +24,7 @@ import org.cherrypic.global.util.MemberUtil;
 import org.cherrypic.member.entity.Member;
 import org.cherrypic.member.entity.OauthInfo;
 import org.cherrypic.tempalbum.entity.TempAlbum;
+import org.cherrypic.tempalbum.entity.TempAlbumImage;
 import org.cherrypic.tempalbum.enums.TempAlbumType;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,15 +32,20 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.event.ApplicationEvents;
+import org.springframework.test.context.event.RecordApplicationEvents;
 
+@RecordApplicationEvents
 public class TempAlbumServiceTest extends IntegrationTest {
 
     @Autowired private TempAlbumService tempAlbumService;
 
     @Autowired TempAlbumRepository tempAlbumRepository;
     @Autowired MemberRepository memberRepository;
+    @Autowired TempAlbumImageRepository tempAlbumImageRepository;
 
     @MockitoBean private MemberUtil memberUtil;
+    @Autowired private ApplicationEvents applicationEvents;
 
     @Nested
     class 임시_앨범을_성성할_때 {
@@ -245,6 +253,70 @@ public class TempAlbumServiceTest extends IntegrationTest {
         void 임시_앨범_생성자가_아닌_경우_예외가_발생한다() {
             // when & then
             assertThatThrownBy(() -> tempAlbumService.getTempAlbum(2L))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(TempAlbumErrorCode.NOT_TEMP_ALBUM_OWNER.getMessage());
+        }
+    }
+
+    @Nested
+    class 임시_앨범을_삭제할_때 {
+
+        @BeforeEach
+        void setUp() {
+            Member member1 =
+                    Member.createMember(
+                            OauthInfo.createOauthInfo("testOauthId", "testOauthProvider"),
+                            "testNickname1",
+                            "testProfileImageUrl1");
+            Member member2 =
+                    Member.createMember(
+                            OauthInfo.createOauthInfo("testOauthId", "testOauthProvider"),
+                            "testNickname2",
+                            "testProfileImageUrl2");
+            memberRepository.saveAll(List.of(member1, member2));
+            given(memberUtil.getCurrentMember()).willReturn(member1);
+
+            TempAlbum tempAlbum1 = TempAlbum.createTempAlbum(member1, "testTitle1");
+            TempAlbum tempAlbum2 = TempAlbum.createTempAlbum(member2, "testTitle2");
+            tempAlbumRepository.saveAll(List.of(tempAlbum1, tempAlbum2));
+
+            TempAlbumImage image1 =
+                    TempAlbumImage.createTempAlbumImage(tempAlbum1, "testUrl1", BigDecimal.ONE);
+            TempAlbumImage image2 =
+                    TempAlbumImage.createTempAlbumImage(tempAlbum1, "testUrl2", BigDecimal.ONE);
+            tempAlbumImageRepository.saveAll(List.of(image1, image2));
+        }
+
+        @Test
+        void 유효한_요청이면_임시_앨범과_유관_정보를_모두_삭제한다() {
+            // when
+            tempAlbumService.deleteTempAlbum(1L);
+
+            // then
+            var events = applicationEvents.stream(TempAlbumDeleteEvent.class).toList();
+            Assertions.assertAll(
+                    () -> assertThat(events.getFirst().tempAlbumId()).isEqualTo(1L),
+                    () -> assertThat(tempAlbumRepository.findById(1L)).isNotPresent(),
+                    () ->
+                            assertThat(
+                                            tempAlbumImageRepository
+                                                    .findAllById(List.of(1L, 2L))
+                                                    .isEmpty())
+                                    .isTrue());
+        }
+
+        @Test
+        void 임시_앨범이_존재하지_않는_경우_예외가_발생한다() {
+            // when & then
+            assertThatThrownBy(() -> tempAlbumService.deleteTempAlbum(999L))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(TempAlbumErrorCode.TEMP_ALBUM_NOT_FOUND.getMessage());
+        }
+
+        @Test
+        void 임시_앨범_소유자가_아닌_경우_예외가_발생한다() {
+            // when & then
+            assertThatThrownBy(() -> tempAlbumService.deleteTempAlbum(2L))
                     .isInstanceOf(CustomException.class)
                     .hasMessage(TempAlbumErrorCode.NOT_TEMP_ALBUM_OWNER.getMessage());
         }

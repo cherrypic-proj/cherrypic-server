@@ -8,6 +8,7 @@ import org.cherrypic.domain.tempalbum.dto.request.TempAlbumUpdateRequest;
 import org.cherrypic.domain.tempalbum.dto.response.TempAlbumCreateResponse;
 import org.cherrypic.domain.tempalbum.dto.response.TempAlbumInfoResponse;
 import org.cherrypic.domain.tempalbum.dto.response.TempAlbumListResponse;
+import org.cherrypic.domain.tempalbum.event.TempAlbumDeleteEvent;
 import org.cherrypic.domain.tempalbum.exception.TempAlbumErrorCode;
 import org.cherrypic.domain.tempalbum.repository.TempAlbumImageRepository;
 import org.cherrypic.domain.tempalbum.repository.TempAlbumRepository;
@@ -15,8 +16,8 @@ import org.cherrypic.exception.CustomException;
 import org.cherrypic.global.util.MemberUtil;
 import org.cherrypic.member.entity.Member;
 import org.cherrypic.s3.S3Util;
-import org.cherrypic.s3.enums.ImageType;
 import org.cherrypic.tempalbum.entity.TempAlbum;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,6 +31,8 @@ public class TempAlbumServiceImpl implements TempAlbumService {
 
     private final TempAlbumRepository tempAlbumRepository;
     private final TempAlbumImageRepository tempAlbumImageRepository;
+
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     @Transactional
@@ -87,9 +90,9 @@ public class TempAlbumServiceImpl implements TempAlbumService {
 
         validateTempAlbumOwner(tempAlbum, currentMember.getId());
 
-        tempAlbumRepository.delete(tempAlbum);
+        eventPublisher.publishEvent(TempAlbumDeleteEvent.of(tempAlbum));
         tempAlbumImageRepository.deleteAllByTempAlbumId(tempAlbum.getId());
-        s3Util.deleteAllByImageTypeAndTargetId(ImageType.TEMP_ALBUM_IMAGE, tempAlbum.getId());
+        tempAlbumRepository.delete(tempAlbum);
     }
 
     private void validateTempAlbumCreateLimit(Member member) {
