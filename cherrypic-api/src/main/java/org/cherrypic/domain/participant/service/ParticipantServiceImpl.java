@@ -4,8 +4,11 @@ import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.cherrypic.album.entity.Album;
+import org.cherrypic.album.entity.AlbumParticipationHistory;
 import org.cherrypic.album.enums.AlbumType;
+import org.cherrypic.album.enums.ParticipationAction;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
+import org.cherrypic.domain.album.repository.AlbumParticipationHistoryRepository;
 import org.cherrypic.domain.album.repository.AlbumRepository;
 import org.cherrypic.domain.favorites.repository.FavoritesRepository;
 import org.cherrypic.domain.notification.repository.NotificationRepository;
@@ -40,6 +43,7 @@ public class ParticipantServiceImpl implements ParticipantService {
     private final SubscriptionRepository subscriptionRepository;
     private final FavoritesRepository favoritesRepository;
     private final NotificationRepository notificationRepository;
+    private final AlbumParticipationHistoryRepository albumParticipationHistoryRepository;
 
     @Override
     public void leaveAlbum(Long albumId) {
@@ -57,6 +61,10 @@ public class ParticipantServiceImpl implements ParticipantService {
             notificationRepository.deleteByReceiverIdAndAlbumId(currentMember.getId(), albumId);
         } catch (ObjectOptimisticLockingFailureException ignored) {
         }
+
+        albumParticipationHistoryRepository.save(
+                AlbumParticipationHistory.createAlbumParticipationHistory(
+                        currentMember.getId(), album.getTitle(), ParticipationAction.LEAVE));
     }
 
     @Override
@@ -78,6 +86,10 @@ public class ParticipantServiceImpl implements ParticipantService {
                     target.getMember().getId(), album.getId());
         } catch (ObjectOptimisticLockingFailureException ignored) {
         }
+
+        albumParticipationHistoryRepository.save(
+                AlbumParticipationHistory.createAlbumParticipationHistory(
+                        target.getMember().getId(), album.getTitle(), ParticipationAction.KICK));
     }
 
     @Override

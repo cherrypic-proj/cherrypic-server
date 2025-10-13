@@ -5,14 +5,17 @@ import java.util.List;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import org.cherrypic.album.entity.Album;
+import org.cherrypic.album.entity.AlbumParticipationHistory;
 import org.cherrypic.album.entity.InvitationCode;
 import org.cherrypic.album.enums.AlbumType;
 import org.cherrypic.domain.album.dto.event.AlbumDeleteNotificationSendEvent;
 import org.cherrypic.domain.album.dto.event.AlbumImagesDeleteEvent;
+import org.cherrypic.album.enums.ParticipationAction;
 import org.cherrypic.domain.album.dto.request.AlbumCreateRequest;
 import org.cherrypic.domain.album.dto.request.AlbumUpdateRequest;
 import org.cherrypic.domain.album.dto.response.*;
 import org.cherrypic.domain.album.exception.AlbumErrorCode;
+import org.cherrypic.domain.album.repository.AlbumParticipationHistoryRepository;
 import org.cherrypic.domain.album.repository.AlbumRepository;
 import org.cherrypic.domain.album.repository.InvitationCodeRepository;
 import org.cherrypic.domain.event.repository.EventImageRepository;
@@ -65,6 +68,7 @@ public class AlbumServiceImpl implements AlbumService {
     private final ImageRepository imageRepository;
     private final EventImageRepository eventImageRepository;
     private final NotificationRepository notificationRepository;
+    private final AlbumParticipationHistoryRepository albumParticipationHistoryRepository;
 
     private final ApplicationEventPublisher eventPublisher;
 
@@ -189,6 +193,10 @@ public class AlbumServiceImpl implements AlbumService {
         participantRepository.save(participant);
 
         favoritesRepository.save(Favorites.createFavorites(participant));
+
+        albumParticipationHistoryRepository.save(
+                AlbumParticipationHistory.createAlbumParticipationHistory(
+                        currentMember.getId(), album.getTitle(), ParticipationAction.JOIN));
 
         return AlbumJoinResponse.from(participant);
     }
