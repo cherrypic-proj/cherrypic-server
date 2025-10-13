@@ -3,3 +3,11 @@ spring:
     url: jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=false;MODE=MYSQL
   flyway:
     enabled: false
+
+aws:
+  access-key-id: ${AWS_ACCESS_KEY_ID}
+  secret-access-key: ${AWS_SECRET_ACCESS_KEY}
+  region: ${AWS_REGION}
+  s3:
+    bucket: ${S3_BUCKET}
+    endpoint: ${S3_ENDPOINT:https://s3.ap-northeast-2.amazonaws.com}
