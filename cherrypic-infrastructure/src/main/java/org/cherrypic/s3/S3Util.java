@@ -115,6 +115,52 @@ public class S3Util {
         } while (result.isTruncated());
     }
 
+    public void deleteAllTempAlbumImagesInBatch(List<Long> tempAlbumIds) {
+        if (tempAlbumIds == null || tempAlbumIds.isEmpty()) {
+            log.info("deleteAllTempAlbumImagesInBatch skipped: empty targetIds");
+            return;
+        }
+
+        String bucket = s3Properties.bucket();
+        ImageType imageType = ImageType.TEMP_ALBUM_IMAGE;
+
+        for (Long targetId : tempAlbumIds) {
+            String prefix =
+                    springEnvironmentHelper.getCurrentProfile()
+                            + "/"
+                            + imageType.getType()
+                            + "/"
+                            + targetId
+                            + "/";
+
+            ListObjectsV2Request listReq =
+                    new ListObjectsV2Request().withBucketName(bucket).withPrefix(prefix);
+
+            ListObjectsV2Result result;
+            do {
+                result = amazonS3.listObjectsV2(listReq);
+
+                List<DeleteObjectsRequest.KeyVersion> keys =
+                        result.getObjectSummaries().stream()
+                                .map(S3ObjectSummary::getKey)
+                                .map(DeleteObjectsRequest.KeyVersion::new)
+                                .toList();
+
+                if (!keys.isEmpty()) {
+                    amazonS3.deleteObjects(new DeleteObjectsRequest(bucket).withKeys(keys));
+                    log.info(
+                            "Deleted {} objects for targetId={} (TEMP_ALBUM_IMAGE)",
+                            keys.size(),
+                            targetId);
+                } else {
+                    log.info("No objects found for targetId={} (TEMP_ALBUM_IMAGE)", targetId);
+                }
+
+                listReq.setContinuationToken(result.getNextContinuationToken());
+            } while (result.isTruncated());
+        }
+    }
+
     public void deleteByUrl(String url) {
         String bucket = s3Properties.bucket();
         String objectKey = extractObjectKey(url);
