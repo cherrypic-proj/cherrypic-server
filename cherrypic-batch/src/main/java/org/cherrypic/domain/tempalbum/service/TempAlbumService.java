@@ -6,7 +6,6 @@ import lombok.RequiredArgsConstructor;
 import org.cherrypic.domain.tempalbum.repository.TempAlbumImageRepository;
 import org.cherrypic.domain.tempalbum.repository.TempAlbumRepository;
 import org.cherrypic.s3.S3Util;
-import org.cherrypic.tempalbum.entity.TempAlbum;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,11 +20,10 @@ public class TempAlbumService {
     private final S3Util s3Util;
 
     public void expireOverdueTempAlbum() {
-        List<TempAlbum> tempAlbums = tempAlbumRepository.findAllExpiredToday(LocalDate.now());
-        List<Long> tempAlbumIds = tempAlbums.stream().map(TempAlbum::getId).toList();
+        List<Long> tempAlbumIds = tempAlbumRepository.findAllExpiredIdsToday(LocalDate.now());
 
         s3Util.deleteAllTempAlbumImagesInBatch(tempAlbumIds);
         tempAlbumImageRepository.deleteAllByTempAlbumIds(tempAlbumIds);
-        tempAlbumRepository.deleteAllInBatch(tempAlbums);
+        tempAlbumRepository.deleteAllByIdInBatch(tempAlbumIds);
     }
 }
