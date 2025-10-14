@@ -5,7 +5,6 @@ import org.cherrypic.subscription.entity.Subscription;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 
 public interface SubscriptionRepository extends JpaRepository<Subscription, Long> {
     @Modifying(clearAutomatically = true)
@@ -13,5 +12,5 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
             value =
                     "update subscription set status = 'EXPIRED', next_billing_at = null where status IN ('ACTIVE', 'CANCELED') and end_at < :now",
             nativeQuery = true)
-    void bulkExpire(@Param("now") LocalDateTime now);
+    void bulkExpire(LocalDateTime now);
 }
