@@ -49,4 +49,11 @@ public class TempAlbumController {
         tempAlbumService.updateTempAlbum(tempAlbumId, request);
         return ResponseEntity.noContent().build();
     }
+
+    @DeleteMapping("/{tempAlbumId}")
+    @Operation(summary = "임시 앨범 삭제", description = "임시 앨범을 삭제합니다.")
+    public ResponseEntity<Void> tempAlbumDelete(@PathVariable Long tempAlbumId) {
+        tempAlbumService.deleteTempAlbum(tempAlbumId);
+        return ResponseEntity.noContent().build();
+    }
 }

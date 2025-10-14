@@ -304,4 +304,51 @@ class TempAlbumControllerTest {
                     .andExpect(jsonPath("$.data.message").value("임시 앨범 소유자가 아닌 경우 권한이 없습니다."));
         }
     }
+
+    @Nested
+    class 임시_앨범_삭제_요청_시 {
+
+        @Test
+        void 유효한_요청이면_임시_앨범을_삭제한다() throws Exception {
+            // given
+            willDoNothing().given(tempAlbumService).deleteTempAlbum(1L);
+
+            // when & then
+            ResultActions perform = mockMvc.perform(delete("/temp-albums/1"));
+
+            perform.andExpect(status().isNoContent())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.NO_CONTENT.value()));
+        }
+
+        @Test
+        void 임시_앨범이_존재하지_않는_경우_예외가_발생한다() throws Exception {
+            // given
+            willThrow(new CustomException(TempAlbumErrorCode.TEMP_ALBUM_NOT_FOUND))
+                    .given(tempAlbumService)
+                    .deleteTempAlbum(1L);
+
+            // when & then
+            ResultActions perform = mockMvc.perform(delete("/temp-albums/1"));
+
+            perform.andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.NOT_FOUND.value()));
+        }
+
+        @Test
+        void 임시_앨범_소유자가_아닌_경우_예외가_발생한다() throws Exception {
+            // given
+            willThrow(new CustomException(TempAlbumErrorCode.NOT_TEMP_ALBUM_OWNER))
+                    .given(tempAlbumService)
+                    .deleteTempAlbum(1L);
+
+            // when & then
+            ResultActions perform = mockMvc.perform(delete("/temp-albums/1"));
+
+            perform.andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.FORBIDDEN.value()));
+        }
+    }
 }

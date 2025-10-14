@@ -1,4 +1,4 @@
-package org.cherrypic.domain.album.event;
+package org.cherrypic.domain.album.dto.event;
 
 import java.util.List;
 

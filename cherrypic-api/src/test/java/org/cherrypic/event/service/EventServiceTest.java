@@ -25,7 +25,7 @@ import org.cherrypic.domain.event.exception.EventErrorCode;
 import org.cherrypic.domain.event.repository.EventImageRepository;
 import org.cherrypic.domain.event.repository.EventRepository;
 import org.cherrypic.domain.event.service.EventService;
-import org.cherrypic.domain.image.event.ImageDeleteEvent;
+import org.cherrypic.domain.image.dto.event.ImageDeleteEvent;
 import org.cherrypic.domain.image.exception.ImageErrorCode;
 import org.cherrypic.domain.image.repository.ImageRepository;
 import org.cherrypic.domain.member.repository.MemberRepository;

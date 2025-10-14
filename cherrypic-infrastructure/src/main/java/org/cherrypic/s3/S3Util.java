@@ -115,6 +115,17 @@ public class S3Util {
         } while (result.isTruncated());
     }
 
+    public void deleteAllTempAlbumImagesInBatch(List<Long> targetIds) {
+        if (targetIds == null || targetIds.isEmpty()) {
+            log.info("deleteAllByImageTypeAndTargetIds skipped: empty targetIds");
+            return;
+        }
+
+        for (Long targetId : targetIds) {
+            deleteAllByImageTypeAndTargetId(ImageType.TEMP_ALBUM_IMAGE, targetId);
+        }
+    }
+
     public void deleteByUrl(String url) {
         String bucket = s3Properties.bucket();
         String objectKey = extractObjectKey(url);

@@ -12,3 +12,6 @@ management:
   endpoint:
     health:
       access: unrestricted
+
+fcm:
+  certification: ${FCM_CERTIFICATION:}
