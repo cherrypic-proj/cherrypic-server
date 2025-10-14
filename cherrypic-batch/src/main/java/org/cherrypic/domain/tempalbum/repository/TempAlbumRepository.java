@@ -9,6 +9,6 @@ import org.springframework.data.repository.query.Param;
 
 public interface TempAlbumRepository extends JpaRepository<TempAlbum, Long> {
 
-    @Query("SELECT t.id FROM TempAlbum t WHERE t.expiredAt = :now")
+    @Query("select t.id from TempAlbum t where t.expiredAt = :now")
     List<Long> findAllExpiredIdsToday(@Param("now") LocalDate now);
 }
