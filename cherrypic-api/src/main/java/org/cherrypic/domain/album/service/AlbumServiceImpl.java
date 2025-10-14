@@ -284,6 +284,10 @@ public class AlbumServiceImpl implements AlbumService {
         paymentRepository.deleteAllByAlbumId(album.getId());
 
         albumRepository.deleteByAlbumId(album.getId());
+
+        albumParticipationHistoryRepository.save(
+                AlbumParticipationHistory.createAlbumParticipationHistory(
+                        currentMember.getId(), album.getTitle(), ParticipationAction.DELETED));
     }
 
     private Album getAlbumById(Long albumId) {
