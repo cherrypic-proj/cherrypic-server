@@ -8,6 +8,6 @@ import org.springframework.data.jpa.repository.Query;
 public interface TempAlbumImageRepository extends JpaRepository<TempAlbumImage, Long> {
 
     @Modifying(clearAutomatically = true)
-    @Query("DELETE FROM TempAlbumImage i WHERE i.tempAlbum.id = :tempAlbumId")
+    @Query("delete from TempAlbumImage i where i.tempAlbum.id = :tempAlbumId")
     void deleteAllByTempAlbumId(Long tempAlbumId);
 }

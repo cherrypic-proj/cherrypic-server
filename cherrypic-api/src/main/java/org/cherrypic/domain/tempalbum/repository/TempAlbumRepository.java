@@ -10,6 +10,6 @@ public interface TempAlbumRepository extends JpaRepository<TempAlbum, Long> {
 
     long countByMemberId(Long memberId);
 
-    @Query("SELECT t FROM TempAlbum t WHERE t.member.id = :memberId ORDER BY t.id DESC")
+    @Query("select t from TempAlbum t where t.member.id = :memberId order by t.id desc")
     List<TempAlbum> findAllByMemberIdOrderByIdDesc(@Param("memberId") Long memberId);
 }
