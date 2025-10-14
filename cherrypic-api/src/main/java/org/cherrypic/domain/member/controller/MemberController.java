@@ -50,7 +50,7 @@ public class MemberController {
     }
 
     @GetMapping("/me/participation-history")
-    @Operation(summary = "회원의 앨범 참여 이력 조회", description = "사용자가 입장/퇴장/강퇴된 앨범 이력을 조회합니다.")
+    @Operation(summary = "앨범 참여 이력 조회", description = "사용자가 생성/입장, 삭제, 퇴장, 강퇴된 앨범 이력을 조회합니다.")
     public SliceResponse<ParticipationHistoryResponse> participationHistoryGet(
             @Parameter(description = "이전 페이지의 마지막 앨범 참여 이력 ID (첫 요청 시 생략)")
                     @RequestParam(required = false)
