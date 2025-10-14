@@ -24,7 +24,7 @@ public class AlbumParticipationHistory extends BaseTimeEntity {
 
     @NotNull
     @Enumerated(EnumType.STRING)
-    ParticipationAction action;
+    private ParticipationAction action;
 
     @Builder(access = AccessLevel.PRIVATE)
     private AlbumParticipationHistory(
