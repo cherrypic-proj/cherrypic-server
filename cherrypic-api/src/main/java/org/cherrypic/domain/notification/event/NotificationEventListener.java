@@ -1,7 +1,7 @@
 package org.cherrypic.domain.notification.event;
 
 import lombok.RequiredArgsConstructor;
-import org.cherrypic.domain.album.event.AlbumDeleteNotificationSendEvent;
+import org.cherrypic.domain.album.dto.event.AlbumDeleteNotificationSendEvent;
 import org.cherrypic.domain.notification.service.NotificationService;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;

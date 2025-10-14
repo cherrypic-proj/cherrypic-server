@@ -1,4 +1,4 @@
-package org.cherrypic.domain.tempalbum.event;
+package org.cherrypic.domain.tempalbum.dto.event;
 
 import org.cherrypic.tempalbum.entity.TempAlbum;
 

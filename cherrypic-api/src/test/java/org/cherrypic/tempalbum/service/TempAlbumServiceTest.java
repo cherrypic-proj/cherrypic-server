@@ -2,7 +2,6 @@ package org.cherrypic.tempalbum.service;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.cherrypic.member.entity.QMember.member;
 import static org.mockito.BDDMockito.given;
 
 import java.math.BigDecimal;
@@ -10,11 +9,11 @@ import java.time.LocalDate;
 import java.util.List;
 import org.cherrypic.IntegrationTest;
 import org.cherrypic.domain.member.repository.MemberRepository;
+import org.cherrypic.domain.tempalbum.dto.event.TempAlbumDeleteEvent;
 import org.cherrypic.domain.tempalbum.dto.request.TempAlbumCreateRequest;
 import org.cherrypic.domain.tempalbum.dto.request.TempAlbumUpdateRequest;
 import org.cherrypic.domain.tempalbum.dto.response.TempAlbumInfoResponse;
 import org.cherrypic.domain.tempalbum.dto.response.TempAlbumListResponse;
-import org.cherrypic.domain.tempalbum.event.TempAlbumDeleteEvent;
 import org.cherrypic.domain.tempalbum.exception.TempAlbumErrorCode;
 import org.cherrypic.domain.tempalbum.repository.TempAlbumImageRepository;
 import org.cherrypic.domain.tempalbum.repository.TempAlbumRepository;

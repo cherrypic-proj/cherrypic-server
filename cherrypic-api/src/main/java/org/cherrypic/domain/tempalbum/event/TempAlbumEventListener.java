@@ -1,6 +1,8 @@
 package org.cherrypic.domain.tempalbum.event;
 
 import lombok.RequiredArgsConstructor;
+import org.cherrypic.domain.tempalbum.dto.event.TempAlbumDeleteEvent;
+import org.cherrypic.domain.tempalbum.dto.event.TempAlbumImagesDeleteEvent;
 import org.cherrypic.s3.S3Util;
 import org.cherrypic.s3.enums.ImageType;
 import org.springframework.scheduling.annotation.Async;

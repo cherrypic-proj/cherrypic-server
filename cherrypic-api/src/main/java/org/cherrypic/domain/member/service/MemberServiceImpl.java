@@ -1,7 +1,7 @@
 package org.cherrypic.domain.member.service;
 
 import lombok.RequiredArgsConstructor;
-import org.cherrypic.domain.image.event.ImageDeleteEvent;
+import org.cherrypic.domain.image.dto.event.ImageDeleteEvent;
 import org.cherrypic.domain.member.dto.request.FcmTokenSaveRequest;
 import org.cherrypic.domain.member.dto.request.MemberProfileUpdateRequest;
 import org.cherrypic.domain.member.dto.response.LocalImageDeletionToggleResponse;
