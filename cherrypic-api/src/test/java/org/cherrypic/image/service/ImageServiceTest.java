@@ -1334,7 +1334,7 @@ class ImageServiceTest extends IntegrationTest {
 
             // then
             Assertions.assertAll(
-                    () -> assertThat(response.tempAlbumImagesId()).isEqualTo(List.of(1L, 2L)),
+                    () -> assertThat(response.tempAlbumImageIds()).isEqualTo(List.of(1L, 2L)),
                     () ->
                             assertThat(tempAlbumImageRepository.findAllById(List.of(1L, 2L)).size())
                                     .isEqualTo(2));
