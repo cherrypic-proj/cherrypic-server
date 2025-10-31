@@ -36,4 +36,6 @@ public interface ImageService {
             Long tempAlbumId, TempAlbumImageUploadRequest request);
 
     void deleteTempAlbumImage(Long tempAlbumId, TempAlbumImageDeleteRequest request);
+
+    void confirmNonAlbumImage(ImageConfirmRequest request);
 }

@@ -333,6 +333,13 @@ public class ImageServiceImpl implements ImageService {
         tempAlbumImageRepository.deleteAllInBatch(tempAlbumImages);
     }
 
+    @Override
+    public void confirmNonAlbumImage(ImageConfirmRequest request) {
+        if (!s3Util.doesFileExistByUrl(request.imageUrl())) {
+            throw new CustomException(ImageErrorCode.IMAGE_UPLOAD_FAIL);
+        }
+    }
+
     private Album getAlbumById(Long albumId) {
         return albumRepository
                 .findById(albumId)

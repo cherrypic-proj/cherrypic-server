@@ -51,6 +51,14 @@ public class ImageController {
         return imageService.createEventCoverImageUploadUrl(request);
     }
 
+    @PostMapping("/image/confirm-non-album")
+    @Operation(summary = "앨범 사진 외 사진 검증", description = "프로필, 커버 사진 등의 이미지 업로드를 검증합니다.")
+    public ResponseEntity<Void> nonAlbumImageConfirm(
+            @Valid @RequestBody ImageConfirmRequest request) {
+        imageService.confirmNonAlbumImage(request);
+        return ResponseEntity.noContent().build();
+    }
+
     @PostMapping("/albums/{albumId}/images")
     @Operation(
             summary = "앨범 이미지 업로드 Presigned URL들 생성",

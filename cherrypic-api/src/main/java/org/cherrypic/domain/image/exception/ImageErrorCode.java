@@ -11,6 +11,7 @@ public enum ImageErrorCode implements BaseErrorCode {
     IMAGE_DELETED(409, "이미지 관련 작업 중 이미지가 삭제되었습니다."),
     IMAGE_CONFLICT(409, "예상치 못한 이미지 무결성 오류"),
     NOT_IMAGE_EXTENSION(400, "프로필과 커버에는 이미지 파일만 업로드 가능합니다."),
+    IMAGE_UPLOAD_FAIL(400, "이미지가 성공적으로 업로드 되지 못했습니다."),
 
     PRESIGNED_IMAGES_NOT_MINE(403, "본인이 업로드하지 않은 Presigned Image는 삭제할 수 없습니다."),
     DUPLICATE_HASHES(400, "중복되는 md5 해시값이 존재합니다.");
