@@ -1350,11 +1350,7 @@ class ImageControllerTest {
 
             TempAlbumImageUploadResponse response =
                     new TempAlbumImageUploadResponse(
-                            List.of(
-                                    new TempAlbumImageUploadResponse.Content(
-                                            1L, "testPresignedUrl1"),
-                                    new TempAlbumImageUploadResponse.Content(
-                                            2L, "testPresignedUrl2")));
+                            List.of("testPresignedUrl1", "testPresignedUrl2"));
 
             given(imageService.createTempAlbumImageUploadUrls(1L, request)).willReturn(response);
 

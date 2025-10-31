@@ -955,7 +955,7 @@ class ImageServiceTest extends IntegrationTest {
         }
 
         @Test
-        void 유효한_요청이면_임시_앨범_이미지를_저장하고_Presigned_URL들을_반환한다() {
+        void 유효한_요청이면_Presigned_URL들을_반환한다() {
             // given
             TempAlbumImageUploadRequest request =
                     new TempAlbumImageUploadRequest(
@@ -999,33 +999,18 @@ class ImageServiceTest extends IntegrationTest {
                     imageService.createTempAlbumImageUploadUrls(1L, request);
 
             // then
-            assertThat(response.content())
+            assertThat(response.urls())
                     .hasSize(2)
                     .satisfiesExactly(
                             payload1 -> {
-                                assertThat(payload1.tempAlbumImageId()).isEqualTo(1L);
-                                assertThat(payload1.presignedUrl())
+                                assertThat(payload1)
                                         .containsPattern(
                                                 ".*/local/temp-album-image/1/[\\w\\-]+\\.(jpg|jpeg)\\?.+");
                             },
                             payload2 -> {
-                                assertThat(payload2.tempAlbumImageId()).isEqualTo(2L);
-                                assertThat(payload2.presignedUrl())
+                                assertThat(payload2)
                                         .containsPattern(
                                                 ".*/local/temp-album-image/1/[\\w\\-]+\\.(jpg|jpeg)\\?.+");
-                            });
-
-            List<TempAlbumImage> tempAlbumImages = tempAlbumImageRepository.findAll();
-            assertThat(tempAlbumImages)
-                    .hasSize(2)
-                    .allSatisfy(
-                            tempAlbumImage -> {
-                                assertThat(tempAlbumImage.getTempAlbum().getId()).isEqualTo(1L);
-                                assertThat(tempAlbumImage.getUrl())
-                                        .containsPattern(
-                                                String.format(
-                                                        "/%s/%s/%d/[\\w\\-]+\\.(jpg|jpeg)",
-                                                        "local", "temp-album-image", 1));
                             });
         }
 
@@ -1304,6 +1289,90 @@ class ImageServiceTest extends IntegrationTest {
 
             // when & then
             assertThatThrownBy(() -> imageService.confirmAlbumImagesUpload(1L, request))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(ImageErrorCode.IMAGE_UPLOAD_FAIL.getMessage());
+        }
+    }
+
+    @Nested
+    class 임시_앨범_이미지_업로드를_검증할_때 {
+
+        @BeforeEach
+        void setUp() {
+            Member member =
+                    Member.createMember(
+                            OauthInfo.createOauthInfo("testOauthId", "testOauthProvider"),
+                            "testNickname1",
+                            "testProfileImageUrl1");
+            memberRepository.save(member);
+            given(memberUtil.getCurrentMember()).willReturn(member);
+
+            TempAlbum tempAlbum = TempAlbum.createTempAlbum(member, "testTitle1");
+            tempAlbumRepository.save(tempAlbum);
+        }
+
+        @Test
+        void 유효한_요청이면_임시_앨범_이미지를_생성한다() {
+            // given
+            TempAlbumImagesConfirmRequest request =
+                    new TempAlbumImagesConfirmRequest(
+                            List.of(
+                                    new TempAlbumImagesConfirmRequest.Payload(
+                                            BigDecimal.ONE, "testImageUrl1"),
+                                    new TempAlbumImagesConfirmRequest.Payload(
+                                            BigDecimal.ONE, "testImageUrl2")));
+
+            given(s3Util.doAllFilesExistByUrls(List.of("testImageUrl1", "testImageUrl2")))
+                    .willReturn(true);
+            willDoNothing()
+                    .given(s3Util)
+                    .updateTagsToCompleteByUrls(List.of("testImageUrl1", "testImageUrl2"));
+
+            // when
+            TempAlbumImagesConfirmResponse response =
+                    imageService.confirmTempAlbumImagesUpload(1L, request);
+
+            // then
+            Assertions.assertAll(
+                    () -> assertThat(response.tempAlbumImagesId()).isEqualTo(List.of(1L, 2L)),
+                    () ->
+                            assertThat(tempAlbumImageRepository.findAllById(List.of(1L, 2L)).size())
+                                    .isEqualTo(2));
+        }
+
+        @Test
+        void 임시_앨범이_존재하지_않는_경우_예외가_발생한다() {
+            // given
+            TempAlbumImagesConfirmRequest request =
+                    new TempAlbumImagesConfirmRequest(
+                            List.of(
+                                    new TempAlbumImagesConfirmRequest.Payload(
+                                            BigDecimal.ONE, "testImageUrl1"),
+                                    new TempAlbumImagesConfirmRequest.Payload(
+                                            BigDecimal.ONE, "testImageUrl2")));
+
+            // when & then
+            assertThatThrownBy(() -> imageService.confirmTempAlbumImagesUpload(999L, request))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(TempAlbumErrorCode.TEMP_ALBUM_NOT_FOUND.getMessage());
+        }
+
+        @Test
+        void 모든_이미지를_업로드_성공하지_않았을_경우_예외가_발생한다() {
+            // given
+            TempAlbumImagesConfirmRequest request =
+                    new TempAlbumImagesConfirmRequest(
+                            List.of(
+                                    new TempAlbumImagesConfirmRequest.Payload(
+                                            BigDecimal.ONE, "testImageUrl1"),
+                                    new TempAlbumImagesConfirmRequest.Payload(
+                                            BigDecimal.ONE, "testImageUrl2")));
+
+            given(s3Util.doAllFilesExistByUrls(List.of("testImageUrl1", "testImageUrl2")))
+                    .willReturn(false);
+
+            // when & then
+            assertThatThrownBy(() -> imageService.confirmTempAlbumImagesUpload(1L, request))
                     .isInstanceOf(CustomException.class)
                     .hasMessage(ImageErrorCode.IMAGE_UPLOAD_FAIL.getMessage());
         }
