@@ -1763,4 +1763,72 @@ class ImageControllerTest {
                                     .value("삭제하고자 하는 임시 앨범 이미지 ID들은 비워둘 수 없습니다."));
         }
     }
+
+    @Nested
+    class 앨범_외_이미지_업로드_검증_요청_시 {
+
+        @Test
+        void 유효한_요청이면_NO_CONTENT를_반환한다() throws Exception {
+            // given
+            ImageConfirmRequest request = new ImageConfirmRequest("testImageUrl");
+
+            willDoNothing().given(imageService).confirmNonAlbumImage(request);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/image/confirm-non-album")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isNoContent())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.NO_CONTENT.value()));
+        }
+
+        @Test
+        void 이미지_업로드_실패_시_예외가_발생한다() throws Exception {
+            // given
+            ImageConfirmRequest request = new ImageConfirmRequest("testImageUrl");
+
+            willThrow(new CustomException(ImageErrorCode.IMAGE_UPLOAD_FAIL))
+                    .given(imageService)
+                    .confirmNonAlbumImage(request);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/image/confirm-non-album")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("IMAGE_UPLOAD_FAIL"))
+                    .andExpect(jsonPath("$.data.message").value("이미지가 성공적으로 업로드 되지 못했습니다."));
+        }
+
+        @ParameterizedTest
+        @NullSource
+        @EmptySource
+        @ValueSource(strings = {" "})
+        void 이미지_url을_비워두면_예외가_발생한다(String imageUrl) throws Exception {
+            // given
+            ImageConfirmRequest request = new ImageConfirmRequest(imageUrl);
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            post("/image/confirm-non-album")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("MethodArgumentNotValidException"))
+                    .andExpect(jsonPath("$.data.message").value("이미지 url을 비워둘 수 없습니다."));
+        }
+    }
 }

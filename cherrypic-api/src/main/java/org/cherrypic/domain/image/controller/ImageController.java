@@ -52,7 +52,7 @@ public class ImageController {
     }
 
     @PostMapping("/image/confirm-non-album")
-    @Operation(summary = "앨범 사진 외 사진 검증", description = "프로필, 커버 사진 등의 이미지 업로드를 검증합니다.")
+    @Operation(summary = "앨범 사진 외 이미지 검증", description = "프로필, 커버 사진 등의 이미지 업로드를 검증합니다.")
     public ResponseEntity<Void> nonAlbumImageConfirm(
             @Valid @RequestBody ImageConfirmRequest request) {
         imageService.confirmNonAlbumImage(request);
