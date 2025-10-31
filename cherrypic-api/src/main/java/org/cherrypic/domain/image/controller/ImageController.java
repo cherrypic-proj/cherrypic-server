@@ -68,7 +68,7 @@ public class ImageController {
         return imageService.createAlbumImageUploadUrls(albumId, request);
     }
 
-    @PostMapping("/album/{albumId}/confirm-images-upload")
+    @PostMapping("/albums/{albumId}/confirm-images-upload")
     @Operation(summary = "앨범 이미지 업로드 검증", description = "앨범 이미지들의 업로드를 검증합니다.")
     public AlbumImagesConfirmResponse albumImagesUploadConfirm(
             @PathVariable Long albumId, @Valid @RequestBody AlbumImagesConfirmRequest request) {
