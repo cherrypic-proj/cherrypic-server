@@ -1,6 +1,7 @@
 package org.cherrypic.image.service;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
 
@@ -1249,6 +1250,32 @@ class ImageServiceTest extends IntegrationTest {
             assertThatThrownBy(() -> imageService.deleteTempAlbumImage(1L, request))
                     .isInstanceOf(CustomException.class)
                     .hasMessage(TempAlbumErrorCode.IMAGES_NOT_IN_TEMP_ALBUM.getMessage());
+        }
+    }
+
+    @Nested
+    class 앨범_외_이미지_업로드를_검증할_때 {
+
+        @Test
+        void 업로드_성공_시_예외가_발생하지_않는다() {
+            // given
+            ImageConfirmRequest request = new ImageConfirmRequest("testImageUrl");
+            given(s3Util.doesFileExistByUrl("testImageUrl")).willReturn(true);
+
+            // when & then
+            assertDoesNotThrow(() -> imageService.confirmNonAlbumImage(request));
+        }
+
+        @Test
+        void 업로드_실패_시_예외가_발생한다() {
+            // given
+            ImageConfirmRequest request = new ImageConfirmRequest("testImageUrl");
+            given(s3Util.doesFileExistByUrl("testImageUrl")).willReturn(false);
+
+            // when & then
+            assertThatThrownBy(() -> imageService.confirmNonAlbumImage(request))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(ImageErrorCode.IMAGE_UPLOAD_FAIL.getMessage());
         }
     }
 }
