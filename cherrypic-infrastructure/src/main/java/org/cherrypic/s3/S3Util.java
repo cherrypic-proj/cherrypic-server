@@ -80,6 +80,12 @@ public class S3Util {
         amazonS3.setObjectTagging(request);
     }
 
+    public void updateTagsToCompleteByUrls(List<String> urls) {
+        for (String url : urls) {
+            updateTagToCompleteByUrl(url);
+        }
+    }
+
     public boolean doesFileExistByUrl(String url) {
         String bucket = s3Properties.bucket();
         String key = extractObjectKey(url);
@@ -96,6 +102,17 @@ public class S3Util {
             log.error("Network error while connecting to S3: {}", e.getMessage());
             return false;
         }
+    }
+
+    public boolean doAllFilesExistByUrls(List<String> urls) {
+        for (String url : urls) {
+            if (!doesFileExistByUrl(url)) {
+                log.warn("File not found or inaccessible: {}", url);
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public void deleteAllByUrls(List<String> urls) {

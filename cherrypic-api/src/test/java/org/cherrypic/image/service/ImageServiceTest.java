@@ -1263,7 +1263,7 @@ class ImageServiceTest extends IntegrationTest {
             given(s3Util.doesFileExistByUrl("testImageUrl")).willReturn(true);
 
             // when & then
-            assertDoesNotThrow(() -> imageService.confirmNonAlbumImage(request));
+            assertDoesNotThrow(() -> imageService.confirmNonAlbumImageUpload(request));
         }
 
         @Test
@@ -1273,7 +1273,7 @@ class ImageServiceTest extends IntegrationTest {
             given(s3Util.doesFileExistByUrl("testImageUrl")).willReturn(false);
 
             // when & then
-            assertThatThrownBy(() -> imageService.confirmNonAlbumImage(request))
+            assertThatThrownBy(() -> imageService.confirmNonAlbumImageUpload(request))
                     .isInstanceOf(CustomException.class)
                     .hasMessage(ImageErrorCode.IMAGE_UPLOAD_FAIL.getMessage());
         }

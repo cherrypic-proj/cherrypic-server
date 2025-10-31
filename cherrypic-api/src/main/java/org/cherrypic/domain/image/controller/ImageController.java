@@ -52,10 +52,10 @@ public class ImageController {
     }
 
     @PostMapping("/image/confirm-non-album")
-    @Operation(summary = "앨범 사진 외 이미지 검증", description = "프로필, 커버 사진 등의 이미지 업로드를 검증합니다.")
-    public ResponseEntity<Void> nonAlbumImageConfirm(
+    @Operation(summary = "앨범 사진 외 이미지 업로드 검증", description = "프로필, 커버 사진 등의 이미지 업로드를 검증합니다.")
+    public ResponseEntity<Void> nonAlbumImageUploadConfirm(
             @Valid @RequestBody ImageConfirmRequest request) {
-        imageService.confirmNonAlbumImage(request);
+        imageService.confirmNonAlbumImageUpload(request);
         return ResponseEntity.noContent().build();
     }
 
@@ -63,9 +63,16 @@ public class ImageController {
     @Operation(
             summary = "앨범 이미지 업로드 Presigned URL들 생성",
             description = "앨범 이미지 업로드를 위한 Presigned URL들을 생성합니다.")
-    public ImageUploadListResponse albumImageUploadUrlsCreate(
+    public AlbumImageUploadResponse albumImageUploadUrlsCreate(
             @PathVariable Long albumId, @Valid @RequestBody AlbumImageUploadRequest request) {
         return imageService.createAlbumImageUploadUrls(albumId, request);
+    }
+
+    @PostMapping("/album/{albumId}/confirm-images-upload")
+    @Operation(summary = "앨범 이미지 업로드 검증", description = "앨범 이미지들의 업로드를 검증합니다.")
+    public AlbumImagesConfirmResponse albumImagesUploadConfirm(
+            @PathVariable Long albumId, @Valid @RequestBody AlbumImagesConfirmRequest request) {
+        return imageService.confirmAlbumImagesUpload(albumId, request);
     }
 
     @GetMapping("/albums/{albumId}/images")

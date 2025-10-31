@@ -1772,7 +1772,7 @@ class ImageControllerTest {
             // given
             ImageConfirmRequest request = new ImageConfirmRequest("testImageUrl");
 
-            willDoNothing().given(imageService).confirmNonAlbumImage(request);
+            willDoNothing().given(imageService).confirmNonAlbumImageUpload(request);
 
             // when & then
             ResultActions perform =
@@ -1793,7 +1793,7 @@ class ImageControllerTest {
 
             willThrow(new CustomException(ImageErrorCode.IMAGE_UPLOAD_FAIL))
                     .given(imageService)
-                    .confirmNonAlbumImage(request);
+                    .confirmNonAlbumImageUpload(request);
 
             // when & then
             ResultActions perform =

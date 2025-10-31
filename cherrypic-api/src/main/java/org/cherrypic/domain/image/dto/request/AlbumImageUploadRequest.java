@@ -6,7 +6,6 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.List;
 import org.cherrypic.global.annotation.Enum;
 import org.cherrypic.s3.enums.FileExtension;
@@ -25,7 +24,6 @@ public record AlbumImageUploadRequest(
             @NotBlank(message = "MD5 해시값은 비워둘 수 없습니다.")
                     @Schema(description = "S3 업로드시 파일의 변형을 확인하기 위한 md5 해시")
                     String md5Hashes,
-            @Schema(description = "파일이 찍힌 시간, 정보가 없다면 null을 넣어주세요.") LocalDateTime generatedAt,
             @NotNull(message = "파일의 용량은 비워둘 수 없습니다.")
                     @Schema(description = "업로드 하는 파일의 용량(MB), 소수점 2자리 까지", example = "0.04")
                     BigDecimal capacityMb) {}

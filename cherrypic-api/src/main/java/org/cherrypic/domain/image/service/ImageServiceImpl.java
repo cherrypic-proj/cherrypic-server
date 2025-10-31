@@ -114,7 +114,7 @@ public class ImageServiceImpl implements ImageService {
     }
 
     @Override
-    public ImageUploadListResponse createAlbumImageUploadUrls(
+    public AlbumImageUploadResponse createAlbumImageUploadUrls(
             Long albumId, AlbumImageUploadRequest request) {
         final Member currentMember = memberUtil.getCurrentMember();
         final Album album = getAlbumByIdWithLock(albumId);
@@ -130,8 +130,6 @@ public class ImageServiceImpl implements ImageService {
         validateAlbumCapacity(album, uploadCapacityMb);
         validateDistinctHashes(request);
 
-        album.increaseCapacity(uploadCapacityMb);
-
         List<String> presignedUrls =
                 request.payloads().stream()
                         .map(
@@ -143,42 +141,7 @@ public class ImageServiceImpl implements ImageService {
                                                 req.md5Hashes()))
                         .toList();
 
-        List<Image> images =
-                IntStream.range(0, request.payloads().size())
-                        .mapToObj(
-                                i -> {
-                                    AlbumImageUploadRequest.Payload req = request.payloads().get(i);
-                                    String presignedUrl = presignedUrls.get(i);
-
-                                    String objectUrl =
-                                            presignedUrl.substring(0, presignedUrl.indexOf("?"));
-
-                                    return Image.createImage(
-                                            album,
-                                            currentMember.getId(),
-                                            objectUrl,
-                                            req.generatedAt() != null
-                                                    ? req.generatedAt()
-                                                    : LocalDateTime.now(),
-                                            req.capacityMb());
-                                })
-                        .toList();
-
-        imageRepository.bulkInsertImages(images);
-
-        List<Long> imageIds =
-                imageRepository.findImageIdsByUrlsInOrder(
-                        images.stream().map(Image::getUrl).toList());
-
-        List<ImageUploadListResponse.Content> content =
-                IntStream.range(0, images.size())
-                        .mapToObj(
-                                i ->
-                                        ImageUploadListResponse.Content.of(
-                                                imageIds.get(i), presignedUrls.get(i)))
-                        .toList();
-
-        return ImageUploadListResponse.of(content, currentMember.getLocalImageDeletion());
+        return AlbumImageUploadResponse.of(presignedUrls);
     }
 
     @Override
@@ -334,10 +297,59 @@ public class ImageServiceImpl implements ImageService {
     }
 
     @Override
-    public void confirmNonAlbumImage(ImageConfirmRequest request) {
-        if (!s3Util.doesFileExistByUrl(request.imageUrl())) {
-            throw new CustomException(ImageErrorCode.IMAGE_UPLOAD_FAIL);
-        }
+    public void confirmNonAlbumImageUpload(ImageConfirmRequest request) {
+        validateImageUpload(request.imageUrl());
+
+        s3Util.updateTagToCompleteByUrl(request.imageUrl());
+    }
+
+    @Override
+    public AlbumImagesConfirmResponse confirmAlbumImagesUpload(
+            Long albumId, AlbumImagesConfirmRequest request) {
+        final Member currentMember = memberUtil.getCurrentMember();
+        final Album album = getAlbumById(albumId);
+
+        List<String> imageUrls =
+                request.payloads().stream()
+                        .map(AlbumImagesConfirmRequest.Payload::imageUrl)
+                        .toList();
+
+        validateImagesUpload(imageUrls);
+
+        s3Util.updateTagsToCompleteByUrls(imageUrls);
+
+        BigDecimal uploadCapacityMb =
+                request.payloads().stream()
+                        .map(AlbumImagesConfirmRequest.Payload::capacityMb)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+        album.increaseCapacity(uploadCapacityMb);
+
+        List<Image> images =
+                IntStream.range(0, request.payloads().size())
+                        .mapToObj(
+                                i -> {
+                                    AlbumImagesConfirmRequest.Payload req =
+                                            request.payloads().get(i);
+                                    String imageUrl = imageUrls.get(i);
+
+                                    return Image.createImage(
+                                            album,
+                                            currentMember.getId(),
+                                            imageUrl,
+                                            req.generatedAt() != null
+                                                    ? req.generatedAt()
+                                                    : LocalDateTime.now(),
+                                            req.capacityMb());
+                                })
+                        .toList();
+
+        imageRepository.bulkInsertImages(images);
+
+        List<Long> imageIds =
+                imageRepository.findImageIdsByUrlsInOrder(
+                        images.stream().map(Image::getUrl).toList());
+
+        return AlbumImagesConfirmResponse.of(imageIds, currentMember.getLocalImageDeletion());
     }
 
     private Album getAlbumById(Long albumId) {
@@ -465,6 +477,18 @@ public class ImageServiceImpl implements ImageService {
         Subscription subscription = getSubscriptionByAlbumId(album.getId());
         if (subscription.getStatus() == SubscriptionStatus.EXPIRED) {
             throw new CustomException(AlbumErrorCode.EXPIRED_SUBSCRIPTION);
+        }
+    }
+
+    private void validateImageUpload(String imageUrl) {
+        if (!s3Util.doesFileExistByUrl(imageUrl)) {
+            throw new CustomException(ImageErrorCode.IMAGE_UPLOAD_FAIL);
+        }
+    }
+
+    private void validateImagesUpload(List<String> imageUrls) {
+        if (!s3Util.doAllFilesExistByUrls(imageUrls)) {
+            throw new CustomException(ImageErrorCode.IMAGE_UPLOAD_FAIL);
         }
     }
 }
