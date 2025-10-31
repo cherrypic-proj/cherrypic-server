@@ -15,7 +15,6 @@ public record AlbumImagesConfirmRequest(
                 List<Payload> payloads) {
     @Schema(name = "AlbumImagesConfirmPayload")
     public record Payload(
-            String md5Hashes,
             @Schema(description = "파일이 찍힌 시간, 정보가 없다면 null을 넣어주세요.") LocalDateTime generatedAt,
             @NotNull(message = "파일의 용량은 비워둘 수 없습니다.")
                     @Schema(description = "업로드 하는 파일의 용량(MB), 소수점 2자리 까지", example = "0.04")

@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willDoNothing;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -302,21 +303,15 @@ class ImageServiceTest extends IntegrationTest {
         }
 
         @Test
-        void 유효한_요청이면_이미지를_저장하고_Presigned_URL들을_반환한다() {
+        void 유효한_요청이면_Presigned_URL들을_반환한다() {
             // given
             AlbumImageUploadRequest request =
                     new AlbumImageUploadRequest(
                             List.of(
                                     new AlbumImageUploadRequest.Payload(
-                                            FileExtension.JPEG,
-                                            "testMd5Hash1",
-                                            LocalDateTime.now(),
-                                            BigDecimal.ONE),
+                                            FileExtension.JPEG, "testMd5Hash1", BigDecimal.ONE),
                                     new AlbumImageUploadRequest.Payload(
-                                            FileExtension.JPEG,
-                                            "testMd5Hash2",
-                                            LocalDateTime.now(),
-                                            BigDecimal.ONE)));
+                                            FileExtension.JPEG, "testMd5Hash2", BigDecimal.ONE)));
             given(
                             s3Util.createPresignedUrl(
                                     eq(ImageType.ALBUM_IMAGE),
@@ -344,38 +339,22 @@ class ImageServiceTest extends IntegrationTest {
                                     + "&Content-MD5=testMd5Hash2");
 
             // when
-            ImageUploadListResponse response = imageService.createAlbumImageUploadUrls(1L, request);
+            AlbumImageUploadResponse response =
+                    imageService.createAlbumImageUploadUrls(1L, request);
 
             // then
-            assertThat(response.content())
+            assertThat(response.urls())
                     .hasSize(2)
                     .satisfiesExactly(
                             payload1 -> {
-                                assertThat(payload1.imageId()).isEqualTo(1L);
-                                assertThat(payload1.presignedUrl())
+                                assertThat(payload1)
                                         .containsPattern(
                                                 ".*/local/album-image/1/[\\w\\-]+\\.(jpg|jpeg)\\?.+");
                             },
                             payload2 -> {
-                                assertThat(payload2.imageId()).isEqualTo(2L);
-                                assertThat(payload2.presignedUrl())
+                                assertThat(payload2)
                                         .containsPattern(
                                                 ".*/local/album-image/1/[\\w\\-]+\\.(jpg|jpeg)\\?.+");
-                            });
-            assertThat(response.localImageDeletion()).isFalse();
-
-            List<Image> images = imageRepository.findAll();
-            assertThat(images)
-                    .hasSize(2)
-                    .allSatisfy(
-                            image -> {
-                                assertThat(image.getAlbum().getId()).isEqualTo(1L);
-                                assertThat(image.getMemberId()).isEqualTo(1L);
-                                assertThat(image.getUrl())
-                                        .containsPattern(
-                                                String.format(
-                                                        "/%s/%s/%d/[\\w\\-]+\\.(jpg|jpeg)",
-                                                        "local", "album-image", 1));
                             });
         }
 
@@ -386,15 +365,9 @@ class ImageServiceTest extends IntegrationTest {
                     new AlbumImageUploadRequest(
                             List.of(
                                     new AlbumImageUploadRequest.Payload(
-                                            FileExtension.JPEG,
-                                            "testMd5Hash1",
-                                            LocalDateTime.now(),
-                                            BigDecimal.ZERO),
+                                            FileExtension.JPEG, "testMd5Hash1", BigDecimal.ONE),
                                     new AlbumImageUploadRequest.Payload(
-                                            FileExtension.JPEG,
-                                            "testMd5Hash2",
-                                            LocalDateTime.now(),
-                                            BigDecimal.ZERO)));
+                                            FileExtension.JPEG, "testMd5Hash2", BigDecimal.ONE)));
 
             // when & then
             assertThatThrownBy(() -> imageService.createAlbumImageUploadUrls(999L, request))
@@ -409,15 +382,9 @@ class ImageServiceTest extends IntegrationTest {
                     new AlbumImageUploadRequest(
                             List.of(
                                     new AlbumImageUploadRequest.Payload(
-                                            FileExtension.JPEG,
-                                            "testMd5Hash1",
-                                            LocalDateTime.now(),
-                                            BigDecimal.ZERO),
+                                            FileExtension.JPEG, "testMd5Hash1", BigDecimal.ONE),
                                     new AlbumImageUploadRequest.Payload(
-                                            FileExtension.JPEG,
-                                            "testMd5Hash2",
-                                            LocalDateTime.now(),
-                                            BigDecimal.ZERO)));
+                                            FileExtension.JPEG, "testMd5Hash2", BigDecimal.ONE)));
 
             // when & then
             assertThatThrownBy(() -> imageService.createAlbumImageUploadUrls(3L, request))
@@ -432,15 +399,9 @@ class ImageServiceTest extends IntegrationTest {
                     new AlbumImageUploadRequest(
                             List.of(
                                     new AlbumImageUploadRequest.Payload(
-                                            FileExtension.JPEG,
-                                            "testMd5Hash1",
-                                            LocalDateTime.now(),
-                                            BigDecimal.ZERO),
+                                            FileExtension.JPEG, "testMd5Hash1", BigDecimal.ONE),
                                     new AlbumImageUploadRequest.Payload(
-                                            FileExtension.JPEG,
-                                            "testMd5Hash2",
-                                            LocalDateTime.now(),
-                                            BigDecimal.ZERO)));
+                                            FileExtension.JPEG, "testMd5Hash2", BigDecimal.ONE)));
 
             // when & then
             assertThatThrownBy(() -> imageService.createAlbumImageUploadUrls(2L, request))
@@ -455,15 +416,9 @@ class ImageServiceTest extends IntegrationTest {
                     new AlbumImageUploadRequest(
                             List.of(
                                     new AlbumImageUploadRequest.Payload(
-                                            FileExtension.JPEG,
-                                            "testMd5Hash1",
-                                            LocalDateTime.now(),
-                                            BigDecimal.ZERO),
+                                            FileExtension.JPEG, "testMd5Hash1", BigDecimal.ONE),
                                     new AlbumImageUploadRequest.Payload(
-                                            FileExtension.JPEG,
-                                            "testMd5Hash2",
-                                            LocalDateTime.now(),
-                                            BigDecimal.ZERO)));
+                                            FileExtension.JPEG, "testMd5Hash2", BigDecimal.ONE)));
 
             // when & then
             assertThatThrownBy(() -> imageService.createAlbumImageUploadUrls(4L, request))
@@ -480,13 +435,9 @@ class ImageServiceTest extends IntegrationTest {
                                     new AlbumImageUploadRequest.Payload(
                                             FileExtension.JPEG,
                                             "testMd5Hash1",
-                                            LocalDateTime.now(),
                                             AlbumType.BASIC.getCapacityMb()),
                                     new AlbumImageUploadRequest.Payload(
-                                            FileExtension.JPEG,
-                                            "testMd5Hash2",
-                                            LocalDateTime.now(),
-                                            BigDecimal.ONE)));
+                                            FileExtension.JPEG, "testMd5Hash2", BigDecimal.ONE)));
 
             // when & then
             assertThatThrownBy(() -> imageService.createAlbumImageUploadUrls(1L, request))
@@ -501,15 +452,9 @@ class ImageServiceTest extends IntegrationTest {
                     new AlbumImageUploadRequest(
                             List.of(
                                     new AlbumImageUploadRequest.Payload(
-                                            FileExtension.JPEG,
-                                            "testMd5Hash1",
-                                            LocalDateTime.now(),
-                                            BigDecimal.ZERO),
+                                            FileExtension.JPEG, "testMd5Hash1", BigDecimal.ZERO),
                                     new AlbumImageUploadRequest.Payload(
-                                            FileExtension.JPEG,
-                                            "testMd5Hash1",
-                                            LocalDateTime.now(),
-                                            BigDecimal.ZERO)));
+                                            FileExtension.JPEG, "testMd5Hash1", BigDecimal.ZERO)));
             // when & then
             assertThatThrownBy(() -> imageService.createAlbumImageUploadUrls(1L, request))
                     .isInstanceOf(CustomException.class)
@@ -1274,6 +1219,91 @@ class ImageServiceTest extends IntegrationTest {
 
             // when & then
             assertThatThrownBy(() -> imageService.confirmNonAlbumImageUpload(request))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(ImageErrorCode.IMAGE_UPLOAD_FAIL.getMessage());
+        }
+    }
+
+    @Nested
+    class 앨범_이미지_업로드를_검증할_때 {
+
+        @BeforeEach
+        void setUp() {
+            Member member =
+                    Member.createMember(
+                            OauthInfo.createOauthInfo("testOauthId", "testOauthProvider"),
+                            "testNickname",
+                            "testProfileImageUrl");
+            memberRepository.save(member);
+            given(memberUtil.getCurrentMember()).willReturn(member);
+
+            Album album = Album.createAlbum("testTitle1", "testCoverUrl1", AlbumType.BASIC, false);
+            album.increaseCapacity(BigDecimal.ONE);
+            albumRepository.save(album);
+        }
+
+        @Test
+        void 유효한_요청이면_이미지를_생성한다() {
+            // given
+            AlbumImagesConfirmRequest request =
+                    new AlbumImagesConfirmRequest(
+                            List.of(
+                                    new AlbumImagesConfirmRequest.Payload(
+                                            LocalDateTime.now(), BigDecimal.ONE, "testImageUrl1"),
+                                    new AlbumImagesConfirmRequest.Payload(
+                                            LocalDateTime.now(), BigDecimal.ONE, "testImageUrl2")));
+
+            given(s3Util.doAllFilesExistByUrls(List.of("testImageUrl1", "testImageUrl2")))
+                    .willReturn(true);
+            willDoNothing()
+                    .given(s3Util)
+                    .updateTagsToCompleteByUrls(List.of("testImageUrl1", "testImageUrl2"));
+
+            // when
+            AlbumImagesConfirmResponse response =
+                    imageService.confirmAlbumImagesUpload(1L, request);
+
+            // then
+            Assertions.assertAll(
+                    () -> assertThat(response.localImageDeletion()).isFalse(),
+                    () -> assertThat(response.imageIds()).isEqualTo(List.of(1L, 2L)),
+                    () ->
+                            assertThat(imageRepository.findAllById(List.of(1L, 2L)).size())
+                                    .isEqualTo(2));
+        }
+
+        @Test
+        void 앨범이_존재하지_않는_경우_예외가_발생한다() {
+            // given
+            AlbumImagesConfirmRequest request =
+                    new AlbumImagesConfirmRequest(
+                            List.of(
+                                    new AlbumImagesConfirmRequest.Payload(
+                                            LocalDateTime.now(), BigDecimal.ONE, "testImageUrl1"),
+                                    new AlbumImagesConfirmRequest.Payload(
+                                            LocalDateTime.now(), BigDecimal.ONE, "testImageUrl2")));
+
+            // when & then
+            assertThatThrownBy(() -> imageService.confirmAlbumImagesUpload(999L, request))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(AlbumErrorCode.ALBUM_NOT_FOUND.getMessage());
+        }
+
+        @Test
+        void 모든_이미지를_업로드_성공하지_않았을_경우_예외가_발생한다() {
+            // given
+            AlbumImagesConfirmRequest request =
+                    new AlbumImagesConfirmRequest(
+                            List.of(
+                                    new AlbumImagesConfirmRequest.Payload(
+                                            LocalDateTime.now(), BigDecimal.ONE, "testImageUrl1"),
+                                    new AlbumImagesConfirmRequest.Payload(
+                                            LocalDateTime.now(), BigDecimal.ONE, "testImageUrl2")));
+            given(s3Util.doAllFilesExistByUrls(List.of("testImageUrl1", "testImageUrl2")))
+                    .willReturn(false);
+
+            // when & then
+            assertThatThrownBy(() -> imageService.confirmAlbumImagesUpload(1L, request))
                     .isInstanceOf(CustomException.class)
                     .hasMessage(ImageErrorCode.IMAGE_UPLOAD_FAIL.getMessage());
         }

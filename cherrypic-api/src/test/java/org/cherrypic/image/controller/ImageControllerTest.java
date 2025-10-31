@@ -345,22 +345,12 @@ class ImageControllerTest {
                     new AlbumImageUploadRequest(
                             List.of(
                                     new AlbumImageUploadRequest.Payload(
-                                            FileExtension.JPEG,
-                                            "testMd5Hash1",
-                                            LocalDateTime.now(),
-                                            BigDecimal.ONE),
+                                            FileExtension.JPEG, "testMd5Hash1", BigDecimal.ONE),
                                     new AlbumImageUploadRequest.Payload(
-                                            FileExtension.JPEG,
-                                            "testMd5Hash2",
-                                            LocalDateTime.now(),
-                                            BigDecimal.ONE)));
+                                            FileExtension.JPEG, "testMd5Hash2", BigDecimal.ONE)));
 
-            ImageUploadListResponse response =
-                    new ImageUploadListResponse(
-                            false,
-                            List.of(
-                                    new ImageUploadListResponse.Content(1L, "testPresignedUrl1"),
-                                    new ImageUploadListResponse.Content(2L, "testPresignedUrl2")));
+            AlbumImageUploadResponse response =
+                    new AlbumImageUploadResponse(List.of("testPresignedUrl1", "testPresignedUrl2"));
 
             given(imageService.createAlbumImageUploadUrls(1L, request)).willReturn(response);
 
@@ -374,8 +364,7 @@ class ImageControllerTest {
             perform.andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
-                    .andExpect(jsonPath("$.data.content").isNotEmpty())
-                    .andExpect(jsonPath("$.data.localImageDeletion").value(false));
+                    .andExpect(jsonPath("$.data.urls").isNotEmpty());
         }
 
         @Test
@@ -385,15 +374,9 @@ class ImageControllerTest {
                     new AlbumImageUploadRequest(
                             List.of(
                                     new AlbumImageUploadRequest.Payload(
-                                            FileExtension.JPEG,
-                                            "testMd5Hash1",
-                                            LocalDateTime.now(),
-                                            BigDecimal.ONE),
+                                            FileExtension.JPEG, "testMd5Hash1", BigDecimal.ONE),
                                     new AlbumImageUploadRequest.Payload(
-                                            FileExtension.JPEG,
-                                            "testMd5Hash2",
-                                            LocalDateTime.now(),
-                                            BigDecimal.ONE)));
+                                            FileExtension.JPEG, "testMd5Hash2", BigDecimal.ONE)));
 
             given(imageService.createAlbumImageUploadUrls(1L, request))
                     .willThrow(new CustomException(AlbumErrorCode.ALBUM_NOT_FOUND));
@@ -419,15 +402,9 @@ class ImageControllerTest {
                     new AlbumImageUploadRequest(
                             List.of(
                                     new AlbumImageUploadRequest.Payload(
-                                            FileExtension.JPEG,
-                                            "testMd5Hash1",
-                                            LocalDateTime.now(),
-                                            BigDecimal.ONE),
+                                            FileExtension.JPEG, "testMd5Hash1", BigDecimal.ONE),
                                     new AlbumImageUploadRequest.Payload(
-                                            FileExtension.JPEG,
-                                            "testMd5Hash2",
-                                            LocalDateTime.now(),
-                                            BigDecimal.ONE)));
+                                            FileExtension.JPEG, "testMd5Hash2", BigDecimal.ONE)));
 
             given(imageService.createAlbumImageUploadUrls(1L, request))
                     .willThrow(new CustomException(AlbumErrorCode.NOT_ALBUM_PARTICIPANT));
@@ -453,15 +430,9 @@ class ImageControllerTest {
                     new AlbumImageUploadRequest(
                             List.of(
                                     new AlbumImageUploadRequest.Payload(
-                                            FileExtension.JPEG,
-                                            "testMd5Hash1",
-                                            LocalDateTime.now(),
-                                            BigDecimal.ONE),
+                                            FileExtension.JPEG, "testMd5Hash1", BigDecimal.ONE),
                                     new AlbumImageUploadRequest.Payload(
-                                            FileExtension.JPEG,
-                                            "testMd5Hash2",
-                                            LocalDateTime.now(),
-                                            BigDecimal.ONE)));
+                                            FileExtension.JPEG, "testMd5Hash2", BigDecimal.ONE)));
 
             given(imageService.createAlbumImageUploadUrls(1L, request))
                     .willThrow(new CustomException(AlbumErrorCode.LIMITED_AUTHORITY));
@@ -487,15 +458,9 @@ class ImageControllerTest {
                     new AlbumImageUploadRequest(
                             List.of(
                                     new AlbumImageUploadRequest.Payload(
-                                            FileExtension.JPEG,
-                                            "testMd5Hash1",
-                                            LocalDateTime.now(),
-                                            BigDecimal.ONE),
+                                            FileExtension.JPEG, "testMd5Hash1", BigDecimal.ONE),
                                     new AlbumImageUploadRequest.Payload(
-                                            FileExtension.JPEG,
-                                            "testMd5Hash2",
-                                            LocalDateTime.now(),
-                                            BigDecimal.ONE)));
+                                            FileExtension.JPEG, "testMd5Hash2", BigDecimal.ONE)));
 
             given(imageService.createAlbumImageUploadUrls(1L, request))
                     .willThrow(new CustomException(AlbumErrorCode.EXPIRED_SUBSCRIPTION));
@@ -522,15 +487,9 @@ class ImageControllerTest {
                     new AlbumImageUploadRequest(
                             List.of(
                                     new AlbumImageUploadRequest.Payload(
-                                            FileExtension.JPEG,
-                                            "testMd5Hash1",
-                                            LocalDateTime.now(),
-                                            BigDecimal.ONE),
+                                            FileExtension.JPEG, "testMd5Hash1", BigDecimal.ONE),
                                     new AlbumImageUploadRequest.Payload(
-                                            FileExtension.JPEG,
-                                            "testMd5Hash2",
-                                            LocalDateTime.now(),
-                                            BigDecimal.ONE)));
+                                            FileExtension.JPEG, "testMd5Hash2", BigDecimal.ONE)));
 
             given(imageService.createAlbumImageUploadUrls(1L, request))
                     .willThrow(new CustomException(AlbumErrorCode.ALBUM_CAPACITY_EXCEEDED));
@@ -556,15 +515,9 @@ class ImageControllerTest {
                     new AlbumImageUploadRequest(
                             List.of(
                                     new AlbumImageUploadRequest.Payload(
-                                            FileExtension.JPEG,
-                                            "testMd5Hash",
-                                            LocalDateTime.now(),
-                                            BigDecimal.ONE),
+                                            FileExtension.JPEG, "testMd5Hash", BigDecimal.ONE),
                                     new AlbumImageUploadRequest.Payload(
-                                            FileExtension.JPEG,
-                                            "testMd5Hash",
-                                            LocalDateTime.now(),
-                                            BigDecimal.ONE)));
+                                            FileExtension.JPEG, "testMd5Hash", BigDecimal.ONE)));
 
             given(imageService.createAlbumImageUploadUrls(1L, request))
                     .willThrow(new CustomException(ImageErrorCode.DUPLICATE_HASHES));
@@ -595,7 +548,6 @@ class ImageControllerTest {
                                     new AlbumImageUploadRequest.Payload(
                                             FileExtension.from(extension),
                                             "testMd5Hash1",
-                                            LocalDateTime.now(),
                                             BigDecimal.ONE)));
 
             // when & then
@@ -622,10 +574,7 @@ class ImageControllerTest {
                     new AlbumImageUploadRequest(
                             List.of(
                                     new AlbumImageUploadRequest.Payload(
-                                            FileExtension.JPEG,
-                                            "testMd5Hash",
-                                            LocalDateTime.now(),
-                                            null)));
+                                            FileExtension.JPEG, "testMd5Hash", null)));
 
             // when & then
             ResultActions perform =
@@ -651,10 +600,7 @@ class ImageControllerTest {
                     new AlbumImageUploadRequest(
                             List.of(
                                     new AlbumImageUploadRequest.Payload(
-                                            FileExtension.JPEG,
-                                            md5Hash,
-                                            LocalDateTime.now(),
-                                            BigDecimal.ONE)));
+                                            FileExtension.JPEG, md5Hash, BigDecimal.ONE)));
 
             // when & then
             ResultActions perform =
