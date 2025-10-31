@@ -32,7 +32,7 @@ public interface ImageService {
 
     void deleteAlbumImage(Long albumId, AlbumImageDeleteRequest request);
 
-    TempAlbumImageUploadListResponse createTempAlbumImageUploadUrls(
+    TempAlbumImageUploadResponse createTempAlbumImageUploadUrls(
             Long tempAlbumId, TempAlbumImageUploadRequest request);
 
     void deleteTempAlbumImage(Long tempAlbumId, TempAlbumImageDeleteRequest request);
@@ -41,4 +41,7 @@ public interface ImageService {
 
     AlbumImagesConfirmResponse confirmAlbumImagesUpload(
             Long albumId, AlbumImagesConfirmRequest request);
+
+    TempAlbumImagesConfirmResponse confirmTempAlbumImagesUpload(
+            Long tempAlbumId, TempAlbumImagesConfirmRequest request);
 }

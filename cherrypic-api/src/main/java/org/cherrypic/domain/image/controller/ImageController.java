@@ -121,10 +121,18 @@ public class ImageController {
     @Operation(
             summary = "임시 앨범 이미지 업로드 Presigned URL들 생성",
             description = "임시 앨범 이미지 업로드를 위한 Presigned URL들을 생성합니다.")
-    public TempAlbumImageUploadListResponse tempAlbumImageUploadUrlsCreate(
+    public TempAlbumImageUploadResponse tempAlbumImageUploadUrlsCreate(
             @PathVariable Long tempAlbumId,
             @Valid @RequestBody TempAlbumImageUploadRequest request) {
         return imageService.createTempAlbumImageUploadUrls(tempAlbumId, request);
+    }
+
+    @PostMapping("/temp-albums/{tempAlbumId}/confirm-images-upload")
+    @Operation(summary = "임시 앨범 이미지 업로드 검증", description = "임시 앨범 이미지들의 업로드를 검증합니다.")
+    public TempAlbumImagesConfirmResponse tempAlbumImagesUploadConfirm(
+            @PathVariable Long tempAlbumId,
+            @Valid @RequestBody TempAlbumImagesConfirmRequest request) {
+        return imageService.confirmTempAlbumImagesUpload(tempAlbumId, request);
     }
 
     @DeleteMapping("temp-albums/{tempAlbumId}/images")

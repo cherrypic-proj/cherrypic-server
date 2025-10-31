@@ -207,7 +207,7 @@ public class ImageServiceImpl implements ImageService {
 
     @Override
     @Transactional
-    public TempAlbumImageUploadListResponse createTempAlbumImageUploadUrls(
+    public TempAlbumImageUploadResponse createTempAlbumImageUploadUrls(
             Long tempAlbumId, TempAlbumImageUploadRequest request) {
         final Member currentMember = memberUtil.getCurrentMember();
         final TempAlbum tempAlbum = getTempAlbumById(tempAlbumId);
@@ -222,8 +222,6 @@ public class ImageServiceImpl implements ImageService {
         validateTempAlbumCapacity(tempAlbum, uploadCapacityMb);
         validateDistinctHashes(request);
 
-        tempAlbum.increaseCapacity(uploadCapacityMb);
-
         List<String> presignedUrls =
                 request.payloads().stream()
                         .map(
@@ -235,37 +233,7 @@ public class ImageServiceImpl implements ImageService {
                                                 req.md5Hashes()))
                         .toList();
 
-        List<TempAlbumImage> tempAlbumImages =
-                IntStream.range(0, request.payloads().size())
-                        .mapToObj(
-                                i -> {
-                                    TempAlbumImageUploadRequest.Payload req =
-                                            request.payloads().get(i);
-                                    String presignedUrl = presignedUrls.get(i);
-
-                                    String objectUrl =
-                                            presignedUrl.substring(0, presignedUrl.indexOf("?"));
-
-                                    return TempAlbumImage.createTempAlbumImage(
-                                            tempAlbum, objectUrl, req.capacityMb());
-                                })
-                        .toList();
-
-        imageRepository.bulkInsertTempAlbumImages(tempAlbumImages);
-
-        List<Long> tempAlbumImageIds =
-                imageRepository.findTempImageIdsByUrlsInOrder(
-                        tempAlbumImages.stream().map(TempAlbumImage::getUrl).toList());
-
-        List<TempAlbumImageUploadListResponse.Content> content =
-                IntStream.range(0, tempAlbumImageIds.size())
-                        .mapToObj(
-                                i ->
-                                        TempAlbumImageUploadListResponse.Content.of(
-                                                tempAlbumImageIds.get(i), presignedUrls.get(i)))
-                        .toList();
-
-        return TempAlbumImageUploadListResponse.of(content);
+        return TempAlbumImageUploadResponse.of(presignedUrls);
     }
 
     @Override
@@ -350,6 +318,49 @@ public class ImageServiceImpl implements ImageService {
                         images.stream().map(Image::getUrl).toList());
 
         return AlbumImagesConfirmResponse.of(imageIds, currentMember.getLocalImageDeletion());
+    }
+
+    @Override
+    public TempAlbumImagesConfirmResponse confirmTempAlbumImagesUpload(
+            Long tempAlbumId, TempAlbumImagesConfirmRequest request) {
+        final TempAlbum tempAlbum = getTempAlbumById(tempAlbumId);
+
+        List<String> imageUrls =
+                request.payloads().stream()
+                        .map(TempAlbumImagesConfirmRequest.Payload::tempAlbumImageUrl)
+                        .toList();
+
+        validateImagesUpload(imageUrls);
+
+        s3Util.updateTagsToCompleteByUrls(imageUrls);
+
+        BigDecimal uploadCapacityMb =
+                request.payloads().stream()
+                        .map(TempAlbumImagesConfirmRequest.Payload::capacityMb)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        tempAlbum.increaseCapacity(uploadCapacityMb);
+
+        List<TempAlbumImage> tempAlbumImages =
+                IntStream.range(0, request.payloads().size())
+                        .mapToObj(
+                                i -> {
+                                    TempAlbumImagesConfirmRequest.Payload req =
+                                            request.payloads().get(i);
+                                    String imageUrl = imageUrls.get(i);
+
+                                    return TempAlbumImage.createTempAlbumImage(
+                                            tempAlbum, imageUrl, req.capacityMb());
+                                })
+                        .toList();
+
+        imageRepository.bulkInsertTempAlbumImages(tempAlbumImages);
+
+        List<Long> tempAlbumImageIds =
+                imageRepository.findTempImageIdsByUrlsInOrder(
+                        tempAlbumImages.stream().map(TempAlbumImage::getUrl).toList());
+
+        return TempAlbumImagesConfirmResponse.of(tempAlbumImageIds);
     }
 
     private Album getAlbumById(Long albumId) {

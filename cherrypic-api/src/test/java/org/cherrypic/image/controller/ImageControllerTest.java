@@ -1348,12 +1348,12 @@ class ImageControllerTest {
                                             "testMd5Hash2",
                                             new BigDecimal("0.3"))));
 
-            TempAlbumImageUploadListResponse response =
-                    new TempAlbumImageUploadListResponse(
+            TempAlbumImageUploadResponse response =
+                    new TempAlbumImageUploadResponse(
                             List.of(
-                                    new TempAlbumImageUploadListResponse.Content(
+                                    new TempAlbumImageUploadResponse.Content(
                                             1L, "testPresignedUrl1"),
-                                    new TempAlbumImageUploadListResponse.Content(
+                                    new TempAlbumImageUploadResponse.Content(
                                             2L, "testPresignedUrl2")));
 
             given(imageService.createTempAlbumImageUploadUrls(1L, request)).willReturn(response);

@@ -995,7 +995,7 @@ class ImageServiceTest extends IntegrationTest {
                                     + "&Content-MD5=testMd5Hash2");
 
             // when
-            TempAlbumImageUploadListResponse response =
+            TempAlbumImageUploadResponse response =
                     imageService.createTempAlbumImageUploadUrls(1L, request);
 
             // then
