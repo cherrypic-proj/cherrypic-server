@@ -1798,7 +1798,7 @@ class ImageControllerTest {
                                             LocalDateTime.now(), BigDecimal.ONE, "testImageUrl2")));
 
             AlbumImagesUploadCompleteResponse response =
-                    new AlbumImagesUploadCompleteResponse(false, List.of(1L, 2L));
+                    new AlbumImagesUploadCompleteResponse(List.of(1L, 2L));
 
             given(imageService.completeAlbumImagesUpload(1L, request)).willReturn(response);
 
@@ -1812,7 +1812,6 @@ class ImageControllerTest {
             perform.andExpect(status().isCreated())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.status").value(HttpStatus.CREATED.value()))
-                    .andExpect(jsonPath("$.data.localImageDeletion").value(false))
                     .andExpect(jsonPath("$.data.imageIds").value(Matchers.contains(1, 2)));
         }
 

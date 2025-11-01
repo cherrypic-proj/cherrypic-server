@@ -317,8 +317,7 @@ public class ImageServiceImpl implements ImageService {
                 imageRepository.findImageIdsByUrlsInOrder(
                         images.stream().map(Image::getUrl).toList());
 
-        return AlbumImagesUploadCompleteResponse.of(
-                imageIds, currentMember.getLocalImageDeletion());
+        return AlbumImagesUploadCompleteResponse.of(imageIds);
     }
 
     @Override

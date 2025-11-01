@@ -1257,7 +1257,6 @@ class ImageServiceTest extends IntegrationTest {
 
             // then
             Assertions.assertAll(
-                    () -> assertThat(response.localImageDeletion()).isFalse(),
                     () -> assertThat(response.imageIds()).isEqualTo(List.of(1L, 2L)),
                     () ->
                             assertThat(imageRepository.findAllById(List.of(1L, 2L)).size())
