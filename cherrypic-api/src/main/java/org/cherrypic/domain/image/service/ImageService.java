@@ -23,6 +23,9 @@ public interface ImageService {
             SortParameter parameter,
             SortDirection direction);
 
+    SliceResponse<TempAlbumImageListResponse> getTempAlbumImages(
+            Long tempAlbumId, Long lasTempAlbumImageId, int size, SortDirection direction);
+
     SliceResponse<EventImageListResponse> getEventImages(
             Long eventId,
             Long lastImageId,

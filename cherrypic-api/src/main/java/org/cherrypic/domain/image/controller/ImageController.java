@@ -96,6 +96,20 @@ public class ImageController {
         return imageService.getAlbumImages(albumId, lastImageId, size, parameter, direction);
     }
 
+    @GetMapping("/temp-albums/{tempAlbumId}/images")
+    @Operation(summary = "임시 앨범 이미지 목록 조회", description = "임시 앨범의 이미지 목록을 조회합니다.")
+    public SliceResponse<TempAlbumImageListResponse> tempAlbumImagesGet(
+            @PathVariable Long tempAlbumId,
+            @Parameter(description = "이전 페이지의 마지막 임시 앨범 이미지 ID (첫 요청 시 생략)")
+                    @RequestParam(required = false)
+                    Long tempAlbumImageId,
+            @Parameter(description = "페이지당 조회할 임시 앨범 이미지의 수") @RequestParam @PageSize Integer size,
+            @Parameter(description = "정렬 방향 (ASC: 오래된순, DESC: 최신순)")
+                    @RequestParam(defaultValue = "DESC")
+                    SortDirection direction) {
+        return imageService.getTempAlbumImages(tempAlbumId, tempAlbumImageId, size, direction);
+    }
+
     @GetMapping("/events/{eventId}/images")
     @Operation(summary = "이벤트 이미지 목록 조회", description = "이벤트 이미지 목록을 조회합니다.")
     public SliceResponse<EventImageListResponse> eventImagesGet(
