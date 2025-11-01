@@ -346,7 +346,7 @@ class ImageServiceTest extends IntegrationTest {
                                     + "&Content-MD5=testMd5Hash2");
 
             // when
-            AlbumImagesUploadUrlResponse response =
+            AlbumImagesPresignedUrlResponse response =
                     imageService.createAlbumImageUploadUrls(1L, request);
 
             // then
@@ -1002,7 +1002,7 @@ class ImageServiceTest extends IntegrationTest {
                                     + "&Content-MD5=testMd5Hash2");
 
             // when
-            TempAlbumImagesUploadUrlResponse response =
+            TempAlbumImagesPresignedUrlResponse response =
                     imageService.createTempAlbumImageUploadUrls(1L, request);
 
             // then

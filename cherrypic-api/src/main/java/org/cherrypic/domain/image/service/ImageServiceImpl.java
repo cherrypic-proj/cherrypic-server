@@ -114,7 +114,7 @@ public class ImageServiceImpl implements ImageService {
     }
 
     @Override
-    public AlbumImagesUploadUrlResponse createAlbumImageUploadUrls(
+    public AlbumImagesPresignedUrlResponse createAlbumImageUploadUrls(
             Long albumId, AlbumImagesUploadUrlRequest request) {
         final Member currentMember = memberUtil.getCurrentMember();
         final Album album = getAlbumByIdWithLock(albumId);
@@ -141,7 +141,7 @@ public class ImageServiceImpl implements ImageService {
                                                 req.md5Hashes()))
                         .toList();
 
-        return AlbumImagesUploadUrlResponse.of(presignedUrls);
+        return AlbumImagesPresignedUrlResponse.of(presignedUrls);
     }
 
     @Override
@@ -207,7 +207,7 @@ public class ImageServiceImpl implements ImageService {
 
     @Override
     @Transactional
-    public TempAlbumImagesUploadUrlResponse createTempAlbumImageUploadUrls(
+    public TempAlbumImagesPresignedUrlResponse createTempAlbumImageUploadUrls(
             Long tempAlbumId, TempAlbumImagesUploadUrlRequest request) {
         final Member currentMember = memberUtil.getCurrentMember();
         final TempAlbum tempAlbum = getTempAlbumById(tempAlbumId);
@@ -233,7 +233,7 @@ public class ImageServiceImpl implements ImageService {
                                                 req.md5Hashes()))
                         .toList();
 
-        return TempAlbumImagesUploadUrlResponse.of(presignedUrls);
+        return TempAlbumImagesPresignedUrlResponse.of(presignedUrls);
     }
 
     @Override

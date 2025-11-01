@@ -64,7 +64,7 @@ public class ImageController {
     @Operation(
             summary = "앨범 이미지 업로드 Presigned URL들 생성",
             description = "앨범 이미지 업로드를 위한 Presigned URL들을 생성합니다.")
-    public AlbumImagesUploadUrlResponse albumImageUploadUrlsCreate(
+    public AlbumImagesPresignedUrlResponse albumImageUploadUrlsCreate(
             @PathVariable Long albumId, @Valid @RequestBody AlbumImagesUploadUrlRequest request) {
         return imageService.createAlbumImageUploadUrls(albumId, request);
     }
@@ -125,7 +125,7 @@ public class ImageController {
     @Operation(
             summary = "임시 앨범 이미지들 업로드 Presigned URL들 생성",
             description = "임시 앨범 이미지들 업로드를 위한 Presigned URL들을 생성합니다.")
-    public TempAlbumImagesUploadUrlResponse tempAlbumImageUploadUrlsCreate(
+    public TempAlbumImagesPresignedUrlResponse tempAlbumImageUploadUrlsCreate(
             @PathVariable Long tempAlbumId,
             @Valid @RequestBody TempAlbumImagesUploadUrlRequest request) {
         return imageService.createTempAlbumImageUploadUrls(tempAlbumId, request);

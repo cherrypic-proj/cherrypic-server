@@ -356,8 +356,8 @@ class ImageControllerTest {
                                     new AlbumImagesUploadUrlRequest.Payload(
                                             FileExtension.JPEG, "testMd5Hash2", BigDecimal.ONE)));
 
-            AlbumImagesUploadUrlResponse response =
-                    new AlbumImagesUploadUrlResponse(
+            AlbumImagesPresignedUrlResponse response =
+                    new AlbumImagesPresignedUrlResponse(
                             List.of("testPresignedUrl1", "testPresignedUrl2"));
 
             given(imageService.createAlbumImageUploadUrls(1L, request)).willReturn(response);
@@ -1355,8 +1355,8 @@ class ImageControllerTest {
                                             "testMd5Hash2",
                                             new BigDecimal("0.3"))));
 
-            TempAlbumImagesUploadUrlResponse response =
-                    new TempAlbumImagesUploadUrlResponse(
+            TempAlbumImagesPresignedUrlResponse response =
+                    new TempAlbumImagesPresignedUrlResponse(
                             List.of("testPresignedUrl1", "testPresignedUrl2"));
 
             given(imageService.createTempAlbumImageUploadUrls(1L, request)).willReturn(response);
