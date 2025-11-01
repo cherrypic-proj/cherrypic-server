@@ -66,7 +66,8 @@ public class ImageServiceImpl implements ImageService {
     private final ApplicationEventPublisher eventPublisher;
 
     @Override
-    public ImageUploadUrlResponse createMemberProfileImageUploadUrl(ImageUploadUrlRequest request) {
+    public ImagePresignedUrlResponse createMemberProfileImageUploadUrl(
+            ImageUploadUrlRequest request) {
         final Member currentMember = memberUtil.getCurrentMember();
 
         validateImageExtension(request.fileExtension());
@@ -78,11 +79,11 @@ public class ImageServiceImpl implements ImageService {
                         request.fileExtension(),
                         request.md5Hash());
 
-        return ImageUploadUrlResponse.of(presignedUrl);
+        return ImagePresignedUrlResponse.of(presignedUrl);
     }
 
     @Override
-    public ImageUploadUrlResponse createAlbumCoverImageUploadUrl(ImageUploadUrlRequest request) {
+    public ImagePresignedUrlResponse createAlbumCoverImageUploadUrl(ImageUploadUrlRequest request) {
         final Member currentMember = memberUtil.getCurrentMember();
 
         validateImageExtension(request.fileExtension());
@@ -94,11 +95,11 @@ public class ImageServiceImpl implements ImageService {
                         request.fileExtension(),
                         request.md5Hash());
 
-        return ImageUploadUrlResponse.of(presignedUrl);
+        return ImagePresignedUrlResponse.of(presignedUrl);
     }
 
     @Override
-    public ImageUploadUrlResponse createEventCoverImageUploadUrl(ImageUploadUrlRequest request) {
+    public ImagePresignedUrlResponse createEventCoverImageUploadUrl(ImageUploadUrlRequest request) {
         final Member currentMember = memberUtil.getCurrentMember();
 
         validateImageExtension(request.fileExtension());
@@ -110,7 +111,7 @@ public class ImageServiceImpl implements ImageService {
                         request.fileExtension(),
                         request.md5Hash());
 
-        return ImageUploadUrlResponse.of(presignedUrl);
+        return ImagePresignedUrlResponse.of(presignedUrl);
     }
 
     @Override

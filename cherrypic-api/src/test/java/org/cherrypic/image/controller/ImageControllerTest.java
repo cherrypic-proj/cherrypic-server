@@ -57,7 +57,7 @@ class ImageControllerTest {
             ImageUploadUrlRequest request =
                     new ImageUploadUrlRequest(FileExtension.JPEG, "testMd5Hash");
 
-            ImageUploadUrlResponse response = new ImageUploadUrlResponse("testPresignedUrl");
+            ImagePresignedUrlResponse response = new ImagePresignedUrlResponse("testPresignedUrl");
 
             given(imageService.createMemberProfileImageUploadUrl(request)).willReturn(response);
 
@@ -155,7 +155,7 @@ class ImageControllerTest {
             ImageUploadUrlRequest request =
                     new ImageUploadUrlRequest(FileExtension.JPEG, "testMd5Hash");
 
-            ImageUploadUrlResponse response = new ImageUploadUrlResponse("testPresignedUrl");
+            ImagePresignedUrlResponse response = new ImagePresignedUrlResponse("testPresignedUrl");
 
             given(imageService.createAlbumCoverImageUploadUrl(request)).willReturn(response);
 
@@ -253,7 +253,7 @@ class ImageControllerTest {
             ImageUploadUrlRequest request =
                     new ImageUploadUrlRequest(FileExtension.JPEG, "testMd5Hash");
 
-            ImageUploadUrlResponse response = new ImageUploadUrlResponse("testPresignedUrl");
+            ImagePresignedUrlResponse response = new ImagePresignedUrlResponse("testPresignedUrl");
 
             given(imageService.createEventCoverImageUploadUrl(request)).willReturn(response);
 

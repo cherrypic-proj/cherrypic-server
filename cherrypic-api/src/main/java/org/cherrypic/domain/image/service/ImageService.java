@@ -7,11 +7,11 @@ import org.cherrypic.global.pagination.SortDirection;
 import org.cherrypic.global.pagination.SortParameter;
 
 public interface ImageService {
-    ImageUploadUrlResponse createMemberProfileImageUploadUrl(ImageUploadUrlRequest request);
+    ImagePresignedUrlResponse createMemberProfileImageUploadUrl(ImageUploadUrlRequest request);
 
-    ImageUploadUrlResponse createAlbumCoverImageUploadUrl(ImageUploadUrlRequest request);
+    ImagePresignedUrlResponse createAlbumCoverImageUploadUrl(ImageUploadUrlRequest request);
 
-    ImageUploadUrlResponse createEventCoverImageUploadUrl(ImageUploadUrlRequest request);
+    ImagePresignedUrlResponse createEventCoverImageUploadUrl(ImageUploadUrlRequest request);
 
     AlbumImagesPresignedUrlResponse createAlbumImageUploadUrls(
             Long albumId, AlbumImagesUploadUrlRequest request);

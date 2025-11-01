@@ -115,7 +115,7 @@ class ImageServiceTest extends IntegrationTest {
                                     + "                                    + \"&Content-MD5=testMd5Hash\"");
 
             // when
-            ImageUploadUrlResponse response =
+            ImagePresignedUrlResponse response =
                     imageService.createMemberProfileImageUploadUrl(request);
 
             // then
@@ -183,7 +183,8 @@ class ImageServiceTest extends IntegrationTest {
                                     + "&Content-MD5=testMd5Hash");
 
             // when
-            ImageUploadUrlResponse response = imageService.createAlbumCoverImageUploadUrl(request);
+            ImagePresignedUrlResponse response =
+                    imageService.createAlbumCoverImageUploadUrl(request);
 
             // then
             assertThat(response.presignedUrl())
@@ -254,7 +255,8 @@ class ImageServiceTest extends IntegrationTest {
                                     + "&Content-MD5=testMd5Hash");
 
             // when
-            ImageUploadUrlResponse response = imageService.createEventCoverImageUploadUrl(request);
+            ImagePresignedUrlResponse response =
+                    imageService.createEventCoverImageUploadUrl(request);
 
             // then
             assertThat(response.presignedUrl())

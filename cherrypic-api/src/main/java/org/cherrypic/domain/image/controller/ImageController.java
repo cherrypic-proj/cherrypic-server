@@ -29,7 +29,7 @@ public class ImageController {
     @Operation(
             summary = "회원 프로필 이미지 Presigned URL 생성",
             description = "회원 프로필 이미지 업로드를 위한 Presigned URL을 생성합니다.")
-    public ImageUploadUrlResponse memberProfileImageUploadUrlCreate(
+    public ImagePresignedUrlResponse memberProfileImageUploadUrlCreate(
             @Valid @RequestBody ImageUploadUrlRequest request) {
         return imageService.createMemberProfileImageUploadUrl(request);
     }
@@ -38,7 +38,7 @@ public class ImageController {
     @Operation(
             summary = "앨범 커버 이미지 Presigned URL 생성",
             description = "앨범 커버 이미지 업로드를 위한 Presigned URL을 생성합니다.")
-    public ImageUploadUrlResponse albumCoverImageUploadUrlCreate(
+    public ImagePresignedUrlResponse albumCoverImageUploadUrlCreate(
             @Valid @RequestBody ImageUploadUrlRequest request) {
         return imageService.createAlbumCoverImageUploadUrl(request);
     }
@@ -47,7 +47,7 @@ public class ImageController {
     @Operation(
             summary = "이벤트 커버 이미지 Presigned URL 생성",
             description = "이벤트 커버 이미지 업로드를 위한 Presigned URL을 생성합니다.")
-    public ImageUploadUrlResponse eventCoverImageUploadUrlCreate(
+    public ImagePresignedUrlResponse eventCoverImageUploadUrlCreate(
             @Valid @RequestBody ImageUploadUrlRequest request) {
         return imageService.createEventCoverImageUploadUrl(request);
     }
