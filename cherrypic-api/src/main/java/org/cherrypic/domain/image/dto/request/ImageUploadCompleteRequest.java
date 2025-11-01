@@ -5,5 +5,5 @@ import jakarta.validation.constraints.NotBlank;
 
 public record ImageUploadCompleteRequest(
         @NotBlank(message = "이미지 url을 비워둘 수 없습니다.")
-                @Schema(description = "검증하고자 하는 이미지 url", example = "https://example.jpg")
+                @Schema(description = "업로드 완료 하고자 하는 이미지 url", example = "https://example.jpg")
                 String imageUrl) {}

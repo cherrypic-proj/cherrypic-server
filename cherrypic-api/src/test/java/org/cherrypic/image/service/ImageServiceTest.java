@@ -1191,7 +1191,7 @@ class ImageServiceTest extends IntegrationTest {
     }
 
     @Nested
-    class 앨범_외_이미지_업로드를_검증할_때 {
+    class 앨범_외_이미지_업로드_완료_요청할_때 {
 
         @Test
         void 업로드_성공_시_예외가_발생하지_않는다() {
@@ -1217,7 +1217,7 @@ class ImageServiceTest extends IntegrationTest {
     }
 
     @Nested
-    class 앨범_이미지_업로드를_검증할_때 {
+    class 앨범_이미지_업로드_완료_요청할_때 {
 
         @BeforeEach
         void setUp() {
@@ -1302,7 +1302,7 @@ class ImageServiceTest extends IntegrationTest {
     }
 
     @Nested
-    class 임시_앨범_이미지_업로드를_검증할_때 {
+    class 임시_앨범_이미지_업로드_완료_요청할_때 {
 
         @BeforeEach
         void setUp() {

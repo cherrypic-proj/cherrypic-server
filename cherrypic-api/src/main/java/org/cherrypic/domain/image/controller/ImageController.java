@@ -52,7 +52,7 @@ public class ImageController {
         return imageService.createEventCoverImageUploadUrl(request);
     }
 
-    @PostMapping("/image/upload-complete")
+    @PostMapping("/images/upload-complete")
     @Operation(summary = "앨범 사진 외 이미지 업로드 완료", description = "프로필, 커버 사진 등의 이미지 업로드를 완료합니다.")
     public ResponseEntity<Void> nonAlbumImageUploadComplete(
             @Valid @RequestBody ImageUploadCompleteRequest request) {

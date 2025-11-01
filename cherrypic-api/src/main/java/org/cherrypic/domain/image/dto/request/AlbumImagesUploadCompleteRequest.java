@@ -10,9 +10,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public record AlbumImagesUploadCompleteRequest(
-        @NotEmpty(message = "검증하고자 하는 이미지들의 정보들은 비워둘 수 없습니다.")
+        @NotEmpty(message = "업로드 완료 하는 이미지들의 정보들은 비워둘 수 없습니다.")
                 @Valid
-                @Schema(description = "검증 요청 리스트")
+                @Schema(description = "업로드 완료 요청 리스트")
                 List<Payload> payloads) {
     @Schema(name = "AlbumImagesUploadCompletePayload")
     public record Payload(
@@ -20,8 +20,8 @@ public record AlbumImagesUploadCompleteRequest(
             @NotNull(message = "파일의 용량은 비워둘 수 없습니다.")
                     @Schema(description = "업로드 하는 파일의 용량(MB), 소수점 2자리 까지", example = "0.04")
                     BigDecimal capacityMb,
-            @NotBlank(message = "검증하고자 하는 imageUrl은 비워둘 수 없습니다.")
+            @NotBlank(message = "업로드 완료 하고자 하는 imageUrl은 비워둘 수 없습니다.")
                     @Valid
-                    @Schema(description = "검증 요청 이미지 Url")
+                    @Schema(description = "엄로드 완료 요청 이미지 Url")
                     String imageUrl) {}
 }

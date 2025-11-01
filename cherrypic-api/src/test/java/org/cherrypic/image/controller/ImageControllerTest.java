@@ -1715,7 +1715,7 @@ class ImageControllerTest {
     }
 
     @Nested
-    class 앨범_외_이미지_업로드_검증_요청_시 {
+    class 앨범_외_이미지_업로드_완료_요청_시 {
 
         @Test
         void 유효한_요청이면_NO_CONTENT를_반환한다() throws Exception {
@@ -1727,7 +1727,7 @@ class ImageControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            post("/image/upload-complete")
+                            post("/images/upload-complete")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -1748,7 +1748,7 @@ class ImageControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            post("/image/upload-complete")
+                            post("/images/upload-complete")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -1770,7 +1770,7 @@ class ImageControllerTest {
             // when & then
             ResultActions perform =
                     mockMvc.perform(
-                            post("/image/upload-complete")
+                            post("/images/upload-complete")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
@@ -1808,9 +1808,9 @@ class ImageControllerTest {
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
-            perform.andExpect(status().isOk())
+            perform.andExpect(status().isCreated())
                     .andExpect(jsonPath("$.success").value(true))
-                    .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.CREATED.value()))
                     .andExpect(jsonPath("$.data.localImageDeletion").value(false))
                     .andExpect(jsonPath("$.data.imageIds").value(Matchers.contains(1, 2)));
         }
@@ -1872,7 +1872,7 @@ class ImageControllerTest {
         }
 
         @Test
-        void 검증하고자_하는_이미지들의_정보를_비워두면_예외가_발생한다() throws Exception {
+        void 업로드_완료_하고자_하는_이미지들의_정보를_비워두면_예외가_발생한다() throws Exception {
             // given
             AlbumImagesUploadCompleteRequest request =
                     new AlbumImagesUploadCompleteRequest(List.of());
@@ -1888,7 +1888,8 @@ class ImageControllerTest {
                     .andExpect(jsonPath("$.success").value(false))
                     .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
                     .andExpect(jsonPath("$.data.code").value("MethodArgumentNotValidException"))
-                    .andExpect(jsonPath("$.data.message").value("검증하고자 하는 이미지들의 정보들은 비워둘 수 없습니다."));
+                    .andExpect(
+                            jsonPath("$.data.message").value("업로드 완료 하는 이미지들의 정보들은 비워둘 수 없습니다."));
         }
 
         @Test
@@ -1918,7 +1919,7 @@ class ImageControllerTest {
         @NullSource
         @EmptySource
         @ValueSource(strings = {" "})
-        void 검증_요청_이미지_url을_비워두면_예외가_발생한다(String imageUrl) throws Exception {
+        void 업로드_완료_요청_이미지_url을_비워두면_예외가_발생한다(String imageUrl) throws Exception {
             // given
             AlbumImagesUploadCompleteRequest request =
                     new AlbumImagesUploadCompleteRequest(
@@ -1937,7 +1938,9 @@ class ImageControllerTest {
                     .andExpect(jsonPath("$.success").value(false))
                     .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
                     .andExpect(jsonPath("$.data.code").value("MethodArgumentNotValidException"))
-                    .andExpect(jsonPath("$.data.message").value("검증하고자 하는 imageUrl은 비워둘 수 없습니다."));
+                    .andExpect(
+                            jsonPath("$.data.message")
+                                    .value("업로드 완료 하고자 하는 imageUrl은 비워둘 수 없습니다."));
         }
     }
 
@@ -1967,9 +1970,9 @@ class ImageControllerTest {
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)));
 
-            perform.andExpect(status().isOk())
+            perform.andExpect(status().isCreated())
                     .andExpect(jsonPath("$.success").value(true))
-                    .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.CREATED.value()))
                     .andExpect(jsonPath("$.data.tempAlbumImageIds").value(Matchers.contains(1, 2)));
         }
 
@@ -2030,7 +2033,7 @@ class ImageControllerTest {
         }
 
         @Test
-        void 검증하고자_하는_이미지들의_정보를_비워두면_예외가_발생한다() throws Exception {
+        void 업로드_완료_하고자_하는_이미지들의_정보를_비워두면_예외가_발생한다() throws Exception {
             // given
             TempAlbumImagesUploadCompleteRequest request =
                     new TempAlbumImagesUploadCompleteRequest(List.of());
@@ -2048,7 +2051,7 @@ class ImageControllerTest {
                     .andExpect(jsonPath("$.data.code").value("MethodArgumentNotValidException"))
                     .andExpect(
                             jsonPath("$.data.message")
-                                    .value("검증하고자 하는 임시 앨범 이미지들의 정보들은 비워둘 수 없습니다."));
+                                    .value("업로드 완료 하고자 하는 임시 앨범 이미지들의 정보들은 비워둘 수 없습니다."));
         }
 
         @Test
@@ -2078,7 +2081,7 @@ class ImageControllerTest {
         @NullSource
         @EmptySource
         @ValueSource(strings = {" "})
-        void 검증_요청_이미지_url을_비워두면_예외가_발생한다(String imageUrl) throws Exception {
+        void 업로드_완료_요청_이미지_url을_비워두면_예외가_발생한다(String imageUrl) throws Exception {
             // given
             TempAlbumImagesUploadCompleteRequest request =
                     new TempAlbumImagesUploadCompleteRequest(
@@ -2099,7 +2102,7 @@ class ImageControllerTest {
                     .andExpect(jsonPath("$.data.code").value("MethodArgumentNotValidException"))
                     .andExpect(
                             jsonPath("$.data.message")
-                                    .value("검증하고자 하는 tempAlbumImageUrl은 비워둘 수 없습니다."));
+                                    .value("업로드 완료 하고자 하는 tempAlbumImageUrl은 비워둘 수 없습니다."));
         }
     }
 }
