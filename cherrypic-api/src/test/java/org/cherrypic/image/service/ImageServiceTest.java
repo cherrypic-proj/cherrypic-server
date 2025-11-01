@@ -95,7 +95,8 @@ class ImageServiceTest extends IntegrationTest {
         @Test
         void 유효한_요청이면_회원_프로필_이미지용_Presigned_URL을_생성한다() {
             // given
-            ImageUploadRequest request = new ImageUploadRequest(FileExtension.JPEG, "testMd5Hash");
+            ImageUploadUrlRequest request =
+                    new ImageUploadUrlRequest(FileExtension.JPEG, "testMd5Hash");
             given(
                             s3Util.createPresignedUrl(
                                     ImageType.MEMBER_PROFILE,
@@ -114,7 +115,8 @@ class ImageServiceTest extends IntegrationTest {
                                     + "                                    + \"&Content-MD5=testMd5Hash\"");
 
             // when
-            PresignedUrlResponse response = imageService.createMemberProfileImageUploadUrl(request);
+            ImageUploadUrlResponse response =
+                    imageService.createMemberProfileImageUploadUrl(request);
 
             // then
             assertThat(response.presignedUrl())
@@ -126,7 +128,8 @@ class ImageServiceTest extends IntegrationTest {
         @Test
         void 동영상_확장자를_입력할_경우_예외가_발생한다() {
             // given
-            ImageUploadRequest request = new ImageUploadRequest(FileExtension.MKV, "testMd5Hash");
+            ImageUploadUrlRequest request =
+                    new ImageUploadUrlRequest(FileExtension.MKV, "testMd5Hash");
 
             // when & then
             assertThatThrownBy(() -> imageService.createMemberProfileImageUploadUrl(request))
@@ -163,7 +166,8 @@ class ImageServiceTest extends IntegrationTest {
         @Test
         void 유효한_요청이면_앨범_커버_이미지용_Presigned_URL을_생성한다() {
             // given
-            ImageUploadRequest request = new ImageUploadRequest(FileExtension.JPEG, "testMd5Hash");
+            ImageUploadUrlRequest request =
+                    new ImageUploadUrlRequest(FileExtension.JPEG, "testMd5Hash");
             given(
                             s3Util.createPresignedUrl(
                                     ImageType.ALBUM_COVER, 1L, FileExtension.JPEG, "testMd5Hash"))
@@ -179,7 +183,7 @@ class ImageServiceTest extends IntegrationTest {
                                     + "&Content-MD5=testMd5Hash");
 
             // when
-            PresignedUrlResponse response = imageService.createAlbumCoverImageUploadUrl(request);
+            ImageUploadUrlResponse response = imageService.createAlbumCoverImageUploadUrl(request);
 
             // then
             assertThat(response.presignedUrl())
@@ -190,7 +194,8 @@ class ImageServiceTest extends IntegrationTest {
         @Test
         void 동영상_확장자를_입력할_경우_예외가_발생한다() {
             // given
-            ImageUploadRequest request = new ImageUploadRequest(FileExtension.MKV, "testMd5Hash");
+            ImageUploadUrlRequest request =
+                    new ImageUploadUrlRequest(FileExtension.MKV, "testMd5Hash");
 
             // when & then
             assertThatThrownBy(() -> imageService.createAlbumCoverImageUploadUrl(request))
@@ -232,7 +237,8 @@ class ImageServiceTest extends IntegrationTest {
         @Test
         void 유효한_요청이면_이벤트_커버_이미지용_Presigned_URL을_생성한다() {
             // given
-            ImageUploadRequest request = new ImageUploadRequest(FileExtension.JPEG, "testMd5Hash");
+            ImageUploadUrlRequest request =
+                    new ImageUploadUrlRequest(FileExtension.JPEG, "testMd5Hash");
             given(
                             s3Util.createPresignedUrl(
                                     ImageType.EVENT_COVER, 1L, FileExtension.JPEG, "testMd5Hash"))
@@ -248,7 +254,7 @@ class ImageServiceTest extends IntegrationTest {
                                     + "&Content-MD5=testMd5Hash");
 
             // when
-            PresignedUrlResponse response = imageService.createEventCoverImageUploadUrl(request);
+            ImageUploadUrlResponse response = imageService.createEventCoverImageUploadUrl(request);
 
             // then
             assertThat(response.presignedUrl())
@@ -259,7 +265,8 @@ class ImageServiceTest extends IntegrationTest {
         @Test
         void 동영상_확장자를_입력할_경우_예외가_발생한다() {
             // given
-            ImageUploadRequest request = new ImageUploadRequest(FileExtension.MKV, "testMd5Hash");
+            ImageUploadUrlRequest request =
+                    new ImageUploadUrlRequest(FileExtension.MKV, "testMd5Hash");
 
             // when & then
             assertThatThrownBy(() -> imageService.createEventCoverImageUploadUrl(request))
@@ -305,12 +312,12 @@ class ImageServiceTest extends IntegrationTest {
         @Test
         void 유효한_요청이면_Presigned_URL들을_반환한다() {
             // given
-            AlbumImageUploadRequest request =
-                    new AlbumImageUploadRequest(
+            AlbumImageUploadUrlRequest request =
+                    new AlbumImageUploadUrlRequest(
                             List.of(
-                                    new AlbumImageUploadRequest.Payload(
+                                    new AlbumImageUploadUrlRequest.Payload(
                                             FileExtension.JPEG, "testMd5Hash1", BigDecimal.ONE),
-                                    new AlbumImageUploadRequest.Payload(
+                                    new AlbumImageUploadUrlRequest.Payload(
                                             FileExtension.JPEG, "testMd5Hash2", BigDecimal.ONE)));
             given(
                             s3Util.createPresignedUrl(
@@ -339,7 +346,7 @@ class ImageServiceTest extends IntegrationTest {
                                     + "&Content-MD5=testMd5Hash2");
 
             // when
-            AlbumImageUploadResponse response =
+            AlbumImageUploadUrlResponse response =
                     imageService.createAlbumImageUploadUrls(1L, request);
 
             // then
@@ -361,12 +368,12 @@ class ImageServiceTest extends IntegrationTest {
         @Test
         void 앨범이_존재하지_않는_경우_예외가_발생한다() {
             // given
-            AlbumImageUploadRequest request =
-                    new AlbumImageUploadRequest(
+            AlbumImageUploadUrlRequest request =
+                    new AlbumImageUploadUrlRequest(
                             List.of(
-                                    new AlbumImageUploadRequest.Payload(
+                                    new AlbumImageUploadUrlRequest.Payload(
                                             FileExtension.JPEG, "testMd5Hash1", BigDecimal.ONE),
-                                    new AlbumImageUploadRequest.Payload(
+                                    new AlbumImageUploadUrlRequest.Payload(
                                             FileExtension.JPEG, "testMd5Hash2", BigDecimal.ONE)));
 
             // when & then
@@ -378,12 +385,12 @@ class ImageServiceTest extends IntegrationTest {
         @Test
         void 앨범에_속하지_않은_사용자가_앨범_이미지_업로드_URL을_요청하면_예외가_발생한다() {
             // given
-            AlbumImageUploadRequest request =
-                    new AlbumImageUploadRequest(
+            AlbumImageUploadUrlRequest request =
+                    new AlbumImageUploadUrlRequest(
                             List.of(
-                                    new AlbumImageUploadRequest.Payload(
+                                    new AlbumImageUploadUrlRequest.Payload(
                                             FileExtension.JPEG, "testMd5Hash1", BigDecimal.ONE),
-                                    new AlbumImageUploadRequest.Payload(
+                                    new AlbumImageUploadUrlRequest.Payload(
                                             FileExtension.JPEG, "testMd5Hash2", BigDecimal.ONE)));
 
             // when & then
@@ -395,12 +402,12 @@ class ImageServiceTest extends IntegrationTest {
         @Test
         void LIMITED_권한의_사용자가_앨범_이미지_업로드_URL을_요청하면_예외가_발생한다() {
             // given
-            AlbumImageUploadRequest request =
-                    new AlbumImageUploadRequest(
+            AlbumImageUploadUrlRequest request =
+                    new AlbumImageUploadUrlRequest(
                             List.of(
-                                    new AlbumImageUploadRequest.Payload(
+                                    new AlbumImageUploadUrlRequest.Payload(
                                             FileExtension.JPEG, "testMd5Hash1", BigDecimal.ONE),
-                                    new AlbumImageUploadRequest.Payload(
+                                    new AlbumImageUploadUrlRequest.Payload(
                                             FileExtension.JPEG, "testMd5Hash2", BigDecimal.ONE)));
 
             // when & then
@@ -412,12 +419,12 @@ class ImageServiceTest extends IntegrationTest {
         @Test
         void 구독이_만료된_앨범인_경우_예외가_발생한다() {
             // given
-            AlbumImageUploadRequest request =
-                    new AlbumImageUploadRequest(
+            AlbumImageUploadUrlRequest request =
+                    new AlbumImageUploadUrlRequest(
                             List.of(
-                                    new AlbumImageUploadRequest.Payload(
+                                    new AlbumImageUploadUrlRequest.Payload(
                                             FileExtension.JPEG, "testMd5Hash1", BigDecimal.ONE),
-                                    new AlbumImageUploadRequest.Payload(
+                                    new AlbumImageUploadUrlRequest.Payload(
                                             FileExtension.JPEG, "testMd5Hash2", BigDecimal.ONE)));
 
             // when & then
@@ -429,14 +436,14 @@ class ImageServiceTest extends IntegrationTest {
         @Test
         void 앨범의_남은_용량을_초과해서_요청하면_예외가_발생한다() {
             /// given
-            AlbumImageUploadRequest request =
-                    new AlbumImageUploadRequest(
+            AlbumImageUploadUrlRequest request =
+                    new AlbumImageUploadUrlRequest(
                             List.of(
-                                    new AlbumImageUploadRequest.Payload(
+                                    new AlbumImageUploadUrlRequest.Payload(
                                             FileExtension.JPEG,
                                             "testMd5Hash1",
                                             AlbumType.BASIC.getCapacityMb()),
-                                    new AlbumImageUploadRequest.Payload(
+                                    new AlbumImageUploadUrlRequest.Payload(
                                             FileExtension.JPEG, "testMd5Hash2", BigDecimal.ONE)));
 
             // when & then
@@ -448,12 +455,12 @@ class ImageServiceTest extends IntegrationTest {
         @Test
         void 해시값에_중복이_존재하면_예외가_발생한다() {
             // given
-            AlbumImageUploadRequest request =
-                    new AlbumImageUploadRequest(
+            AlbumImageUploadUrlRequest request =
+                    new AlbumImageUploadUrlRequest(
                             List.of(
-                                    new AlbumImageUploadRequest.Payload(
+                                    new AlbumImageUploadUrlRequest.Payload(
                                             FileExtension.JPEG, "testMd5Hash1", BigDecimal.ZERO),
-                                    new AlbumImageUploadRequest.Payload(
+                                    new AlbumImageUploadUrlRequest.Payload(
                                             FileExtension.JPEG, "testMd5Hash1", BigDecimal.ZERO)));
             // when & then
             assertThatThrownBy(() -> imageService.createAlbumImageUploadUrls(1L, request))
@@ -957,14 +964,14 @@ class ImageServiceTest extends IntegrationTest {
         @Test
         void 유효한_요청이면_Presigned_URL들을_반환한다() {
             // given
-            TempAlbumImageUploadRequest request =
-                    new TempAlbumImageUploadRequest(
+            TempAlbumImageUploadUrlRequest request =
+                    new TempAlbumImageUploadUrlRequest(
                             List.of(
-                                    new TempAlbumImageUploadRequest.Payload(
+                                    new TempAlbumImageUploadUrlRequest.Payload(
                                             FileExtension.JPEG,
                                             "testMd5Hash1",
                                             new BigDecimal("0.3")),
-                                    new TempAlbumImageUploadRequest.Payload(
+                                    new TempAlbumImageUploadUrlRequest.Payload(
                                             FileExtension.JPEG,
                                             "testMd5Hash2",
                                             new BigDecimal("0.3"))));
@@ -995,7 +1002,7 @@ class ImageServiceTest extends IntegrationTest {
                                     + "&Content-MD5=testMd5Hash2");
 
             // when
-            TempAlbumImageUploadResponse response =
+            TempAlbumImageUploadUrlResponse response =
                     imageService.createTempAlbumImageUploadUrls(1L, request);
 
             // then
@@ -1017,12 +1024,12 @@ class ImageServiceTest extends IntegrationTest {
         @Test
         void 임시_앨범이_존재하지_않는_경우_예외가_발생한다() {
             // given
-            TempAlbumImageUploadRequest request =
-                    new TempAlbumImageUploadRequest(
+            TempAlbumImageUploadUrlRequest request =
+                    new TempAlbumImageUploadUrlRequest(
                             List.of(
-                                    new TempAlbumImageUploadRequest.Payload(
+                                    new TempAlbumImageUploadUrlRequest.Payload(
                                             FileExtension.JPEG, "testMd5Hash1", BigDecimal.ZERO),
-                                    new TempAlbumImageUploadRequest.Payload(
+                                    new TempAlbumImageUploadUrlRequest.Payload(
                                             FileExtension.JPEG, "testMd5Hash2", BigDecimal.ZERO)));
 
             // when & then
@@ -1034,12 +1041,12 @@ class ImageServiceTest extends IntegrationTest {
         @Test
         void 임시_앨범의_소유자가_아닌_사람이_이미지_업로드를_시도하면_예외가_발생한다() {
             // given
-            TempAlbumImageUploadRequest request =
-                    new TempAlbumImageUploadRequest(
+            TempAlbumImageUploadUrlRequest request =
+                    new TempAlbumImageUploadUrlRequest(
                             List.of(
-                                    new TempAlbumImageUploadRequest.Payload(
+                                    new TempAlbumImageUploadUrlRequest.Payload(
                                             FileExtension.JPEG, "testMd5Hash1", BigDecimal.ZERO),
-                                    new TempAlbumImageUploadRequest.Payload(
+                                    new TempAlbumImageUploadUrlRequest.Payload(
                                             FileExtension.JPEG, "testMd5Hash2", BigDecimal.ZERO)));
 
             // when & then
@@ -1051,14 +1058,14 @@ class ImageServiceTest extends IntegrationTest {
         @Test
         void 임시_앨범의_남은_용량을_초과해서_요청하면_예외가_발생한다() {
             // given
-            TempAlbumImageUploadRequest request =
-                    new TempAlbumImageUploadRequest(
+            TempAlbumImageUploadUrlRequest request =
+                    new TempAlbumImageUploadUrlRequest(
                             List.of(
-                                    new TempAlbumImageUploadRequest.Payload(
+                                    new TempAlbumImageUploadUrlRequest.Payload(
                                             FileExtension.JPEG,
                                             "testMd5Hash1",
                                             TempAlbumType.DEFAULT.getCapacityMb()),
-                                    new TempAlbumImageUploadRequest.Payload(
+                                    new TempAlbumImageUploadUrlRequest.Payload(
                                             FileExtension.JPEG, "testMd5Hash2", BigDecimal.ONE)));
 
             // when & then
@@ -1070,12 +1077,12 @@ class ImageServiceTest extends IntegrationTest {
         @Test
         void 해시값에_중복이_존재하면_예외가_발생한다() {
             // given
-            TempAlbumImageUploadRequest request =
-                    new TempAlbumImageUploadRequest(
+            TempAlbumImageUploadUrlRequest request =
+                    new TempAlbumImageUploadUrlRequest(
                             List.of(
-                                    new TempAlbumImageUploadRequest.Payload(
+                                    new TempAlbumImageUploadUrlRequest.Payload(
                                             FileExtension.JPEG, "testMd5Hash1", BigDecimal.ZERO),
-                                    new TempAlbumImageUploadRequest.Payload(
+                                    new TempAlbumImageUploadUrlRequest.Payload(
                                             FileExtension.JPEG, "testMd5Hash1", BigDecimal.ZERO)));
             // when & then
             assertThatThrownBy(() -> imageService.createTempAlbumImageUploadUrls(1L, request))
@@ -1189,21 +1196,21 @@ class ImageServiceTest extends IntegrationTest {
         @Test
         void 업로드_성공_시_예외가_발생하지_않는다() {
             // given
-            ImageConfirmRequest request = new ImageConfirmRequest("testImageUrl");
+            ImageUploadCompleteRequest request = new ImageUploadCompleteRequest("testImageUrl");
             given(s3Util.doesFileExistByUrl("testImageUrl")).willReturn(true);
 
             // when & then
-            assertDoesNotThrow(() -> imageService.confirmNonAlbumImageUpload(request));
+            assertDoesNotThrow(() -> imageService.completeNonAlbumImageUpload(request));
         }
 
         @Test
         void 업로드_실패_시_예외가_발생한다() {
             // given
-            ImageConfirmRequest request = new ImageConfirmRequest("testImageUrl");
+            ImageUploadCompleteRequest request = new ImageUploadCompleteRequest("testImageUrl");
             given(s3Util.doesFileExistByUrl("testImageUrl")).willReturn(false);
 
             // when & then
-            assertThatThrownBy(() -> imageService.confirmNonAlbumImageUpload(request))
+            assertThatThrownBy(() -> imageService.completeNonAlbumImageUpload(request))
                     .isInstanceOf(CustomException.class)
                     .hasMessage(ImageErrorCode.IMAGE_UPLOAD_FAIL.getMessage());
         }
@@ -1230,12 +1237,12 @@ class ImageServiceTest extends IntegrationTest {
         @Test
         void 유효한_요청이면_이미지를_생성한다() {
             // given
-            AlbumImagesConfirmRequest request =
-                    new AlbumImagesConfirmRequest(
+            AlbumImagesUploadCompleteRequest request =
+                    new AlbumImagesUploadCompleteRequest(
                             List.of(
-                                    new AlbumImagesConfirmRequest.Payload(
+                                    new AlbumImagesUploadCompleteRequest.Payload(
                                             LocalDateTime.now(), BigDecimal.ONE, "testImageUrl1"),
-                                    new AlbumImagesConfirmRequest.Payload(
+                                    new AlbumImagesUploadCompleteRequest.Payload(
                                             LocalDateTime.now(), BigDecimal.ONE, "testImageUrl2")));
 
             given(s3Util.doAllFilesExistByUrls(List.of("testImageUrl1", "testImageUrl2")))
@@ -1245,8 +1252,8 @@ class ImageServiceTest extends IntegrationTest {
                     .updateTagsToCompleteByUrls(List.of("testImageUrl1", "testImageUrl2"));
 
             // when
-            AlbumImagesConfirmResponse response =
-                    imageService.confirmAlbumImagesUpload(1L, request);
+            AlbumImagesUploadCompleteResponse response =
+                    imageService.completeAlbumImagesUpload(1L, request);
 
             // then
             Assertions.assertAll(
@@ -1260,16 +1267,16 @@ class ImageServiceTest extends IntegrationTest {
         @Test
         void 앨범이_존재하지_않는_경우_예외가_발생한다() {
             // given
-            AlbumImagesConfirmRequest request =
-                    new AlbumImagesConfirmRequest(
+            AlbumImagesUploadCompleteRequest request =
+                    new AlbumImagesUploadCompleteRequest(
                             List.of(
-                                    new AlbumImagesConfirmRequest.Payload(
+                                    new AlbumImagesUploadCompleteRequest.Payload(
                                             LocalDateTime.now(), BigDecimal.ONE, "testImageUrl1"),
-                                    new AlbumImagesConfirmRequest.Payload(
+                                    new AlbumImagesUploadCompleteRequest.Payload(
                                             LocalDateTime.now(), BigDecimal.ONE, "testImageUrl2")));
 
             // when & then
-            assertThatThrownBy(() -> imageService.confirmAlbumImagesUpload(999L, request))
+            assertThatThrownBy(() -> imageService.completeAlbumImagesUpload(999L, request))
                     .isInstanceOf(CustomException.class)
                     .hasMessage(AlbumErrorCode.ALBUM_NOT_FOUND.getMessage());
         }
@@ -1277,18 +1284,18 @@ class ImageServiceTest extends IntegrationTest {
         @Test
         void 모든_이미지를_업로드_성공하지_않았을_경우_예외가_발생한다() {
             // given
-            AlbumImagesConfirmRequest request =
-                    new AlbumImagesConfirmRequest(
+            AlbumImagesUploadCompleteRequest request =
+                    new AlbumImagesUploadCompleteRequest(
                             List.of(
-                                    new AlbumImagesConfirmRequest.Payload(
+                                    new AlbumImagesUploadCompleteRequest.Payload(
                                             LocalDateTime.now(), BigDecimal.ONE, "testImageUrl1"),
-                                    new AlbumImagesConfirmRequest.Payload(
+                                    new AlbumImagesUploadCompleteRequest.Payload(
                                             LocalDateTime.now(), BigDecimal.ONE, "testImageUrl2")));
             given(s3Util.doAllFilesExistByUrls(List.of("testImageUrl1", "testImageUrl2")))
                     .willReturn(false);
 
             // when & then
-            assertThatThrownBy(() -> imageService.confirmAlbumImagesUpload(1L, request))
+            assertThatThrownBy(() -> imageService.completeAlbumImagesUpload(1L, request))
                     .isInstanceOf(CustomException.class)
                     .hasMessage(ImageErrorCode.IMAGE_UPLOAD_FAIL.getMessage());
         }
@@ -1314,12 +1321,12 @@ class ImageServiceTest extends IntegrationTest {
         @Test
         void 유효한_요청이면_임시_앨범_이미지를_생성한다() {
             // given
-            TempAlbumImagesConfirmRequest request =
-                    new TempAlbumImagesConfirmRequest(
+            TempAlbumImagesUploadCompleteRequest request =
+                    new TempAlbumImagesUploadCompleteRequest(
                             List.of(
-                                    new TempAlbumImagesConfirmRequest.Payload(
+                                    new TempAlbumImagesUploadCompleteRequest.Payload(
                                             BigDecimal.ONE, "testImageUrl1"),
-                                    new TempAlbumImagesConfirmRequest.Payload(
+                                    new TempAlbumImagesUploadCompleteRequest.Payload(
                                             BigDecimal.ONE, "testImageUrl2")));
 
             given(s3Util.doAllFilesExistByUrls(List.of("testImageUrl1", "testImageUrl2")))
@@ -1329,8 +1336,8 @@ class ImageServiceTest extends IntegrationTest {
                     .updateTagsToCompleteByUrls(List.of("testImageUrl1", "testImageUrl2"));
 
             // when
-            TempAlbumImagesConfirmResponse response =
-                    imageService.confirmTempAlbumImagesUpload(1L, request);
+            TempAlbumImagesUploadCompleteResponse response =
+                    imageService.completeTempAlbumImagesUpload(1L, request);
 
             // then
             Assertions.assertAll(
@@ -1343,16 +1350,16 @@ class ImageServiceTest extends IntegrationTest {
         @Test
         void 임시_앨범이_존재하지_않는_경우_예외가_발생한다() {
             // given
-            TempAlbumImagesConfirmRequest request =
-                    new TempAlbumImagesConfirmRequest(
+            TempAlbumImagesUploadCompleteRequest request =
+                    new TempAlbumImagesUploadCompleteRequest(
                             List.of(
-                                    new TempAlbumImagesConfirmRequest.Payload(
+                                    new TempAlbumImagesUploadCompleteRequest.Payload(
                                             BigDecimal.ONE, "testImageUrl1"),
-                                    new TempAlbumImagesConfirmRequest.Payload(
+                                    new TempAlbumImagesUploadCompleteRequest.Payload(
                                             BigDecimal.ONE, "testImageUrl2")));
 
             // when & then
-            assertThatThrownBy(() -> imageService.confirmTempAlbumImagesUpload(999L, request))
+            assertThatThrownBy(() -> imageService.completeTempAlbumImagesUpload(999L, request))
                     .isInstanceOf(CustomException.class)
                     .hasMessage(TempAlbumErrorCode.TEMP_ALBUM_NOT_FOUND.getMessage());
         }
@@ -1360,19 +1367,19 @@ class ImageServiceTest extends IntegrationTest {
         @Test
         void 모든_이미지를_업로드_성공하지_않았을_경우_예외가_발생한다() {
             // given
-            TempAlbumImagesConfirmRequest request =
-                    new TempAlbumImagesConfirmRequest(
+            TempAlbumImagesUploadCompleteRequest request =
+                    new TempAlbumImagesUploadCompleteRequest(
                             List.of(
-                                    new TempAlbumImagesConfirmRequest.Payload(
+                                    new TempAlbumImagesUploadCompleteRequest.Payload(
                                             BigDecimal.ONE, "testImageUrl1"),
-                                    new TempAlbumImagesConfirmRequest.Payload(
+                                    new TempAlbumImagesUploadCompleteRequest.Payload(
                                             BigDecimal.ONE, "testImageUrl2")));
 
             given(s3Util.doAllFilesExistByUrls(List.of("testImageUrl1", "testImageUrl2")))
                     .willReturn(false);
 
             // when & then
-            assertThatThrownBy(() -> imageService.confirmTempAlbumImagesUpload(1L, request))
+            assertThatThrownBy(() -> imageService.completeTempAlbumImagesUpload(1L, request))
                     .isInstanceOf(CustomException.class)
                     .hasMessage(ImageErrorCode.IMAGE_UPLOAD_FAIL.getMessage());
         }

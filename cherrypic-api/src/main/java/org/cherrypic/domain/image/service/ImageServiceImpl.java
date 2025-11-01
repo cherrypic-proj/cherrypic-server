@@ -66,7 +66,7 @@ public class ImageServiceImpl implements ImageService {
     private final ApplicationEventPublisher eventPublisher;
 
     @Override
-    public PresignedUrlResponse createMemberProfileImageUploadUrl(ImageUploadRequest request) {
+    public ImageUploadUrlResponse createMemberProfileImageUploadUrl(ImageUploadUrlRequest request) {
         final Member currentMember = memberUtil.getCurrentMember();
 
         validateImageExtension(request.fileExtension());
@@ -78,11 +78,11 @@ public class ImageServiceImpl implements ImageService {
                         request.fileExtension(),
                         request.md5Hash());
 
-        return PresignedUrlResponse.of(presignedUrl);
+        return ImageUploadUrlResponse.of(presignedUrl);
     }
 
     @Override
-    public PresignedUrlResponse createAlbumCoverImageUploadUrl(ImageUploadRequest request) {
+    public ImageUploadUrlResponse createAlbumCoverImageUploadUrl(ImageUploadUrlRequest request) {
         final Member currentMember = memberUtil.getCurrentMember();
 
         validateImageExtension(request.fileExtension());
@@ -94,11 +94,11 @@ public class ImageServiceImpl implements ImageService {
                         request.fileExtension(),
                         request.md5Hash());
 
-        return PresignedUrlResponse.of(presignedUrl);
+        return ImageUploadUrlResponse.of(presignedUrl);
     }
 
     @Override
-    public PresignedUrlResponse createEventCoverImageUploadUrl(ImageUploadRequest request) {
+    public ImageUploadUrlResponse createEventCoverImageUploadUrl(ImageUploadUrlRequest request) {
         final Member currentMember = memberUtil.getCurrentMember();
 
         validateImageExtension(request.fileExtension());
@@ -110,12 +110,12 @@ public class ImageServiceImpl implements ImageService {
                         request.fileExtension(),
                         request.md5Hash());
 
-        return PresignedUrlResponse.of(presignedUrl);
+        return ImageUploadUrlResponse.of(presignedUrl);
     }
 
     @Override
-    public AlbumImageUploadResponse createAlbumImageUploadUrls(
-            Long albumId, AlbumImageUploadRequest request) {
+    public AlbumImageUploadUrlResponse createAlbumImageUploadUrls(
+            Long albumId, AlbumImageUploadUrlRequest request) {
         final Member currentMember = memberUtil.getCurrentMember();
         final Album album = getAlbumByIdWithLock(albumId);
 
@@ -124,7 +124,7 @@ public class ImageServiceImpl implements ImageService {
 
         BigDecimal uploadCapacityMb =
                 request.payloads().stream()
-                        .map(AlbumImageUploadRequest.Payload::capacityMb)
+                        .map(AlbumImageUploadUrlRequest.Payload::capacityMb)
                         .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         validateAlbumCapacity(album, uploadCapacityMb);
@@ -141,7 +141,7 @@ public class ImageServiceImpl implements ImageService {
                                                 req.md5Hashes()))
                         .toList();
 
-        return AlbumImageUploadResponse.of(presignedUrls);
+        return AlbumImageUploadUrlResponse.of(presignedUrls);
     }
 
     @Override
@@ -207,8 +207,8 @@ public class ImageServiceImpl implements ImageService {
 
     @Override
     @Transactional
-    public TempAlbumImageUploadResponse createTempAlbumImageUploadUrls(
-            Long tempAlbumId, TempAlbumImageUploadRequest request) {
+    public TempAlbumImageUploadUrlResponse createTempAlbumImageUploadUrls(
+            Long tempAlbumId, TempAlbumImageUploadUrlRequest request) {
         final Member currentMember = memberUtil.getCurrentMember();
         final TempAlbum tempAlbum = getTempAlbumById(tempAlbumId);
 
@@ -216,7 +216,7 @@ public class ImageServiceImpl implements ImageService {
 
         BigDecimal uploadCapacityMb =
                 request.payloads().stream()
-                        .map(TempAlbumImageUploadRequest.Payload::capacityMb)
+                        .map(TempAlbumImageUploadUrlRequest.Payload::capacityMb)
                         .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         validateTempAlbumCapacity(tempAlbum, uploadCapacityMb);
@@ -233,7 +233,7 @@ public class ImageServiceImpl implements ImageService {
                                                 req.md5Hashes()))
                         .toList();
 
-        return TempAlbumImageUploadResponse.of(presignedUrls);
+        return TempAlbumImageUploadUrlResponse.of(presignedUrls);
     }
 
     @Override
@@ -265,21 +265,21 @@ public class ImageServiceImpl implements ImageService {
     }
 
     @Override
-    public void confirmNonAlbumImageUpload(ImageConfirmRequest request) {
+    public void completeNonAlbumImageUpload(ImageUploadCompleteRequest request) {
         validateImageUpload(request.imageUrl());
 
         s3Util.updateTagToCompleteByUrl(request.imageUrl());
     }
 
     @Override
-    public AlbumImagesConfirmResponse confirmAlbumImagesUpload(
-            Long albumId, AlbumImagesConfirmRequest request) {
+    public AlbumImagesUploadCompleteResponse completeAlbumImagesUpload(
+            Long albumId, AlbumImagesUploadCompleteRequest request) {
         final Member currentMember = memberUtil.getCurrentMember();
         final Album album = getAlbumById(albumId);
 
         List<String> imageUrls =
                 request.payloads().stream()
-                        .map(AlbumImagesConfirmRequest.Payload::imageUrl)
+                        .map(AlbumImagesUploadCompleteRequest.Payload::imageUrl)
                         .toList();
 
         validateImagesUpload(imageUrls);
@@ -288,7 +288,7 @@ public class ImageServiceImpl implements ImageService {
 
         BigDecimal uploadCapacityMb =
                 request.payloads().stream()
-                        .map(AlbumImagesConfirmRequest.Payload::capacityMb)
+                        .map(AlbumImagesUploadCompleteRequest.Payload::capacityMb)
                         .reduce(BigDecimal.ZERO, BigDecimal::add);
         album.increaseCapacity(uploadCapacityMb);
 
@@ -296,7 +296,7 @@ public class ImageServiceImpl implements ImageService {
                 IntStream.range(0, request.payloads().size())
                         .mapToObj(
                                 i -> {
-                                    AlbumImagesConfirmRequest.Payload req =
+                                    AlbumImagesUploadCompleteRequest.Payload req =
                                             request.payloads().get(i);
                                     String imageUrl = imageUrls.get(i);
 
@@ -317,17 +317,18 @@ public class ImageServiceImpl implements ImageService {
                 imageRepository.findImageIdsByUrlsInOrder(
                         images.stream().map(Image::getUrl).toList());
 
-        return AlbumImagesConfirmResponse.of(imageIds, currentMember.getLocalImageDeletion());
+        return AlbumImagesUploadCompleteResponse.of(
+                imageIds, currentMember.getLocalImageDeletion());
     }
 
     @Override
-    public TempAlbumImagesConfirmResponse confirmTempAlbumImagesUpload(
-            Long tempAlbumId, TempAlbumImagesConfirmRequest request) {
+    public TempAlbumImagesUploadCompleteResponse completeTempAlbumImagesUpload(
+            Long tempAlbumId, TempAlbumImagesUploadCompleteRequest request) {
         final TempAlbum tempAlbum = getTempAlbumById(tempAlbumId);
 
         List<String> imageUrls =
                 request.payloads().stream()
-                        .map(TempAlbumImagesConfirmRequest.Payload::tempAlbumImageUrl)
+                        .map(TempAlbumImagesUploadCompleteRequest.Payload::tempAlbumImageUrl)
                         .toList();
 
         validateImagesUpload(imageUrls);
@@ -336,7 +337,7 @@ public class ImageServiceImpl implements ImageService {
 
         BigDecimal uploadCapacityMb =
                 request.payloads().stream()
-                        .map(TempAlbumImagesConfirmRequest.Payload::capacityMb)
+                        .map(TempAlbumImagesUploadCompleteRequest.Payload::capacityMb)
                         .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         tempAlbum.increaseCapacity(uploadCapacityMb);
@@ -345,7 +346,7 @@ public class ImageServiceImpl implements ImageService {
                 IntStream.range(0, request.payloads().size())
                         .mapToObj(
                                 i -> {
-                                    TempAlbumImagesConfirmRequest.Payload req =
+                                    TempAlbumImagesUploadCompleteRequest.Payload req =
                                             request.payloads().get(i);
                                     String imageUrl = imageUrls.get(i);
 
@@ -360,7 +361,7 @@ public class ImageServiceImpl implements ImageService {
                 imageRepository.findTempImageIdsByUrlsInOrder(
                         tempAlbumImages.stream().map(TempAlbumImage::getUrl).toList());
 
-        return TempAlbumImagesConfirmResponse.of(tempAlbumImageIds);
+        return TempAlbumImagesUploadCompleteResponse.of(tempAlbumImageIds);
     }
 
     private Album getAlbumById(Long albumId) {
@@ -434,10 +435,10 @@ public class ImageServiceImpl implements ImageService {
         }
     }
 
-    private void validateDistinctHashes(AlbumImageUploadRequest request) {
+    private void validateDistinctHashes(AlbumImageUploadUrlRequest request) {
         List<String> hashes =
                 request.payloads().stream()
-                        .map(AlbumImageUploadRequest.Payload::md5Hashes)
+                        .map(AlbumImageUploadUrlRequest.Payload::md5Hashes)
                         .toList();
 
         if (hashes.stream().distinct().count() != hashes.size()) {
@@ -445,10 +446,10 @@ public class ImageServiceImpl implements ImageService {
         }
     }
 
-    private void validateDistinctHashes(TempAlbumImageUploadRequest request) {
+    private void validateDistinctHashes(TempAlbumImageUploadUrlRequest request) {
         List<String> hashes =
                 request.payloads().stream()
-                        .map(TempAlbumImageUploadRequest.Payload::md5Hashes)
+                        .map(TempAlbumImageUploadUrlRequest.Payload::md5Hashes)
                         .toList();
 
         if (hashes.stream().distinct().count() != hashes.size()) {

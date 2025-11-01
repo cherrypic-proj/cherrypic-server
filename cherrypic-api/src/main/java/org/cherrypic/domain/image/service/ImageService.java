@@ -7,14 +7,14 @@ import org.cherrypic.global.pagination.SortDirection;
 import org.cherrypic.global.pagination.SortParameter;
 
 public interface ImageService {
-    PresignedUrlResponse createMemberProfileImageUploadUrl(ImageUploadRequest request);
+    ImageUploadUrlResponse createMemberProfileImageUploadUrl(ImageUploadUrlRequest request);
 
-    PresignedUrlResponse createAlbumCoverImageUploadUrl(ImageUploadRequest request);
+    ImageUploadUrlResponse createAlbumCoverImageUploadUrl(ImageUploadUrlRequest request);
 
-    PresignedUrlResponse createEventCoverImageUploadUrl(ImageUploadRequest request);
+    ImageUploadUrlResponse createEventCoverImageUploadUrl(ImageUploadUrlRequest request);
 
-    AlbumImageUploadResponse createAlbumImageUploadUrls(
-            Long albumId, AlbumImageUploadRequest request);
+    AlbumImageUploadUrlResponse createAlbumImageUploadUrls(
+            Long albumId, AlbumImageUploadUrlRequest request);
 
     SliceResponse<AlbumImageListResponse> getAlbumImages(
             Long albumId,
@@ -32,16 +32,16 @@ public interface ImageService {
 
     void deleteAlbumImage(Long albumId, AlbumImageDeleteRequest request);
 
-    TempAlbumImageUploadResponse createTempAlbumImageUploadUrls(
-            Long tempAlbumId, TempAlbumImageUploadRequest request);
+    TempAlbumImageUploadUrlResponse createTempAlbumImageUploadUrls(
+            Long tempAlbumId, TempAlbumImageUploadUrlRequest request);
 
     void deleteTempAlbumImage(Long tempAlbumId, TempAlbumImageDeleteRequest request);
 
-    void confirmNonAlbumImageUpload(ImageConfirmRequest request);
+    void completeNonAlbumImageUpload(ImageUploadCompleteRequest request);
 
-    AlbumImagesConfirmResponse confirmAlbumImagesUpload(
-            Long albumId, AlbumImagesConfirmRequest request);
+    AlbumImagesUploadCompleteResponse completeAlbumImagesUpload(
+            Long albumId, AlbumImagesUploadCompleteRequest request);
 
-    TempAlbumImagesConfirmResponse confirmTempAlbumImagesUpload(
-            Long tempAlbumId, TempAlbumImagesConfirmRequest request);
+    TempAlbumImagesUploadCompleteResponse completeTempAlbumImagesUpload(
+            Long tempAlbumId, TempAlbumImagesUploadCompleteRequest request);
 }
