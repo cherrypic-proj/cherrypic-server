@@ -12,6 +12,7 @@ import org.cherrypic.global.annotation.PageSize;
 import org.cherrypic.global.pagination.SliceResponse;
 import org.cherrypic.global.pagination.SortDirection;
 import org.cherrypic.global.pagination.SortParameter;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -28,8 +29,8 @@ public class ImageController {
     @Operation(
             summary = "회원 프로필 이미지 Presigned URL 생성",
             description = "회원 프로필 이미지 업로드를 위한 Presigned URL을 생성합니다.")
-    public PresignedUrlResponse memberProfileImageUploadUrlCreate(
-            @Valid @RequestBody ImageUploadRequest request) {
+    public ImagePresignedUrlResponse memberProfileImageUploadUrlCreate(
+            @Valid @RequestBody ImageUploadUrlRequest request) {
         return imageService.createMemberProfileImageUploadUrl(request);
     }
 
@@ -37,8 +38,8 @@ public class ImageController {
     @Operation(
             summary = "앨범 커버 이미지 Presigned URL 생성",
             description = "앨범 커버 이미지 업로드를 위한 Presigned URL을 생성합니다.")
-    public PresignedUrlResponse albumCoverImageUploadUrlCreate(
-            @Valid @RequestBody ImageUploadRequest request) {
+    public ImagePresignedUrlResponse albumCoverImageUploadUrlCreate(
+            @Valid @RequestBody ImageUploadUrlRequest request) {
         return imageService.createAlbumCoverImageUploadUrl(request);
     }
 
@@ -46,18 +47,36 @@ public class ImageController {
     @Operation(
             summary = "이벤트 커버 이미지 Presigned URL 생성",
             description = "이벤트 커버 이미지 업로드를 위한 Presigned URL을 생성합니다.")
-    public PresignedUrlResponse eventCoverImageUploadUrlCreate(
-            @Valid @RequestBody ImageUploadRequest request) {
+    public ImagePresignedUrlResponse eventCoverImageUploadUrlCreate(
+            @Valid @RequestBody ImageUploadUrlRequest request) {
         return imageService.createEventCoverImageUploadUrl(request);
     }
 
-    @PostMapping("/albums/{albumId}/images")
+    @PostMapping("/images/upload-complete")
+    @Operation(summary = "앨범 사진 외 이미지 업로드 완료", description = "프로필, 커버 사진 등의 이미지 업로드를 완료합니다.")
+    public ResponseEntity<Void> nonAlbumImageUploadComplete(
+            @Valid @RequestBody ImageUploadCompleteRequest request) {
+        imageService.completeNonAlbumImageUpload(request);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/albums/{albumId}/upload-url")
     @Operation(
             summary = "앨범 이미지 업로드 Presigned URL들 생성",
             description = "앨범 이미지 업로드를 위한 Presigned URL들을 생성합니다.")
-    public ImageUploadListResponse albumImageUploadUrlsCreate(
-            @PathVariable Long albumId, @Valid @RequestBody AlbumImageUploadRequest request) {
+    public AlbumImagesPresignedUrlResponse albumImageUploadUrlsCreate(
+            @PathVariable Long albumId, @Valid @RequestBody AlbumImagesUploadUrlRequest request) {
         return imageService.createAlbumImageUploadUrls(albumId, request);
+    }
+
+    @PostMapping("/albums/{albumId}/upload-complete")
+    @Operation(summary = "앨범 이미지들 업로드 완료", description = "앨범 이미지들의 업로드를 완료합니다.")
+    public ResponseEntity<AlbumImagesUploadCompleteResponse> albumImagesUploadComplete(
+            @PathVariable Long albumId,
+            @Valid @RequestBody AlbumImagesUploadCompleteRequest request) {
+        AlbumImagesUploadCompleteResponse response =
+                imageService.completeAlbumImagesUpload(albumId, request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @GetMapping("/albums/{albumId}/images")
@@ -102,14 +121,24 @@ public class ImageController {
         return ResponseEntity.noContent().build();
     }
 
-    @PostMapping("temp-albums/{tempAlbumId}/images")
+    @PostMapping("temp-albums/{tempAlbumId}/upload-url")
     @Operation(
-            summary = "임시 앨범 이미지 업로드 Presigned URL들 생성",
-            description = "임시 앨범 이미지 업로드를 위한 Presigned URL들을 생성합니다.")
-    public TempAlbumImageUploadListResponse tempAlbumImageUploadUrlsCreate(
+            summary = "임시 앨범 이미지들 업로드 Presigned URL들 생성",
+            description = "임시 앨범 이미지들 업로드를 위한 Presigned URL들을 생성합니다.")
+    public TempAlbumImagesPresignedUrlResponse tempAlbumImageUploadUrlsCreate(
             @PathVariable Long tempAlbumId,
-            @Valid @RequestBody TempAlbumImageUploadRequest request) {
+            @Valid @RequestBody TempAlbumImagesUploadUrlRequest request) {
         return imageService.createTempAlbumImageUploadUrls(tempAlbumId, request);
+    }
+
+    @PostMapping("/temp-albums/{tempAlbumId}/upload-complete")
+    @Operation(summary = "임시 앨범 이미지들 업로드 완료", description = "임시 앨범 이미지들의 업로드를 완료합니다.")
+    public ResponseEntity<TempAlbumImagesUploadCompleteResponse> tempAlbumImagesUploadComplete(
+            @PathVariable Long tempAlbumId,
+            @Valid @RequestBody TempAlbumImagesUploadCompleteRequest request) {
+        TempAlbumImagesUploadCompleteResponse response =
+                imageService.completeTempAlbumImagesUpload(tempAlbumId, request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @DeleteMapping("temp-albums/{tempAlbumId}/images")

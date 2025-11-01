@@ -7,14 +7,14 @@ import org.cherrypic.global.pagination.SortDirection;
 import org.cherrypic.global.pagination.SortParameter;
 
 public interface ImageService {
-    PresignedUrlResponse createMemberProfileImageUploadUrl(ImageUploadRequest request);
+    ImagePresignedUrlResponse createMemberProfileImageUploadUrl(ImageUploadUrlRequest request);
 
-    PresignedUrlResponse createAlbumCoverImageUploadUrl(ImageUploadRequest request);
+    ImagePresignedUrlResponse createAlbumCoverImageUploadUrl(ImageUploadUrlRequest request);
 
-    PresignedUrlResponse createEventCoverImageUploadUrl(ImageUploadRequest request);
+    ImagePresignedUrlResponse createEventCoverImageUploadUrl(ImageUploadUrlRequest request);
 
-    ImageUploadListResponse createAlbumImageUploadUrls(
-            Long albumId, AlbumImageUploadRequest request);
+    AlbumImagesPresignedUrlResponse createAlbumImageUploadUrls(
+            Long albumId, AlbumImagesUploadUrlRequest request);
 
     SliceResponse<AlbumImageListResponse> getAlbumImages(
             Long albumId,
@@ -32,8 +32,16 @@ public interface ImageService {
 
     void deleteAlbumImage(Long albumId, AlbumImageDeleteRequest request);
 
-    TempAlbumImageUploadListResponse createTempAlbumImageUploadUrls(
-            Long tempAlbumId, TempAlbumImageUploadRequest request);
+    TempAlbumImagesPresignedUrlResponse createTempAlbumImageUploadUrls(
+            Long tempAlbumId, TempAlbumImagesUploadUrlRequest request);
 
     void deleteTempAlbumImage(Long tempAlbumId, TempAlbumImageDeleteRequest request);
+
+    void completeNonAlbumImageUpload(ImageUploadCompleteRequest request);
+
+    AlbumImagesUploadCompleteResponse completeAlbumImagesUpload(
+            Long albumId, AlbumImagesUploadCompleteRequest request);
+
+    TempAlbumImagesUploadCompleteResponse completeTempAlbumImagesUpload(
+            Long tempAlbumId, TempAlbumImagesUploadCompleteRequest request);
 }

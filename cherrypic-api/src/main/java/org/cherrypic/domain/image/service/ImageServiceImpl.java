@@ -66,7 +66,8 @@ public class ImageServiceImpl implements ImageService {
     private final ApplicationEventPublisher eventPublisher;
 
     @Override
-    public PresignedUrlResponse createMemberProfileImageUploadUrl(ImageUploadRequest request) {
+    public ImagePresignedUrlResponse createMemberProfileImageUploadUrl(
+            ImageUploadUrlRequest request) {
         final Member currentMember = memberUtil.getCurrentMember();
 
         validateImageExtension(request.fileExtension());
@@ -78,11 +79,11 @@ public class ImageServiceImpl implements ImageService {
                         request.fileExtension(),
                         request.md5Hash());
 
-        return PresignedUrlResponse.of(presignedUrl);
+        return ImagePresignedUrlResponse.of(presignedUrl);
     }
 
     @Override
-    public PresignedUrlResponse createAlbumCoverImageUploadUrl(ImageUploadRequest request) {
+    public ImagePresignedUrlResponse createAlbumCoverImageUploadUrl(ImageUploadUrlRequest request) {
         final Member currentMember = memberUtil.getCurrentMember();
 
         validateImageExtension(request.fileExtension());
@@ -94,11 +95,11 @@ public class ImageServiceImpl implements ImageService {
                         request.fileExtension(),
                         request.md5Hash());
 
-        return PresignedUrlResponse.of(presignedUrl);
+        return ImagePresignedUrlResponse.of(presignedUrl);
     }
 
     @Override
-    public PresignedUrlResponse createEventCoverImageUploadUrl(ImageUploadRequest request) {
+    public ImagePresignedUrlResponse createEventCoverImageUploadUrl(ImageUploadUrlRequest request) {
         final Member currentMember = memberUtil.getCurrentMember();
 
         validateImageExtension(request.fileExtension());
@@ -110,12 +111,12 @@ public class ImageServiceImpl implements ImageService {
                         request.fileExtension(),
                         request.md5Hash());
 
-        return PresignedUrlResponse.of(presignedUrl);
+        return ImagePresignedUrlResponse.of(presignedUrl);
     }
 
     @Override
-    public ImageUploadListResponse createAlbumImageUploadUrls(
-            Long albumId, AlbumImageUploadRequest request) {
+    public AlbumImagesPresignedUrlResponse createAlbumImageUploadUrls(
+            Long albumId, AlbumImagesUploadUrlRequest request) {
         final Member currentMember = memberUtil.getCurrentMember();
         final Album album = getAlbumByIdWithLock(albumId);
 
@@ -124,13 +125,11 @@ public class ImageServiceImpl implements ImageService {
 
         BigDecimal uploadCapacityMb =
                 request.payloads().stream()
-                        .map(AlbumImageUploadRequest.Payload::capacityMb)
+                        .map(AlbumImagesUploadUrlRequest.Payload::capacityMb)
                         .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         validateAlbumCapacity(album, uploadCapacityMb);
         validateDistinctHashes(request);
-
-        album.increaseCapacity(uploadCapacityMb);
 
         List<String> presignedUrls =
                 request.payloads().stream()
@@ -143,42 +142,7 @@ public class ImageServiceImpl implements ImageService {
                                                 req.md5Hashes()))
                         .toList();
 
-        List<Image> images =
-                IntStream.range(0, request.payloads().size())
-                        .mapToObj(
-                                i -> {
-                                    AlbumImageUploadRequest.Payload req = request.payloads().get(i);
-                                    String presignedUrl = presignedUrls.get(i);
-
-                                    String objectUrl =
-                                            presignedUrl.substring(0, presignedUrl.indexOf("?"));
-
-                                    return Image.createImage(
-                                            album,
-                                            currentMember.getId(),
-                                            objectUrl,
-                                            req.generatedAt() != null
-                                                    ? req.generatedAt()
-                                                    : LocalDateTime.now(),
-                                            req.capacityMb());
-                                })
-                        .toList();
-
-        imageRepository.bulkInsertImages(images);
-
-        List<Long> imageIds =
-                imageRepository.findImageIdsByUrlsInOrder(
-                        images.stream().map(Image::getUrl).toList());
-
-        List<ImageUploadListResponse.Content> content =
-                IntStream.range(0, images.size())
-                        .mapToObj(
-                                i ->
-                                        ImageUploadListResponse.Content.of(
-                                                imageIds.get(i), presignedUrls.get(i)))
-                        .toList();
-
-        return ImageUploadListResponse.of(content, currentMember.getLocalImageDeletion());
+        return AlbumImagesPresignedUrlResponse.of(presignedUrls);
     }
 
     @Override
@@ -244,8 +208,8 @@ public class ImageServiceImpl implements ImageService {
 
     @Override
     @Transactional
-    public TempAlbumImageUploadListResponse createTempAlbumImageUploadUrls(
-            Long tempAlbumId, TempAlbumImageUploadRequest request) {
+    public TempAlbumImagesPresignedUrlResponse createTempAlbumImageUploadUrls(
+            Long tempAlbumId, TempAlbumImagesUploadUrlRequest request) {
         final Member currentMember = memberUtil.getCurrentMember();
         final TempAlbum tempAlbum = getTempAlbumById(tempAlbumId);
 
@@ -253,13 +217,11 @@ public class ImageServiceImpl implements ImageService {
 
         BigDecimal uploadCapacityMb =
                 request.payloads().stream()
-                        .map(TempAlbumImageUploadRequest.Payload::capacityMb)
+                        .map(TempAlbumImagesUploadUrlRequest.Payload::capacityMb)
                         .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         validateTempAlbumCapacity(tempAlbum, uploadCapacityMb);
         validateDistinctHashes(request);
-
-        tempAlbum.increaseCapacity(uploadCapacityMb);
 
         List<String> presignedUrls =
                 request.payloads().stream()
@@ -272,37 +234,7 @@ public class ImageServiceImpl implements ImageService {
                                                 req.md5Hashes()))
                         .toList();
 
-        List<TempAlbumImage> tempAlbumImages =
-                IntStream.range(0, request.payloads().size())
-                        .mapToObj(
-                                i -> {
-                                    TempAlbumImageUploadRequest.Payload req =
-                                            request.payloads().get(i);
-                                    String presignedUrl = presignedUrls.get(i);
-
-                                    String objectUrl =
-                                            presignedUrl.substring(0, presignedUrl.indexOf("?"));
-
-                                    return TempAlbumImage.createTempAlbumImage(
-                                            tempAlbum, objectUrl, req.capacityMb());
-                                })
-                        .toList();
-
-        imageRepository.bulkInsertTempAlbumImages(tempAlbumImages);
-
-        List<Long> tempAlbumImageIds =
-                imageRepository.findTempImageIdsByUrlsInOrder(
-                        tempAlbumImages.stream().map(TempAlbumImage::getUrl).toList());
-
-        List<TempAlbumImageUploadListResponse.Content> content =
-                IntStream.range(0, tempAlbumImageIds.size())
-                        .mapToObj(
-                                i ->
-                                        TempAlbumImageUploadListResponse.Content.of(
-                                                tempAlbumImageIds.get(i), presignedUrls.get(i)))
-                        .toList();
-
-        return TempAlbumImageUploadListResponse.of(content);
+        return TempAlbumImagesPresignedUrlResponse.of(presignedUrls);
     }
 
     @Override
@@ -331,6 +263,105 @@ public class ImageServiceImpl implements ImageService {
                 TempAlbumImagesDeleteEvent.of(
                         tempAlbumImages.stream().map(TempAlbumImage::getUrl).toList()));
         tempAlbumImageRepository.deleteAllInBatch(tempAlbumImages);
+    }
+
+    @Override
+    public void completeNonAlbumImageUpload(ImageUploadCompleteRequest request) {
+        validateImageUpload(request.imageUrl());
+
+        s3Util.updateTagToCompleteByUrl(request.imageUrl());
+    }
+
+    @Override
+    public AlbumImagesUploadCompleteResponse completeAlbumImagesUpload(
+            Long albumId, AlbumImagesUploadCompleteRequest request) {
+        final Member currentMember = memberUtil.getCurrentMember();
+        final Album album = getAlbumById(albumId);
+
+        List<String> imageUrls =
+                request.payloads().stream()
+                        .map(AlbumImagesUploadCompleteRequest.Payload::imageUrl)
+                        .toList();
+
+        validateImagesUpload(imageUrls);
+
+        s3Util.updateTagsToCompleteByUrls(imageUrls);
+
+        BigDecimal uploadCapacityMb =
+                request.payloads().stream()
+                        .map(AlbumImagesUploadCompleteRequest.Payload::capacityMb)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+        album.increaseCapacity(uploadCapacityMb);
+
+        List<Image> images =
+                IntStream.range(0, request.payloads().size())
+                        .mapToObj(
+                                i -> {
+                                    AlbumImagesUploadCompleteRequest.Payload req =
+                                            request.payloads().get(i);
+                                    String imageUrl = imageUrls.get(i);
+
+                                    return Image.createImage(
+                                            album,
+                                            currentMember.getId(),
+                                            imageUrl,
+                                            req.generatedAt() != null
+                                                    ? req.generatedAt()
+                                                    : LocalDateTime.now(),
+                                            req.capacityMb());
+                                })
+                        .toList();
+
+        imageRepository.bulkInsertImages(images);
+
+        List<Long> imageIds =
+                imageRepository.findImageIdsByUrlsInOrder(
+                        images.stream().map(Image::getUrl).toList());
+
+        return AlbumImagesUploadCompleteResponse.of(imageIds);
+    }
+
+    @Override
+    public TempAlbumImagesUploadCompleteResponse completeTempAlbumImagesUpload(
+            Long tempAlbumId, TempAlbumImagesUploadCompleteRequest request) {
+        final TempAlbum tempAlbum = getTempAlbumById(tempAlbumId);
+
+        List<String> imageUrls =
+                request.payloads().stream()
+                        .map(TempAlbumImagesUploadCompleteRequest.Payload::tempAlbumImageUrl)
+                        .toList();
+
+        validateImagesUpload(imageUrls);
+
+        s3Util.updateTagsToCompleteByUrls(imageUrls);
+
+        BigDecimal uploadCapacityMb =
+                request.payloads().stream()
+                        .map(TempAlbumImagesUploadCompleteRequest.Payload::capacityMb)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        tempAlbum.increaseCapacity(uploadCapacityMb);
+
+        List<TempAlbumImage> tempAlbumImages =
+                IntStream.range(0, request.payloads().size())
+                        .mapToObj(
+                                i -> {
+                                    TempAlbumImagesUploadCompleteRequest.Payload req =
+                                            request.payloads().get(i);
+                                    String imageUrl = imageUrls.get(i);
+
+                                    return TempAlbumImage.createTempAlbumImage(
+                                            tempAlbum, imageUrl, req.capacityMb());
+                                })
+                        .toList();
+
+        imageRepository.bulkInsertTempAlbumImages(tempAlbumImages);
+
+        List<Long> tempAlbumImageIds =
+                imageRepository.findTempImageIdsByUrlsInOrder(
+                        tempAlbumImages.stream().map(TempAlbumImage::getUrl).toList());
+
+        return TempAlbumImagesUploadCompleteResponse.of(tempAlbumImageIds);
     }
 
     private Album getAlbumById(Long albumId) {
@@ -404,10 +435,10 @@ public class ImageServiceImpl implements ImageService {
         }
     }
 
-    private void validateDistinctHashes(AlbumImageUploadRequest request) {
+    private void validateDistinctHashes(AlbumImagesUploadUrlRequest request) {
         List<String> hashes =
                 request.payloads().stream()
-                        .map(AlbumImageUploadRequest.Payload::md5Hashes)
+                        .map(AlbumImagesUploadUrlRequest.Payload::md5Hashes)
                         .toList();
 
         if (hashes.stream().distinct().count() != hashes.size()) {
@@ -415,10 +446,10 @@ public class ImageServiceImpl implements ImageService {
         }
     }
 
-    private void validateDistinctHashes(TempAlbumImageUploadRequest request) {
+    private void validateDistinctHashes(TempAlbumImagesUploadUrlRequest request) {
         List<String> hashes =
                 request.payloads().stream()
-                        .map(TempAlbumImageUploadRequest.Payload::md5Hashes)
+                        .map(TempAlbumImagesUploadUrlRequest.Payload::md5Hashes)
                         .toList();
 
         if (hashes.stream().distinct().count() != hashes.size()) {
@@ -458,6 +489,18 @@ public class ImageServiceImpl implements ImageService {
         Subscription subscription = getSubscriptionByAlbumId(album.getId());
         if (subscription.getStatus() == SubscriptionStatus.EXPIRED) {
             throw new CustomException(AlbumErrorCode.EXPIRED_SUBSCRIPTION);
+        }
+    }
+
+    private void validateImageUpload(String imageUrl) {
+        if (!s3Util.doesFileExistByUrl(imageUrl)) {
+            throw new CustomException(ImageErrorCode.IMAGE_UPLOAD_FAIL);
+        }
+    }
+
+    private void validateImagesUpload(List<String> imageUrls) {
+        if (!s3Util.doAllFilesExistByUrls(imageUrls)) {
+            throw new CustomException(ImageErrorCode.IMAGE_UPLOAD_FAIL);
         }
     }
 }

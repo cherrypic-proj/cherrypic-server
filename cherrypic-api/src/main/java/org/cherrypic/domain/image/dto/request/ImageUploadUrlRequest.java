@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import org.cherrypic.global.annotation.Enum;
 import org.cherrypic.s3.enums.FileExtension;
 
-public record ImageUploadRequest(
+public record ImageUploadUrlRequest(
         @Enum(message = "이미지 파일의 확장자는 비워둘 수 없으며, PNG, JPG, JPEG, WEBP, HEIC, HEIF만 지원됩니다.")
                 @Schema(description = "이미지 파일의 확장자", defaultValue = "JPEG")
                 FileExtension fileExtension,
