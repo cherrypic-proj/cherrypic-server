@@ -721,6 +721,10 @@ class ImageServiceTest extends IntegrationTest {
 
         @Test
         void 임시_앨범에_이미지가_없는_경우_빈_리스트를_조회한다() {
+            // given
+            Member member = memberRepository.findById(2L).orElseThrow();
+            given(memberUtil.getCurrentMember()).willReturn(member);
+
             // when
             SliceResponse<TempAlbumImageListResponse> response =
                     imageService.getTempAlbumImages(2L, null, 3, SortDirection.ASC);
