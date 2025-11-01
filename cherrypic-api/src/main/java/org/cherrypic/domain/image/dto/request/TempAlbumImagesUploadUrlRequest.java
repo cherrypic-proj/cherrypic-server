@@ -10,7 +10,7 @@ import java.util.List;
 import org.cherrypic.global.annotation.Enum;
 import org.cherrypic.s3.enums.FileExtension;
 
-public record TempAlbumImageUploadUrlRequest(
+public record TempAlbumImagesUploadUrlRequest(
         @NotEmpty(message = "업로드할 피일들의 정보는 비워둘 수 없습니다.") @Valid @Schema(description = "업로드 요청 리스트")
                 List<Payload> payloads) {
     @Schema(name = "TempAlbumImageUploadRequestPayload")

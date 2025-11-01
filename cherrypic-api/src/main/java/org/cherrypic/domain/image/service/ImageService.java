@@ -13,8 +13,8 @@ public interface ImageService {
 
     ImageUploadUrlResponse createEventCoverImageUploadUrl(ImageUploadUrlRequest request);
 
-    AlbumImageUploadUrlResponse createAlbumImageUploadUrls(
-            Long albumId, AlbumImageUploadUrlRequest request);
+    AlbumImagesUploadUrlResponse createAlbumImageUploadUrls(
+            Long albumId, AlbumImagesUploadUrlRequest request);
 
     SliceResponse<AlbumImageListResponse> getAlbumImages(
             Long albumId,
@@ -32,8 +32,8 @@ public interface ImageService {
 
     void deleteAlbumImage(Long albumId, AlbumImageDeleteRequest request);
 
-    TempAlbumImageUploadUrlResponse createTempAlbumImageUploadUrls(
-            Long tempAlbumId, TempAlbumImageUploadUrlRequest request);
+    TempAlbumImagesUploadUrlResponse createTempAlbumImageUploadUrls(
+            Long tempAlbumId, TempAlbumImagesUploadUrlRequest request);
 
     void deleteTempAlbumImage(Long tempAlbumId, TempAlbumImageDeleteRequest request);
 

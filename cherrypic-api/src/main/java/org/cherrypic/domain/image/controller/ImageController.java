@@ -64,13 +64,13 @@ public class ImageController {
     @Operation(
             summary = "앨범 이미지 업로드 Presigned URL들 생성",
             description = "앨범 이미지 업로드를 위한 Presigned URL들을 생성합니다.")
-    public AlbumImageUploadUrlResponse albumImageUploadUrlsCreate(
-            @PathVariable Long albumId, @Valid @RequestBody AlbumImageUploadUrlRequest request) {
+    public AlbumImagesUploadUrlResponse albumImageUploadUrlsCreate(
+            @PathVariable Long albumId, @Valid @RequestBody AlbumImagesUploadUrlRequest request) {
         return imageService.createAlbumImageUploadUrls(albumId, request);
     }
 
     @PostMapping("/albums/{albumId}/upload-complete")
-    @Operation(summary = "앨범 이미지 업로드 완료", description = "앨범 이미지들의 업로드를 완료합니다.")
+    @Operation(summary = "앨범 이미지들 업로드 완료", description = "앨범 이미지들의 업로드를 완료합니다.")
     public ResponseEntity<AlbumImagesUploadCompleteResponse> albumImagesUploadComplete(
             @PathVariable Long albumId,
             @Valid @RequestBody AlbumImagesUploadCompleteRequest request) {
@@ -123,16 +123,16 @@ public class ImageController {
 
     @PostMapping("temp-albums/{tempAlbumId}/upload-url")
     @Operation(
-            summary = "임시 앨범 이미지 업로드 Presigned URL들 생성",
-            description = "임시 앨범 이미지 업로드를 위한 Presigned URL들을 생성합니다.")
-    public TempAlbumImageUploadUrlResponse tempAlbumImageUploadUrlsCreate(
+            summary = "임시 앨범 이미지들 업로드 Presigned URL들 생성",
+            description = "임시 앨범 이미지들 업로드를 위한 Presigned URL들을 생성합니다.")
+    public TempAlbumImagesUploadUrlResponse tempAlbumImageUploadUrlsCreate(
             @PathVariable Long tempAlbumId,
-            @Valid @RequestBody TempAlbumImageUploadUrlRequest request) {
+            @Valid @RequestBody TempAlbumImagesUploadUrlRequest request) {
         return imageService.createTempAlbumImageUploadUrls(tempAlbumId, request);
     }
 
     @PostMapping("/temp-albums/{tempAlbumId}/upload-complete")
-    @Operation(summary = "임시 앨범 이미지 업로드 완료", description = "임시 앨범 이미지들의 업로드를 완료합니다.")
+    @Operation(summary = "임시 앨범 이미지들 업로드 완료", description = "임시 앨범 이미지들의 업로드를 완료합니다.")
     public ResponseEntity<TempAlbumImagesUploadCompleteResponse> tempAlbumImagesUploadComplete(
             @PathVariable Long tempAlbumId,
             @Valid @RequestBody TempAlbumImagesUploadCompleteRequest request) {
