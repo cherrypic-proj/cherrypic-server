@@ -5,7 +5,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
-public interface TempAlbumImageRepository extends JpaRepository<TempAlbumImage, Long> {
+public interface TempAlbumImageRepository
+        extends JpaRepository<TempAlbumImage, Long>, TempAlbumImageRepositoryCustom {
 
     @Modifying(clearAutomatically = true)
     @Query("delete from TempAlbumImage i where i.tempAlbum.id = :tempAlbumId")

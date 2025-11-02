@@ -165,6 +165,22 @@ public class ImageServiceImpl implements ImageService {
 
     @Override
     @Transactional(readOnly = true)
+    public SliceResponse<TempAlbumImageListResponse> getTempAlbumImages(
+            Long tempAlbumId, Long lasTempAlbumImageId, int size, SortDirection direction) {
+        final Member currentMember = memberUtil.getCurrentMember();
+        final TempAlbum tempAlbum = getTempAlbumById(tempAlbumId);
+
+        validateTempAlbumOwner(tempAlbum, currentMember);
+
+        Slice<TempAlbumImageListResponse> result =
+                tempAlbumImageRepository.findAllByTempAlbumId(
+                        tempAlbum.getId(), lasTempAlbumImageId, size, direction);
+
+        return SliceResponse.from(result);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public SliceResponse<EventImageListResponse> getEventImages(
             Long eventId,
             Long lastImageId,

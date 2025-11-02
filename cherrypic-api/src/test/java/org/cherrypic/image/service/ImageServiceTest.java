@@ -652,6 +652,133 @@ class ImageServiceTest extends IntegrationTest {
     }
 
     @Nested
+    class 임시_앨범_이미지_목록_조회_요청시 {
+
+        @BeforeEach
+        void setUp() {
+            Member member1 =
+                    Member.createMember(
+                            OauthInfo.createOauthInfo("testOauthId", "testOauthProvider"),
+                            "testNickname1",
+                            "testProfileImageUrl1");
+            Member member2 =
+                    Member.createMember(
+                            OauthInfo.createOauthInfo("testOauthId", "testOauthProvider"),
+                            "testNickname2",
+                            "testProfileImageUrl2");
+            memberRepository.saveAll(List.of(member1, member2));
+            given(memberUtil.getCurrentMember()).willReturn(member1);
+
+            TempAlbum tempAlbum1 = TempAlbum.createTempAlbum(member1, "testTitle");
+            TempAlbum tempAlbum2 = TempAlbum.createTempAlbum(member2, "testTitle");
+            tempAlbumRepository.saveAll(List.of(tempAlbum1, tempAlbum2));
+
+            TempAlbumImage tempAlbumImage1 =
+                    TempAlbumImage.createTempAlbumImage(tempAlbum1, "testUrl1", BigDecimal.ZERO);
+
+            TempAlbumImage tempAlbumImage2 =
+                    TempAlbumImage.createTempAlbumImage(tempAlbum1, "testUrl2", BigDecimal.ZERO);
+
+            TempAlbumImage tempAlbumImage3 =
+                    TempAlbumImage.createTempAlbumImage(tempAlbum1, "testUrl3", BigDecimal.ZERO);
+            tempAlbumImageRepository.saveAll(
+                    List.of(tempAlbumImage1, tempAlbumImage2, tempAlbumImage3));
+        }
+
+        @Test
+        void 정렬_조건이_ASC이면_tempAlbumImageId를_오름차순으로_조회한다() {
+            // when
+            SliceResponse<TempAlbumImageListResponse> response =
+                    imageService.getTempAlbumImages(1L, null, 3, SortDirection.ASC);
+
+            // then
+            assertThat(response.content())
+                    .extracting("tempAlbumImageId")
+                    .containsExactly(1L, 2L, 3L);
+        }
+
+        @Test
+        void 정렬_조건이_DESC면_tempAlbumImageId를_내림차순으로_조회한다() {
+            // when
+            SliceResponse<TempAlbumImageListResponse> response =
+                    imageService.getTempAlbumImages(1L, null, 3, SortDirection.DESC);
+
+            // then
+            assertThat(response.content())
+                    .extracting("tempAlbumImageId")
+                    .containsExactly(3L, 2L, 1L);
+        }
+
+        @Test
+        void tempAlbumImageId를_입력하면_다음_tempAlbumImage_부터_조회한다() {
+            // when
+            SliceResponse<TempAlbumImageListResponse> response =
+                    imageService.getTempAlbumImages(1L, 1L, 2, SortDirection.ASC);
+
+            // then
+            assertThat(response.content()).extracting("tempAlbumImageId").containsExactly(2L, 3L);
+        }
+
+        @Test
+        void 임시_앨범에_이미지가_없는_경우_빈_리스트를_조회한다() {
+            // given
+            Member member = memberRepository.findById(2L).orElseThrow();
+            given(memberUtil.getCurrentMember()).willReturn(member);
+
+            // when
+            SliceResponse<TempAlbumImageListResponse> response =
+                    imageService.getTempAlbumImages(2L, null, 3, SortDirection.ASC);
+
+            // when & then
+            Assertions.assertAll(
+                    () -> assertThat(response.content().size()).isZero(),
+                    () -> assertThat(response.isLast()).isTrue());
+        }
+
+        @Test
+        void 마지막_페이지인_경우_isLast를_true로_반환한다() {
+            // when
+            SliceResponse<TempAlbumImageListResponse> response =
+                    imageService.getTempAlbumImages(1L, null, 3, SortDirection.ASC);
+
+            // then
+            Assertions.assertAll(
+                    () -> assertThat(response.content().size()).isEqualTo(3),
+                    () -> assertThat(response.isLast()).isTrue());
+        }
+
+        @Test
+        void 마지막_페이지가_아닌_경우_isLast를_false로_반환한다() {
+            // when
+            SliceResponse<TempAlbumImageListResponse> response =
+                    imageService.getTempAlbumImages(1L, null, 2, SortDirection.ASC);
+
+            // then
+            Assertions.assertAll(
+                    () -> assertThat(response.content().size()).isEqualTo(2),
+                    () -> assertThat(response.isLast()).isFalse());
+        }
+
+        @Test
+        void 임시_앨범이_존재하지_않을_경우_예외가_발생한다() {
+            // when & then
+            assertThatThrownBy(
+                            () -> imageService.getTempAlbumImages(999L, null, 2, SortDirection.ASC))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(TempAlbumErrorCode.TEMP_ALBUM_NOT_FOUND.getMessage());
+        }
+
+        @Test
+        void 임시_앨범_소유자가_아닌_경우_예외가_발생한다() {
+            // when & then
+            assertThatThrownBy(
+                            () -> imageService.getTempAlbumImages(2L, null, 2, SortDirection.ASC))
+                    .isInstanceOf(CustomException.class)
+                    .hasMessage(TempAlbumErrorCode.NOT_TEMP_ALBUM_OWNER.getMessage());
+        }
+    }
+
+    @Nested
     class 이벤트_이미지_목록_조회_요청시 {
 
         @BeforeEach

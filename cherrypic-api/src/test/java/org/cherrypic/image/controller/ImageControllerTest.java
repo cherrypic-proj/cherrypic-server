@@ -925,6 +925,216 @@ class ImageControllerTest {
     }
 
     @Nested
+    class 임시_앨범_이미지_목록_조회_요청시 {
+
+        @Test
+        void 정렬_조건이_ASC이면_tempAlbumImageId를_오름차순으로_응답한다() throws Exception {
+            // given
+            List<TempAlbumImageListResponse> images =
+                    List.of(
+                            new TempAlbumImageListResponse(
+                                    1L, "testImageUrl1", LocalDateTime.of(2025, 1, 1, 0, 0)),
+                            new TempAlbumImageListResponse(
+                                    2L, "testImageUrl2", LocalDateTime.of(2025, 1, 2, 0, 0)));
+
+            given(imageService.getTempAlbumImages(1L, null, 2, SortDirection.ASC))
+                    .willReturn(new SliceResponse<>(images, true));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            get("/temp-albums/1/images")
+                                    .param("size", "2")
+                                    .param("direction", "ASC"));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
+                    .andExpect(jsonPath("$.data.content[0].tempAlbumImageId").value(1))
+                    .andExpect(jsonPath("$.data.content[1].tempAlbumImageId").value(2))
+                    .andExpect(jsonPath("$.data.isLast").value(true));
+        }
+
+        @Test
+        void 정렬_파라미터가_UPLOAD이고_정렬_조건이_DESC면_imageId를_내림차순으로_응답한다() throws Exception {
+            // given
+            List<TempAlbumImageListResponse> images =
+                    List.of(
+                            new TempAlbumImageListResponse(
+                                    2L, "testImageUrl1", LocalDateTime.of(2025, 1, 1, 0, 0)),
+                            new TempAlbumImageListResponse(
+                                    1L, "testImageUrl2", LocalDateTime.of(2025, 1, 2, 0, 0)));
+
+            given(imageService.getTempAlbumImages(1L, null, 2, SortDirection.DESC))
+                    .willReturn(new SliceResponse<>(images, true));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            get("/temp-albums/1/images")
+                                    .param("size", "2")
+                                    .param("direction", "DESC"));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
+                    .andExpect(jsonPath("$.data.content[0].tempAlbumImageId").value(2))
+                    .andExpect(jsonPath("$.data.content[1].tempAlbumImageId").value(1))
+                    .andExpect(jsonPath("$.data.isLast").value(true));
+        }
+
+        @Test
+        void 마지막_페이지인_경우_isLast를_true로_응답한다() throws Exception {
+            // given
+            List<TempAlbumImageListResponse> images =
+                    List.of(
+                            new TempAlbumImageListResponse(
+                                    1L, "testImageUrl1", LocalDateTime.of(2025, 1, 1, 0, 0)));
+
+            given(imageService.getTempAlbumImages(1L, null, 1, SortDirection.ASC))
+                    .willReturn(new SliceResponse<>(images, true));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            get("/temp-albums/1/images")
+                                    .param("size", "1")
+                                    .param("direction", "ASC"));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
+                    .andExpect(jsonPath("$.data.content[0].tempAlbumImageId").value(1))
+                    .andExpect(jsonPath("$.data.isLast").value(true));
+        }
+
+        @Test
+        void 마지막_페이지가_아닌_경우_isLast를_false로_응답한다() throws Exception {
+            // given
+            List<TempAlbumImageListResponse> images =
+                    List.of(
+                            new TempAlbumImageListResponse(
+                                    1L, "testImageUrl1", LocalDateTime.of(2025, 1, 1, 0, 0)),
+                            new TempAlbumImageListResponse(
+                                    2L, "testImageUrl2", LocalDateTime.of(2025, 1, 2, 0, 0)));
+
+            given(imageService.getTempAlbumImages(1L, null, 1, SortDirection.ASC))
+                    .willReturn(new SliceResponse<>(images, false));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            get("/temp-albums/1/images")
+                                    .param("size", "1")
+                                    .param("direction", "ASC"));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
+                    .andExpect(jsonPath("$.data.content[0].tempAlbumImageId").value(1))
+                    .andExpect(jsonPath("$.data.content[1].tempAlbumImageId").value(2))
+                    .andExpect(jsonPath("$.data.isLast").value(false));
+        }
+
+        @Test
+        void 임시_앨범_이미지가_없는_경우_빈_리스트를_응답한다() throws Exception {
+            // given
+            List<TempAlbumImageListResponse> images = List.of();
+
+            given(imageService.getTempAlbumImages(1L, null, 1, SortDirection.ASC))
+                    .willReturn(new SliceResponse<>(images, true));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            get("/temp-albums/1/images")
+                                    .param("size", "1")
+                                    .param("parameter", "UPLOAD")
+                                    .param("direction", "ASC"));
+
+            perform.andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
+                    .andExpect(jsonPath("$.data.content").isEmpty())
+                    .andExpect(jsonPath("$.data.isLast").value(true));
+        }
+
+        @Test
+        void 임시_앨범이_존재하지_않을_경우_예외가_발생한다() throws Exception {
+            // given
+            given(imageService.getTempAlbumImages(999L, null, 2, SortDirection.ASC))
+                    .willThrow(new CustomException(TempAlbumErrorCode.TEMP_ALBUM_NOT_FOUND));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            get("/temp-albums/999/images")
+                                    .param("size", "2")
+                                    .param("direction", "ASC"));
+
+            perform.andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.NOT_FOUND.value()))
+                    .andExpect(jsonPath("$.data.code").value("TEMP_ALBUM_NOT_FOUND"))
+                    .andExpect(jsonPath("$.data.message").value("임시 앨범이 존재하지 않습니다."));
+        }
+
+        @Test
+        void 임시_앨범_소유자가_아닌_경우_예외가_발생한다() throws Exception {
+            // given
+            given(imageService.getTempAlbumImages(1L, null, 2, SortDirection.ASC))
+                    .willThrow(new CustomException(TempAlbumErrorCode.NOT_TEMP_ALBUM_OWNER));
+
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            get("/temp-albums/1/images")
+                                    .param("size", "2")
+                                    .param("direction", "ASC"));
+
+            perform.andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.FORBIDDEN.value()))
+                    .andExpect(jsonPath("$.data.code").value("NOT_TEMP_ALBUM_OWNER"))
+                    .andExpect(jsonPath("$.data.message").value("임시 앨범 소유자가 아닌 경우 권한이 없습니다."));
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"-1", "-999", "0"})
+        void 페이지_크기를_0_이하로_설정하면_예외가_발생한다(String pageSize) throws Exception {
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            get("/temp-albums/1/images")
+                                    .param("size", pageSize)
+                                    .param("direction", "ASC"));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("ConstraintViolationException"))
+                    .andExpect(jsonPath("$.data.message").value("페이지 크기는 0보다 큰 값만 가능합니다."));
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"ASCC", "DESCC", "OLDEST", "NEWEST"})
+        void 존재하지_않는_정렬_기준을_입력한_경우_예외가_발생한다(String sort) throws Exception {
+            // when & then
+            ResultActions perform =
+                    mockMvc.perform(
+                            get("/temp-albums/1/images")
+                                    .param("size", "1")
+                                    .param("direction", sort));
+
+            perform.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(jsonPath("$.data.code").value("METHOD_ARGUMENT_TYPE_MISMATCH"))
+                    .andExpect(jsonPath("$.data.message").value("요청한 값의 타입이 잘못되어 처리할 수 없습니다."));
+        }
+    }
+
+    @Nested
     class 이벤트_이미지_목록_조회_요청시 {
 
         @Test
